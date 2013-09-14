@@ -214,6 +214,12 @@ int gv_endBuildMinutesEditBox;
 int gv_endBuildMinutesLabel;
 int gv_endBuildSecondsEditBox;
 int gv_endBuildSecondsLabel;
+int gv_practiceAgainstSavedBuildOrderLabelWidth;
+int gv_practiceAgainstSavedBuildOrderCheckbox;
+int gv_practiceAgainstSavedBuildOrderLabel;
+int gv_displayBuildOrderHintsLabelWidth;
+int gv_displayBuildOrderHintsCheckbox;
+int gv_displayBuildOrderHintsLabel;
 timer gv_buildTimer;
 string gv_benchmarkBuildStepEntryKeyPrefix;
 string gv_numBenchmarkBuildOrderStepsEntryKey;
@@ -284,70 +290,22 @@ void InitGlobals () {
     gv_orangeBenchmarkSupplyThreshold = 6;
     gv_orangeBenchmarkSecondsThreshold = 15;
     gv_trackSupplyUnitObjectivesUntil = 40;
-    gv_trackSupplyUnitsAsObjectives = false;
-    gv_lastCreatedBuildOrderUnitType = null;
-    gv_lastCreatedUnitTimestamp = 0.0;
-    gv_currentBuildOrderStepCursor = 0;
-    init_i = 0;
-    while (init_i <= 20) {
-        gv_currentBuildOrderSteps[init_i].lv_upgradeType = null;
-        gv_currentBuildOrderSteps[init_i].lv_unitType = null;
-        gv_currentBuildOrderSteps[init_i].lv_numUnits = 0;
-        gv_currentBuildOrderSteps[init_i].lv_supplyCount = 0;
-        gv_currentBuildOrderSteps[init_i].lv_elapsedSeconds = 0;
-        init_i = init_i + 1;
-    }
-    gv_totalNumBenchmarkBuildOrderSteps = 0;
     gv_practiceAgainstBenchmarkBuildOrder = true;
-    init_i = 0;
-    while (init_i <= 10) {
+    for (init_i = 0; init_i <= 10; init_i += 1) {
         gv_benchmarkBuildOrderStepObjectives[init_i] = c_invalidObjectiveId;
-        init_i = init_i + 1;
     }
-    init_i = 0;
-    while (init_i <= 20) {
-        gv_benchmarkBuildOrderSteps[init_i].lv_upgradeType = null;
-        gv_benchmarkBuildOrderSteps[init_i].lv_unitType = null;
-        gv_benchmarkBuildOrderSteps[init_i].lv_numUnits = 0;
-        gv_benchmarkBuildOrderSteps[init_i].lv_supplyCount = 0;
-        gv_benchmarkBuildOrderSteps[init_i].lv_elapsedSeconds = 0;
-        init_i = init_i + 1;
-    }
-    gv_benchmarkBuildOrderStepCursor = 0;
     gv_resources = UnitGroupEmpty();
     gv_paused = true;
     gv_benchmark1Timer = TimerCreate();
     gv_benchmark2Timer = TimerCreate();
     gv_benchmark3Timer = TimerCreate();
-    init_i = 0;
-    while (init_i <= 3) {
+    for (init_i = 0; init_i <= 3; init_i += 1) {
         gv_benchmarkSupplyObjectives[init_i] = c_invalidObjectiveId;
-        init_i = init_i + 1;
     }
     gv_benchmarkMaxTimeObjective = c_invalidObjectiveId;
-    gv_benchmarkMaxTimeTotalSeconds = 0;
     gv_benchmarkMaxTimeMinutes = 15;
-    gv_benchmarkMaxTimeSeconds = 0;
     gv_benchmarkMaxTimeTimer = TimerCreate();
-    init_i = 0;
-    while (init_i <= 3) {
-        gv_benchmarkTimerDurations[init_i] = 0;
-        init_i = init_i + 1;
-    }
-    init_i = 0;
-    while (init_i <= 3) {
-        gv_benchmarkSupplyValues[init_i] = 0;
-        init_i = init_i + 1;
-    }
-    init_i = 0;
-    while (init_i <= 3) {
-        gv_benchmarkSupplyDefaults[init_i] = 0;
-        init_i = init_i + 1;
-    }
     gv_benchmarkEndBuildatMinutes = 15;
-    gv_benchmarkEndBuildatSeconds = 0;
-    gv_benchmarkEndBuildTotalSeconds = 0;
-    gv_numMorphingOverlords = 0;
     gv_overlordInProgressTimer = TimerCreate();
     gv_overlordMorphDuration = 25;
     gv_morphingOverlords = UnitGroupEmpty();
@@ -363,7 +321,6 @@ void InitGlobals () {
     gv_alertSupplyBlockCheckEnabled = true;
     gv_alertSupplyBlockWithinCapThreshold = 6;
     gv_alertSupplyBlockCooldownTimer = TimerCreate();
-    gv_alertSelectedMacroEnergyThreshold = 0;
     gv_alertZergDefaultMacroEnergyThreshold = 40;
     gv_alertTerranDefaultMacroEnergyThreshold = 65;
     gv_alertProtossDefaultMacroEnergyThreshold = 55;
@@ -371,75 +328,24 @@ void InitGlobals () {
     gv_alertMacroEnergyCooldownTimer = TimerCreate();
     gv_alertUpgradeGapCheckEnabled = true;
     gv_alertUpgradeGapThreshold = 20;
-    gv_alertUpgradeGapNumUpgrades = 0;
-    init_i = 0;
-    while (init_i <= 14) {
-        gv_alertUpgradeGapTimers[init_i] = null;
-        init_i = init_i + 1;
-    }
-    init_i = 0;
-    while (init_i <= 14) {
-        gv_alertUpgradeGapCooldownTimers[init_i] = null;
-        init_i = init_i + 1;
-    }
-    init_i = 0;
-    while (init_i <= 14) {
-        gv_alertUpgradeGapUpgrades[init_i] = null;
-        init_i = init_i + 1;
-    }
     gv_alertProductionIdleCheckEnabled = true;
     gv_alertProductionIdleThreshold = 20;
-    gv_alertProductionIdleNumProductionTypes = 0;
-    init_i = 0;
-    while (init_i <= 6) {
-        gv_alertProductionIdleBuildingTimers[init_i] = null;
-        init_i = init_i + 1;
-    }
-    init_i = 0;
-    while (init_i <= 6) {
-        gv_alertProductionIdleCooldownTimers[init_i] = null;
-        init_i = init_i + 1;
-    }
-    init_i = 0;
-    while (init_i <= 6) {
-        gv_alertProductionIdleUnitTypes[init_i] = null;
-        init_i = init_i + 1;
-    }
-    gv_spendingQuotient = 0.0;
-    gv_gasTaken = false;
-    gv_totalMineralSamplesThisBuild = 0;
-    gv_totalGasSamplesThisBuild = 0;
-    gv_totalAPMSamplesThisBuild = 0;
-    gv_timeProductionIdleThisBuild = 0;
-    gv_timeSupplyBlockedThisBuild = 0;
-    gv_cumulativeAPM = 0;
-    gv_cumulativeUnspentMinerals = 0;
-    gv_cumulativeUnspentGas = 0;
     gv_workersCreated = 6;
-    gv_totalMineralsCollected = 0;
-    gv_totalGasCollected = 0;
-    gv_totalNumberofUpgradesResearched = 0;
     gv_objectiveSupplyColor = Color(100.00, 53.33, 6.67);
     gv_labelAlignmentSpacer = 15;
     gv_menuPadding = 60;
-    init_i = 0;
-    while (init_i <= 2) {
+    for (init_i = 0; init_i <= 2; init_i += 1) {
         gv_startButton[init_i] = c_invalidDialogControlId;
-        init_i = init_i + 1;
     }
     gv_startButtonWidth = 200;
     gv_startButtonHeight = 60;
     gv_menuSelectButtonWidth = 200;
     gv_menuSelectButtonHeight = 40;
-    init_i = 0;
-    while (init_i <= 2) {
+    for (init_i = 0; init_i <= 2; init_i += 1) {
         gv_benchmarksMenuButton[init_i] = c_invalidDialogControlId;
-        init_i = init_i + 1;
     }
-    init_i = 0;
-    while (init_i <= 2) {
+    for (init_i = 0; init_i <= 2; init_i += 1) {
         gv_alertMenuButton[init_i] = c_invalidDialogControlId;
-        init_i = init_i + 1;
     }
     gv_sectionLabelWidth = 300;
     gv_sectionLabelHeight = 35;
@@ -453,23 +359,10 @@ void InitGlobals () {
     gv_checkboxWidth = 50;
     gv_checkboxHeight = 50;
     gv_alertMenuDialog = c_invalidDialogId;
-    init_i = 0;
-    while (init_i <= 8) {
-        init_j = 0;
-        while (init_j <= 4) {
+    for (init_i = 0; init_i <= 8; init_i += 1) {
+        for (init_j = 0; init_j <= 4; init_j += 1) {
             gv_alertMenuDialogItemGrid[init_i][init_j] = c_invalidDialogControlId;
-            init_j = init_j + 1;
         }
-        init_i = init_i + 1;
-    }
-    init_i = 0;
-    while (init_i <= 8) {
-        init_j = 0;
-        while (init_j <= 2) {
-            gv_alertRowLabelWidths[init_i][init_j] = 0;
-            init_j = init_j + 1;
-        }
-        init_i = init_i + 1;
     }
     gv_alertMenuSupplyBlockBaseWidth = 306;
     gv_alertMenuQueenNameWidth = 100;
@@ -488,13 +381,10 @@ void InitGlobals () {
     gv_helpDialogTitle = StringExternal("Param/Value/91DF6EE7");
     gv_helpDialog = c_invalidDialogId;
     gv_helpOkButton = c_invalidDialogControlId;
-    gv_helpDialogOpen = false;
     gv_statsDialogWidth = 650;
     gv_statsDialogHeight = 525;
-    init_i = 0;
-    while (init_i <= 10) {
+    for (init_i = 0; init_i <= 10; init_i += 1) {
         gv_statValueDialogItems[init_i] = c_invalidDialogControlId;
-        init_i = init_i + 1;
     }
     gv_statValueWidth = 200;
     gv_statLabelWidth = 350;
@@ -502,7 +392,6 @@ void InitGlobals () {
     gv_statsDialogTitle = StringExternal("Param/Value/F4075B4B");
     gv_statsDialog = c_invalidDialogId;
     gv_statsOkButton = c_invalidDialogControlId;
-    gv_statsDialogOpen = false;
     gv_backToMenuButton = c_invalidDialogControlId;
     gv_postBuildReportDialogWidth = 1200;
     gv_postBuildReportDialog = c_invalidDialogId;
@@ -512,14 +401,10 @@ void InitGlobals () {
     gv_postBuildReportMatchupLabelHeight = 60;
     gv_postBuildReportMatchupLabelXOffset = 70;
     gv_postBuildReportMatchupLabelYOffset = 40;
-    init_i = 0;
-    while (init_i <= 14) {
-        init_j = 0;
-        while (init_j <= 4) {
+    for (init_i = 0; init_i <= 14; init_i += 1) {
+        for (init_j = 0; init_j <= 4; init_j += 1) {
             gv_postBuildReportDialogItems[init_i][init_j] = c_invalidDialogControlId;
-            init_j = init_j + 1;
         }
-        init_i = init_i + 1;
     }
     gv_postBuildReportDialogItemHeight = 35;
     gv_postBuildReportStatLabelWidth = 335;
@@ -541,21 +426,16 @@ void InitGlobals () {
     gv_benchmarkMenuSectionLabelNudge = 8;
     gv_minutesLabelWidth = 154;
     gv_secondsLabelWidth = 150;
-    gv_currentlySelectedMatchupIndex = 0;
     gv_currentlySelectedMatchupButton = gv_matchupSelectionButtons[0];
-    init_i = 0;
-    while (init_i <= 3) {
+    for (init_i = 0; init_i <= 3; init_i += 1) {
         gv_matchupSelectionButtons[init_i] = c_invalidDialogControlId;
-        init_i = init_i + 1;
     }
     gv_matchupSelectionLabelHeight = 35;
     gv_matchupButtonWidth = 200;
     gv_matchupButtonHeight = 75;
     gv_matchupButtonSpacing = 10;
-    init_i = 0;
-    while (init_i <= 3) {
+    for (init_i = 0; init_i <= 3; init_i += 1) {
         gv_benchmarkSupplyEditBoxes[init_i] = c_invalidDialogControlId;
-        init_i = init_i + 1;
     }
     gv_supplyValueLabelWidth = 350;
     gv_supplyValueLabelHeight = 50;
@@ -571,6 +451,12 @@ void InitGlobals () {
     gv_endBuildMinutesLabel = c_invalidDialogControlId;
     gv_endBuildSecondsEditBox = c_invalidDialogControlId;
     gv_endBuildSecondsLabel = c_invalidDialogControlId;
+    gv_practiceAgainstSavedBuildOrderLabelWidth = 500;
+    gv_practiceAgainstSavedBuildOrderCheckbox = c_invalidDialogControlId;
+    gv_practiceAgainstSavedBuildOrderLabel = c_invalidDialogControlId;
+    gv_displayBuildOrderHintsLabelWidth = 300;
+    gv_displayBuildOrderHintsCheckbox = c_invalidDialogControlId;
+    gv_displayBuildOrderHintsLabel = c_invalidDialogControlId;
     gv_buildTimer = TimerCreate();
     gv_benchmarkBuildStepEntryKeyPrefix = "benchmarkBuildStep";
     gv_numBenchmarkBuildOrderStepsEntryKey = "numBenchmarkBuildOrderSteps";
@@ -579,19 +465,14 @@ void InitGlobals () {
     gv_numUnitsBuildOrderStepEntryKey = "numUnits";
     gv_elapsedSecondsBuildOrderStepEntryKey = "elapsedSeconds";
     gv_benchmarkerBankName = "benchmarker";
-    gv_benchmarkerBank = null;
     gv_configurationOptionsSectionKey = "options";
     gv_benchmarkMaxTimeMinutesKey = "maxTimeMin";
     gv_benchmarkMaxTimeSecondsKey = "maxTimeSec";
-    init_i = 0;
-    while (init_i <= 3) {
+    for (init_i = 0; init_i <= 3; init_i += 1) {
         gv_benchmarkMatchupSectionKeys[init_i] = "";
-        init_i = init_i + 1;
     }
-    init_i = 0;
-    while (init_i <= 3) {
+    for (init_i = 0; init_i <= 3; init_i += 1) {
         gv_benchmarkSupplyEntryKeys[init_i] = "";
-        init_i = init_i + 1;
     }
     gv_benchmarkEndBuildSelectionKey = "endBuildSelection";
     gv_benchmarkEndBuildMinutesKey = "endBuildMin";
@@ -643,6 +524,7 @@ void InitGlobals () {
 // Global Function Declarations
 //--------------------------------------------------------------------------------------------------
 text gf_ConverttoTextWithSign (int lp_int);
+bool gf_DoesSavedBuildOrderExistForCurrentMatchup ();
 int gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex (int lp_cursor);
 string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
 bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex);
@@ -810,6 +692,7 @@ trigger gt_OpenPostBuildReportDialog;
 trigger gt_ReturntoMainMenufromReport;
 trigger gt_DisplayEndBuildGameTimeEdits;
 trigger gt_HideEndBuildGameTimeEdits;
+trigger gt_TogglePracticeAgainstSavedBuild;
 trigger gt_EnableDisableMineralAlert;
 trigger gt_EnableDisableGasAlert;
 trigger gt_EnableDisableSupplyBlockAlert;
@@ -834,7 +717,6 @@ text gf_ConverttoTextWithSign (int lp_int) {
     text lv_result;
 
     // Variable Initialization
-    lv_result = null;
 
     // Implementation
     if ((lp_int > 0)) {
@@ -848,12 +730,22 @@ text gf_ConverttoTextWithSign (int lp_int) {
     return lv_result;
 }
 
+bool gf_DoesSavedBuildOrderExistForCurrentMatchup () {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+    lv_result = true;
+
+    // Implementation
+    return lv_result;
+}
+
 int gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex (int lp_cursor) {
     // Variable Declarations
     int lv_result;
 
     // Variable Initialization
-    lv_result = 0;
 
     // Implementation
     lv_result = lp_cursor;
@@ -877,7 +769,6 @@ bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_
     bool lv_result;
 
     // Variable Initialization
-    lv_result = false;
 
     // Implementation
     if ((lp_unitType == gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_unitType)) {
@@ -918,7 +809,6 @@ bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType) {
     bool lv_result;
 
     // Variable Initialization
-    lv_result = false;
 
     // Implementation
     if (((lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon") || (lp_unitType == "CreepTumor"))) {
@@ -949,10 +839,6 @@ text gf_GetCurrentBuildOrderStepText (int lp_stepNumber) {
 
     // Variable Initialization
     lv_numUnits = StringExternal("Param/Value/29A8F1DC");
-    lv_unitType = null;
-    lv_supplyCount = null;
-    lv_elapsedTime = null;
-    lv_result = null;
 
     // Implementation
     lv_unitType = UnitTypeGetName(gv_currentBuildOrderSteps[lp_stepNumber].lv_unitType);
@@ -982,10 +868,6 @@ text gf_GetBenchmarkBuildOrderStepText (int lp_stepNumber) {
 
     // Variable Initialization
     lv_numUnits = StringExternal("Param/Value/B286C09B");
-    lv_unitType = null;
-    lv_supplyCount = null;
-    lv_elapsedTime = null;
-    lv_result = null;
 
     // Implementation
     lv_unitType = UnitTypeGetName(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_unitType);
@@ -1010,7 +892,6 @@ text gf_GetFormattedCompleteBenchmarkBuildOrderStepText (int lp_stepNumber) {
     text lv_result;
 
     // Variable Initialization
-    lv_result = null;
 
     // Implementation
     TextExpressionSetToken("Param/Expression/236BD2AB", "A", gf_GetBenchmarkBuildOrderStepText(lp_stepNumber));
@@ -1028,10 +909,7 @@ text gf_ApplyColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber, text 
     text lv_result;
 
     // Variable Initialization
-    lv_currentElaspedSeconds = 0;
-    lv_currentSupplyCount = 0;
     lv_color = Color(0,0,0);
-    lv_result = null;
 
     // Implementation
     lv_currentElaspedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
@@ -1062,8 +940,6 @@ text gf_GetBenchmarkandCurrentStepSupplyDiffasText (int lp_stepNumber) {
     text lv_result;
 
     // Variable Initialization
-    lv_diff = 0;
-    lv_result = null;
 
     // Implementation
     lv_diff = (PlayerScoreValueGetAsInt(1, "FoodUsed")-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount);
@@ -1077,8 +953,6 @@ text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber) {
     text lv_result;
 
     // Variable Initialization
-    lv_diff = 0;
-    lv_result = null;
 
     // Implementation
     lv_diff = (FixedToInt(TimerGetElapsed(gv_buildTimer))-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
@@ -1225,21 +1099,16 @@ bool gf_IsRaceMacroEnergyAboveThreshold () {
     unit lv_currentunit;
 
     // Variable Initialization
-    lv_result = false;
-    lv_currentunit = null;
 
     // Implementation
     autoEE6E2050_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, (1 << (c_targetFilterHasEnergy - 32)), (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0);
     autoEE6E2050_u = 1;
-    while (autoEE6E2050_u <= UnitGroupCount(autoEE6E2050_g, c_unitCountAll)) {
+    for ( ; autoEE6E2050_u <= UnitGroupCount(autoEE6E2050_g, c_unitCountAll) ; autoEE6E2050_u += BoolToInt(lv_currentunit == UnitGroupUnit(autoEE6E2050_g, autoEE6E2050_u)) ) {
         lv_currentunit = UnitGroupUnit(autoEE6E2050_g, autoEE6E2050_u);
         if (((UnitGetPropertyFixed(lv_currentunit, c_unitPropEnergy, c_unitPropCurrent) > gv_alertSelectedMacroEnergyThreshold) && ((UnitGetType(lv_currentunit) == "Queen") || (UnitGetType(lv_currentunit) == "QueenBurrowed") || (UnitGetType(lv_currentunit) == "OrbitalCommand") || (UnitGetType(lv_currentunit) == "OrbitalCommandFlying") || (UnitGetType(lv_currentunit) == "Nexus")))) {
             lv_result = true;
         }
         else {
-        }
-        if (lv_currentunit == UnitGroupUnit(autoEE6E2050_g, autoEE6E2050_u)) {
-            autoEE6E2050_u = autoEE6E2050_u + 1;
         }
     }
     return lv_result;
@@ -1264,21 +1133,16 @@ bool gf_IsSupplyDepotorPylonUnderConstruction () {
     bool lv_result;
 
     // Variable Initialization
-    lv_currentUnit = null;
-    lv_result = false;
 
     // Implementation
     auto54B9016D_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, (1 << (c_targetFilterUnderConstruction - 32)), 0, 0), 0);
     auto54B9016D_u = 1;
-    while (auto54B9016D_u <= UnitGroupCount(auto54B9016D_g, c_unitCountAll)) {
+    for ( ; auto54B9016D_u <= UnitGroupCount(auto54B9016D_g, c_unitCountAll) ; auto54B9016D_u += BoolToInt(lv_currentUnit == UnitGroupUnit(auto54B9016D_g, auto54B9016D_u)) ) {
         lv_currentUnit = UnitGroupUnit(auto54B9016D_g, auto54B9016D_u);
         if (((UnitGetType(lv_currentUnit) == "SupplyDepot") || (UnitGetType(lv_currentUnit) == "Pylon"))) {
             lv_result = true;
         }
         else {
-        }
-        if (lv_currentUnit == UnitGroupUnit(auto54B9016D_g, auto54B9016D_u)) {
-            auto54B9016D_u = auto54B9016D_u + 1;
         }
     }
     return lv_result;
@@ -1293,21 +1157,17 @@ unitgroup gf_GetAllPlayer1UnitsforType (string lp_unitType) {
     unitgroup lv_result;
 
     // Variable Initialization
-    lv_currentUnit = null;
     lv_result = UnitGroupEmpty();
 
     // Implementation
     auto7054DA5F_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0);
     auto7054DA5F_u = 1;
-    while (auto7054DA5F_u <= UnitGroupCount(auto7054DA5F_g, c_unitCountAll)) {
+    for ( ; auto7054DA5F_u <= UnitGroupCount(auto7054DA5F_g, c_unitCountAll) ; auto7054DA5F_u += BoolToInt(lv_currentUnit == UnitGroupUnit(auto7054DA5F_g, auto7054DA5F_u)) ) {
         lv_currentUnit = UnitGroupUnit(auto7054DA5F_g, auto7054DA5F_u);
         if ((UnitGetType(lv_currentUnit) == lp_unitType)) {
             UnitGroupAdd(lv_result, lv_currentUnit);
         }
         else {
-        }
-        if (lv_currentUnit == UnitGroupUnit(auto7054DA5F_g, auto7054DA5F_u)) {
-            auto7054DA5F_u = auto7054DA5F_u + 1;
         }
     }
     return lv_result;
@@ -1320,7 +1180,6 @@ int gf_GetDefaultMacroEnergyThreshold () {
     int lv_result;
 
     // Variable Initialization
-    lv_result = 0;
 
     // Implementation
     autoBAC892F0_val = PlayerRace(1);
@@ -1400,8 +1259,6 @@ bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
     bool lv_queueIsEmpty;
 
     // Variable Initialization
-    lv_currenUnit = null;
-    lv_queueIsEmpty = false;
 
     // Implementation
     if ((PlayerRace(1) == "Zerg")) {
@@ -1416,7 +1273,7 @@ bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
         lv_queueIsEmpty = true;
         auto9BA590D3_g = gf_GetAllPlayer1UnitsforType(lp_unitType);
         auto9BA590D3_u = 1;
-        while (auto9BA590D3_u <= UnitGroupCount(auto9BA590D3_g, c_unitCountAll)) {
+        for ( ; auto9BA590D3_u <= UnitGroupCount(auto9BA590D3_g, c_unitCountAll) ; auto9BA590D3_u += BoolToInt(lv_currenUnit == UnitGroupUnit(auto9BA590D3_g, auto9BA590D3_u)) ) {
             lv_currenUnit = UnitGroupUnit(auto9BA590D3_g, auto9BA590D3_u);
             if ((UnitQueueGetProperty(lv_currenUnit, c_unitQueuePropertyUsed) > 0)) {
                 lv_queueIsEmpty = false;
@@ -1427,9 +1284,6 @@ bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
                 lv_queueIsEmpty = false;
             }
             else {
-            }
-            if (lv_currenUnit == UnitGroupUnit(auto9BA590D3_g, auto9BA590D3_u)) {
-                auto9BA590D3_u = auto9BA590D3_u + 1;
             }
         }
     }
@@ -1445,24 +1299,18 @@ bool gf_IsProductionIdle () {
     int lv_i;
 
     // Variable Initialization
-    lv_result = false;
-    lv_i = 0;
 
     // Implementation
     if ((gv_alertProductionIdleNumProductionTypes > 0)) {
         autoBD02A5A8_ae = (gv_alertProductionIdleNumProductionTypes-1);
         autoBD02A5A8_ai = 1;
         lv_i = 0;
-        while ((autoBD02A5A8_ai >= 0 && lv_i <= autoBD02A5A8_ae) || (autoBD02A5A8_ai <= 0 && lv_i >= autoBD02A5A8_ae)) {
+        for ( ; ( (autoBD02A5A8_ai >= 0 && lv_i <= autoBD02A5A8_ae) || (autoBD02A5A8_ai <= 0 && lv_i >= autoBD02A5A8_ae) ) ; lv_i += autoBD02A5A8_ai ) {
             if ((gf_IsUnitTypeTrainingQueueEmpty(gv_alertProductionIdleUnitTypes[lv_i]) == true)) {
                 lv_result = true;
             }
             else {
             }
-            if (lv_i == autoBD02A5A8_ae) {
-                break;
-            }
-            lv_i = lv_i + autoBD02A5A8_ai;
         }
     }
     else {
@@ -1557,9 +1405,6 @@ text gf_CalculateIntPercentDifferenceAsText (int lp_value, int lp_previousBest, 
     text lv_coloredPercentDifferenceText;
 
     // Variable Initialization
-    lv_percentDifference = 0.0;
-    lv_percentDifferenceText = null;
-    lv_coloredPercentDifferenceText = null;
 
     // Implementation
     if (((lp_value > 0) && (lp_previousBest > 0))) {
@@ -1582,9 +1427,6 @@ text gf_CalculateRealPercentDifferenceAsText (fixed lp_value, fixed lp_previousB
     text lv_coloredPercentDifferenceText;
 
     // Variable Initialization
-    lv_percentDifference = 0.0;
-    lv_percentDifferenceText = null;
-    lv_coloredPercentDifferenceText = null;
 
     // Implementation
     if (((lp_value > 0) && (lp_previousBest > 0))) {
@@ -1673,13 +1515,12 @@ string gf_FormatCatalogStringwithSpaces (string lp_string) {
     // Variable Initialization
     lv_currentLetter = "";
     lv_result = "";
-    lv_i = 0;
 
     // Implementation
     auto6F8A5183_ae = StringLength(lp_string);
     auto6F8A5183_ai = 1;
     lv_i = 0;
-    while ((auto6F8A5183_ai >= 0 && lv_i <= auto6F8A5183_ae) || (auto6F8A5183_ai <= 0 && lv_i >= auto6F8A5183_ae)) {
+    for ( ; ( (auto6F8A5183_ai >= 0 && lv_i <= auto6F8A5183_ae) || (auto6F8A5183_ai <= 0 && lv_i >= auto6F8A5183_ae) ) ; lv_i += auto6F8A5183_ai ) {
         lv_currentLetter = StringSub(lp_string, lv_i, lv_i);
         if ((gf_IsCapitalLetterOrDigit(lv_currentLetter) == true)) {
             lv_result = (lv_result + " " + lv_currentLetter);
@@ -1687,10 +1528,6 @@ string gf_FormatCatalogStringwithSpaces (string lp_string) {
         else {
             lv_result = (lv_result + lv_currentLetter);
         }
-        if (lv_i == auto6F8A5183_ae) {
-            break;
-        }
-        lv_i = lv_i + auto6F8A5183_ai;
     }
     return lv_result;
 }
@@ -1747,22 +1584,17 @@ void gf_ResetCurrentBuildOrderStepsVariables () {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     gv_lastCreatedBuildOrderUnitType = null;
     autoA13422C8_ae = gv_currentBuildOrderStepCursor;
     autoA13422C8_ai = 1;
     lv_i = 0;
-    while ((autoA13422C8_ai >= 0 && lv_i <= autoA13422C8_ae) || (autoA13422C8_ai <= 0 && lv_i >= autoA13422C8_ae)) {
+    for ( ; ( (autoA13422C8_ai >= 0 && lv_i <= autoA13422C8_ae) || (autoA13422C8_ai <= 0 && lv_i >= autoA13422C8_ae) ) ; lv_i += autoA13422C8_ai ) {
         gv_currentBuildOrderSteps[lv_i].lv_unitType = null;
         gv_currentBuildOrderSteps[lv_i].lv_supplyCount = 0;
         gv_currentBuildOrderSteps[lv_i].lv_numUnits = 0;
         gv_currentBuildOrderSteps[lv_i].lv_elapsedSeconds = 0;
-        if (lv_i == autoA13422C8_ae) {
-            break;
-        }
-        lv_i = lv_i + autoA13422C8_ai;
     }
     gv_currentBuildOrderStepCursor = 0;
 }
@@ -1775,21 +1607,16 @@ void gf_ResetBenchmarkBuildOrderStepsVariables () {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     auto488B3271_ae = gv_benchmarkBuildOrderStepCursor;
     auto488B3271_ai = 1;
     lv_i = 0;
-    while ((auto488B3271_ai >= 0 && lv_i <= auto488B3271_ae) || (auto488B3271_ai <= 0 && lv_i >= auto488B3271_ae)) {
+    for ( ; ( (auto488B3271_ai >= 0 && lv_i <= auto488B3271_ae) || (auto488B3271_ai <= 0 && lv_i >= auto488B3271_ae) ) ; lv_i += auto488B3271_ai ) {
         gv_benchmarkBuildOrderSteps[lv_i].lv_unitType = null;
         gv_benchmarkBuildOrderSteps[lv_i].lv_supplyCount = 0;
         gv_benchmarkBuildOrderSteps[lv_i].lv_numUnits = 0;
         gv_benchmarkBuildOrderSteps[lv_i].lv_elapsedSeconds = 0;
-        if (lv_i == auto488B3271_ae) {
-            break;
-        }
-        lv_i = lv_i + auto488B3271_ai;
     }
     gv_benchmarkBuildOrderStepCursor = 0;
     gv_totalNumBenchmarkBuildOrderSteps = 0;
@@ -1805,26 +1632,19 @@ void gf_SaveMapResources () {
     unit lv_currentResource;
 
     // Variable Initialization
-    lv_currentResource = null;
 
     // Implementation
     auto59129081_g = UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter((1 << c_targetFilterHarvestableResource), 0, 0, 0), 0);
     auto59129081_u = 1;
-    while (auto59129081_u <= UnitGroupCount(auto59129081_g, c_unitCountAll)) {
+    for ( ; auto59129081_u <= UnitGroupCount(auto59129081_g, c_unitCountAll) ; auto59129081_u += BoolToInt(lv_currentResource == UnitGroupUnit(auto59129081_g, auto59129081_u)) ) {
         lv_currentResource = UnitGroupUnit(auto59129081_g, auto59129081_u);
         UnitGroupAdd(gv_resources, lv_currentResource);
-        if (lv_currentResource == UnitGroupUnit(auto59129081_g, auto59129081_u)) {
-            auto59129081_u = auto59129081_u + 1;
-        }
     }
     autoAECA9D28_g = UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter((1 << c_targetFilterRawResource), 0, 0, 0), 0);
     autoAECA9D28_u = 1;
-    while (autoAECA9D28_u <= UnitGroupCount(autoAECA9D28_g, c_unitCountAll)) {
+    for ( ; autoAECA9D28_u <= UnitGroupCount(autoAECA9D28_g, c_unitCountAll) ; autoAECA9D28_u += BoolToInt(lv_currentResource == UnitGroupUnit(autoAECA9D28_g, autoAECA9D28_u)) ) {
         lv_currentResource = UnitGroupUnit(autoAECA9D28_g, autoAECA9D28_u);
         UnitGroupAdd(gv_resources, lv_currentResource);
-        if (lv_currentResource == UnitGroupUnit(autoAECA9D28_g, autoAECA9D28_u)) {
-            autoAECA9D28_u = autoAECA9D28_u + 1;
-        }
     }
 }
 
@@ -1837,12 +1657,11 @@ void gf_ResetMapResources () {
     unit lv_currentResource;
 
     // Variable Initialization
-    lv_currentResource = null;
 
     // Implementation
     auto239B13AC_g = gv_resources;
     auto239B13AC_u = 1;
-    while (auto239B13AC_u <= UnitGroupCount(auto239B13AC_g, c_unitCountAll)) {
+    for ( ; auto239B13AC_u <= UnitGroupCount(auto239B13AC_g, c_unitCountAll) ; auto239B13AC_u += BoolToInt(lv_currentResource == UnitGroupUnit(auto239B13AC_g, auto239B13AC_u)) ) {
         lv_currentResource = UnitGroupUnit(auto239B13AC_g, auto239B13AC_u);
         autoD5EEC4D5_val = UnitGetType(lv_currentResource);
         if (autoD5EEC4D5_val == "VespeneGeyser") {
@@ -1870,9 +1689,6 @@ void gf_ResetMapResources () {
             UnitBehaviorAdd(lv_currentResource, "HighYieldMineralFieldMinerals", lv_currentResource, 1);
         }
         else {
-        }
-        if (lv_currentResource == UnitGroupUnit(auto239B13AC_g, auto239B13AC_u)) {
-            auto239B13AC_u = auto239B13AC_u + 1;
         }
     }
 }
@@ -1922,7 +1738,6 @@ void gf_PauseGame () {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     gv_paused = true;
@@ -1937,7 +1752,6 @@ void gf_UnpauseGame () {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     gv_paused = false;
@@ -1952,7 +1766,6 @@ void gf_StartBenchmarkTimers () {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     TimerStart(gv_benchmark1Timer, gv_benchmarkTimerDurations[0], false, c_timeGame);
@@ -1996,31 +1809,21 @@ void gf_PauseAlertTimers () {
     int lv_j;
 
     // Variable Initialization
-    lv_i = 0;
-    lv_j = 0;
 
     // Implementation
     autoDAB23CA2_ae = gv_alertUpgradeGapNumUpgrades;
     autoDAB23CA2_ai = 1;
     lv_i = 0;
-    while ((autoDAB23CA2_ai >= 0 && lv_i <= autoDAB23CA2_ae) || (autoDAB23CA2_ai <= 0 && lv_i >= autoDAB23CA2_ae)) {
+    for ( ; ( (autoDAB23CA2_ai >= 0 && lv_i <= autoDAB23CA2_ae) || (autoDAB23CA2_ai <= 0 && lv_i >= autoDAB23CA2_ae) ) ; lv_i += autoDAB23CA2_ai ) {
         TimerPause(gv_alertUpgradeGapTimers[lv_i], true);
         TimerPause(gv_alertUpgradeGapCooldownTimers[lv_i], true);
-        if (lv_i == autoDAB23CA2_ae) {
-            break;
-        }
-        lv_i = lv_i + autoDAB23CA2_ai;
     }
     auto33B8CBD4_ae = gv_alertProductionIdleNumProductionTypes;
     auto33B8CBD4_ai = 1;
     lv_j = 0;
-    while ((auto33B8CBD4_ai >= 0 && lv_j <= auto33B8CBD4_ae) || (auto33B8CBD4_ai <= 0 && lv_j >= auto33B8CBD4_ae)) {
+    for ( ; ( (auto33B8CBD4_ai >= 0 && lv_j <= auto33B8CBD4_ae) || (auto33B8CBD4_ai <= 0 && lv_j >= auto33B8CBD4_ae) ) ; lv_j += auto33B8CBD4_ai ) {
         TimerPause(gv_alertProductionIdleBuildingTimers[lv_i], true);
         TimerPause(gv_alertProductionIdleCooldownTimers[lv_i], true);
-        if (lv_j == auto33B8CBD4_ae) {
-            break;
-        }
-        lv_j = lv_j + auto33B8CBD4_ai;
     }
 }
 
@@ -2035,31 +1838,21 @@ void gf_UnpauseAlertTimers () {
     int lv_j;
 
     // Variable Initialization
-    lv_i = 0;
-    lv_j = 0;
 
     // Implementation
     auto88C88B75_ae = gv_alertUpgradeGapNumUpgrades;
     auto88C88B75_ai = 1;
     lv_i = 0;
-    while ((auto88C88B75_ai >= 0 && lv_i <= auto88C88B75_ae) || (auto88C88B75_ai <= 0 && lv_i >= auto88C88B75_ae)) {
+    for ( ; ( (auto88C88B75_ai >= 0 && lv_i <= auto88C88B75_ae) || (auto88C88B75_ai <= 0 && lv_i >= auto88C88B75_ae) ) ; lv_i += auto88C88B75_ai ) {
         TimerPause(gv_alertUpgradeGapTimers[lv_i], false);
         TimerPause(gv_alertUpgradeGapCooldownTimers[lv_i], false);
-        if (lv_i == auto88C88B75_ae) {
-            break;
-        }
-        lv_i = lv_i + auto88C88B75_ai;
     }
     autoA8434BF4_ae = gv_alertProductionIdleNumProductionTypes;
     autoA8434BF4_ai = 1;
     lv_i = 0;
-    while ((autoA8434BF4_ai >= 0 && lv_i <= autoA8434BF4_ae) || (autoA8434BF4_ai <= 0 && lv_i >= autoA8434BF4_ae)) {
+    for ( ; ( (autoA8434BF4_ai >= 0 && lv_i <= autoA8434BF4_ae) || (autoA8434BF4_ai <= 0 && lv_i >= autoA8434BF4_ae) ) ; lv_i += autoA8434BF4_ai ) {
         TimerPause(gv_alertProductionIdleBuildingTimers[lv_i], false);
         TimerPause(gv_alertProductionIdleCooldownTimers[lv_i], false);
-        if (lv_i == autoA8434BF4_ae) {
-            break;
-        }
-        lv_i = lv_i + autoA8434BF4_ai;
     }
 }
 
@@ -2074,33 +1867,23 @@ void gf_ResetAlertTimers () {
     int lv_j;
 
     // Variable Initialization
-    lv_i = 0;
-    lv_j = 0;
 
     // Implementation
     auto453C1E1D_ae = gv_alertUpgradeGapNumUpgrades;
     auto453C1E1D_ai = 1;
     lv_i = 0;
-    while ((auto453C1E1D_ai >= 0 && lv_i <= auto453C1E1D_ae) || (auto453C1E1D_ai <= 0 && lv_i >= auto453C1E1D_ae)) {
+    for ( ; ( (auto453C1E1D_ai >= 0 && lv_i <= auto453C1E1D_ae) || (auto453C1E1D_ai <= 0 && lv_i >= auto453C1E1D_ae) ) ; lv_i += auto453C1E1D_ai ) {
         gv_alertUpgradeGapTimers[lv_i] = null;
         gv_alertUpgradeGapCooldownTimers[lv_i] = null;
         gv_alertUpgradeGapUpgrades[lv_i] = null;
-        if (lv_i == auto453C1E1D_ae) {
-            break;
-        }
-        lv_i = lv_i + auto453C1E1D_ai;
     }
     auto5984B6EA_ae = gv_alertProductionIdleNumProductionTypes;
     auto5984B6EA_ai = 1;
     lv_j = 0;
-    while ((auto5984B6EA_ai >= 0 && lv_j <= auto5984B6EA_ae) || (auto5984B6EA_ai <= 0 && lv_j >= auto5984B6EA_ae)) {
+    for ( ; ( (auto5984B6EA_ai >= 0 && lv_j <= auto5984B6EA_ae) || (auto5984B6EA_ai <= 0 && lv_j >= auto5984B6EA_ae) ) ; lv_j += auto5984B6EA_ai ) {
         gv_alertProductionIdleBuildingTimers[lv_i] = null;
         gv_alertProductionIdleCooldownTimers[lv_i] = null;
         gv_alertProductionIdleUnitTypes[lv_i] = null;
-        if (lv_j == auto5984B6EA_ae) {
-            break;
-        }
-        lv_j = lv_j + auto5984B6EA_ai;
     }
 }
 
@@ -2127,19 +1910,14 @@ void gf_SelectAlertMenu () {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     auto2BD4AF57_ae = 1;
     auto2BD4AF57_ai = 1;
     lv_i = 0;
-    while ((auto2BD4AF57_ai >= 0 && lv_i <= auto2BD4AF57_ae) || (auto2BD4AF57_ai <= 0 && lv_i >= auto2BD4AF57_ae)) {
+    for ( ; ( (auto2BD4AF57_ai >= 0 && lv_i <= auto2BD4AF57_ae) || (auto2BD4AF57_ai <= 0 && lv_i >= auto2BD4AF57_ae) ) ; lv_i += auto2BD4AF57_ai ) {
         libNtve_gf_SetDialogItemToggled(gv_benchmarksMenuButton[lv_i], false, PlayerGroupAll());
         libNtve_gf_SetDialogItemToggled(gv_alertMenuButton[lv_i], true, PlayerGroupAll());
-        if (lv_i == auto2BD4AF57_ae) {
-            break;
-        }
-        lv_i = lv_i + auto2BD4AF57_ai;
     }
     DialogSetVisible(gv_benchmarkDialog, PlayerGroupAll(), false);
     DialogSetVisible(gv_alertMenuDialog, PlayerGroupAll(), true);
@@ -2153,19 +1931,14 @@ void gf_SelectBenchmarkMenu () {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     auto1FD49190_ae = 1;
     auto1FD49190_ai = 1;
     lv_i = 0;
-    while ((auto1FD49190_ai >= 0 && lv_i <= auto1FD49190_ae) || (auto1FD49190_ai <= 0 && lv_i >= auto1FD49190_ae)) {
+    for ( ; ( (auto1FD49190_ai >= 0 && lv_i <= auto1FD49190_ae) || (auto1FD49190_ai <= 0 && lv_i >= auto1FD49190_ae) ) ; lv_i += auto1FD49190_ai ) {
         libNtve_gf_SetDialogItemToggled(gv_alertMenuButton[lv_i], false, PlayerGroupAll());
         libNtve_gf_SetDialogItemToggled(gv_benchmarksMenuButton[lv_i], true, PlayerGroupAll());
-        if (lv_i == auto1FD49190_ae) {
-            break;
-        }
-        lv_i = lv_i + auto1FD49190_ai;
     }
     DialogSetVisible(gv_alertMenuDialog, PlayerGroupAll(), false);
     DialogSetVisible(gv_benchmarkDialog, PlayerGroupAll(), true);
@@ -2268,23 +2041,18 @@ void gf_EnableDisableAlertRow (bool lp_checked, int lp_rowNum, int lp_numRowItem
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     auto6C54BDE2_ae = lp_numRowItems;
     auto6C54BDE2_ai = 1;
     lv_i = 1;
-    while ((auto6C54BDE2_ai >= 0 && lv_i <= auto6C54BDE2_ae) || (auto6C54BDE2_ai <= 0 && lv_i >= auto6C54BDE2_ae)) {
+    for ( ; ( (auto6C54BDE2_ai >= 0 && lv_i <= auto6C54BDE2_ae) || (auto6C54BDE2_ai <= 0 && lv_i >= auto6C54BDE2_ae) ) ; lv_i += auto6C54BDE2_ai ) {
         if ((lp_checked == true)) {
             DialogControlSetEnabled(gv_alertMenuDialogItemGrid[lp_rowNum][lv_i], PlayerGroupAll(), true);
         }
         else {
             DialogControlSetEnabled(gv_alertMenuDialogItemGrid[lp_rowNum][lv_i], PlayerGroupAll(), false);
         }
-        if (lv_i == auto6C54BDE2_ae) {
-            break;
-        }
-        lv_i = lv_i + auto6C54BDE2_ai;
     }
 }
 
@@ -2294,7 +2062,6 @@ void gf_CreatePostBuildReportDialog () {
     int lv_labelHeightOffset;
 
     // Variable Initialization
-    lv_rowNum = 0;
     lv_labelHeightOffset = (gv_menuPadding+gv_benchmarkDialogTitleSpacer);
 
     // Implementation
@@ -2399,7 +2166,6 @@ void gf_UpdatePostBuildSupplyRowValueInt (int lp_value, string lp_benchmarkEntry
     int lv_benchmarkValue;
 
     // Variable Initialization
-    lv_benchmarkValue = 0;
 
     // Implementation
     TextExpressionSetToken("Param/Expression/B465A6FA", "A", IntToText(lp_value));
@@ -2415,7 +2181,6 @@ void gf_UpdatePostBuildSupplyRowValueReal (fixed lp_value, string lp_benchmarkEn
     fixed lv_benchmarkValue;
 
     // Variable Initialization
-    lv_benchmarkValue = 0.0;
 
     // Implementation
     TextExpressionSetToken("Param/Expression/58FC52E5", "A", FixedToText(lp_value, 2));
@@ -2434,18 +2199,13 @@ void gf_ResetBuildOrderListBox () {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     autoA02A982D_ae = (gv_currentBuildOrderStepCursor+1);
     autoA02A982D_ai = 1;
     lv_i = 1;
-    while ((autoA02A982D_ai >= 0 && lv_i <= autoA02A982D_ae) || (autoA02A982D_ai <= 0 && lv_i >= autoA02A982D_ae)) {
+    for ( ; ( (autoA02A982D_ai >= 0 && lv_i <= autoA02A982D_ae) || (autoA02A982D_ai <= 0 && lv_i >= autoA02A982D_ae) ) ; lv_i += autoA02A982D_ai ) {
         DialogControlRemoveItem(gv_postBuildReportBuildOrderListBox, PlayerGroupAll(), lv_i);
-        if (lv_i == autoA02A982D_ae) {
-            break;
-        }
-        lv_i = lv_i + autoA02A982D_ai;
     }
 }
 
@@ -2457,19 +2217,14 @@ void gf_UpdateBuildStepsListBox () {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     gf_ResetBuildOrderListBox();
     autoF990DA09_ae = (gv_currentBuildOrderStepCursor-1);
     autoF990DA09_ai = 1;
     lv_i = 0;
-    while ((autoF990DA09_ai >= 0 && lv_i <= autoF990DA09_ae) || (autoF990DA09_ai <= 0 && lv_i >= autoF990DA09_ae)) {
+    for ( ; ( (autoF990DA09_ai >= 0 && lv_i <= autoF990DA09_ae) || (autoF990DA09_ai <= 0 && lv_i >= autoF990DA09_ae) ) ; lv_i += autoF990DA09_ai ) {
         DialogControlAddItem(gv_postBuildReportBuildOrderListBox, PlayerGroupAll(), gf_GetCurrentBuildOrderStepText(lv_i));
-        if (lv_i == autoF990DA09_ae) {
-            break;
-        }
-        lv_i = lv_i + autoF990DA09_ai;
     }
 }
 
@@ -2497,8 +2252,6 @@ void gf_CreateHelpInfoRow (text lp_commandText, text lp_hotkeyText, text lp_desc
     int lv_rowYOffset;
 
     // Variable Initialization
-    lv_rowXOffset = 0;
-    lv_rowYOffset = 0;
 
     // Implementation
     lv_rowXOffset = (gv_menuPadding+gv_menuOptionIndent);
@@ -2638,6 +2391,34 @@ void gf_CreateBenchmarkMenuDialog () {
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_secondsLabelWidth, gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent+gv_endBuildLabelWidth+gv_endBuildPulldownWidth+gv__2DigitEditBoxWidth+gv_minutesLabelWidth+gv__2DigitEditBoxWidth), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionLabelHeight+gv_matchupButtonHeight+gv_labelAlignmentSpacer+5*gv_supplyValueLabelHeight+gv_sectionLabelHeight), StringExternal("Param/Value/3513F291"), ColorWithAlpha(0,0,0,0), false, 2.0);
     gv_endBuildSecondsLabel = DialogControlLastCreated();
     DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), false);
+    DialogControlCreate(DialogLastCreated(), c_triggerControlTypeCheckBox);
+    gv_practiceAgainstSavedBuildOrderCheckbox = DialogControlLastCreated();
+    DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv_checkboxWidth, gv_menuItemHeight);
+    libNtve_gf_SetDialogItemChecked(DialogControlLastCreated(), true, PlayerGroupAll());
+    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionLabelHeight+gv_matchupButtonHeight+6*gv_benchmarkEditBoxHeight+gv_sectionLabelHeight));
+    if ((gf_DoesSavedBuildOrderExistForCurrentMatchup() == true)) {
+        DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), true);
+    }
+    else {
+        DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), false);
+    }
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_practiceAgainstSavedBuildOrderLabelWidth, gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent+gv_checkboxWidth), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionLabelHeight+gv_matchupButtonHeight+gv_labelAlignmentSpacer+6*gv_supplyValueLabelHeight+gv_sectionLabelHeight), StringExternal("Param/Value/C981768C"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_practiceAgainstSavedBuildOrderLabel = DialogControlLastCreated();
+    if ((gf_DoesSavedBuildOrderExistForCurrentMatchup() == true)) {
+        DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), true);
+    }
+    else {
+        DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), false);
+    }
+    DialogControlCreate(DialogLastCreated(), c_triggerControlTypeCheckBox);
+    gv_displayBuildOrderHintsCheckbox = DialogControlLastCreated();
+    DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv_checkboxWidth, gv_menuItemHeight);
+    libNtve_gf_SetDialogItemChecked(DialogControlLastCreated(), true, PlayerGroupAll());
+    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionLabelHeight+gv_matchupButtonHeight+7*gv_benchmarkEditBoxHeight+gv_sectionLabelHeight));
+    DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), false);
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_displayBuildOrderHintsLabelWidth, gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent+gv_checkboxWidth), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionLabelHeight+gv_matchupButtonHeight+gv_labelAlignmentSpacer+7*gv_supplyValueLabelHeight+gv_sectionLabelHeight), StringExternal("Param/Value/1BB4532B"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_displayBuildOrderHintsLabel = DialogControlLastCreated();
+    DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), false);
     libNtve_gf_CreateDialogItemButton(gv_benchmarkDialog, gv_startButtonWidth, gv_startButtonHeight, c_anchorBottom, 0, gv_menuPadding, StringExternal("Param/Value/84760B8B"), StringExternal("Param/Value/49A63E54"), "");
     gv_startButton[0] = DialogControlLastCreated();
 }
@@ -2676,9 +2457,8 @@ void gf_OpenMainMenu () {
     DialogSetVisible(gv_benchmarkDialog, PlayerGroupAll(), true);
     Wait(0.25, c_timeGame);
     UnitGroupLoopBegin(UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterAlly) | (1 << c_targetFilterNeutral) | (1 << c_targetFilterEnemy), 0), 0));
-    while (!UnitGroupLoopDone()) {
+    for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
         UnitRemove(UnitGroupLoopCurrent());
-        UnitGroupLoopStep();
     }
     UnitGroupLoopEnd();
     TimerRestart(gv_buildTimer);
@@ -2749,21 +2529,16 @@ void gf_SaveBenchmarkBuildOrder () {
     int lv_currentStepNum;
 
     // Variable Initialization
-    lv_currentStepNum = 0;
 
     // Implementation
     auto895F190E_ae = (gv_currentBuildOrderStepCursor-1);
     auto895F190E_ai = 1;
     lv_currentStepNum = 0;
-    while ((auto895F190E_ai >= 0 && lv_currentStepNum <= auto895F190E_ae) || (auto895F190E_ai <= 0 && lv_currentStepNum >= auto895F190E_ae)) {
+    for ( ; ( (auto895F190E_ai >= 0 && lv_currentStepNum <= auto895F190E_ae) || (auto895F190E_ai <= 0 && lv_currentStepNum >= auto895F190E_ae) ) ; lv_currentStepNum += auto895F190E_ai ) {
         BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_unitTypeBuildOrderStepEntryKey), (gv_currentBuildOrderSteps[lv_currentStepNum].lv_unitType));
         BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_supplyCountBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lv_currentStepNum].lv_supplyCount);
         BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_numUnitsBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lv_currentStepNum].lv_numUnits);
         BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_elapsedSecondsBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lv_currentStepNum].lv_elapsedSeconds);
-        if (lv_currentStepNum == auto895F190E_ae) {
-            break;
-        }
-        lv_currentStepNum = lv_currentStepNum + auto895F190E_ai;
     }
     BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey, gv_currentBuildOrderStepCursor);
     BankSave(gv_benchmarkerBank);
@@ -2778,8 +2553,6 @@ void gf_LoadBenchmarkBuildOrder () {
     int lv_currentStepNum;
 
     // Variable Initialization
-    lv_entryKeyPrefix = 0;
-    lv_currentStepNum = 0;
 
     // Implementation
     gv_totalNumBenchmarkBuildOrderSteps = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey);
@@ -2787,15 +2560,11 @@ void gf_LoadBenchmarkBuildOrder () {
         auto8F962F3E_ae = (gv_totalNumBenchmarkBuildOrderSteps-1);
         auto8F962F3E_ai = 1;
         lv_currentStepNum = 0;
-        while ((auto8F962F3E_ai >= 0 && lv_currentStepNum <= auto8F962F3E_ae) || (auto8F962F3E_ai <= 0 && lv_currentStepNum >= auto8F962F3E_ae)) {
+        for ( ; ( (auto8F962F3E_ai >= 0 && lv_currentStepNum <= auto8F962F3E_ae) || (auto8F962F3E_ai <= 0 && lv_currentStepNum >= auto8F962F3E_ae) ) ; lv_currentStepNum += auto8F962F3E_ai ) {
             gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_unitType = (BankValueGetAsString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_unitTypeBuildOrderStepEntryKey)));
             gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_supplyCount = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_supplyCountBuildOrderStepEntryKey));
             gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_numUnits = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_numUnitsBuildOrderStepEntryKey));
             gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_elapsedSeconds = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_elapsedSecondsBuildOrderStepEntryKey));
-            if (lv_currentStepNum == auto8F962F3E_ae) {
-                break;
-            }
-            lv_currentStepNum = lv_currentStepNum + auto8F962F3E_ai;
         }
     }
     else {
@@ -2815,19 +2584,14 @@ void gf_SaveMatchupBenchmarks (string lp_sectionKey) {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     autoA7CD85DF_ae = 2;
     autoA7CD85DF_ai = 1;
     lv_i = 0;
-    while ((autoA7CD85DF_ai >= 0 && lv_i <= autoA7CD85DF_ae) || (autoA7CD85DF_ai <= 0 && lv_i >= autoA7CD85DF_ae)) {
+    for ( ; ( (autoA7CD85DF_ai >= 0 && lv_i <= autoA7CD85DF_ae) || (autoA7CD85DF_ai <= 0 && lv_i >= autoA7CD85DF_ae) ) ; lv_i += autoA7CD85DF_ai ) {
         gv_benchmarkSupplyValues[lv_i] = gf_GetEditBoxIntValue(gv_benchmarkSupplyEditBoxes[lv_i]);
         BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkSupplyEntryKeys[lv_i], gv_benchmarkSupplyValues[lv_i]);
-        if (lv_i == autoA7CD85DF_ae) {
-            break;
-        }
-        lv_i = lv_i + autoA7CD85DF_ai;
     }
     gv_benchmarkMaxTimeTotalSeconds = ((gf_GetEditBoxIntValue(gv_maxTimeMinutesEditBox)*60)+gf_GetEditBoxIntValue(gv_maxTimeSecondsEditBox));
     BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkMaxTimeMinutesKey, gf_GetEditBoxIntValue(gv_maxTimeMinutesEditBox));
@@ -2849,18 +2613,13 @@ void gf_LoadMatchupBenchmarks (string lp_sectionKey) {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     autoB80F7580_ae = 2;
     autoB80F7580_ai = 1;
     lv_i = 0;
-    while ((autoB80F7580_ai >= 0 && lv_i <= autoB80F7580_ae) || (autoB80F7580_ai <= 0 && lv_i >= autoB80F7580_ae)) {
+    for ( ; ( (autoB80F7580_ai >= 0 && lv_i <= autoB80F7580_ae) || (autoB80F7580_ai <= 0 && lv_i >= autoB80F7580_ae) ) ; lv_i += autoB80F7580_ai ) {
         gf_LoadIntFromBankIfKeyisSetElseDefault(gv_benchmarkSupplyEditBoxes[lv_i], gv_benchmarkSupplyEntryKeys[lv_i], lp_sectionKey, gv_benchmarkSupplyDefaults[lv_i]);
-        if (lv_i == autoB80F7580_ae) {
-            break;
-        }
-        lv_i = lv_i + autoB80F7580_ai;
     }
     gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeMinutesEditBox, gv_benchmarkMaxTimeMinutesKey, lp_sectionKey, gv_benchmarkMaxTimeMinutes);
     gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeSecondsEditBox, gv_benchmarkMaxTimeSecondsKey, lp_sectionKey, gv_benchmarkMaxTimeSeconds);
@@ -2879,7 +2638,6 @@ void gf_SaveAlertConfigurations () {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     BankValueSetFromFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertMineralsCheckEnabledEntryKey, gv_alertMineralsCheckEnabled);
@@ -2947,7 +2705,6 @@ void gf_LoadAlertRowConfiguration (string lp_alertEnabledKey, string lp_alertThr
 
     // Variable Initialization
     lv_checkEnabled = true;
-    lv_threshold = 0;
 
     // Implementation
     if ((BankKeyExists(gv_benchmarkerBank, gv_alertConfigurationSectionKey, lp_alertEnabledKey) == true)) {
@@ -2987,7 +2744,6 @@ void gf_CompleteBenchmarkBuildOrderObjectiveStep (int lp_benchmarkBuildOrderInde
     text lv_objectiveText;
 
     // Variable Initialization
-    lv_objectiveText = null;
 
     // Implementation
     TextExpressionSetToken("Param/Expression/83361AD6", "A", IntToText(lp_benchmarkBuildOrderIndex));
@@ -3019,23 +2775,18 @@ void gf_CreateBenchmarkBuildOrderObjectives () {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     auto98326FC4_ae = 9;
     auto98326FC4_ai = 1;
     lv_i = 0;
-    while ((auto98326FC4_ai >= 0 && lv_i <= auto98326FC4_ae) || (auto98326FC4_ai <= 0 && lv_i >= auto98326FC4_ae)) {
+    for ( ; ( (auto98326FC4_ai >= 0 && lv_i <= auto98326FC4_ae) || (auto98326FC4_ai <= 0 && lv_i >= auto98326FC4_ae) ) ; lv_i += auto98326FC4_ai ) {
         if ((lv_i < gv_totalNumBenchmarkBuildOrderSteps)) {
             gf_CreateBenchmarkBuildOrderStepObjective(lv_i);
             gv_benchmarkBuildOrderStepObjectives[lv_i] = ObjectiveLastCreated();
         }
         else {
         }
-        if (lv_i == auto98326FC4_ae) {
-            break;
-        }
-        lv_i = lv_i + auto98326FC4_ai;
     }
 }
 
@@ -3044,7 +2795,6 @@ void gf_CreateBenchmarkBuildOrderStepObjective (int lp_buildStep) {
     text lv_stepObjectiveText;
 
     // Variable Initialization
-    lv_stepObjectiveText = null;
 
     // Implementation
     lv_stepObjectiveText = gf_GetBenchmarkBuildOrderStepText(lp_buildStep);
@@ -3059,18 +2809,13 @@ void gf_ResetBenchmarkBuildOrderObjectives () {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     auto8EFD539D_ae = 9;
     auto8EFD539D_ai = 1;
     lv_i = 0;
-    while ((auto8EFD539D_ai >= 0 && lv_i <= auto8EFD539D_ae) || (auto8EFD539D_ai <= 0 && lv_i >= auto8EFD539D_ae)) {
+    for ( ; ( (auto8EFD539D_ai >= 0 && lv_i <= auto8EFD539D_ae) || (auto8EFD539D_ai <= 0 && lv_i >= auto8EFD539D_ae) ) ; lv_i += auto8EFD539D_ai ) {
         ObjectiveDestroy(gv_benchmarkBuildOrderStepObjectives[lv_i]);
-        if (lv_i == auto8EFD539D_ae) {
-            break;
-        }
-        lv_i = lv_i + auto8EFD539D_ai;
     }
 }
 
@@ -3082,19 +2827,14 @@ void gf_CreateHiddenBenchmarkSupplyObjectives () {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     auto672AD999_ae = 2;
     auto672AD999_ai = 1;
     lv_i = 0;
-    while ((auto672AD999_ai >= 0 && lv_i <= auto672AD999_ae) || (auto672AD999_ai <= 0 && lv_i >= auto672AD999_ae)) {
+    for ( ; ( (auto672AD999_ai >= 0 && lv_i <= auto672AD999_ae) || (auto672AD999_ai <= 0 && lv_i >= auto672AD999_ae) ) ; lv_i += auto672AD999_ai ) {
         ObjectiveCreate(StringExternal("Param/Value/7196AAC4"), StringExternal("Param/Value/D6D94F6E"), c_objectiveStateHidden, true);
         gv_benchmarkSupplyObjectives[lv_i] = ObjectiveLastCreated();
-        if (lv_i == auto672AD999_ae) {
-            break;
-        }
-        lv_i = lv_i + auto672AD999_ai;
     }
     ObjectiveCreate(StringExternal("Param/Value/A11C3A0B"), StringExternal("Param/Value/BC9BE74F"), c_objectiveStateHidden, true);
     gv_benchmarkMaxTimeObjective = ObjectiveLastCreated();
@@ -3108,18 +2848,13 @@ void gf_HideBenchmarkSupplyObjectives () {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     autoA3763877_ae = 2;
     autoA3763877_ai = 1;
     lv_i = 0;
-    while ((autoA3763877_ai >= 0 && lv_i <= autoA3763877_ae) || (autoA3763877_ai <= 0 && lv_i >= autoA3763877_ae)) {
+    for ( ; ( (autoA3763877_ai >= 0 && lv_i <= autoA3763877_ae) || (autoA3763877_ai <= 0 && lv_i >= autoA3763877_ae) ) ; lv_i += autoA3763877_ai ) {
         ObjectiveShow(gv_benchmarkSupplyObjectives[lv_i], PlayerGroupAll(), false);
-        if (lv_i == autoA3763877_ae) {
-            break;
-        }
-        lv_i = lv_i + autoA3763877_ai;
     }
     ObjectiveShow(gv_benchmarkMaxTimeObjective, PlayerGroupAll(), false);
 }
@@ -3132,18 +2867,13 @@ void gf_ShowBenchmarkSupplyObjectives () {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     auto0FC1EE86_ae = 2;
     auto0FC1EE86_ai = 1;
     lv_i = 0;
-    while ((auto0FC1EE86_ai >= 0 && lv_i <= auto0FC1EE86_ae) || (auto0FC1EE86_ai <= 0 && lv_i >= auto0FC1EE86_ae)) {
+    for ( ; ( (auto0FC1EE86_ai >= 0 && lv_i <= auto0FC1EE86_ae) || (auto0FC1EE86_ai <= 0 && lv_i >= auto0FC1EE86_ae) ) ; lv_i += auto0FC1EE86_ai ) {
         ObjectiveShow(gv_benchmarkSupplyObjectives[lv_i], PlayerGroupAll(), true);
-        if (lv_i == auto0FC1EE86_ae) {
-            break;
-        }
-        lv_i = lv_i + auto0FC1EE86_ai;
     }
     ObjectiveShow(gv_benchmarkMaxTimeObjective, PlayerGroupAll(), true);
 }
@@ -3156,22 +2886,17 @@ void gf_ResetBenchmarkSupplyObjectives () {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Implementation
     auto197B812D_ae = 2;
     auto197B812D_ai = 1;
     lv_i = 0;
-    while ((auto197B812D_ai >= 0 && lv_i <= auto197B812D_ae) || (auto197B812D_ai <= 0 && lv_i >= auto197B812D_ae)) {
+    for ( ; ( (auto197B812D_ai >= 0 && lv_i <= auto197B812D_ae) || (auto197B812D_ai <= 0 && lv_i >= auto197B812D_ae) ) ; lv_i += auto197B812D_ai ) {
         ObjectiveSetState(gv_benchmarkSupplyObjectives[lv_i], c_objectiveStateActive);
         TextExpressionSetToken("Param/Expression/0ED07185", "C", TextWithColor(IntToText(gv_benchmarkSupplyValues[lv_i]), gv_objectiveSupplyColor));
         TextExpressionSetToken("Param/Expression/0ED07185", "B", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkTimerDurations[lv_i]));
         ObjectiveSetName(gv_benchmarkSupplyObjectives[lv_i], TextExpressionAssemble("Param/Expression/0ED07185"));
         Wait(0.25, c_timeGame);
-        if (lv_i == auto197B812D_ae) {
-            break;
-        }
-        lv_i = lv_i + auto197B812D_ai;
     }
     ObjectiveSetState(gv_benchmarkMaxTimeObjective, c_objectiveStateActive);
     TextExpressionSetToken("Param/Expression/B6B33C58", "B", TextWithColor(TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkMaxTimeTotalSeconds), gv_objectiveSupplyColor));
@@ -3195,7 +2920,6 @@ void gf_Debug () {
     // Variable Initialization
     lv_currentNextUpgrade = "ZergMeleeWeaponsLevel1";
     lv_currentNextUpgradeName = "";
-    lv_currentNextUpgradeNameText = null;
     lv_currentNextUpgradeNameFormatted = "";
 
     // Implementation
@@ -3277,7 +3001,6 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Actions
     if (!runActions) {
@@ -3335,9 +3058,8 @@ bool gt_EndGame_Func (bool testConds, bool runActions) {
     }
 
     UnitGroupLoopBegin(UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterAlly) | (1 << c_targetFilterNeutral) | (1 << c_targetFilterEnemy) | (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0));
-    while (!UnitGroupLoopDone()) {
+    for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
         UnitKill(UnitGroupLoopCurrent());
-        UnitGroupLoopStep();
     }
     UnitGroupLoopEnd();
     GameOver(1, c_gameOverVictory, true, true);
@@ -3371,15 +3093,13 @@ bool gt_StartBuild_Func (bool testConds, bool runActions) {
     DialogSetVisible(gv_alertMenuDialog, PlayerGroupAll(), false);
     gf_ResetMapResources();
     UnitGroupLoopBegin(UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterAlly) | (1 << c_targetFilterNeutral), 0), 0));
-    while (!UnitGroupLoopDone()) {
+    for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
         UnitRemove(UnitGroupLoopCurrent());
-        UnitGroupLoopStep();
     }
     UnitGroupLoopEnd();
     UnitGroupLoopBegin(UnitGroup(null, 2, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterAlly) | (1 << c_targetFilterNeutral), 0), 0));
-    while (!UnitGroupLoopDone()) {
+    for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
         UnitRemove(UnitGroupLoopCurrent());
-        UnitGroupLoopStep();
     }
     UnitGroupLoopEnd();
     MeleeInitResources();
@@ -3431,15 +3151,13 @@ bool gt_ResetBuild_Func (bool testConds, bool runActions) {
     CinematicFade(false, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
     Wait(0.5, c_timeGame);
     UnitGroupLoopBegin(UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterAlly) | (1 << c_targetFilterNeutral) | (1 << c_targetFilterEnemy), 0), 0));
-    while (!UnitGroupLoopDone()) {
+    for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
         UnitRemove(UnitGroupLoopCurrent());
-        UnitGroupLoopStep();
     }
     UnitGroupLoopEnd();
     UnitGroupLoopBegin(UnitGroup(null, 2, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterAlly) | (1 << c_targetFilterNeutral) | (1 << c_targetFilterEnemy), 0), 0));
-    while (!UnitGroupLoopDone()) {
+    for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
         UnitRemove(UnitGroupLoopCurrent());
-        UnitGroupLoopStep();
     }
     UnitGroupLoopEnd();
     MeleeInitUnits();
@@ -3870,7 +3588,6 @@ bool gt_RaceMacroEnergyAboveThreshold_Func (bool testConds, bool runActions) {
     unit lv_currentunit;
 
     // Variable Initialization
-    lv_currentunit = null;
 
     // Conditions
     if (testConds) {
@@ -3887,7 +3604,7 @@ bool gt_RaceMacroEnergyAboveThreshold_Func (bool testConds, bool runActions) {
     TimerStart(gv_alertMacroEnergyCooldownTimer, gv_alertCooldownSeconds, false, c_timeGame);
     autoF5F9D5CD_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, (1 << (c_targetFilterHasEnergy - 32)), (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0);
     autoF5F9D5CD_u = 1;
-    while (autoF5F9D5CD_u <= UnitGroupCount(autoF5F9D5CD_g, c_unitCountAll)) {
+    for ( ; autoF5F9D5CD_u <= UnitGroupCount(autoF5F9D5CD_g, c_unitCountAll) ; autoF5F9D5CD_u += BoolToInt(lv_currentunit == UnitGroupUnit(autoF5F9D5CD_g, autoF5F9D5CD_u)) ) {
         lv_currentunit = UnitGroupUnit(autoF5F9D5CD_g, autoF5F9D5CD_u);
         if (((UnitGetPropertyFixed(lv_currentunit, c_unitPropEnergy, c_unitPropCurrent) > gv_alertSelectedMacroEnergyThreshold) && ((UnitGetType(lv_currentunit) == "Queen") || (UnitGetType(lv_currentunit) == "QueenBurrowed") || (UnitGetType(lv_currentunit) == "OrbitalCommand") || (UnitGetType(lv_currentunit) == "OrbitalCommandFlying") || (UnitGetType(lv_currentunit) == "Nexus")))) {
             autoB329AA1E_val = PlayerRace(1);
@@ -3910,9 +3627,6 @@ bool gt_RaceMacroEnergyAboveThreshold_Func (bool testConds, bool runActions) {
             SoundPlay(SoundLink("UI_Bnet_PopUp_Generic", -1), PlayerGroupAll(), 100.0, 0.0);
         }
         else {
-        }
-        if (lv_currentunit == UnitGroupUnit(autoF5F9D5CD_g, autoF5F9D5CD_u)) {
-            autoF5F9D5CD_u = autoF5F9D5CD_u + 1;
         }
     }
     return true;
@@ -3974,10 +3688,8 @@ bool gt_UpgradeGapAboveThresholdTimerExpires_Func (bool testConds, bool runActio
     int lv_i;
 
     // Variable Initialization
-    lv_currentNextUpgrade = null;
     lv_currentNextUpgradeName = "";
     lv_currentNextUpgradeNameFormatted = "";
-    lv_i = 0;
 
     // Conditions
     if (testConds) {
@@ -3994,7 +3706,7 @@ bool gt_UpgradeGapAboveThresholdTimerExpires_Func (bool testConds, bool runActio
     auto4B6990F6_ae = gv_alertUpgradeGapNumUpgrades;
     auto4B6990F6_ai = 1;
     lv_i = 0;
-    while ((auto4B6990F6_ai >= 0 && lv_i <= auto4B6990F6_ae) || (auto4B6990F6_ai <= 0 && lv_i >= auto4B6990F6_ae)) {
+    for ( ; ( (auto4B6990F6_ai >= 0 && lv_i <= auto4B6990F6_ae) || (auto4B6990F6_ai <= 0 && lv_i >= auto4B6990F6_ae) ) ; lv_i += auto4B6990F6_ai ) {
         if (((EventTimer() == gv_alertUpgradeGapTimers[lv_i]) || (EventTimer() == gv_alertUpgradeGapCooldownTimers[lv_i]))) {
             lv_currentNextUpgrade = gf_GetNextUpgrade(gv_alertUpgradeGapUpgrades[lv_i]);
             lv_currentNextUpgradeName = CatalogFieldValueGet(c_gameCatalogUpgrade, lv_currentNextUpgrade, "Name", c_playerAny);
@@ -4008,10 +3720,6 @@ bool gt_UpgradeGapAboveThresholdTimerExpires_Func (bool testConds, bool runActio
         }
         else {
         }
-        if (lv_i == auto4B6990F6_ae) {
-            break;
-        }
-        lv_i = lv_i + auto4B6990F6_ai;
     }
     return true;
 }
@@ -4033,7 +3741,6 @@ bool gt_UpgradeGapAboveThresholdNewUpgradeStarts_Func (bool testConds, bool runA
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Conditions
     if (testConds) {
@@ -4050,7 +3757,7 @@ bool gt_UpgradeGapAboveThresholdNewUpgradeStarts_Func (bool testConds, bool runA
     auto54EAB7A2_ae = gv_alertUpgradeGapNumUpgrades;
     auto54EAB7A2_ai = 1;
     lv_i = 0;
-    while ((auto54EAB7A2_ai >= 0 && lv_i <= auto54EAB7A2_ae) || (auto54EAB7A2_ai <= 0 && lv_i >= auto54EAB7A2_ae)) {
+    for ( ; ( (auto54EAB7A2_ai >= 0 && lv_i <= auto54EAB7A2_ae) || (auto54EAB7A2_ai <= 0 && lv_i >= auto54EAB7A2_ae) ) ; lv_i += auto54EAB7A2_ai ) {
         if ((libNtve_gf_TriggeringProgressUpgrade() == gf_GetNextUpgrade(gv_alertUpgradeGapUpgrades[lv_i]))) {
             TimerRestart(gv_alertUpgradeGapTimers[lv_i]);
             TimerPause(gv_alertUpgradeGapTimers[lv_i], true);
@@ -4059,10 +3766,6 @@ bool gt_UpgradeGapAboveThresholdNewUpgradeStarts_Func (bool testConds, bool runA
         }
         else {
         }
-        if (lv_i == auto54EAB7A2_ae) {
-            break;
-        }
-        lv_i = lv_i + auto54EAB7A2_ai;
     }
     return true;
 }
@@ -4088,9 +3791,7 @@ bool gt_ProductionIdleAboveThresholdStartTimer_Func (bool testConds, bool runAct
     int lv_i;
 
     // Variable Initialization
-    lv_productionUnitTypeExists = false;
     lv_tempTimer = TimerCreate();
-    lv_i = 0;
 
     // Conditions
     if (testConds) {
@@ -4108,16 +3809,12 @@ bool gt_ProductionIdleAboveThresholdStartTimer_Func (bool testConds, bool runAct
         auto4C73585D_ae = gv_alertProductionIdleNumProductionTypes;
         auto4C73585D_ai = 1;
         lv_i = 0;
-        while ((auto4C73585D_ai >= 0 && lv_i <= auto4C73585D_ae) || (auto4C73585D_ai <= 0 && lv_i >= auto4C73585D_ae)) {
+        for ( ; ( (auto4C73585D_ai >= 0 && lv_i <= auto4C73585D_ae) || (auto4C73585D_ai <= 0 && lv_i >= auto4C73585D_ae) ) ; lv_i += auto4C73585D_ai ) {
             if ((UnitGetType(EventUnit()) == gv_alertProductionIdleUnitTypes[lv_i])) {
                 lv_productionUnitTypeExists = true;
             }
             else {
             }
-            if (lv_i == auto4C73585D_ae) {
-                break;
-            }
-            lv_i = lv_i + auto4C73585D_ai;
         }
     }
     else {
@@ -4134,16 +3831,12 @@ bool gt_ProductionIdleAboveThresholdStartTimer_Func (bool testConds, bool runAct
         auto6B257B32_ae = gv_alertProductionIdleNumProductionTypes;
         auto6B257B32_ai = 1;
         lv_i = 0;
-        while ((auto6B257B32_ai >= 0 && lv_i <= auto6B257B32_ae) || (auto6B257B32_ai <= 0 && lv_i >= auto6B257B32_ae)) {
+        for ( ; ( (auto6B257B32_ai >= 0 && lv_i <= auto6B257B32_ae) || (auto6B257B32_ai <= 0 && lv_i >= auto6B257B32_ae) ) ; lv_i += auto6B257B32_ai ) {
             if ((UnitGetType(EventUnit()) == gv_alertProductionIdleUnitTypes[lv_i])) {
                 TimerStart(gv_alertProductionIdleBuildingTimers[lv_i], gv_alertProductionIdleThreshold, false, c_timeGame);
             }
             else {
             }
-            if (lv_i == auto6B257B32_ae) {
-                break;
-            }
-            lv_i = lv_i + auto6B257B32_ai;
         }
     }
     return true;
@@ -4184,8 +3877,6 @@ bool gt_ProductionIdleAboveThresholdTimerExpires_Func (bool testConds, bool runA
     int lv_i;
 
     // Variable Initialization
-    lv_currentUnitType = null;
-    lv_i = 0;
 
     // Conditions
     if (testConds) {
@@ -4202,7 +3893,7 @@ bool gt_ProductionIdleAboveThresholdTimerExpires_Func (bool testConds, bool runA
     auto505100F0_ae = gv_alertProductionIdleNumProductionTypes;
     auto505100F0_ai = 1;
     lv_i = 0;
-    while ((auto505100F0_ai >= 0 && lv_i <= auto505100F0_ae) || (auto505100F0_ai <= 0 && lv_i >= auto505100F0_ae)) {
+    for ( ; ( (auto505100F0_ai >= 0 && lv_i <= auto505100F0_ae) || (auto505100F0_ai <= 0 && lv_i >= auto505100F0_ae) ) ; lv_i += auto505100F0_ai ) {
         if (((EventTimer() == gv_alertProductionIdleBuildingTimers[lv_i]) || (EventTimer() == gv_alertProductionIdleCooldownTimers[lv_i]))) {
             lv_currentUnitType = gv_alertProductionIdleUnitTypes[lv_i];
             TextExpressionSetToken("Param/Expression/FFDFB39E", "A", UnitTypeGetName(lv_currentUnitType));
@@ -4216,10 +3907,6 @@ bool gt_ProductionIdleAboveThresholdTimerExpires_Func (bool testConds, bool runA
         }
         else {
         }
-        if (lv_i == auto505100F0_ae) {
-            break;
-        }
-        lv_i = lv_i + auto505100F0_ai;
     }
     return true;
 }
@@ -4242,8 +3929,6 @@ bool gt_ProductionIdleAboveThresholdNewProductionStarts_Func (bool testConds, bo
     int lv_i;
 
     // Variable Initialization
-    lv_triggeringUnitType = null;
-    lv_i = 0;
 
     // Conditions
     if (testConds) {
@@ -4266,7 +3951,7 @@ bool gt_ProductionIdleAboveThresholdNewProductionStarts_Func (bool testConds, bo
     autoE0E17448_ae = gv_alertProductionIdleNumProductionTypes;
     autoE0E17448_ai = 1;
     lv_i = 0;
-    while ((autoE0E17448_ai >= 0 && lv_i <= autoE0E17448_ae) || (autoE0E17448_ai <= 0 && lv_i >= autoE0E17448_ae)) {
+    for ( ; ( (autoE0E17448_ai >= 0 && lv_i <= autoE0E17448_ae) || (autoE0E17448_ai <= 0 && lv_i >= autoE0E17448_ae) ) ; lv_i += autoE0E17448_ai ) {
         if ((lv_triggeringUnitType == gv_alertProductionIdleUnitTypes[lv_i])) {
             TimerRestart(gv_alertProductionIdleBuildingTimers[lv_i]);
             TimerPause(gv_alertProductionIdleBuildingTimers[lv_i], true);
@@ -4275,10 +3960,6 @@ bool gt_ProductionIdleAboveThresholdNewProductionStarts_Func (bool testConds, bo
         }
         else {
         }
-        if (lv_i == autoE0E17448_ae) {
-            break;
-        }
-        lv_i = lv_i + autoE0E17448_ai;
     }
     return true;
 }
@@ -4561,7 +4242,6 @@ bool gt_SelectAlertMenu_Func (bool testConds, bool runActions) {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Conditions
     if (testConds) {
@@ -4596,7 +4276,6 @@ bool gt_SelectMatchup_Func (bool testConds, bool runActions) {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Conditions
     if (testConds) {
@@ -4615,7 +4294,7 @@ bool gt_SelectMatchup_Func (bool testConds, bool runActions) {
     auto31D15147_ae = 2;
     auto31D15147_ai = 1;
     lv_i = 0;
-    while ((auto31D15147_ai >= 0 && lv_i <= auto31D15147_ae) || (auto31D15147_ai <= 0 && lv_i >= auto31D15147_ae)) {
+    for ( ; ( (auto31D15147_ai >= 0 && lv_i <= auto31D15147_ae) || (auto31D15147_ai <= 0 && lv_i >= auto31D15147_ae) ) ; lv_i += auto31D15147_ai ) {
         if ((gv_matchupSelectionButtons[lv_i] != EventDialogControl())) {
             libNtve_gf_SetDialogItemToggled(gv_matchupSelectionButtons[lv_i], false, PlayerGroupAll());
         }
@@ -4624,10 +4303,14 @@ bool gt_SelectMatchup_Func (bool testConds, bool runActions) {
             gv_currentlySelectedMatchupIndex = lv_i;
             gv_currentlySelectedMatchupButton = gv_matchupSelectionButtons[lv_i];
         }
-        if (lv_i == auto31D15147_ae) {
-            break;
-        }
-        lv_i = lv_i + auto31D15147_ai;
+    }
+    if ((gf_DoesSavedBuildOrderExistForCurrentMatchup() == true)) {
+        DialogControlSetVisible(gv_practiceAgainstSavedBuildOrderCheckbox, PlayerGroupAll(), true);
+        DialogControlSetVisible(gv_practiceAgainstSavedBuildOrderLabel, PlayerGroupAll(), true);
+    }
+    else {
+        DialogControlSetVisible(gv_practiceAgainstSavedBuildOrderCheckbox, PlayerGroupAll(), false);
+        DialogControlSetVisible(gv_practiceAgainstSavedBuildOrderLabel, PlayerGroupAll(), false);
     }
     return true;
 }
@@ -4646,7 +4329,6 @@ bool gt_SelectBenchmarkMenu_Func (bool testConds, bool runActions) {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Conditions
     if (testConds) {
@@ -4745,7 +4427,6 @@ bool gt_OpenMainMenu_Func (bool testConds, bool runActions) {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Actions
     if (!runActions) {
@@ -4775,7 +4456,6 @@ bool gt_OpenPostBuildReportDialog_Func (bool testConds, bool runActions) {
     unit lv_currentUnit;
 
     // Variable Initialization
-    lv_currentUnit = null;
 
     // Actions
     if (!runActions) {
@@ -4788,13 +4468,10 @@ bool gt_OpenPostBuildReportDialog_Func (bool testConds, bool runActions) {
     libNtve_gf_SwooshCamera(1, ((CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance)) + 0.0), (CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance)+10), PlayerStartLocation(1), 10.0);
     auto8DF230F2_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, 0, 0), 0);
     auto8DF230F2_u = 1;
-    while (auto8DF230F2_u <= UnitGroupCount(auto8DF230F2_g, c_unitCountAll)) {
+    for ( ; auto8DF230F2_u <= UnitGroupCount(auto8DF230F2_g, c_unitCountAll) ; auto8DF230F2_u += BoolToInt(lv_currentUnit == UnitGroupUnit(auto8DF230F2_g, auto8DF230F2_u)) ) {
         lv_currentUnit = UnitGroupUnit(auto8DF230F2_g, auto8DF230F2_u);
         Wait(0.2, c_timeGame);
         UnitKill(lv_currentUnit);
-        if (lv_currentUnit == UnitGroupUnit(auto8DF230F2_g, auto8DF230F2_u)) {
-            auto8DF230F2_u = auto8DF230F2_u + 1;
-        }
     }
     return true;
 }
@@ -4812,7 +4489,6 @@ bool gt_ReturntoMainMenufromReport_Func (bool testConds, bool runActions) {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Conditions
     if (testConds) {
@@ -4895,6 +4571,42 @@ void gt_HideEndBuildGameTimeEdits_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Toggle Practice Against Saved Build
+//--------------------------------------------------------------------------------------------------
+bool gt_TogglePracticeAgainstSavedBuild_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((EventDialogControl() == gv_practiceAgainstSavedBuildOrderCheckbox))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    TextExpressionSetToken("Param/Expression/02CDE841", "A", libNtve_gf_ConvertBooleanToText(libNtve_gf_DialogItemIsChecked(EventDialogControl(), 1)));
+    UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/02CDE841"));
+    gv_practiceAgainstBenchmarkBuildOrder = libNtve_gf_DialogItemIsChecked(EventDialogControl(), 1);
+    if ((libNtve_gf_DialogItemIsChecked(EventDialogControl(), 1) == true)) {
+        DialogControlSetVisible(gv_displayBuildOrderHintsCheckbox, PlayerGroupAll(), true);
+        DialogControlSetVisible(gv_displayBuildOrderHintsLabel, PlayerGroupAll(), true);
+    }
+    else {
+        DialogControlSetVisible(gv_displayBuildOrderHintsCheckbox, PlayerGroupAll(), false);
+        DialogControlSetVisible(gv_displayBuildOrderHintsLabel, PlayerGroupAll(), false);
+    }
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_TogglePracticeAgainstSavedBuild_Init () {
+    gt_TogglePracticeAgainstSavedBuild = TriggerCreate("gt_TogglePracticeAgainstSavedBuild_Func");
+    TriggerAddEventDialogControl(gt_TogglePracticeAgainstSavedBuild, 1, c_invalidDialogControlId, c_triggerControlEventTypeChecked);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Enable/Disable Mineral Alert
 //--------------------------------------------------------------------------------------------------
 bool gt_EnableDisableMineralAlert_Func (bool testConds, bool runActions) {
@@ -4902,7 +4614,6 @@ bool gt_EnableDisableMineralAlert_Func (bool testConds, bool runActions) {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Conditions
     if (testConds) {
@@ -4935,7 +4646,6 @@ bool gt_EnableDisableGasAlert_Func (bool testConds, bool runActions) {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Conditions
     if (testConds) {
@@ -4968,7 +4678,6 @@ bool gt_EnableDisableSupplyBlockAlert_Func (bool testConds, bool runActions) {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Conditions
     if (testConds) {
@@ -5001,7 +4710,6 @@ bool gt_EnableDisableMacroEnergyAlert_Func (bool testConds, bool runActions) {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Conditions
     if (testConds) {
@@ -5034,7 +4742,6 @@ bool gt_EnableDisableUpgradeGapAlert_Func (bool testConds, bool runActions) {
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Conditions
     if (testConds) {
@@ -5067,7 +4774,6 @@ bool gt_EnableDisableProductionIdleAlert_Func (bool testConds, bool runActions) 
     int lv_i;
 
     // Variable Initialization
-    lv_i = 0;
 
     // Conditions
     if (testConds) {
@@ -5328,6 +5034,7 @@ void InitTriggers () {
     gt_ReturntoMainMenufromReport_Init();
     gt_DisplayEndBuildGameTimeEdits_Init();
     gt_HideEndBuildGameTimeEdits_Init();
+    gt_TogglePracticeAgainstSavedBuild_Init();
     gt_EnableDisableMineralAlert_Init();
     gt_EnableDisableGasAlert_Init();
     gt_EnableDisableSupplyBlockAlert_Init();
