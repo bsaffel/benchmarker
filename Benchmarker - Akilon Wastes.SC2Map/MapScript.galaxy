@@ -616,6 +616,9 @@ void gf_CreateBenchmarkMenuDialog ();
 void gf_CreateMatchupSelectionButton (text lp_buttonText, int lp_offsetPositionVariable);
 void gf_CreateSupplyValueEditBox (text lp_labelText, int lp_rowNumber, int lp_defaultValue);
 void gf_OpenMainMenu ();
+void gf_EnablePracticeAgainstBenchmarkBuildOrderOptions ();
+void gf_DisablePracticeAgainstBenchmarkBuildOrderOption ();
+void gf_EvaluateAndDisableEnableBuildHintsOptions ();
 void gf_SaveCurrentStatsasNewBenchmark ();
 void gf_ResetBenchmarkBuildStatistics ();
 void gf_SaveIntAsSupplyBenchmark (int lp_value, string lp_entryKey);
@@ -735,9 +738,14 @@ bool gf_DoesSavedBuildOrderExistForCurrentMatchup () {
     bool lv_result;
 
     // Variable Initialization
-    lv_result = true;
 
     // Implementation
+    if ((BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey) > 0)) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
     return lv_result;
 }
 
@@ -2396,29 +2404,23 @@ void gf_CreateBenchmarkMenuDialog () {
     DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv_checkboxWidth, gv_menuItemHeight);
     libNtve_gf_SetDialogItemChecked(DialogControlLastCreated(), true, PlayerGroupAll());
     DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionLabelHeight+gv_matchupButtonHeight+6*gv_benchmarkEditBoxHeight+gv_sectionLabelHeight));
-    if ((gf_DoesSavedBuildOrderExistForCurrentMatchup() == true)) {
-        DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), true);
-    }
-    else {
-        DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), false);
-    }
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/7FDBA57B"), PlayerGroupAll());
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_practiceAgainstSavedBuildOrderLabelWidth, gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent+gv_checkboxWidth), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionLabelHeight+gv_matchupButtonHeight+gv_labelAlignmentSpacer+6*gv_supplyValueLabelHeight+gv_sectionLabelHeight), StringExternal("Param/Value/C981768C"), ColorWithAlpha(0,0,0,0), false, 2.0);
     gv_practiceAgainstSavedBuildOrderLabel = DialogControlLastCreated();
-    if ((gf_DoesSavedBuildOrderExistForCurrentMatchup() == true)) {
-        DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), true);
-    }
-    else {
-        DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), false);
-    }
     DialogControlCreate(DialogLastCreated(), c_triggerControlTypeCheckBox);
     gv_displayBuildOrderHintsCheckbox = DialogControlLastCreated();
     DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv_checkboxWidth, gv_menuItemHeight);
     libNtve_gf_SetDialogItemChecked(DialogControlLastCreated(), true, PlayerGroupAll());
     DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionLabelHeight+gv_matchupButtonHeight+7*gv_benchmarkEditBoxHeight+gv_sectionLabelHeight));
-    DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), false);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/5777D4C2"), PlayerGroupAll());
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_displayBuildOrderHintsLabelWidth, gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent+gv_checkboxWidth), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionLabelHeight+gv_matchupButtonHeight+gv_labelAlignmentSpacer+7*gv_supplyValueLabelHeight+gv_sectionLabelHeight), StringExternal("Param/Value/1BB4532B"), ColorWithAlpha(0,0,0,0), false, 2.0);
     gv_displayBuildOrderHintsLabel = DialogControlLastCreated();
-    DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), false);
+    if ((gf_DoesSavedBuildOrderExistForCurrentMatchup() == true)) {
+        gf_EnablePracticeAgainstBenchmarkBuildOrderOptions();
+    }
+    else {
+        gf_DisablePracticeAgainstBenchmarkBuildOrderOption();
+    }
     libNtve_gf_CreateDialogItemButton(gv_benchmarkDialog, gv_startButtonWidth, gv_startButtonHeight, c_anchorBottom, 0, gv_menuPadding, StringExternal("Param/Value/84760B8B"), StringExternal("Param/Value/49A63E54"), "");
     gv_startButton[0] = DialogControlLastCreated();
 }
@@ -2464,6 +2466,36 @@ void gf_OpenMainMenu () {
     TimerRestart(gv_buildTimer);
     gf_ResetBenchmarkTimers();
     gf_PauseGame();
+}
+
+void gf_EnablePracticeAgainstBenchmarkBuildOrderOptions () {
+    // Implementation
+    DialogControlSetEnabled(gv_practiceAgainstSavedBuildOrderCheckbox, PlayerGroupAll(), true);
+    DialogControlSetEnabled(gv_practiceAgainstSavedBuildOrderLabel, PlayerGroupAll(), true);
+    libNtve_gf_SetDialogItemChecked(gv_practiceAgainstSavedBuildOrderCheckbox, true, PlayerGroupAll());
+    gf_EvaluateAndDisableEnableBuildHintsOptions();
+}
+
+void gf_DisablePracticeAgainstBenchmarkBuildOrderOption () {
+    // Implementation
+    DialogControlSetEnabled(gv_practiceAgainstSavedBuildOrderCheckbox, PlayerGroupAll(), false);
+    DialogControlSetEnabled(gv_practiceAgainstSavedBuildOrderLabel, PlayerGroupAll(), false);
+    libNtve_gf_SetDialogItemChecked(gv_practiceAgainstSavedBuildOrderCheckbox, false, PlayerGroupAll());
+    gf_EvaluateAndDisableEnableBuildHintsOptions();
+}
+
+void gf_EvaluateAndDisableEnableBuildHintsOptions () {
+    // Implementation
+    if (((gf_DoesSavedBuildOrderExistForCurrentMatchup() == true) && (libNtve_gf_DialogItemIsChecked(gv_practiceAgainstSavedBuildOrderCheckbox, 1) == true))) {
+        DialogControlSetEnabled(gv_displayBuildOrderHintsCheckbox, PlayerGroupAll(), true);
+        DialogControlSetEnabled(gv_displayBuildOrderHintsLabel, PlayerGroupAll(), true);
+        libNtve_gf_SetDialogItemChecked(gv_displayBuildOrderHintsCheckbox, true, PlayerGroupAll());
+    }
+    else {
+        DialogControlSetEnabled(gv_displayBuildOrderHintsCheckbox, PlayerGroupAll(), false);
+        DialogControlSetEnabled(gv_displayBuildOrderHintsLabel, PlayerGroupAll(), false);
+        libNtve_gf_SetDialogItemChecked(gv_displayBuildOrderHintsCheckbox, false, PlayerGroupAll());
+    }
 }
 
 void gf_SaveCurrentStatsasNewBenchmark () {
@@ -3012,6 +3044,11 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_InitializeGameArrayDefaults();
     MeleeInitUnits();
     UnitPauseAll(true);
+    BankLoad(gv_benchmarkerBankName, 1);
+    BankSectionCreate(BankLastCreated(), gv_vZergMatchupSectionKey);
+    BankSectionCreate(BankLastCreated(), gv_vTerranMatchupSectionKey);
+    BankSectionCreate(BankLastCreated(), gv_vProtossMatchupSectionKey);
+    gv_benchmarkerBank = BankLastCreated();
     gf_CreateBenchmarkMenuDialog();
     DialogSetVisible(DialogLastCreated(), PlayerGroupAll(), true);
     gf_CreateAlertMenuDialog();
@@ -3030,11 +3067,6 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/66F0DD53"), PlayerGroupAll());
     libNtve_gf_DisplayScreenButton(5, StringExternal("Param/Value/13AB0492"), gv_winButtonWidth, gv_winButtonHeight, c_anchorBottomRight, gv_winButtonXPadding, gf_GetWinButtonYPadding(), gt_EndGame);
     libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/1CABB5B1"), PlayerGroupAll());
-    BankLoad(gv_benchmarkerBankName, 1);
-    BankSectionCreate(BankLastCreated(), gv_vZergMatchupSectionKey);
-    BankSectionCreate(BankLastCreated(), gv_vTerranMatchupSectionKey);
-    BankSectionCreate(BankLastCreated(), gv_vProtossMatchupSectionKey);
-    gv_benchmarkerBank = BankLastCreated();
     gf_LoadMatchupBenchmarks(gv_vZergMatchupSectionKey);
     gf_LoadAlertConfigurations();
     gf_CreateHiddenBenchmarkSupplyObjectives();
@@ -4305,12 +4337,10 @@ bool gt_SelectMatchup_Func (bool testConds, bool runActions) {
         }
     }
     if ((gf_DoesSavedBuildOrderExistForCurrentMatchup() == true)) {
-        DialogControlSetVisible(gv_practiceAgainstSavedBuildOrderCheckbox, PlayerGroupAll(), true);
-        DialogControlSetVisible(gv_practiceAgainstSavedBuildOrderLabel, PlayerGroupAll(), true);
+        gf_EnablePracticeAgainstBenchmarkBuildOrderOptions();
     }
     else {
-        DialogControlSetVisible(gv_practiceAgainstSavedBuildOrderCheckbox, PlayerGroupAll(), false);
-        DialogControlSetVisible(gv_practiceAgainstSavedBuildOrderLabel, PlayerGroupAll(), false);
+        gf_DisablePracticeAgainstBenchmarkBuildOrderOption();
     }
     return true;
 }
@@ -4586,17 +4616,8 @@ bool gt_TogglePracticeAgainstSavedBuild_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    TextExpressionSetToken("Param/Expression/02CDE841", "A", libNtve_gf_ConvertBooleanToText(libNtve_gf_DialogItemIsChecked(EventDialogControl(), 1)));
-    UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/02CDE841"));
     gv_practiceAgainstBenchmarkBuildOrder = libNtve_gf_DialogItemIsChecked(EventDialogControl(), 1);
-    if ((libNtve_gf_DialogItemIsChecked(EventDialogControl(), 1) == true)) {
-        DialogControlSetVisible(gv_displayBuildOrderHintsCheckbox, PlayerGroupAll(), true);
-        DialogControlSetVisible(gv_displayBuildOrderHintsLabel, PlayerGroupAll(), true);
-    }
-    else {
-        DialogControlSetVisible(gv_displayBuildOrderHintsCheckbox, PlayerGroupAll(), false);
-        DialogControlSetVisible(gv_displayBuildOrderHintsLabel, PlayerGroupAll(), false);
-    }
+    gf_EvaluateAndDisableEnableBuildHintsOptions();
     return true;
 }
 
