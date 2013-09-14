@@ -665,6 +665,7 @@ trigger gt_Benchmark1TimerExpires;
 trigger gt_Benchmark2TimerExpires;
 trigger gt_Benchmark3TimerExpires;
 trigger gt_MaxTimeTimerElapsed;
+trigger gt_MuteUnmuteAlerts;
 trigger gt_MineralsAboveThreshold;
 trigger gt_GasAboveThreshold;
 trigger gt_SupplyBlockImminent;
@@ -3512,6 +3513,18 @@ void gt_MaxTimeTimerElapsed_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Mute/Unmute Alerts
+//--------------------------------------------------------------------------------------------------
+bool gt_MuteUnmuteAlerts_Func (bool testConds, bool runActions) {
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_MuteUnmuteAlerts_Init () {
+    gt_MuteUnmuteAlerts = TriggerCreate("gt_MuteUnmuteAlerts_Func");
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Minerals Above Threshold
 //--------------------------------------------------------------------------------------------------
 bool gt_MineralsAboveThreshold_Func (bool testConds, bool runActions) {
@@ -5025,6 +5038,7 @@ void InitTriggers () {
     gt_Benchmark2TimerExpires_Init();
     gt_Benchmark3TimerExpires_Init();
     gt_MaxTimeTimerElapsed_Init();
+    gt_MuteUnmuteAlerts_Init();
     gt_MineralsAboveThreshold_Init();
     gt_GasAboveThreshold_Init();
     gt_SupplyBlockImminent_Init();
