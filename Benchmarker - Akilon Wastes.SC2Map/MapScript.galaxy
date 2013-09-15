@@ -62,6 +62,7 @@ int[4] gv_benchmarkSupplyDefaults;
 int gv_benchmarkEndBuildatMinutes;
 int gv_benchmarkEndBuildatSeconds;
 int gv_benchmarkEndBuildTotalSeconds;
+bool gv_muteAlertsEnabled;
 int gv_numMorphingOverlords;
 timer gv_overlordInProgressTimer;
 int gv_overlordMorphDuration;
@@ -665,7 +666,6 @@ trigger gt_Benchmark1TimerExpires;
 trigger gt_Benchmark2TimerExpires;
 trigger gt_Benchmark3TimerExpires;
 trigger gt_MaxTimeTimerElapsed;
-trigger gt_MuteUnmuteAlerts;
 trigger gt_MineralsAboveThreshold;
 trigger gt_GasAboveThreshold;
 trigger gt_SupplyBlockImminent;
@@ -686,6 +686,7 @@ trigger gt_UpdateAverageUnspentGas;
 trigger gt_UpdateCumulativeAPM;
 trigger gt_UpdateTotalWorkers;
 trigger gt_UpdateNumUpgradesResearched;
+trigger gt_MuteUnmuteAlerts;
 trigger gt_SelectAlertMenu;
 trigger gt_SelectMatchup;
 trigger gt_SelectBenchmarkMenu;
@@ -2250,7 +2251,8 @@ void gf_CreateHelpDialog () {
     gf_CreateHelpInfoRow(StringExternal("Param/Value/5C5B6190"), StringExternal("Param/Value/3E7A53DD"), StringExternal("Param/Value/9CD7E854"), 1);
     gf_CreateHelpInfoRow(StringExternal("Param/Value/D498D14D"), StringExternal("Param/Value/D75B7086"), StringExternal("Param/Value/A963FAF3"), 2);
     gf_CreateHelpInfoRow(StringExternal("Param/Value/6639460A"), StringExternal("Param/Value/5AC1BD33"), StringExternal("Param/Value/945362B1"), 3);
-    gf_CreateHelpInfoRow(StringExternal("Param/Value/2EFCFDB5"), StringExternal("Param/Value/1234E292"), StringExternal("Param/Value/62BC3490"), 4);
+    gf_CreateHelpInfoRow(StringExternal("Param/Value/732FD0CC"), StringExternal("Param/Value/E709BC6E"), StringExternal("Param/Value/7A5AB46F"), 4);
+    gf_CreateHelpInfoRow(StringExternal("Param/Value/2EFCFDB5"), StringExternal("Param/Value/1234E292"), StringExternal("Param/Value/62BC3490"), 5);
     libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_startButtonWidth, gv_startButtonHeight, c_anchorBottom, 0, gv_menuPadding, StringExternal("Param/Value/87960E2D"), StringExternal("Param/Value/208CDB48"), "");
     gv_helpOkButton = DialogControlLastCreated();
 }
@@ -3513,18 +3515,6 @@ void gt_MaxTimeTimerElapsed_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Mute/Unmute Alerts
-//--------------------------------------------------------------------------------------------------
-bool gt_MuteUnmuteAlerts_Func (bool testConds, bool runActions) {
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_MuteUnmuteAlerts_Init () {
-    gt_MuteUnmuteAlerts = TriggerCreate("gt_MuteUnmuteAlerts_Func");
-}
-
-//--------------------------------------------------------------------------------------------------
 // Trigger: Minerals Above Threshold
 //--------------------------------------------------------------------------------------------------
 bool gt_MineralsAboveThreshold_Func (bool testConds, bool runActions) {
@@ -3542,7 +3532,11 @@ bool gt_MineralsAboveThreshold_Func (bool testConds, bool runActions) {
 
     TimerStart(gv_alertMineralsCooldownTimer, gv_alertCooldownSeconds, false, c_timeGame);
     UIAlert("MineralsTooHigh", 1, StringExternal("Param/Value/40F47144"), null);
-    SoundPlay(SoundLink("Alert_BaseUnderAttackKlaxon", -1), PlayerGroupAll(), 50.0, 4.8);
+    if ((gv_muteAlertsEnabled == false)) {
+        SoundPlay(SoundLink("Alert_BaseUnderAttackKlaxon", -1), PlayerGroupAll(), 50.0, 4.8);
+    }
+    else {
+    }
     return true;
 }
 
@@ -3570,7 +3564,11 @@ bool gt_GasAboveThreshold_Func (bool testConds, bool runActions) {
 
     TimerStart(gv_alertGasCooldownTimer, gv_alertCooldownSeconds, false, c_timeGame);
     UIAlert("MineralsTooHigh2", 1, StringExternal("Param/Value/F8A6C784"), null);
-    SoundPlay(SoundLink("Doodad_ProtossWarpInPad_Alert", -1), PlayerGroupAll(), 50.0, 0.0);
+    if ((gv_muteAlertsEnabled == false)) {
+        SoundPlay(SoundLink("Doodad_ProtossWarpInPad_Alert", -1), PlayerGroupAll(), 50.0, 0.0);
+    }
+    else {
+    }
     return true;
 }
 
@@ -3611,7 +3609,11 @@ bool gt_SupplyBlockImminent_Func (bool testConds, bool runActions) {
     }
     else {
     }
-    SoundPlay(SoundLink("UI_TerranPing", -1), PlayerGroupAll(), 50.0, 2.3);
+    if ((gv_muteAlertsEnabled == false)) {
+        SoundPlay(SoundLink("UI_TerranPing", -1), PlayerGroupAll(), 50.0, 2.3);
+    }
+    else {
+    }
     return true;
 }
 
@@ -3669,7 +3671,11 @@ bool gt_RaceMacroEnergyAboveThreshold_Func (bool testConds, bool runActions) {
             }
             PingCreate(PlayerGroupAll(), "MinimapPing", UnitGetPosition(lv_currentunit), ColorWithAlpha(100.00, 100.00, 100.00, 0.00), 4.0);
             PingSetUnit(PingLastCreated(), lv_currentunit);
-            SoundPlay(SoundLink("UI_Bnet_PopUp_Generic", -1), PlayerGroupAll(), 100.0, 0.0);
+            if ((gv_muteAlertsEnabled == false)) {
+                SoundPlay(SoundLink("UI_Bnet_PopUp_Generic", -1), PlayerGroupAll(), 100.0, 0.0);
+            }
+            else {
+            }
         }
         else {
         }
@@ -3760,7 +3766,11 @@ bool gt_UpgradeGapAboveThresholdTimerExpires_Func (bool testConds, bool runActio
             TextExpressionSetToken("Param/Expression/DDA3FDF3", "B", StringToText(gf_TrimSOffArmors(StringWord(lv_currentNextUpgradeNameFormatted, 5))));
             TextExpressionSetToken("Param/Expression/DDA3FDF3", "C", StringToText(StringWord(lv_currentNextUpgradeNameFormatted, 7)));
             UIAlert("MineralsTooHigh3", 1, TextExpressionAssemble("Param/Expression/DDA3FDF3"), (CatalogFieldValueGet(c_gameCatalogUpgrade, lv_currentNextUpgrade, "Icon", c_playerAny)));
-            SoundPlay(SoundLink("UI_ObjectiveUpdate", -1), PlayerGroupAll(), 50.0, 0.0);
+            if ((gv_muteAlertsEnabled == false)) {
+                SoundPlay(SoundLink("UI_ObjectiveUpdate", -1), PlayerGroupAll(), 50.0, 0.0);
+            }
+            else {
+            }
             TimerStart(gv_alertUpgradeGapCooldownTimers[lv_i], gv_alertCooldownSeconds, false, c_timeGame);
         }
         else {
@@ -4277,6 +4287,34 @@ bool gt_UpdateNumUpgradesResearched_Func (bool testConds, bool runActions) {
 void gt_UpdateNumUpgradesResearched_Init () {
     gt_UpdateNumUpgradesResearched = TriggerCreate("gt_UpdateNumUpgradesResearched_Func");
     TriggerAddEventUnitResearchProgress(gt_UpdateNumUpgradesResearched, null, c_unitProgressStageStart);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Mute/Unmute Alerts
+//--------------------------------------------------------------------------------------------------
+bool gt_MuteUnmuteAlerts_Func (bool testConds, bool runActions) {
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    if ((gv_muteAlertsEnabled == false)) {
+        gv_muteAlertsEnabled = true;
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/053D400F"));
+    }
+    else {
+        gv_muteAlertsEnabled = false;
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/5BC648F7"));
+    }
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_MuteUnmuteAlerts_Init () {
+    gt_MuteUnmuteAlerts = TriggerCreate("gt_MuteUnmuteAlerts_Func");
+    TriggerAddEventChatMessage(gt_MuteUnmuteAlerts, c_playerAny, "-a", true);
+    TriggerAddEventChatMessage(gt_MuteUnmuteAlerts, c_playerAny, "-alerts", true);
+    TriggerAddEventKeyPressed(gt_MuteUnmuteAlerts, 1, c_keyA, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -5038,7 +5076,6 @@ void InitTriggers () {
     gt_Benchmark2TimerExpires_Init();
     gt_Benchmark3TimerExpires_Init();
     gt_MaxTimeTimerElapsed_Init();
-    gt_MuteUnmuteAlerts_Init();
     gt_MineralsAboveThreshold_Init();
     gt_GasAboveThreshold_Init();
     gt_SupplyBlockImminent_Init();
@@ -5059,6 +5096,7 @@ void InitTriggers () {
     gt_UpdateCumulativeAPM_Init();
     gt_UpdateTotalWorkers_Init();
     gt_UpdateNumUpgradesResearched_Init();
+    gt_MuteUnmuteAlerts_Init();
     gt_SelectAlertMenu_Init();
     gt_SelectMatchup_Init();
     gt_SelectBenchmarkMenu_Init();
