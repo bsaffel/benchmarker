@@ -36,6 +36,7 @@ int gv_orangeBenchmarkSupplyThreshold;
 int gv_orangeBenchmarkSecondsThreshold;
 int gv_trackSupplyUnitObjectivesUntil;
 bool gv_trackSupplyUnitsAsObjectives;
+int gv_buildOrderMaxGasSupply;
 string gv_lastCreatedBuildOrderUnitType;
 fixed gv_lastCreatedUnitTimestamp;
 int gv_currentBuildOrderStepCursor;
@@ -291,6 +292,7 @@ void InitGlobals () {
     gv_orangeBenchmarkSupplyThreshold = 6;
     gv_orangeBenchmarkSecondsThreshold = 15;
     gv_trackSupplyUnitObjectivesUntil = 40;
+    gv_buildOrderMaxGasSupply = 60;
     gv_practiceAgainstBenchmarkBuildOrder = true;
     for (init_i = 0; init_i <= 10; init_i += 1) {
         gv_benchmarkBuildOrderStepObjectives[init_i] = c_invalidObjectiveId;
@@ -821,17 +823,17 @@ bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType) {
     // Variable Initialization
 
     // Implementation
-    if (((lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon") || (lp_unitType == "CreepTumor"))) {
-        lv_result = false;
-    }
-    else if (((PlayerScoreValueGetAsInt(1, "FoodUsed") > 60) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery")))) {
-        lv_result = false;
-    }
-    else if (((PlayerScoreValueGetAsInt(1, "FoodUsed") <= 40) && ((lp_unitType == "Overlord") || (lp_unitType == "Queen")))) {
+    if (((PlayerScoreValueGetAsInt(1, "FoodUsed") <= 40) && ((lp_unitType == "Overlord") || (lp_unitType == "Queen")))) {
         lv_result = true;
     }
     else if ((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1)) {
         lv_result = true;
+    }
+    else if (((lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon") || (lp_unitType == "CreepTumor"))) {
+        lv_result = false;
+    }
+    else if (((PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery")))) {
+        lv_result = false;
     }
     TextExpressionSetToken("Param/Expression/C9374463", "A", UnitTypeGetName(lp_unitType));
     TextExpressionSetToken("Param/Expression/C9374463", "B", libNtve_gf_ConvertBooleanToText(lv_result));
@@ -972,6 +974,8 @@ text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber) {
     else {
     }
     lv_result = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff);
+    TextExpressionSetToken("Param/Expression/510BE628", "A", lv_result);
+    UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/510BE628"));
     return lv_result;
 }
 
