@@ -826,14 +826,12 @@ bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType) {
     if (((PlayerScoreValueGetAsInt(1, "FoodUsed") <= 40) && ((lp_unitType == "Overlord") || (lp_unitType == "Queen")))) {
         lv_result = true;
     }
-    else if ((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1)) {
+    else {
+    }
+    if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (!(((lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon") || (lp_unitType == "CreepTumor")))) && (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery"))))))) {
         lv_result = true;
     }
-    else if (((lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon") || (lp_unitType == "CreepTumor"))) {
-        lv_result = false;
-    }
-    else if (((PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery")))) {
-        lv_result = false;
+    else {
     }
     TextExpressionSetToken("Param/Expression/C9374463", "A", UnitTypeGetName(lp_unitType));
     TextExpressionSetToken("Param/Expression/C9374463", "B", libNtve_gf_ConvertBooleanToText(lv_result));
