@@ -537,8 +537,8 @@ bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType);
 text gf_GetCurrentBuildOrderStepText (int lp_stepNumber);
 text gf_GetBenchmarkBuildOrderStepText (int lp_stepNumber);
 text gf_GetFormattedCompleteBenchmarkBuildOrderStepText (int lp_stepNumber);
-text gf_ApplyColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber, text lp_buildStepText);
-text gf_GetBenchmarkandCurrentStepSupplyDiffasText (int lp_stepNumber);
+color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber);
+text gf_GetBenchmarkandCurrentStepSupplyasText (int lp_stepNumber);
 text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber);
 string gf_GetNextUpgrade (string lp_currentUpgrade);
 text gf_GetRaceMacroUnitName ();
@@ -904,14 +904,10 @@ text gf_GetFormattedCompleteBenchmarkBuildOrderStepText (int lp_stepNumber) {
     // Variable Initialization
 
     // Implementation
-    TextExpressionSetToken("Param/Expression/236BD2AB", "A", gf_GetBenchmarkBuildOrderStepText(lp_stepNumber));
-    TextExpressionSetToken("Param/Expression/236BD2AB", "B", gf_GetBenchmarkandCurrentStepSupplyDiffasText(lp_stepNumber));
-    TextExpressionSetToken("Param/Expression/236BD2AB", "C", gf_GetBenchmarkandCurrentStepSecondsDiffasText(lp_stepNumber));
-    lv_result = TextExpressionAssemble("Param/Expression/236BD2AB");
     return lv_result;
 }
 
-text gf_ApplyColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber, text lp_buildStepText) {
+color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber) {
     // Variable Declarations
     int lv_currentElaspedSeconds;
     int lv_currentSupplyCount;
@@ -919,7 +915,7 @@ text gf_ApplyColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber, text 
     text lv_result;
 
     // Variable Initialization
-    lv_color = Color(0,0,0);
+    lv_color = Color(100,100,100);
 
     // Implementation
     lv_currentElaspedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
@@ -939,12 +935,10 @@ text gf_ApplyColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber, text 
     else if ((true == true)) {
         lv_color = Color(100.00, 50.20, 50.20);
     }
-    TextExpressionSetToken("Param/Expression/9D074CD7", "A", TextWithColor(lp_buildStepText, lv_color));
-    lv_result = TextExpressionAssemble("Param/Expression/9D074CD7");
-    return lv_result;
+    return lv_color;
 }
 
-text gf_GetBenchmarkandCurrentStepSupplyDiffasText (int lp_stepNumber) {
+text gf_GetBenchmarkandCurrentStepSupplyasText (int lp_stepNumber) {
     // Variable Declarations
     int lv_diff;
     text lv_result;
@@ -952,8 +946,8 @@ text gf_GetBenchmarkandCurrentStepSupplyDiffasText (int lp_stepNumber) {
     // Variable Initialization
 
     // Implementation
-    lv_diff = (PlayerScoreValueGetAsInt(1, "FoodUsed")-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount);
-    lv_result = gf_ConverttoTextWithSign(lv_diff);
+    lv_diff = (PlayerScoreValueGetAsInt(1, "FoodUsed"));
+    lv_result = IntToText(lv_diff);
     return lv_result;
 }
 
@@ -967,11 +961,13 @@ text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber) {
     // Implementation
     lv_diff = (FixedToInt(TimerGetElapsed(gv_buildTimer))-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
     if ((lv_diff < 0)) {
-        lv_diff = (-1*(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds-FixedToInt(TimerGetElapsed(gv_buildTimer))));
+        lv_diff = (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds-FixedToInt(TimerGetElapsed(gv_buildTimer)));
+        TextExpressionSetToken("Param/Expression/D17BAC5D", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff));
+        lv_result = TextExpressionAssemble("Param/Expression/D17BAC5D");
     }
     else {
+        lv_result = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff);
     }
-    lv_result = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff);
     TextExpressionSetToken("Param/Expression/510BE628", "A", lv_result);
     UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/510BE628"));
     return lv_result;
@@ -2787,9 +2783,9 @@ void gf_CompleteBenchmarkBuildOrderObjectiveStep (int lp_benchmarkBuildOrderInde
     TextExpressionSetToken("Param/Expression/83361AD6", "B", IntToText(gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex(lp_benchmarkBuildOrderIndex)));
     UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/83361AD6"));
     lv_objectiveText = gf_GetFormattedCompleteBenchmarkBuildOrderStepText(lp_benchmarkBuildOrderIndex);
-    TextExpressionSetToken("Param/Expression/97DCFF5F", "A", gf_ApplyColorForBenchmarkBuildOrderStepCompletion(lp_benchmarkBuildOrderIndex, lv_objectiveText));
-    ObjectiveSetName(gv_benchmarkBuildOrderStepObjectives[gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex(lp_benchmarkBuildOrderIndex)], TextExpressionAssemble("Param/Expression/97DCFF5F"));
     ObjectiveSetState(gv_benchmarkBuildOrderStepObjectives[gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex(lp_benchmarkBuildOrderIndex)], c_objectiveStateCompleted);
+    TextExpressionSetToken("Param/Expression/97DCFF5F", "A", gf_GetFormattedCompleteBenchmarkBuildOrderStepText(lp_benchmarkBuildOrderIndex));
+    ObjectiveSetName(gv_benchmarkBuildOrderStepObjectives[gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex(lp_benchmarkBuildOrderIndex)], TextExpressionAssemble("Param/Expression/97DCFF5F"));
     Wait(1.0, c_timeGame);
     UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, ObjectiveGetName(gv_benchmarkBuildOrderStepObjectives[gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex(lp_benchmarkBuildOrderIndex)]));
     TextExpressionSetToken("Param/Expression/6EA63537", "A", ObjectiveGetName(gv_benchmarkBuildOrderStepObjectives[gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex(lp_benchmarkBuildOrderIndex)]));
