@@ -39,8 +39,9 @@ bool gv_trackSupplyUnitsAsObjectives;
 int gv_buildOrderMaxGasSupply;
 string gv_lastCreatedBuildOrderUnitType;
 fixed gv_lastCreatedUnitTimestamp;
+int gv_maxCurrentBuildOrderStepsTracked;
 int gv_currentBuildOrderStepCursor;
-gs_BuildOrderStep[21] gv_currentBuildOrderSteps;
+gs_BuildOrderStep[51] gv_currentBuildOrderSteps;
 int gv_totalNumBenchmarkBuildOrderSteps;
 bool gv_practiceAgainstBenchmarkBuildOrder;
 int[11] gv_benchmarkBuildOrderStepObjectives;
@@ -293,6 +294,7 @@ void InitGlobals () {
     gv_orangeBenchmarkSecondsThreshold = 15;
     gv_trackSupplyUnitObjectivesUntil = 40;
     gv_buildOrderMaxGasSupply = 60;
+    gv_maxCurrentBuildOrderStepsTracked = 50;
     gv_practiceAgainstBenchmarkBuildOrder = true;
     for (init_i = 0; init_i <= 10; init_i += 1) {
         gv_benchmarkBuildOrderStepObjectives[init_i] = c_invalidObjectiveId;
@@ -526,7 +528,6 @@ void InitGlobals () {
 //--------------------------------------------------------------------------------------------------
 // Global Function Declarations
 //--------------------------------------------------------------------------------------------------
-text gf_ConverttoTextWithSign (int lp_int);
 bool gf_DoesSavedBuildOrderExistForCurrentMatchup ();
 int gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex (int lp_cursor);
 string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
@@ -569,6 +570,7 @@ string gf_GetCurrentlySelectedMatchupasBankSectionKey ();
 text gf_GetCurrentlySelectedMatchupasText ();
 int gf_GetEditBoxIntValue (int lp_editBox);
 int gf_GetWinButtonYPadding ();
+text gf_ConverttoTextWithSign (int lp_int);
 string gf_TrimSOffArmors (string lp_string);
 string gf_FormatCatalogStringwithSpaces (string lp_string);
 bool gf_IsCapitalLetterOrDigit (string lp_letter);
@@ -719,24 +721,6 @@ trigger gt_HatcheryLarvaSpawnFix;
 //--------------------------------------------------------------------------------------------------
 // Global Functions
 //--------------------------------------------------------------------------------------------------
-text gf_ConverttoTextWithSign (int lp_int) {
-    // Variable Declarations
-    text lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if ((lp_int > 0)) {
-        TextExpressionSetToken("Param/Expression/B99F7846", "A", IntToText(lp_int));
-        lv_result = TextExpressionAssemble("Param/Expression/B99F7846");
-    }
-    else {
-        TextExpressionSetToken("Param/Expression/DD4AB624", "A", IntToText(lp_int));
-        lv_result = TextExpressionAssemble("Param/Expression/DD4AB624");
-    }
-    return lv_result;
-}
-
 bool gf_DoesSavedBuildOrderExistForCurrentMatchup () {
     // Variable Declarations
     bool lv_result;
@@ -1495,6 +1479,24 @@ int gf_GetWinButtonYPadding () {
     else {
         return 0;
     }
+}
+
+text gf_ConverttoTextWithSign (int lp_int) {
+    // Variable Declarations
+    text lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((lp_int > 0)) {
+        TextExpressionSetToken("Param/Expression/B99F7846", "A", IntToText(lp_int));
+        lv_result = TextExpressionAssemble("Param/Expression/B99F7846");
+    }
+    else {
+        TextExpressionSetToken("Param/Expression/DD4AB624", "A", IntToText(lp_int));
+        lv_result = TextExpressionAssemble("Param/Expression/DD4AB624");
+    }
+    return lv_result;
 }
 
 string gf_TrimSOffArmors (string lp_string) {
@@ -3002,15 +3004,21 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
         gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor-1)].lv_numUnits += 1;
     }
     else {
-        gf_AddUnitBuildOrderStep(libNtve_gf_TriggeringProgressUnitType());
-        gv_currentBuildOrderStepCursor += 1;
-    }
-    if (((gv_totalNumBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && ((gv_currentBuildOrderStepCursor-1) <= gv_benchmarkBuildOrderStepCursor))) {
-        TextExpressionSetToken("Param/Expression/F78FD77D", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/F78FD77D"));
-        gf_EvaluateBenchmarkBuildOrderStepObjective(libNtve_gf_TriggeringProgressUnitType());
-    }
-    else {
+        if (((gv_currentBuildOrderStepCursor) < gv_maxCurrentBuildOrderStepsTracked)) {
+            gf_AddUnitBuildOrderStep(libNtve_gf_TriggeringProgressUnitType());
+            if (((gv_totalNumBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && ((gv_currentBuildOrderStepCursor) < gv_totalNumBenchmarkBuildOrderSteps))) {
+                TextExpressionSetToken("Param/Expression/F78FD77D", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
+                UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/F78FD77D"));
+                gf_EvaluateBenchmarkBuildOrderStepObjective(libNtve_gf_TriggeringProgressUnitType());
+            }
+            else {
+                UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/B1BB72A4"));
+            }
+            gv_currentBuildOrderStepCursor += 1;
+        }
+        else {
+            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/AD4181D3"));
+        }
     }
     return true;
 }
