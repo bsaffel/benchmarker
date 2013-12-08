@@ -574,16 +574,17 @@ text gf_ConverttoTextWithSign (int lp_int);
 string gf_TrimSOffArmors (string lp_string);
 string gf_FormatCatalogStringwithSpaces (string lp_string);
 bool gf_IsCapitalLetterOrDigit (string lp_letter);
-void gf_InitializeBenchmarkBuildOrderObjectives ();
-void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType);
-void gf_AddUpgradeBuildOrderStep (string lp_buildStepUnitType);
-void gf_ResetCurrentBuildOrderStepsVariables ();
-void gf_ResetBenchmarkBuildOrderStepsVariables ();
+void gf_ResetGameState ();
 void gf_SaveMapResources ();
 void gf_ResetMapResources ();
 void gf_InitializeGameArrayDefaults ();
 void gf_PauseGame ();
 void gf_UnpauseGame ();
+void gf_InitializeBenchmarkBuildOrderObjectives ();
+void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType);
+void gf_AddUpgradeBuildOrderStep (string lp_buildStepUnitType);
+void gf_ResetCurrentBuildOrderStepsVariables ();
+void gf_ResetBenchmarkBuildOrderStepsVariables ();
 void gf_StartBenchmarkTimers ();
 void gf_UnpauseBenchmarkTimers ();
 void gf_PauseBenchmarkTimers ();
@@ -1548,95 +1549,19 @@ bool gf_IsCapitalLetterOrDigit (string lp_letter) {
     }
 }
 
-void gf_InitializeBenchmarkBuildOrderObjectives () {
+void gf_ResetGameState () {
     // Implementation
-    if ((gv_practiceAgainstBenchmarkBuildOrder == true)) {
-        gf_LoadBenchmarkBuildOrder();
-        if ((gv_totalNumBenchmarkBuildOrderSteps > 0)) {
-            gf_CreateBenchmarkBuildOrderObjectives();
-        }
-        else {
-        }
-    }
-    else {
-    }
-}
-
-void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType) {
-    // Variable Declarations
-    int lv_buildOrderStepSupplyCount;
-
-    // Variable Initialization
-
-    // Implementation
-    if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_buildStepUnitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (PlayerRace(EventPlayer()) == "Zerg"))) {
-        lv_buildOrderStepSupplyCount = (PlayerScoreValueGetAsInt(1, "FoodUsed")+1);
-    }
-    else {
-        lv_buildOrderStepSupplyCount = PlayerScoreValueGetAsInt(1, "FoodUsed");
-    }
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_unitType = lp_buildStepUnitType;
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_numUnits = 1;
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_supplyCount = lv_buildOrderStepSupplyCount;
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
-    gv_lastCreatedBuildOrderUnitType = lp_buildStepUnitType;
-    gv_lastCreatedUnitTimestamp = TimerGetElapsed(gv_buildTimer);
-}
-
-void gf_AddUpgradeBuildOrderStep (string lp_buildStepUnitType) {
-    // Implementation
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_unitType = lp_buildStepUnitType;
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_numUnits = 1;
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_supplyCount = PlayerScoreValueGetAsInt(1, "FoodUsed");
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
-    gv_lastCreatedBuildOrderUnitType = lp_buildStepUnitType;
-    gv_lastCreatedUnitTimestamp = TimerGetElapsed(gv_buildTimer);
-}
-
-void gf_ResetCurrentBuildOrderStepsVariables () {
-    int autoA13422C8_ae;
-    int autoA13422C8_ai;
-
-    // Variable Declarations
-    int lv_i;
-
-    // Variable Initialization
-
-    // Implementation
-    gv_lastCreatedBuildOrderUnitType = null;
-    autoA13422C8_ae = gv_currentBuildOrderStepCursor;
-    autoA13422C8_ai = 1;
-    lv_i = 0;
-    for ( ; ( (autoA13422C8_ai >= 0 && lv_i <= autoA13422C8_ae) || (autoA13422C8_ai <= 0 && lv_i >= autoA13422C8_ae) ) ; lv_i += autoA13422C8_ai ) {
-        gv_currentBuildOrderSteps[lv_i].lv_unitType = null;
-        gv_currentBuildOrderSteps[lv_i].lv_supplyCount = 0;
-        gv_currentBuildOrderSteps[lv_i].lv_numUnits = 0;
-        gv_currentBuildOrderSteps[lv_i].lv_elapsedSeconds = 0;
-    }
-    gv_currentBuildOrderStepCursor = 0;
-}
-
-void gf_ResetBenchmarkBuildOrderStepsVariables () {
-    int auto488B3271_ae;
-    int auto488B3271_ai;
-
-    // Variable Declarations
-    int lv_i;
-
-    // Variable Initialization
-
-    // Implementation
-    auto488B3271_ae = gv_benchmarkBuildOrderStepCursor;
-    auto488B3271_ai = 1;
-    lv_i = 0;
-    for ( ; ( (auto488B3271_ai >= 0 && lv_i <= auto488B3271_ae) || (auto488B3271_ai <= 0 && lv_i >= auto488B3271_ae) ) ; lv_i += auto488B3271_ai ) {
-        gv_benchmarkBuildOrderSteps[lv_i].lv_unitType = null;
-        gv_benchmarkBuildOrderSteps[lv_i].lv_supplyCount = 0;
-        gv_benchmarkBuildOrderSteps[lv_i].lv_numUnits = 0;
-        gv_benchmarkBuildOrderSteps[lv_i].lv_elapsedSeconds = 0;
-    }
-    gv_benchmarkBuildOrderStepCursor = 0;
-    gv_totalNumBenchmarkBuildOrderSteps = 0;
+    MeleeInitUnits();
+    MeleeInitResources();
+    gf_ResetMapResources();
+    gf_ResetStatistics();
+    gf_ResetCurrentBuildOrderStepsVariables();
+    gf_ResetBenchmarkSupplyObjectives();
+    gf_ResetBenchmarkBuildOrder();
+    gf_ResetBenchmarkBuildOrderObjectives();
+    gf_ResetAlertTimers();
+    gf_ResetBenchmarkTimers();
+    TimerRestart(gv_buildTimer);
 }
 
 void gf_SaveMapResources () {
@@ -1776,6 +1701,97 @@ void gf_UnpauseGame () {
     gf_UnpauseBenchmarkTimers();
     gf_UnpauseAlertTimers();
     TimerPause(gv_buildTimer, false);
+}
+
+void gf_InitializeBenchmarkBuildOrderObjectives () {
+    // Implementation
+    if ((gv_practiceAgainstBenchmarkBuildOrder == true)) {
+        gf_LoadBenchmarkBuildOrder();
+        if ((gv_totalNumBenchmarkBuildOrderSteps > 0)) {
+            gf_CreateBenchmarkBuildOrderObjectives();
+        }
+        else {
+        }
+    }
+    else {
+    }
+}
+
+void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType) {
+    // Variable Declarations
+    int lv_buildOrderStepSupplyCount;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_buildStepUnitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (PlayerRace(EventPlayer()) == "Zerg"))) {
+        lv_buildOrderStepSupplyCount = (PlayerScoreValueGetAsInt(1, "FoodUsed")+1);
+    }
+    else {
+        lv_buildOrderStepSupplyCount = PlayerScoreValueGetAsInt(1, "FoodUsed");
+    }
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_unitType = lp_buildStepUnitType;
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_numUnits = 1;
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_supplyCount = lv_buildOrderStepSupplyCount;
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
+    gv_lastCreatedBuildOrderUnitType = lp_buildStepUnitType;
+    gv_lastCreatedUnitTimestamp = TimerGetElapsed(gv_buildTimer);
+}
+
+void gf_AddUpgradeBuildOrderStep (string lp_buildStepUnitType) {
+    // Implementation
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_unitType = lp_buildStepUnitType;
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_numUnits = 1;
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_supplyCount = PlayerScoreValueGetAsInt(1, "FoodUsed");
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
+    gv_lastCreatedBuildOrderUnitType = lp_buildStepUnitType;
+    gv_lastCreatedUnitTimestamp = TimerGetElapsed(gv_buildTimer);
+}
+
+void gf_ResetCurrentBuildOrderStepsVariables () {
+    int autoA13422C8_ae;
+    int autoA13422C8_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    gv_lastCreatedBuildOrderUnitType = null;
+    autoA13422C8_ae = gv_currentBuildOrderStepCursor;
+    autoA13422C8_ai = 1;
+    lv_i = 0;
+    for ( ; ( (autoA13422C8_ai >= 0 && lv_i <= autoA13422C8_ae) || (autoA13422C8_ai <= 0 && lv_i >= autoA13422C8_ae) ) ; lv_i += autoA13422C8_ai ) {
+        gv_currentBuildOrderSteps[lv_i].lv_unitType = null;
+        gv_currentBuildOrderSteps[lv_i].lv_supplyCount = 0;
+        gv_currentBuildOrderSteps[lv_i].lv_numUnits = 0;
+        gv_currentBuildOrderSteps[lv_i].lv_elapsedSeconds = 0;
+    }
+    gv_currentBuildOrderStepCursor = 0;
+}
+
+void gf_ResetBenchmarkBuildOrderStepsVariables () {
+    int auto488B3271_ae;
+    int auto488B3271_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    auto488B3271_ae = gv_benchmarkBuildOrderStepCursor;
+    auto488B3271_ai = 1;
+    lv_i = 0;
+    for ( ; ( (auto488B3271_ai >= 0 && lv_i <= auto488B3271_ae) || (auto488B3271_ai <= 0 && lv_i >= auto488B3271_ae) ) ; lv_i += auto488B3271_ai ) {
+        gv_benchmarkBuildOrderSteps[lv_i].lv_unitType = null;
+        gv_benchmarkBuildOrderSteps[lv_i].lv_supplyCount = 0;
+        gv_benchmarkBuildOrderSteps[lv_i].lv_numUnits = 0;
+        gv_benchmarkBuildOrderSteps[lv_i].lv_elapsedSeconds = 0;
+    }
+    gv_benchmarkBuildOrderStepCursor = 0;
+    gv_totalNumBenchmarkBuildOrderSteps = 0;
 }
 
 void gf_StartBenchmarkTimers () {
@@ -3128,7 +3144,6 @@ bool gt_StartBuild_Func (bool testConds, bool runActions) {
 
     DialogSetVisible(gv_benchmarkDialog, PlayerGroupAll(), false);
     DialogSetVisible(gv_alertMenuDialog, PlayerGroupAll(), false);
-    gf_ResetMapResources();
     UnitGroupLoopBegin(UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterAlly) | (1 << c_targetFilterNeutral), 0), 0));
     for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
         UnitRemove(UnitGroupLoopCurrent());
@@ -3139,24 +3154,14 @@ bool gt_StartBuild_Func (bool testConds, bool runActions) {
         UnitRemove(UnitGroupLoopCurrent());
     }
     UnitGroupLoopEnd();
-    MeleeInitResources();
-    if ((UnitGroupCount(UnitGroupFilterPlayer(UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0), 1, 0), c_unitCountAll) == 0)) {
-        MeleeInitUnits();
-    }
-    else {
-        UnitPauseAll(false);
-    }
-    TimerStart(gv_buildTimer, gv_onehourinsecondsof, false, c_timeGame);
     gf_SaveMatchupBenchmarks(gf_GetCurrentlySelectedMatchupasBankSectionKey());
     gf_SaveAlertConfigurations();
-    gf_ResetBenchmarkSupplyObjectives();
+    gf_ResetGameState();
     gf_ShowBenchmarkSupplyObjectives();
-    gf_StartBenchmarkTimers();
     gf_InitializeBenchmarkBuildOrderObjectives();
-    gf_ResetStatistics();
-    gf_ResetCurrentBuildOrderStepsVariables();
+    TimerStart(gv_buildTimer, gv_onehourinsecondsof, false, c_timeGame);
+    gf_StartBenchmarkTimers();
     gf_UnpauseGame();
-    gf_ResetAlertTimers();
     CameraPan(1, PlayerStartLocation(1), 0.5, -1, 5.0, true);
     CinematicFade(true, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
     return true;
@@ -3201,12 +3206,7 @@ bool gt_ResetBuild_Func (bool testConds, bool runActions) {
     UnitPauseAll(true);
     MeleeInitResources();
     Wait(0.5, c_timeGame);
-    gf_ResetMapResources();
-    gf_ResetStatistics();
-    gf_ResetBenchmarkSupplyObjectives();
-    gf_ResetBenchmarkTimers();
-    gf_ResetAlertTimers();
-    TimerRestart(gv_buildTimer);
+    gf_ResetGameState();
     UnitPauseAll(false);
     UIClearMessages(PlayerGroupAll(), c_messageAreaAll);
     CameraPan(1, PlayerStartLocation(1), 0.5, -1, 5.0, true);
