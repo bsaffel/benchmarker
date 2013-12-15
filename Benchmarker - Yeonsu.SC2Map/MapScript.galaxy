@@ -573,6 +573,7 @@ string gf_GetCurrentlySelectedMatchupasBankSectionKey ();
 text gf_GetCurrentlySelectedMatchupasText ();
 int gf_GetEditBoxIntValue (int lp_editBox);
 int gf_GetWinButtonYPadding ();
+unitgroup gf_GetPlayer1Units ();
 text gf_ConverttoTextWithSign (int lp_int);
 string gf_TrimSOffArmors (string lp_string);
 string gf_FormatCatalogStringwithSpaces (string lp_string);
@@ -1507,6 +1508,22 @@ int gf_GetWinButtonYPadding () {
     }
 }
 
+unitgroup gf_GetPlayer1Units () {
+    // Variable Declarations
+    unitgroup lv_result;
+
+    // Variable Initialization
+    lv_result = UnitGroupEmpty();
+
+    // Implementation
+    UnitGroupLoopBegin(UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0));
+    for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
+        UnitGroupAdd(lv_result, UnitGroupLoopCurrent());
+    }
+    UnitGroupLoopEnd();
+    return lv_result;
+}
+
 text gf_ConverttoTextWithSign (int lp_int) {
     // Variable Declarations
     text lv_result;
@@ -1575,11 +1592,24 @@ bool gf_IsCapitalLetterOrDigit (string lp_letter) {
 }
 
 void gf_ResetGameState () {
+    // Variable Declarations
+    unitgroup lv_player1Units;
+
+    // Variable Initialization
+    lv_player1Units = UnitGroupEmpty();
+
     // Implementation
-    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) >= 0)) {
+    gf_ResetMapResources();
+    lv_player1Units = gf_GetPlayer1Units();
+    if ((UnitGroupCount(lv_player1Units, c_unitCountAlive) >= 0)) {
+        UnitGroupLoopBegin(lv_player1Units);
+        for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
+            UnitRemove(UnitGroupLoopCurrent());
+        }
+        UnitGroupLoopEnd();
+        MeleeInitUnits();
     }
     else {
-        MeleeInitUnits();
     }
     MeleeInitResources();
     gf_ResetStatistics();
