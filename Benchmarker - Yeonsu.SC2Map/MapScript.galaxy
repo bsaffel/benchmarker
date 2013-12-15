@@ -28,7 +28,8 @@ struct gs_BuildOrderStep {
 //--------------------------------------------------------------------------------------------------
 // Global Variables
 //--------------------------------------------------------------------------------------------------
-bool gv_isDebug;
+bool gv_debugBuildOrder;
+bool gv_debugAlerts;
 int gv_greenBenchmarkSupplyThreshold;
 int gv_greenBenchmarkSecondsThreshold;
 int gv_yellowBenchmarkSupplyThreshold;
@@ -331,7 +332,7 @@ void InitGlobals () {
     gv_alertSupplyBlockCooldownTimer = TimerCreate();
     gv_alertZergDefaultMacroEnergyThreshold = 40;
     gv_alertTerranDefaultMacroEnergyThreshold = 65;
-    gv_alertProtossDefaultMacroEnergyThreshold = 55;
+    gv_alertProtossDefaultMacroEnergyThreshold = 60;
     gv_alertMacroEnergyCheckEnabled = true;
     gv_alertMacroEnergyCooldownTimer = TimerCreate();
     gv_alertUpgradeGapCheckEnabled = true;
@@ -739,7 +740,7 @@ bool gf_DoesSavedBuildOrderExistForCurrentMatchup () {
     else {
         lv_result = false;
     }
-    if ((gv_isDebug == true)) {
+    if ((gv_debugBuildOrder == true)) {
         TextExpressionSetToken("Param/Expression/449A463F", "A", libNtve_gf_ConvertBooleanToText(lv_result));
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/449A463F"));
     }
@@ -784,7 +785,7 @@ bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_
     else {
         lv_result = false;
     }
-    if ((gv_isDebug == true)) {
+    if ((gv_debugBuildOrder == true)) {
         TextExpressionSetToken("Param/Expression/161A937D", "A", UnitTypeGetName(gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_unitType));
         TextExpressionSetToken("Param/Expression/161A937D", "B", UnitTypeGetName(lp_unitType));
         TextExpressionSetToken("Param/Expression/161A937D", "C", libNtve_gf_ConvertBooleanToText(lv_result));
@@ -832,7 +833,7 @@ bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType) {
     }
     else {
     }
-    if ((gv_isDebug == true)) {
+    if ((gv_debugBuildOrder == true)) {
         TextExpressionSetToken("Param/Expression/C9374463", "A", UnitTypeGetName(lp_unitType));
         TextExpressionSetToken("Param/Expression/C9374463", "B", libNtve_gf_ConvertBooleanToText(lv_result));
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/C9374463"));
@@ -1260,7 +1261,6 @@ string gf_GetIconForBuildingType (string lp_unitType) {
         return "Assets\\Textures\\btn-building-zerg-hive.dds";
     }
     else {
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringToText((lp_unitType)));
         return null;
     }
 }
@@ -1639,7 +1639,7 @@ void gf_SaveMapResources () {
     for ( ; auto59129081_u <= UnitGroupCount(auto59129081_g, c_unitCountAll) ; auto59129081_u += BoolToInt(lv_currentResource == UnitGroupUnit(auto59129081_g, auto59129081_u)) ) {
         lv_currentResource = UnitGroupUnit(auto59129081_g, auto59129081_u);
         UnitGroupAdd(gv_resources, lv_currentResource);
-        if ((gv_isDebug == true)) {
+        if ((gv_debugBuildOrder == true)) {
             TextExpressionSetToken("Param/Expression/2322ADF7", "A", UnitTypeGetName(UnitGetType(lv_currentResource)));
             UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/2322ADF7"));
         }
@@ -1651,7 +1651,7 @@ void gf_SaveMapResources () {
     for ( ; autoAECA9D28_u <= UnitGroupCount(autoAECA9D28_g, c_unitCountAll) ; autoAECA9D28_u += BoolToInt(lv_currentResource == UnitGroupUnit(autoAECA9D28_g, autoAECA9D28_u)) ) {
         lv_currentResource = UnitGroupUnit(autoAECA9D28_g, autoAECA9D28_u);
         UnitGroupAdd(gv_resources, lv_currentResource);
-        if ((gv_isDebug == true)) {
+        if ((gv_debugBuildOrder == true)) {
             TextExpressionSetToken("Param/Expression/1C0F331A", "A", UnitTypeGetName(UnitGetType(lv_currentResource)));
             UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/1C0F331A"));
         }
@@ -1806,6 +1806,12 @@ void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType) {
     gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
     gv_lastCreatedBuildOrderUnitType = lp_buildStepUnitType;
     gv_lastCreatedUnitTimestamp = TimerGetElapsed(gv_buildTimer);
+    if ((gv_debugBuildOrder == true)) {
+        TextExpressionSetToken("Param/Expression/7FAB1454", "A", gf_GetCurrentBuildOrderStepText(gv_currentBuildOrderStepCursor));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/7FAB1454"));
+    }
+    else {
+    }
 }
 
 void gf_AddUpgradeBuildOrderStep (string lp_buildStepUnitType) {
@@ -2854,7 +2860,7 @@ void gf_LoadAlertRowConfiguration (string lp_alertEnabledKey, string lp_alertThr
 void gf_EvaluateBenchmarkBuildOrderStepObjective (string lp_unitType) {
     // Implementation
     if ((gv_benchmarkBuildOrderStepCursor > 0) && ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[(gv_benchmarkBuildOrderStepCursor-1)]) == c_objectiveStateFailed) && (gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep(lp_unitType, (gv_benchmarkBuildOrderStepCursor-1)) == true))) {
-        if ((gv_isDebug == true)) {
+        if ((gv_debugBuildOrder == true)) {
             TextExpressionSetToken("Param/Expression/FB79BAF4", "B", UnitTypeGetName(lp_unitType));
             TextExpressionSetToken("Param/Expression/FB79BAF4", "A", IntToText((gv_benchmarkBuildOrderStepCursor-1)));
             UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/FB79BAF4"));
@@ -2865,14 +2871,14 @@ void gf_EvaluateBenchmarkBuildOrderStepObjective (string lp_unitType) {
     }
     else {
         if ((gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep(lp_unitType, gv_benchmarkBuildOrderStepCursor) == true)) {
-            if ((gv_isDebug == true)) {
+            if ((gv_debugBuildOrder == true)) {
                 TextExpressionSetToken("Param/Expression/6697D031", "A", IntToText(gv_benchmarkBuildOrderStepCursor));
                 UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/6697D031"));
             }
             else {
             }
             if (((gf_IsNumUnitsCorrectForBenchmarkBuildOrderStep(gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor)].lv_numUnits, gv_benchmarkBuildOrderStepCursor) == true) && (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[(gv_benchmarkBuildOrderStepCursor)]) == c_objectiveStateActive))) {
-                if ((gv_isDebug == true)) {
+                if ((gv_debugBuildOrder == true)) {
                     UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/36B26B35"));
                 }
                 else {
@@ -2880,7 +2886,7 @@ void gf_EvaluateBenchmarkBuildOrderStepObjective (string lp_unitType) {
                 gf_CompleteBenchmarkBuildOrderStepObjective(gv_benchmarkBuildOrderStepCursor);
             }
             else {
-                if ((gv_isDebug == true)) {
+                if ((gv_debugBuildOrder == true)) {
                     TextExpressionSetToken("Param/Expression/0A0B2E84", "A", IntToText(gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor)].lv_numUnits));
                     TextExpressionSetToken("Param/Expression/0A0B2E84", "B", IntToText(gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_numUnits));
                     UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/0A0B2E84"));
@@ -2890,7 +2896,7 @@ void gf_EvaluateBenchmarkBuildOrderStepObjective (string lp_unitType) {
             }
         }
         else {
-            if ((gv_isDebug == true)) {
+            if ((gv_debugBuildOrder == true)) {
                 TextExpressionSetToken("Param/Expression/53A44017", "A", IntToText((gv_benchmarkBuildOrderStepCursor-1)));
                 UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/53A44017"));
             }
@@ -2908,7 +2914,7 @@ void gf_CompleteBenchmarkBuildOrderStepObjective (int lp_benchmarkBuildOrderInde
     // Variable Initialization
 
     // Implementation
-    if ((gv_isDebug == true)) {
+    if ((gv_debugBuildOrder == true)) {
         TextExpressionSetToken("Param/Expression/83361AD6", "A", IntToText(lp_benchmarkBuildOrderIndex));
         TextExpressionSetToken("Param/Expression/83361AD6", "B", IntToText(gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex(lp_benchmarkBuildOrderIndex)));
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/83361AD6"));
@@ -2924,7 +2930,7 @@ void gf_CompleteBenchmarkBuildOrderStepObjective (int lp_benchmarkBuildOrderInde
 
 void gf_FailBenchmarkBuildOrderStepObjective (int lp_benchmarkBuildOrderIndex) {
     // Implementation
-    if ((gv_isDebug == true)) {
+    if ((gv_debugBuildOrder == true)) {
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/C8622CB1"));
     }
     else {
@@ -2952,7 +2958,7 @@ void gf_CreateBenchmarkBuildOrderObjectives () {
     // Variable Initialization
 
     // Implementation
-    if ((gv_isDebug == true)) {
+    if ((gv_debugBuildOrder == true)) {
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/8B1A10FA"));
     }
     else {
@@ -3122,7 +3128,7 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
     TextExpressionSetToken("Param/Expression/776434DE", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
     UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/776434DE"));
     if ((((TimerGetElapsed(gv_buildTimer)-gv_lastCreatedUnitTimestamp) <= 15.0) && (UnitGetType(EventUnitProgressUnit()) == gv_lastCreatedBuildOrderUnitType))) {
-        if ((gv_isDebug == true)) {
+        if ((gv_debugBuildOrder == true)) {
             UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/50D360E2"));
             TextExpressionSetToken("Param/Expression/2A0E9DD3", "A", gf_GetCurrentBuildOrderStepText((gv_currentBuildOrderStepCursor-1)));
             UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/2A0E9DD3"));
@@ -3133,15 +3139,9 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
     }
     else {
         if (((gv_currentBuildOrderStepCursor) < gv_maxCurrentBuildOrderStepsTracked)) {
-            if ((gv_isDebug == true)) {
-                TextExpressionSetToken("Param/Expression/7FAB1454", "A", gf_GetCurrentBuildOrderStepText(gv_currentBuildOrderStepCursor));
-                UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/7FAB1454"));
-            }
-            else {
-            }
             gf_AddUnitBuildOrderStep(libNtve_gf_TriggeringProgressUnitType());
             if (((gv_totalNumBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && ((gv_currentBuildOrderStepCursor) < (gv_totalNumBenchmarkBuildOrderSteps+gv_numCorrectedBenchmarkBuildOrderSteps)))) {
-                if ((gv_isDebug == true)) {
+                if ((gv_debugBuildOrder == true)) {
                     TextExpressionSetToken("Param/Expression/F78FD77D", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
                     UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/F78FD77D"));
                 }
@@ -3150,7 +3150,7 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
                 gf_EvaluateBenchmarkBuildOrderStepObjective(libNtve_gf_TriggeringProgressUnitType());
             }
             else {
-                if ((gv_isDebug == true)) {
+                if ((gv_debugBuildOrder == true)) {
                     UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/E10856B1"));
                 }
                 else {
@@ -3159,7 +3159,7 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
             gv_currentBuildOrderStepCursor += 1;
         }
         else {
-            if ((gv_isDebug == true)) {
+            if ((gv_debugBuildOrder == true)) {
                 UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/15C40397"));
             }
             else {
@@ -3222,7 +3222,7 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_LoadAlertConfigurations();
     gf_CreateHiddenBenchmarkSupplyObjectives();
     gf_SaveMapResources();
-    gv_isDebug = true;
+    gv_debugBuildOrder = true;
     return true;
 }
 
@@ -3674,7 +3674,7 @@ bool gt_GasAboveThreshold_Func (bool testConds, bool runActions) {
     }
 
     TimerStart(gv_alertGasCooldownTimer, gv_alertCooldownSeconds, false, c_timeGame);
-    UIAlert("MineralsTooHigh2", 1, StringExternal("Param/Value/F8A6C784"), null);
+    UIAlert("GasTooHigh", 1, StringExternal("Param/Value/F8A6C784"), null);
     if ((gv_muteAlertsEnabled == false)) {
         SoundPlay(SoundLink("Doodad_ProtossWarpInPad_Alert", -1), PlayerGroupAll(), 50.0, 0.0);
     }
@@ -3710,13 +3710,13 @@ bool gt_SupplyBlockImminent_Func (bool testConds, bool runActions) {
     TimerStart(gv_alertSupplyBlockCooldownTimer, gv_warningPingCooldownSeconds, false, c_timeGame);
     auto281F1F30_val = PlayerRace(1);
     if (auto281F1F30_val == "Prot") {
-        UIAlert("TrainError_Prot2", 1, StringExternal("Param/Value/7533586F"), null);
+        UIAlert("SupplyBlockImminentProtoss", 1, StringExternal("Param/Value/7533586F"), null);
     }
     else if (auto281F1F30_val == "Terr") {
-        UIAlert("TrainError_Terr2", 1, StringExternal("Param/Value/02411A2F"), null);
+        UIAlert("SupplyBlockImminentTerran", 1, StringExternal("Param/Value/02411A2F"), null);
     }
     else if (auto281F1F30_val == "Zerg") {
-        UIAlert("TrainError_Zerg2", 1, StringExternal("Param/Value/657B8378"), null);
+        UIAlert("SupplyBlockImminentZerg", 1, StringExternal("Param/Value/657B8378"), null);
     }
     else {
     }
@@ -3768,11 +3768,11 @@ bool gt_RaceMacroEnergyAboveThreshold_Func (bool testConds, bool runActions) {
             autoB329AA1E_val = PlayerRace(1);
             if (autoB329AA1E_val == "Zerg") {
                 TextExpressionSetToken("Param/Expression/23180F1D", "A", UnitTypeGetName(UnitGetType(lv_currentunit)));
-                UIAlertUnit("QueenEnergyTooHigh2", 1, TextExpressionAssemble("Param/Expression/23180F1D"), null, lv_currentunit);
+                UIAlertUnit("NexusEnergyTooHigh", 1, TextExpressionAssemble("Param/Expression/23180F1D"), null, lv_currentunit);
             }
             else if (autoB329AA1E_val == "Terr") {
                 TextExpressionSetToken("Param/Expression/BF1F3D17", "A", UnitTypeGetName(UnitGetType(lv_currentunit)));
-                UIAlertUnit("QueenEnergyTooHigh22", 1, TextExpressionAssemble("Param/Expression/BF1F3D17"), null, lv_currentunit);
+                UIAlertUnit("OrbitalCommandEnergyTooHigh", 1, TextExpressionAssemble("Param/Expression/BF1F3D17"), null, lv_currentunit);
             }
             else if (autoB329AA1E_val == "Prot") {
                 TextExpressionSetToken("Param/Expression/BB1E6CB1", "A", UnitTypeGetName(UnitGetType(lv_currentunit)));
@@ -3876,7 +3876,7 @@ bool gt_UpgradeGapAboveThresholdTimerExpires_Func (bool testConds, bool runActio
             TextExpressionSetToken("Param/Expression/DDA3FDF3", "A", StringToText(StringWord(lv_currentNextUpgradeNameFormatted, 4)));
             TextExpressionSetToken("Param/Expression/DDA3FDF3", "B", StringToText(gf_TrimSOffArmors(StringWord(lv_currentNextUpgradeNameFormatted, 5))));
             TextExpressionSetToken("Param/Expression/DDA3FDF3", "C", StringToText(StringWord(lv_currentNextUpgradeNameFormatted, 7)));
-            UIAlert("MineralsTooHigh3", 1, TextExpressionAssemble("Param/Expression/DDA3FDF3"), (CatalogFieldValueGet(c_gameCatalogUpgrade, lv_currentNextUpgrade, "Icon", c_playerAny)));
+            UIAlert("UpgradeDelayed", 1, TextExpressionAssemble("Param/Expression/DDA3FDF3"), (CatalogFieldValueGet(c_gameCatalogUpgrade, lv_currentNextUpgrade, "Icon", c_playerAny)));
             if ((gv_muteAlertsEnabled == false)) {
                 SoundPlay(SoundLink("UI_ObjectiveUpdate", -1), PlayerGroupAll(), 50.0, 0.0);
             }
@@ -4063,7 +4063,7 @@ bool gt_ProductionIdleAboveThresholdTimerExpires_Func (bool testConds, bool runA
         if (((EventTimer() == gv_alertProductionIdleBuildingTimers[lv_i]) || (EventTimer() == gv_alertProductionIdleCooldownTimers[lv_i]))) {
             lv_currentUnitType = gv_alertProductionIdleUnitTypes[lv_i];
             TextExpressionSetToken("Param/Expression/FFDFB39E", "A", UnitTypeGetName(lv_currentUnitType));
-            UIAlert("MineralsTooHigh32", 1, TextExpressionAssemble("Param/Expression/FFDFB39E"), gf_GetIconForBuildingType(lv_currentUnitType));
+            UIAlert("ProductionIdleTooLong", 1, TextExpressionAssemble("Param/Expression/FFDFB39E"), gf_GetIconForBuildingType(lv_currentUnitType));
             SoundPlay(SoundLink("Alert_UniObjectiveCompleted", -1), PlayerGroupAll(), 50.0, 0.0);
             if ((gf_IsUnitTypeTrainingQueueEmpty(lv_currentUnitType) == true)) {
                 TimerStart(gv_alertProductionIdleCooldownTimers[lv_i], gv_alertCooldownSeconds, false, c_timeGame);
