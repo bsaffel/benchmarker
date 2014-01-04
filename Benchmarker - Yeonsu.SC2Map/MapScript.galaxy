@@ -29,6 +29,7 @@ struct gs_BuildOrderStep {
 // Global Variables
 //--------------------------------------------------------------------------------------------------
 bool gv_debugBuildOrder;
+bool gv_debugMap;
 bool gv_debugAlerts;
 int gv_greenBenchmarkSupplyThreshold;
 int gv_greenBenchmarkSecondsThreshold;
@@ -579,8 +580,8 @@ text gf_ConverttoTextWithSign (int lp_int);
 string gf_TrimSOffArmors (string lp_string);
 string gf_FormatCatalogStringwithSpaces (string lp_string);
 bool gf_IsCapitalLetterOrDigit (string lp_letter);
+void gf_InitializeMapResourcesUnitGroup ();
 void gf_ResetGameState ();
-void gf_SaveMapResources ();
 void gf_ResetMapResources ();
 void gf_InitializeGameArrayDefaults ();
 void gf_PauseGame ();
@@ -659,10 +660,10 @@ void gf_LookatandPanToUnit (unit lp_unit);
 //--------------------------------------------------------------------------------------------------
 // Trigger Variables
 //--------------------------------------------------------------------------------------------------
-trigger gt_OnUpgradeUpdateCurrentBuildOrder;
-trigger gt_OnUnitStartUpdateCurrentBuildOrder;
 trigger gt_MapInitialization;
 trigger gt_EndGame;
+trigger gt_OnUpgradeUpdateCurrentBuildOrder;
+trigger gt_OnUnitStartUpdateCurrentBuildOrder;
 trigger gt_StartBuild;
 trigger gt_ResetBuild;
 trigger gt_CloseStatsandResumeBuildfromOkButton;
@@ -1592,6 +1593,44 @@ bool gf_IsCapitalLetterOrDigit (string lp_letter) {
     }
 }
 
+void gf_InitializeMapResourcesUnitGroup () {
+    unitgroup auto59129081_g;
+    int auto59129081_u;
+    unitgroup autoAECA9D28_g;
+    int autoAECA9D28_u;
+
+    // Variable Declarations
+    unit lv_currentResource;
+
+    // Variable Initialization
+
+    // Implementation
+    auto59129081_g = UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter((1 << c_targetFilterHarvestableResource), 0, 0, 0), 0);
+    auto59129081_u = 1;
+    for ( ; auto59129081_u <= UnitGroupCount(auto59129081_g, c_unitCountAll) ; auto59129081_u += BoolToInt(lv_currentResource == UnitGroupUnit(auto59129081_g, auto59129081_u)) ) {
+        lv_currentResource = UnitGroupUnit(auto59129081_g, auto59129081_u);
+        UnitGroupAdd(gv_resources, lv_currentResource);
+        if ((gv_debugMap == true)) {
+            TextExpressionSetToken("Param/Expression/2322ADF7", "A", UnitTypeGetName(UnitGetType(lv_currentResource)));
+            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/2322ADF7"));
+        }
+        else {
+        }
+    }
+    autoAECA9D28_g = UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter((1 << c_targetFilterRawResource), 0, 0, 0), 0);
+    autoAECA9D28_u = 1;
+    for ( ; autoAECA9D28_u <= UnitGroupCount(autoAECA9D28_g, c_unitCountAll) ; autoAECA9D28_u += BoolToInt(lv_currentResource == UnitGroupUnit(autoAECA9D28_g, autoAECA9D28_u)) ) {
+        lv_currentResource = UnitGroupUnit(autoAECA9D28_g, autoAECA9D28_u);
+        UnitGroupAdd(gv_resources, lv_currentResource);
+        if ((gv_debugMap == true)) {
+            TextExpressionSetToken("Param/Expression/1C0F331A", "A", UnitTypeGetName(UnitGetType(lv_currentResource)));
+            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/1C0F331A"));
+        }
+        else {
+        }
+    }
+}
+
 void gf_ResetGameState () {
     // Variable Declarations
     unitgroup lv_player1Units;
@@ -1623,51 +1662,15 @@ void gf_ResetGameState () {
     TimerRestart(gv_buildTimer);
 }
 
-void gf_SaveMapResources () {
-    unitgroup auto59129081_g;
-    int auto59129081_u;
-    unitgroup autoAECA9D28_g;
-    int autoAECA9D28_u;
-
-    // Variable Declarations
-    unit lv_currentResource;
-
-    // Variable Initialization
-
-    // Implementation
-    auto59129081_g = UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter((1 << c_targetFilterHarvestableResource), 0, 0, 0), 0);
-    auto59129081_u = 1;
-    for ( ; auto59129081_u <= UnitGroupCount(auto59129081_g, c_unitCountAll) ; auto59129081_u += BoolToInt(lv_currentResource == UnitGroupUnit(auto59129081_g, auto59129081_u)) ) {
-        lv_currentResource = UnitGroupUnit(auto59129081_g, auto59129081_u);
-        UnitGroupAdd(gv_resources, lv_currentResource);
-        if ((gv_debugBuildOrder == true)) {
-            TextExpressionSetToken("Param/Expression/2322ADF7", "A", UnitTypeGetName(UnitGetType(lv_currentResource)));
-            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/2322ADF7"));
-        }
-        else {
-        }
-    }
-    autoAECA9D28_g = UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter((1 << c_targetFilterRawResource), 0, 0, 0), 0);
-    autoAECA9D28_u = 1;
-    for ( ; autoAECA9D28_u <= UnitGroupCount(autoAECA9D28_g, c_unitCountAll) ; autoAECA9D28_u += BoolToInt(lv_currentResource == UnitGroupUnit(autoAECA9D28_g, autoAECA9D28_u)) ) {
-        lv_currentResource = UnitGroupUnit(autoAECA9D28_g, autoAECA9D28_u);
-        UnitGroupAdd(gv_resources, lv_currentResource);
-        if ((gv_debugBuildOrder == true)) {
-            TextExpressionSetToken("Param/Expression/1C0F331A", "A", UnitTypeGetName(UnitGetType(lv_currentResource)));
-            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/1C0F331A"));
-        }
-        else {
-        }
-    }
-}
-
 void gf_ResetMapResources () {
     unitgroup auto239B13AC_g;
     int auto239B13AC_u;
-    string autoD5EEC4D5_val;
 
     // Variable Declarations
+    string lv_currentResourceType;
+    point lv_currentPosition;
     unit lv_currentResource;
+    int lv_resourcesReplaced;
 
     // Variable Initialization
 
@@ -1676,33 +1679,23 @@ void gf_ResetMapResources () {
     auto239B13AC_u = 1;
     for ( ; auto239B13AC_u <= UnitGroupCount(auto239B13AC_g, c_unitCountAll) ; auto239B13AC_u += BoolToInt(lv_currentResource == UnitGroupUnit(auto239B13AC_g, auto239B13AC_u)) ) {
         lv_currentResource = UnitGroupUnit(auto239B13AC_g, auto239B13AC_u);
-        autoD5EEC4D5_val = UnitGetType(lv_currentResource);
-        if (autoD5EEC4D5_val == "VespeneGeyser") {
-            UnitBehaviorRemove(lv_currentResource, "RawVespeneGeyserGas", 1);
-            UnitBehaviorAdd(lv_currentResource, "RawVespeneGeyserGas", lv_currentResource, 1);
-        }
-        else if (autoD5EEC4D5_val == "ProtossVespeneGeyser") {
-            UnitBehaviorRemove(lv_currentResource, "RawVespeneGeyserGas", 1);
-            UnitBehaviorAdd(lv_currentResource, "RawVespeneGeyserGas", lv_currentResource, 1);
-        }
-        else if (autoD5EEC4D5_val == "SpacePlatformGeyser") {
-            UnitBehaviorRemove(lv_currentResource, "RawVespeneGeyserGas", 1);
-            UnitBehaviorAdd(lv_currentResource, "RawVespeneGeyserGas", lv_currentResource, 1);
-        }
-        else if (autoD5EEC4D5_val == "RichVespeneGeyser") {
-            UnitBehaviorRemove(lv_currentResource, "RawRichVespeneGeyserGas", 1);
-            UnitBehaviorAdd(lv_currentResource, "RawRichVespeneGeyserGas", lv_currentResource, 1);
-        }
-        else if (autoD5EEC4D5_val == "MineralField") {
-            UnitBehaviorRemove(lv_currentResource, "MineralFieldMinerals", 1);
-            UnitBehaviorAdd(lv_currentResource, "MineralFieldMinerals", lv_currentResource, 1);
-        }
-        else if (autoD5EEC4D5_val == "RichMineralField") {
-            UnitBehaviorRemove(lv_currentResource, "HighYieldMineralFieldMinerals", 1);
-            UnitBehaviorAdd(lv_currentResource, "HighYieldMineralFieldMinerals", lv_currentResource, 1);
+        lv_currentResourceType = UnitGetType(lv_currentResource);
+        if (((((lv_currentResourceType == "VespeneGeyser") || (lv_currentResourceType == "RichVespeneGeyser") || (lv_currentResourceType == "ProtossVespeneGeyser") || (lv_currentResourceType == "SpacePlatformGeyser")) && (libNtve_gf_UnitGetPropertyResources(lv_currentResource, c_unitPropCurrent) < 2500)) || (((lv_currentResourceType == "MineralField") || (lv_currentResourceType == "RichMineralField")) && (libNtve_gf_UnitGetPropertyResources(lv_currentResource, c_unitPropCurrent) < 1500)))) {
+            lv_currentPosition = UnitGetPosition(lv_currentResource);
+            UnitRemove(lv_currentResource);
+            UnitGroupRemove(gv_resources, lv_currentResource);
+            libNtve_gf_CreateUnitsWithDefaultFacing(1, lv_currentResourceType, 0, 0, lv_currentPosition);
+            UnitGroupAdd(gv_resources, UnitLastCreated());
+            lv_resourcesReplaced += 1;
         }
         else {
         }
+    }
+    if ((gv_debugMap == true)) {
+        TextExpressionSetToken("Param/Expression/F4AFF87D", "A", IntToText(lv_resourcesReplaced));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/F4AFF87D"));
+    }
+    else {
     }
 }
 
@@ -3098,6 +3091,88 @@ void gf_LookatandPanToUnit (unit lp_unit) {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Map Initialization
+//--------------------------------------------------------------------------------------------------
+bool gt_MapInitialization_Func (bool testConds, bool runActions) {
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    GameSetSpeedValue(c_gameSpeedFaster);
+    CinematicFade(false, 0.0, c_fadeStyleNormal, Color(0.00, 0.00, 0.00), 0.0, true);
+    gf_InitializeGameArrayDefaults();
+    MeleeInitUnits();
+    gf_PauseGame();
+    BankLoad(gv_benchmarkerBankName, 1);
+    BankSectionCreate(BankLastCreated(), gv_vZergMatchupSectionKey);
+    BankSectionCreate(BankLastCreated(), gv_vTerranMatchupSectionKey);
+    BankSectionCreate(BankLastCreated(), gv_vProtossMatchupSectionKey);
+    gv_benchmarkerBank = BankLastCreated();
+    gf_CreateBenchmarkMenuDialog();
+    DialogSetVisible(DialogLastCreated(), PlayerGroupAll(), true);
+    gf_CreateAlertMenuDialog();
+    gf_CreateStatsDialog();
+    gf_CreateHelpDialog();
+    gf_CreatePostBuildReportDialog();
+    TimerWindowCreate(gv_buildTimer, StringExternal("Param/Value/EAED3202"), true, true);
+    TimerWindowSetAnchor(TimerWindowLastCreated(), c_anchorTopRight, 0, 0);
+    libNtve_gf_DisplayScreenButton(1, StringExternal("Param/Value/C0C8E519"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, gv_screenButtonYPadding, gt_OpenMainMenu);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/0944583F"), PlayerGroupAll());
+    libNtve_gf_DisplayScreenButton(2, StringExternal("Param/Value/EACFE916"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+gv_screenButtonHeight), gt_OpenHelpDialog);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/3D6AF1ED"), PlayerGroupAll());
+    libNtve_gf_DisplayScreenButton(3, StringExternal("Param/Value/CD7984D8"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+2*gv_screenButtonHeight), gt_OpenStatsDialog);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/B098BDCB"), PlayerGroupAll());
+    libNtve_gf_DisplayScreenButton(4, StringExternal("Param/Value/6BF2EBC1"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+3*gv_screenButtonHeight), gt_ResetBuild);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/66F0DD53"), PlayerGroupAll());
+    libNtve_gf_DisplayScreenButton(5, StringExternal("Param/Value/13AB0492"), gv_winButtonWidth, gv_winButtonHeight, c_anchorBottomRight, gv_winButtonXPadding, gf_GetWinButtonYPadding(), gt_EndGame);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/1CABB5B1"), PlayerGroupAll());
+    gf_LoadMatchupBenchmarks(gv_vZergMatchupSectionKey);
+    gf_LoadAlertConfigurations();
+    gf_CreateHiddenBenchmarkSupplyObjectives();
+    gf_InitializeMapResourcesUnitGroup();
+    gv_debugMap = true;
+    gv_debugAlerts = false;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_MapInitialization_Init () {
+    gt_MapInitialization = TriggerCreate("gt_MapInitialization_Func");
+    TriggerAddEventMapInit(gt_MapInitialization);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: End Game
+//--------------------------------------------------------------------------------------------------
+bool gt_EndGame_Func (bool testConds, bool runActions) {
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    UnitGroupLoopBegin(UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterAlly) | (1 << c_targetFilterNeutral) | (1 << c_targetFilterEnemy) | (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0));
+    for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
+        UnitKill(UnitGroupLoopCurrent());
+    }
+    UnitGroupLoopEnd();
+    GameOver(1, c_gameOverVictory, true, true);
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_EndGame_Init () {
+    gt_EndGame = TriggerCreate("gt_EndGame_Func");
+    TriggerAddEventChatMessage(gt_EndGame, c_playerAny, "gg", false);
+    TriggerAddEventKeyPressed(gt_EndGame, 1, c_keyW, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: On Upgrade - Update Current Build Order
 //--------------------------------------------------------------------------------------------------
 bool gt_OnUpgradeUpdateCurrentBuildOrder_Func (bool testConds, bool runActions) {
@@ -3175,87 +3250,6 @@ void gt_OnUnitStartUpdateCurrentBuildOrder_Init () {
     gt_OnUnitStartUpdateCurrentBuildOrder = TriggerCreate("gt_OnUnitStartUpdateCurrentBuildOrder_Func");
     TriggerAddEventUnitTrainProgress(gt_OnUnitStartUpdateCurrentBuildOrder, null, c_unitProgressStageStart);
     TriggerAddEventUnitConstructProgress(gt_OnUnitStartUpdateCurrentBuildOrder, null, c_unitProgressStageStart);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Map Initialization
-//--------------------------------------------------------------------------------------------------
-bool gt_MapInitialization_Func (bool testConds, bool runActions) {
-    // Variable Declarations
-    int lv_i;
-
-    // Variable Initialization
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    GameSetSpeedValue(c_gameSpeedFaster);
-    CinematicFade(false, 0.0, c_fadeStyleNormal, Color(0.00, 0.00, 0.00), 0.0, true);
-    gf_InitializeGameArrayDefaults();
-    MeleeInitUnits();
-    gf_PauseGame();
-    BankLoad(gv_benchmarkerBankName, 1);
-    BankSectionCreate(BankLastCreated(), gv_vZergMatchupSectionKey);
-    BankSectionCreate(BankLastCreated(), gv_vTerranMatchupSectionKey);
-    BankSectionCreate(BankLastCreated(), gv_vProtossMatchupSectionKey);
-    gv_benchmarkerBank = BankLastCreated();
-    gf_CreateBenchmarkMenuDialog();
-    DialogSetVisible(DialogLastCreated(), PlayerGroupAll(), true);
-    gf_CreateAlertMenuDialog();
-    gf_CreateStatsDialog();
-    gf_CreateHelpDialog();
-    gf_CreatePostBuildReportDialog();
-    TimerWindowCreate(gv_buildTimer, StringExternal("Param/Value/EAED3202"), true, true);
-    TimerWindowSetAnchor(TimerWindowLastCreated(), c_anchorTopRight, 0, 0);
-    libNtve_gf_DisplayScreenButton(1, StringExternal("Param/Value/C0C8E519"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, gv_screenButtonYPadding, gt_OpenMainMenu);
-    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/0944583F"), PlayerGroupAll());
-    libNtve_gf_DisplayScreenButton(2, StringExternal("Param/Value/EACFE916"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+gv_screenButtonHeight), gt_OpenHelpDialog);
-    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/3D6AF1ED"), PlayerGroupAll());
-    libNtve_gf_DisplayScreenButton(3, StringExternal("Param/Value/CD7984D8"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+2*gv_screenButtonHeight), gt_OpenStatsDialog);
-    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/B098BDCB"), PlayerGroupAll());
-    libNtve_gf_DisplayScreenButton(4, StringExternal("Param/Value/6BF2EBC1"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+3*gv_screenButtonHeight), gt_ResetBuild);
-    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/66F0DD53"), PlayerGroupAll());
-    libNtve_gf_DisplayScreenButton(5, StringExternal("Param/Value/13AB0492"), gv_winButtonWidth, gv_winButtonHeight, c_anchorBottomRight, gv_winButtonXPadding, gf_GetWinButtonYPadding(), gt_EndGame);
-    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/1CABB5B1"), PlayerGroupAll());
-    gf_LoadMatchupBenchmarks(gv_vZergMatchupSectionKey);
-    gf_LoadAlertConfigurations();
-    gf_CreateHiddenBenchmarkSupplyObjectives();
-    gf_SaveMapResources();
-    gv_debugBuildOrder = true;
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_MapInitialization_Init () {
-    gt_MapInitialization = TriggerCreate("gt_MapInitialization_Func");
-    TriggerAddEventMapInit(gt_MapInitialization);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: End Game
-//--------------------------------------------------------------------------------------------------
-bool gt_EndGame_Func (bool testConds, bool runActions) {
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    UnitGroupLoopBegin(UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterAlly) | (1 << c_targetFilterNeutral) | (1 << c_targetFilterEnemy) | (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0));
-    for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
-        UnitKill(UnitGroupLoopCurrent());
-    }
-    UnitGroupLoopEnd();
-    GameOver(1, c_gameOverVictory, true, true);
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_EndGame_Init () {
-    gt_EndGame = TriggerCreate("gt_EndGame_Func");
-    TriggerAddEventChatMessage(gt_EndGame, c_playerAny, "gg", false);
-    TriggerAddEventKeyPressed(gt_EndGame, 1, c_keyW, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -5171,10 +5165,10 @@ void gt_HatcheryLarvaSpawnFix_Init () {
 // Trigger Initialization
 //--------------------------------------------------------------------------------------------------
 void InitTriggers () {
-    gt_OnUpgradeUpdateCurrentBuildOrder_Init();
-    gt_OnUnitStartUpdateCurrentBuildOrder_Init();
     gt_MapInitialization_Init();
     gt_EndGame_Init();
+    gt_OnUpgradeUpdateCurrentBuildOrder_Init();
+    gt_OnUnitStartUpdateCurrentBuildOrder_Init();
     gt_StartBuild_Init();
     gt_ResetBuild_Init();
     gt_CloseStatsandResumeBuildfromOkButton_Init();
