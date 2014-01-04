@@ -580,6 +580,7 @@ text gf_ConverttoTextWithSign (int lp_int);
 string gf_TrimSOffArmors (string lp_string);
 string gf_FormatCatalogStringwithSpaces (string lp_string);
 bool gf_IsCapitalLetterOrDigit (string lp_letter);
+void gf_ResetCamera ();
 void gf_InitializeMapResourcesUnitGroup ();
 void gf_ResetGameState ();
 void gf_ResetMapResources ();
@@ -1593,6 +1594,11 @@ bool gf_IsCapitalLetterOrDigit (string lp_letter) {
     }
 }
 
+void gf_ResetCamera () {
+    // Implementation
+    CameraRestore(1, 0.75, -1, 10.0);
+}
+
 void gf_InitializeMapResourcesUnitGroup () {
     unitgroup auto59129081_g;
     int auto59129081_u;
@@ -1660,6 +1666,7 @@ void gf_ResetGameState () {
     gf_ResetAlertTimers();
     gf_ResetBenchmarkTimers();
     TimerRestart(gv_buildTimer);
+    gf_ResetCamera();
 }
 
 void gf_ResetMapResources () {
@@ -3105,8 +3112,10 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     }
 
     GameSetSpeedValue(c_gameSpeedFaster);
+    CameraSave(1);
     CinematicFade(false, 0.0, c_fadeStyleNormal, Color(0.00, 0.00, 0.00), 0.0, true);
     gf_InitializeGameArrayDefaults();
+    gf_InitializeMapResourcesUnitGroup();
     MeleeInitUnits();
     gf_PauseGame();
     BankLoad(gv_benchmarkerBankName, 1);
@@ -3135,7 +3144,6 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_LoadMatchupBenchmarks(gv_vZergMatchupSectionKey);
     gf_LoadAlertConfigurations();
     gf_CreateHiddenBenchmarkSupplyObjectives();
-    gf_InitializeMapResourcesUnitGroup();
     gv_debugMap = true;
     gv_debugAlerts = false;
     return true;
