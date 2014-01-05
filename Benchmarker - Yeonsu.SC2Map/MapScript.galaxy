@@ -31,6 +31,7 @@ struct gs_BuildOrderStep {
 bool gv_debugBuildOrder;
 bool gv_debugMap;
 bool gv_debugAlerts;
+bool gv_debugBank;
 int gv_greenBenchmarkSupplyThreshold;
 int gv_greenBenchmarkSecondsThreshold;
 int gv_yellowBenchmarkSupplyThreshold;
@@ -580,13 +581,13 @@ text gf_ConverttoTextWithSign (int lp_int);
 string gf_TrimSOffArmors (string lp_string);
 string gf_FormatCatalogStringwithSpaces (string lp_string);
 bool gf_IsCapitalLetterOrDigit (string lp_letter);
-void gf_ResetCamera ();
+void gf_InitializeGameArrayDefaults ();
 void gf_InitializeMapResourcesUnitGroup ();
 void gf_ResetGameState ();
 void gf_ResetMapResources ();
-void gf_InitializeGameArrayDefaults ();
 void gf_PauseGame ();
 void gf_UnpauseGame ();
+void gf_ResetCamera ();
 void gf_InitializeBenchmarkBuildOrderObjectives ();
 void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType);
 void gf_AddUpgradeBuildOrderStep (string lp_buildStepUnitType);
@@ -1594,9 +1595,44 @@ bool gf_IsCapitalLetterOrDigit (string lp_letter) {
     }
 }
 
-void gf_ResetCamera () {
+void gf_InitializeGameArrayDefaults () {
+    string auto6EDFB34C_val;
+
     // Implementation
-    CameraRestore(1, 0.75, -1, 10.0);
+    gv_benchmarkTimerDurations[0] = 360;
+    gv_benchmarkTimerDurations[1] = 480;
+    gv_benchmarkTimerDurations[2] = 600;
+    gv_benchmarkSupplyEntryKeys[0] = "benchmark1";
+    gv_benchmarkSupplyEntryKeys[1] = "benchmark2";
+    gv_benchmarkSupplyEntryKeys[2] = "benchmark3";
+    gv_benchmarkSupplyDefaults[0] = 30;
+    gv_benchmarkSupplyDefaults[1] = 55;
+    gv_benchmarkSupplyDefaults[2] = 80;
+    gv_benchmarkMatchupSectionKeys[0] = gv_vZergMatchupSectionKey;
+    gv_benchmarkMatchupSectionKeys[1] = gv_vTerranMatchupSectionKey;
+    gv_benchmarkMatchupSectionKeys[2] = gv_vProtossMatchupSectionKey;
+    gv_alertRowLabelWidths[0][0] = 335;
+    gv_alertRowLabelWidths[1][0] = 292;
+    gv_alertRowLabelWidths[2][0] = 317;
+    gv_alertRowLabelWidths[2][1] = 252;
+    auto6EDFB34C_val = PlayerRace(1);
+    if (auto6EDFB34C_val == "Prot") {
+        gv_alertRowLabelWidths[3][0] = (gv_alertMenuSupplyBlockBaseWidth+gv_alertMenuNexusNameWidth);
+    }
+    else if (auto6EDFB34C_val == "Terr") {
+        gv_alertRowLabelWidths[3][0] = (gv_alertMenuSupplyBlockBaseWidth+gv_alertMenuOrbitalNameWidth);
+    }
+    else if (auto6EDFB34C_val == "Zerg") {
+        gv_alertRowLabelWidths[3][0] = (gv_alertMenuSupplyBlockBaseWidth+gv_alertMenuQueenNameWidth);
+    }
+    else {
+    }
+    gv_alertRowLabelWidths[4][0] = 400;
+    gv_alertRowLabelWidths[4][1] = gv_secondsLabelWidth;
+    gv_alertRowLabelWidths[5][0] = 483;
+    gv_alertRowLabelWidths[5][1] = gv_secondsLabelWidth;
+    gv_alertRowLabelWidths[6][0] = 357;
+    gv_alertRowLabelWidths[7][0] = 335;
 }
 
 void gf_InitializeMapResourcesUnitGroup () {
@@ -1706,46 +1742,6 @@ void gf_ResetMapResources () {
     }
 }
 
-void gf_InitializeGameArrayDefaults () {
-    string auto6EDFB34C_val;
-
-    // Implementation
-    gv_benchmarkTimerDurations[0] = 360;
-    gv_benchmarkTimerDurations[1] = 480;
-    gv_benchmarkTimerDurations[2] = 600;
-    gv_benchmarkSupplyEntryKeys[0] = "benchmark1";
-    gv_benchmarkSupplyEntryKeys[1] = "benchmark2";
-    gv_benchmarkSupplyEntryKeys[2] = "benchmark3";
-    gv_benchmarkSupplyDefaults[0] = 30;
-    gv_benchmarkSupplyDefaults[1] = 55;
-    gv_benchmarkSupplyDefaults[2] = 80;
-    gv_benchmarkMatchupSectionKeys[0] = gv_vZergMatchupSectionKey;
-    gv_benchmarkMatchupSectionKeys[1] = gv_vTerranMatchupSectionKey;
-    gv_benchmarkMatchupSectionKeys[2] = gv_vProtossMatchupSectionKey;
-    gv_alertRowLabelWidths[0][0] = 335;
-    gv_alertRowLabelWidths[1][0] = 292;
-    gv_alertRowLabelWidths[2][0] = 317;
-    gv_alertRowLabelWidths[2][1] = 252;
-    auto6EDFB34C_val = PlayerRace(1);
-    if (auto6EDFB34C_val == "Prot") {
-        gv_alertRowLabelWidths[3][0] = (gv_alertMenuSupplyBlockBaseWidth+gv_alertMenuNexusNameWidth);
-    }
-    else if (auto6EDFB34C_val == "Terr") {
-        gv_alertRowLabelWidths[3][0] = (gv_alertMenuSupplyBlockBaseWidth+gv_alertMenuOrbitalNameWidth);
-    }
-    else if (auto6EDFB34C_val == "Zerg") {
-        gv_alertRowLabelWidths[3][0] = (gv_alertMenuSupplyBlockBaseWidth+gv_alertMenuQueenNameWidth);
-    }
-    else {
-    }
-    gv_alertRowLabelWidths[4][0] = 400;
-    gv_alertRowLabelWidths[4][1] = gv_secondsLabelWidth;
-    gv_alertRowLabelWidths[5][0] = 483;
-    gv_alertRowLabelWidths[5][1] = gv_secondsLabelWidth;
-    gv_alertRowLabelWidths[6][0] = 357;
-    gv_alertRowLabelWidths[7][0] = 335;
-}
-
 void gf_PauseGame () {
     // Variable Declarations
     int lv_i;
@@ -1772,6 +1768,11 @@ void gf_UnpauseGame () {
     gf_UnpauseBenchmarkTimers();
     gf_UnpauseAlertTimers();
     TimerPause(gv_buildTimer, false);
+}
+
+void gf_ResetCamera () {
+    // Implementation
+    CameraRestore(1, 0.75, -1, 10.0);
 }
 
 void gf_InitializeBenchmarkBuildOrderObjectives () {
@@ -2666,6 +2667,11 @@ void gf_SaveBenchmarkBuildOrder () {
     // Variable Initialization
 
     // Implementation
+    if ((gv_debugBank == true)) {
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/D246724E"));
+    }
+    else {
+    }
     auto895F190E_ae = (gv_currentBuildOrderStepCursor-1);
     auto895F190E_ai = 1;
     lv_currentStepNum = 0;
@@ -2674,8 +2680,21 @@ void gf_SaveBenchmarkBuildOrder () {
         BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_supplyCountBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lv_currentStepNum].lv_supplyCount);
         BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_numUnitsBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lv_currentStepNum].lv_numUnits);
         BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_elapsedSecondsBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lv_currentStepNum].lv_elapsedSeconds);
+        if ((gv_debugBank == true)) {
+            TextExpressionSetToken("Param/Expression/7AE0547A", "A", gf_GetCurrentBuildOrderStepText(lv_currentStepNum));
+            TextExpressionSetToken("Param/Expression/7AE0547A", "B", IntToText(lv_currentStepNum));
+            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/7AE0547A"));
+        }
+        else {
+        }
     }
     BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey, gv_currentBuildOrderStepCursor);
+    if ((gv_debugBank == true)) {
+        TextExpressionSetToken("Param/Expression/D8431969", "A", IntToText(gv_currentBuildOrderStepCursor));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/D8431969"));
+    }
+    else {
+    }
     BankSave(gv_benchmarkerBank);
 }
 
@@ -2691,6 +2710,15 @@ void gf_LoadBenchmarkBuildOrder () {
 
     // Implementation
     gv_totalNumBenchmarkBuildOrderSteps = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey);
+    if ((gv_debugBank == true)) {
+        TextExpressionSetToken("Param/Expression/6EB05484", "A", IntToText(BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey)));
+        TextExpressionSetToken("Param/Expression/6EB05484", "B", StringToText(gf_GetCurrentlySelectedMatchupasBankSectionKey()));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/6EB05484"));
+        TextExpressionSetToken("Param/Expression/A0919CC0", "A", IntToText(gv_totalNumBenchmarkBuildOrderSteps));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/A0919CC0"));
+    }
+    else {
+    }
     if ((gv_totalNumBenchmarkBuildOrderSteps > 0)) {
         auto8F962F3E_ae = (gv_totalNumBenchmarkBuildOrderSteps-1);
         auto8F962F3E_ai = 1;
@@ -2701,8 +2729,18 @@ void gf_LoadBenchmarkBuildOrder () {
             gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_numUnits = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_numUnitsBuildOrderStepEntryKey));
             gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_elapsedSeconds = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_elapsedSecondsBuildOrderStepEntryKey));
         }
+        if ((gv_debugBank == true)) {
+            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/4E470FCF"));
+        }
+        else {
+        }
     }
     else {
+        if ((gv_debugBank == true)) {
+            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/BB4C5D6E"));
+        }
+        else {
+        }
     }
 }
 
@@ -3144,8 +3182,7 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_LoadMatchupBenchmarks(gv_vZergMatchupSectionKey);
     gf_LoadAlertConfigurations();
     gf_CreateHiddenBenchmarkSupplyObjectives();
-    gv_debugMap = true;
-    gv_debugAlerts = false;
+    gv_debugBank = true;
     return true;
 }
 
@@ -3209,8 +3246,12 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
         return true;
     }
 
-    TextExpressionSetToken("Param/Expression/776434DE", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
-    UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/776434DE"));
+    if ((gv_debugBuildOrder == true)) {
+        TextExpressionSetToken("Param/Expression/776434DE", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/776434DE"));
+    }
+    else {
+    }
     if ((((TimerGetElapsed(gv_buildTimer)-gv_lastCreatedUnitTimestamp) <= 15.0) && (UnitGetType(EventUnitProgressUnit()) == gv_lastCreatedBuildOrderUnitType))) {
         if ((gv_debugBuildOrder == true)) {
             UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/50D360E2"));
@@ -3752,7 +3793,7 @@ bool gt_RaceMacroEnergyAboveThreshold_Func (bool testConds, bool runActions) {
 
     // Conditions
     if (testConds) {
-        if (!(((gf_IsRaceMacroEnergyAboveThreshold() == true) && (TimerGetRemaining(gv_alertMacroEnergyCooldownTimer) == 0.0) && (gv_paused == false) && (gv_alertMacroEnergyCheckEnabled == true)))) {
+        if (!(((EventPlayer() == 1) && (gf_IsRaceMacroEnergyAboveThreshold() == true) && (TimerGetRemaining(gv_alertMacroEnergyCooldownTimer) == 0.0) && (gv_paused == false) && (gv_alertMacroEnergyCheckEnabled == true)))) {
             return false;
         }
     }
@@ -4657,6 +4698,7 @@ bool gt_OpenPostBuildReportDialog_Func (bool testConds, bool runActions) {
         return true;
     }
 
+    Wait(1.0, c_timeGame);
     gf_PauseGame();
     gf_UpdatePostBuildReportDialogValues();
     DialogSetVisible(gv_postBuildReportDialog, PlayerGroupAll(), true);
