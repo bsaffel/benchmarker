@@ -28,48 +28,6 @@ struct gs_BuildOrderStep {
 //--------------------------------------------------------------------------------------------------
 // Global Variables
 //--------------------------------------------------------------------------------------------------
-bool gv_debugBuildOrder;
-bool gv_debugMap;
-bool gv_debugAlerts;
-bool gv_debugBank;
-int gv_greenBenchmarkSupplyThreshold;
-int gv_greenBenchmarkSecondsThreshold;
-int gv_yellowBenchmarkSupplyThreshold;
-int gv_yellowBenchmarkSecondsThreshold;
-int gv_orangeBenchmarkSupplyThreshold;
-int gv_orangeBenchmarkSecondsThreshold;
-int gv_trackSupplyUnitObjectivesUntil;
-bool gv_trackSupplyUnitsAsObjectives;
-int gv_buildOrderMaxGasSupply;
-string gv_lastCreatedBuildOrderUnitType;
-fixed gv_lastCreatedUnitTimestamp;
-int gv_maxCurrentBuildOrderStepsTracked;
-int gv_currentBuildOrderStepCursor;
-gs_BuildOrderStep[51] gv_currentBuildOrderSteps;
-int gv_numFailedBenchmarkBuildOrderSteps;
-int gv_numCorrectedBenchmarkBuildOrderSteps;
-int gv_totalNumBenchmarkBuildOrderSteps;
-bool gv_practiceAgainstBenchmarkBuildOrder;
-int[11] gv_benchmarkBuildOrderStepObjectives;
-gs_BuildOrderStep[21] gv_benchmarkBuildOrderSteps;
-int gv_benchmarkBuildOrderStepCursor;
-unitgroup gv_resources;
-bool gv_paused;
-timer gv_benchmark1Timer;
-timer gv_benchmark2Timer;
-timer gv_benchmark3Timer;
-int[4] gv_benchmarkSupplyObjectives;
-int gv_benchmarkMaxTimeObjective;
-int gv_benchmarkMaxTimeTotalSeconds;
-int gv_benchmarkMaxTimeMinutes;
-int gv_benchmarkMaxTimeSeconds;
-timer gv_benchmarkMaxTimeTimer;
-int[4] gv_benchmarkTimerDurations;
-int[4] gv_benchmarkSupplyValues;
-int[4] gv_benchmarkSupplyDefaults;
-int gv_benchmarkEndBuildatMinutes;
-int gv_benchmarkEndBuildatSeconds;
-int gv_benchmarkEndBuildTotalSeconds;
 bool gv_muteAlertsEnabled;
 int gv_numMorphingOverlords;
 timer gv_overlordInProgressTimer;
@@ -105,20 +63,57 @@ int gv_alertProductionIdleNumProductionTypes;
 timer[7] gv_alertProductionIdleBuildingTimers;
 timer[7] gv_alertProductionIdleCooldownTimers;
 string[7] gv_alertProductionIdleUnitTypes;
-fixed gv_spendingQuotient;
-bool gv_gasTaken;
-int gv_totalMineralSamplesThisBuild;
-int gv_totalGasSamplesThisBuild;
-int gv_totalAPMSamplesThisBuild;
-int gv_timeProductionIdleThisBuild;
-int gv_timeSupplyBlockedThisBuild;
-int gv_cumulativeAPM;
-int gv_cumulativeUnspentMinerals;
-int gv_cumulativeUnspentGas;
-int gv_workersCreated;
-int gv_totalMineralsCollected;
-int gv_totalGasCollected;
-int gv_totalNumberofUpgradesResearched;
+string gv_benchmarkBuildStepEntryKeyPrefix;
+string gv_numBenchmarkBuildOrderStepsEntryKey;
+string gv_unitTypeBuildOrderStepEntryKey;
+string gv_supplyCountBuildOrderStepEntryKey;
+string gv_numUnitsBuildOrderStepEntryKey;
+string gv_elapsedSecondsBuildOrderStepEntryKey;
+string gv_benchmarkerBankName;
+bank gv_benchmarkerBank;
+string gv_configurationOptionsSectionKey;
+string gv_benchmarkMaxTimeMinutesKey;
+string gv_benchmarkMaxTimeSecondsKey;
+string[4] gv_benchmarkMatchupSectionKeys;
+string[4] gv_benchmarkSupplyEntryKeys;
+string gv_benchmarkEndBuildSelectionKey;
+string gv_benchmarkEndBuildMinutesKey;
+string gv_benchmarkEndBuildSecondsKey;
+string gv_alertConfigurationSectionKey;
+string gv_alertMineralsCheckEnabledEntryKey;
+string gv_alertMineralsThresholdKey;
+string gv_alertGasCheckEnabledEntryKey;
+string gv_alertGasThresholdKey;
+string gv_alertSupplyBlockCheckEnabledEntryKey;
+string gv_alertSupplyBlockStartKey;
+string gv_alertSupplyBlockWithinCapKey;
+string gv_alertMacroEnergyCheckEnabledEntryKey;
+string gv_alertMacroEnergyThresholdKey;
+string gv_alertUpgradeGapCheckEnabledEntryKey;
+string gv_alertUpgradeGapThresholdKey;
+string gv_alertProductionIdleCheckEnabledEntryKey;
+string gv_alertProductionIdleThresholdKey;
+string gv_bestSpendingQuotientEntryKey;
+string gv_bestTotalWorkersCreatedEntryKey;
+string gv_bestTotalArmySupplyEntryKey;
+string gv_bestTotalArmyValueMineralsEntryKey;
+string gv_bestTotalArmyValueGasEntryKey;
+string gv_bestNumUpgradesResearchedEntryKey;
+string gv_bestTotalMineralsCollectedEntryKey;
+string gv_bestTotalGasCollectedEntryKey;
+string gv_bestTimeSupplyBlockedEntryKey;
+string gv_bestIdleProductionTimeEntryKey;
+string gv_bestAverageUnspentMineralsEntryKey;
+string gv_bestAverageUnspentGasEntryKey;
+string gv_bestAverageAPMEntryKey;
+string gv_vTerranMatchupSectionKey;
+string gv_vZergMatchupSectionKey;
+string gv_vProtossMatchupSectionKey;
+timer gv_buildTimer;
+bool gv_debugBuildOrder;
+bool gv_debugMap;
+bool gv_debugAlerts;
+bool gv_debugBank;
 color gv_objectiveSupplyColor;
 int gv_labelAlignmentSpacer;
 int gv_menuPadding;
@@ -229,53 +224,59 @@ int gv_practiceAgainstSavedBuildOrderLabel;
 int gv_displayBuildOrderHintsLabelWidth;
 int gv_displayBuildOrderHintsCheckbox;
 int gv_displayBuildOrderHintsLabel;
-timer gv_buildTimer;
-string gv_benchmarkBuildStepEntryKeyPrefix;
-string gv_numBenchmarkBuildOrderStepsEntryKey;
-string gv_unitTypeBuildOrderStepEntryKey;
-string gv_supplyCountBuildOrderStepEntryKey;
-string gv_numUnitsBuildOrderStepEntryKey;
-string gv_elapsedSecondsBuildOrderStepEntryKey;
-string gv_benchmarkerBankName;
-bank gv_benchmarkerBank;
-string gv_configurationOptionsSectionKey;
-string gv_benchmarkMaxTimeMinutesKey;
-string gv_benchmarkMaxTimeSecondsKey;
-string[4] gv_benchmarkMatchupSectionKeys;
-string[4] gv_benchmarkSupplyEntryKeys;
-string gv_benchmarkEndBuildSelectionKey;
-string gv_benchmarkEndBuildMinutesKey;
-string gv_benchmarkEndBuildSecondsKey;
-string gv_alertConfigurationSectionKey;
-string gv_alertMineralsCheckEnabledEntryKey;
-string gv_alertMineralsThresholdKey;
-string gv_alertGasCheckEnabledEntryKey;
-string gv_alertGasThresholdKey;
-string gv_alertSupplyBlockCheckEnabledEntryKey;
-string gv_alertSupplyBlockStartKey;
-string gv_alertSupplyBlockWithinCapKey;
-string gv_alertMacroEnergyCheckEnabledEntryKey;
-string gv_alertMacroEnergyThresholdKey;
-string gv_alertUpgradeGapCheckEnabledEntryKey;
-string gv_alertUpgradeGapThresholdKey;
-string gv_alertProductionIdleCheckEnabledEntryKey;
-string gv_alertProductionIdleThresholdKey;
-string gv_bestSpendingQuotientEntryKey;
-string gv_bestTotalWorkersCreatedEntryKey;
-string gv_bestTotalArmySupplyEntryKey;
-string gv_bestTotalArmyValueMineralsEntryKey;
-string gv_bestTotalArmyValueGasEntryKey;
-string gv_bestNumUpgradesResearchedEntryKey;
-string gv_bestTotalMineralsCollectedEntryKey;
-string gv_bestTotalGasCollectedEntryKey;
-string gv_bestTimeSupplyBlockedEntryKey;
-string gv_bestIdleProductionTimeEntryKey;
-string gv_bestAverageUnspentMineralsEntryKey;
-string gv_bestAverageUnspentGasEntryKey;
-string gv_bestAverageAPMEntryKey;
-string gv_vTerranMatchupSectionKey;
-string gv_vZergMatchupSectionKey;
-string gv_vProtossMatchupSectionKey;
+unitgroup gv_resources;
+bool gv_paused;
+int gv_onehourinsecondsof;
+timer gv_benchmark1Timer;
+timer gv_benchmark2Timer;
+timer gv_benchmark3Timer;
+int[4] gv_benchmarkSupplyObjectives;
+int gv_benchmarkMaxTimeObjective;
+int gv_benchmarkMaxTimeTotalSeconds;
+int gv_benchmarkMaxTimeMinutes;
+int gv_benchmarkMaxTimeSeconds;
+timer gv_benchmarkMaxTimeTimer;
+int[4] gv_benchmarkTimerDurations;
+int[4] gv_benchmarkSupplyValues;
+int[4] gv_benchmarkSupplyDefaults;
+int gv_benchmarkEndBuildatMinutes;
+int gv_benchmarkEndBuildatSeconds;
+int gv_benchmarkEndBuildTotalSeconds;
+int gv_greenBenchmarkSupplyThreshold;
+int gv_greenBenchmarkSecondsThreshold;
+int gv_yellowBenchmarkSupplyThreshold;
+int gv_yellowBenchmarkSecondsThreshold;
+int gv_orangeBenchmarkSupplyThreshold;
+int gv_orangeBenchmarkSecondsThreshold;
+int gv_trackSupplyUnitObjectivesUntil;
+bool gv_trackSupplyUnitsAsObjectives;
+int gv_buildOrderMaxGasSupply;
+string gv_lastCreatedBuildOrderUnitType;
+fixed gv_lastCreatedUnitTimestamp;
+int gv_maxCurrentBuildOrderStepsTracked;
+int gv_currentBuildOrderStepCursor;
+gs_BuildOrderStep[51] gv_currentBuildOrderSteps;
+int gv_numFailedBenchmarkBuildOrderSteps;
+int gv_numCorrectedBenchmarkBuildOrderSteps;
+int gv_totalNumBenchmarkBuildOrderSteps;
+bool gv_practiceAgainstBenchmarkBuildOrder;
+int[11] gv_benchmarkBuildOrderStepObjectives;
+gs_BuildOrderStep[21] gv_benchmarkBuildOrderSteps;
+int gv_benchmarkBuildOrderStepCursor;
+fixed gv_spendingQuotient;
+bool gv_gasTaken;
+int gv_totalMineralSamplesThisBuild;
+int gv_totalGasSamplesThisBuild;
+int gv_totalAPMSamplesThisBuild;
+int gv_timeProductionIdleThisBuild;
+int gv_timeSupplyBlockedThisBuild;
+int gv_cumulativeAPM;
+int gv_cumulativeUnspentMinerals;
+int gv_cumulativeUnspentGas;
+int gv_workersCreated;
+int gv_totalMineralsCollected;
+int gv_totalGasCollected;
+int gv_totalNumberofUpgradesResearched;
 int gv_winButtonHeight;
 int gv_winButtonWidth;
 int gv_winButtonXPadding;
@@ -286,37 +287,11 @@ int gv_screenButtonWidth;
 int gv_screenButtonHeight;
 int gv_screenButtonXPadding;
 int gv_screenButtonYPadding;
-int gv_onehourinsecondsof;
 
 void InitGlobals () {
     int init_i;
     int init_j;
 
-    gv_greenBenchmarkSupplyThreshold = 2;
-    gv_greenBenchmarkSecondsThreshold = 5;
-    gv_yellowBenchmarkSupplyThreshold = 4;
-    gv_yellowBenchmarkSecondsThreshold = 10;
-    gv_orangeBenchmarkSupplyThreshold = 6;
-    gv_orangeBenchmarkSecondsThreshold = 15;
-    gv_trackSupplyUnitObjectivesUntil = 40;
-    gv_buildOrderMaxGasSupply = 60;
-    gv_maxCurrentBuildOrderStepsTracked = 50;
-    gv_practiceAgainstBenchmarkBuildOrder = true;
-    for (init_i = 0; init_i <= 10; init_i += 1) {
-        gv_benchmarkBuildOrderStepObjectives[init_i] = c_invalidObjectiveId;
-    }
-    gv_resources = UnitGroupEmpty();
-    gv_paused = true;
-    gv_benchmark1Timer = TimerCreate();
-    gv_benchmark2Timer = TimerCreate();
-    gv_benchmark3Timer = TimerCreate();
-    for (init_i = 0; init_i <= 3; init_i += 1) {
-        gv_benchmarkSupplyObjectives[init_i] = c_invalidObjectiveId;
-    }
-    gv_benchmarkMaxTimeObjective = c_invalidObjectiveId;
-    gv_benchmarkMaxTimeMinutes = 15;
-    gv_benchmarkMaxTimeTimer = TimerCreate();
-    gv_benchmarkEndBuildatMinutes = 15;
     gv_overlordInProgressTimer = TimerCreate();
     gv_overlordMorphDuration = 25;
     gv_morphingOverlords = UnitGroupEmpty();
@@ -341,7 +316,56 @@ void InitGlobals () {
     gv_alertUpgradeGapThreshold = 20;
     gv_alertProductionIdleCheckEnabled = true;
     gv_alertProductionIdleThreshold = 20;
-    gv_workersCreated = 6;
+    gv_benchmarkBuildStepEntryKeyPrefix = "benchmarkBuildStep";
+    gv_numBenchmarkBuildOrderStepsEntryKey = "numBenchmarkBuildOrderSteps";
+    gv_unitTypeBuildOrderStepEntryKey = "unitType";
+    gv_supplyCountBuildOrderStepEntryKey = "supplyCount";
+    gv_numUnitsBuildOrderStepEntryKey = "numUnits";
+    gv_elapsedSecondsBuildOrderStepEntryKey = "elapsedSeconds";
+    gv_benchmarkerBankName = "benchmarker";
+    gv_configurationOptionsSectionKey = "options";
+    gv_benchmarkMaxTimeMinutesKey = "maxTimeMin";
+    gv_benchmarkMaxTimeSecondsKey = "maxTimeSec";
+    for (init_i = 0; init_i <= 3; init_i += 1) {
+        gv_benchmarkMatchupSectionKeys[init_i] = "";
+    }
+    for (init_i = 0; init_i <= 3; init_i += 1) {
+        gv_benchmarkSupplyEntryKeys[init_i] = "";
+    }
+    gv_benchmarkEndBuildSelectionKey = "endBuildSelection";
+    gv_benchmarkEndBuildMinutesKey = "endBuildMin";
+    gv_benchmarkEndBuildSecondsKey = "endBuildSec";
+    gv_alertConfigurationSectionKey = "alerts";
+    gv_alertMineralsCheckEnabledEntryKey = "alertMineralsEnabled";
+    gv_alertMineralsThresholdKey = "alertMineralsThreshold";
+    gv_alertGasCheckEnabledEntryKey = "alertGasEnabled";
+    gv_alertGasThresholdKey = "alertGasThreshold";
+    gv_alertSupplyBlockCheckEnabledEntryKey = "alertSupplyBlockEnabled";
+    gv_alertSupplyBlockStartKey = "alertSupplyBlockStart";
+    gv_alertSupplyBlockWithinCapKey = "alertSupplyBlockWithinCap";
+    gv_alertMacroEnergyCheckEnabledEntryKey = "alertMacroEnergyEnabled";
+    gv_alertMacroEnergyThresholdKey = "alertMacroEnergyThreshold";
+    gv_alertUpgradeGapCheckEnabledEntryKey = "alertUpgradeGapEnabled";
+    gv_alertUpgradeGapThresholdKey = "alertUpgradeGapThreshold";
+    gv_alertProductionIdleCheckEnabledEntryKey = "alertProductionIdleEnabled";
+    gv_alertProductionIdleThresholdKey = "alertProductionIdleThreshold";
+    gv_bestSpendingQuotientEntryKey = "bestSpendingQuotient";
+    gv_bestTotalWorkersCreatedEntryKey = "bestTotalWorkersCreated";
+    gv_bestTotalArmySupplyEntryKey = "bestTotalArmySupply";
+    gv_bestTotalArmyValueMineralsEntryKey = "bestTotalArmyValueMinerals";
+    gv_bestTotalArmyValueGasEntryKey = "bestTotalArmyValueGas";
+    gv_bestNumUpgradesResearchedEntryKey = "bestNumUpgradesResearched";
+    gv_bestTotalMineralsCollectedEntryKey = "bestTotalMineralsCollected";
+    gv_bestTotalGasCollectedEntryKey = "bestTotalGasCollected";
+    gv_bestTimeSupplyBlockedEntryKey = "bestTimeSupplyBlocked";
+    gv_bestIdleProductionTimeEntryKey = "bestProductionTimeIdle";
+    gv_bestAverageUnspentMineralsEntryKey = "bestAverageUnspentMinerals";
+    gv_bestAverageUnspentGasEntryKey = "bestAverageUnspentGas";
+    gv_bestAverageAPMEntryKey = "bestAverageAPM";
+    gv_vTerranMatchupSectionKey = "vTerran";
+    gv_vZergMatchupSectionKey = "vZerg";
+    gv_vProtossMatchupSectionKey = "vProtoss";
+    gv_buildTimer = TimerCreate();
     gv_objectiveSupplyColor = Color(100.00, 53.33, 6.67);
     gv_labelAlignmentSpacer = 15;
     gv_menuPadding = 60;
@@ -468,56 +492,33 @@ void InitGlobals () {
     gv_displayBuildOrderHintsLabelWidth = 300;
     gv_displayBuildOrderHintsCheckbox = c_invalidDialogControlId;
     gv_displayBuildOrderHintsLabel = c_invalidDialogControlId;
-    gv_buildTimer = TimerCreate();
-    gv_benchmarkBuildStepEntryKeyPrefix = "benchmarkBuildStep";
-    gv_numBenchmarkBuildOrderStepsEntryKey = "numBenchmarkBuildOrderSteps";
-    gv_unitTypeBuildOrderStepEntryKey = "unitType";
-    gv_supplyCountBuildOrderStepEntryKey = "supplyCount";
-    gv_numUnitsBuildOrderStepEntryKey = "numUnits";
-    gv_elapsedSecondsBuildOrderStepEntryKey = "elapsedSeconds";
-    gv_benchmarkerBankName = "benchmarker";
-    gv_configurationOptionsSectionKey = "options";
-    gv_benchmarkMaxTimeMinutesKey = "maxTimeMin";
-    gv_benchmarkMaxTimeSecondsKey = "maxTimeSec";
+    gv_resources = UnitGroupEmpty();
+    gv_paused = true;
+    gv_onehourinsecondsof = 216000;
+    gv_benchmark1Timer = TimerCreate();
+    gv_benchmark2Timer = TimerCreate();
+    gv_benchmark3Timer = TimerCreate();
     for (init_i = 0; init_i <= 3; init_i += 1) {
-        gv_benchmarkMatchupSectionKeys[init_i] = "";
+        gv_benchmarkSupplyObjectives[init_i] = c_invalidObjectiveId;
     }
-    for (init_i = 0; init_i <= 3; init_i += 1) {
-        gv_benchmarkSupplyEntryKeys[init_i] = "";
+    gv_benchmarkMaxTimeObjective = c_invalidObjectiveId;
+    gv_benchmarkMaxTimeMinutes = 15;
+    gv_benchmarkMaxTimeTimer = TimerCreate();
+    gv_benchmarkEndBuildatMinutes = 15;
+    gv_greenBenchmarkSupplyThreshold = 2;
+    gv_greenBenchmarkSecondsThreshold = 5;
+    gv_yellowBenchmarkSupplyThreshold = 4;
+    gv_yellowBenchmarkSecondsThreshold = 10;
+    gv_orangeBenchmarkSupplyThreshold = 6;
+    gv_orangeBenchmarkSecondsThreshold = 15;
+    gv_trackSupplyUnitObjectivesUntil = 40;
+    gv_buildOrderMaxGasSupply = 60;
+    gv_maxCurrentBuildOrderStepsTracked = 50;
+    gv_practiceAgainstBenchmarkBuildOrder = true;
+    for (init_i = 0; init_i <= 10; init_i += 1) {
+        gv_benchmarkBuildOrderStepObjectives[init_i] = c_invalidObjectiveId;
     }
-    gv_benchmarkEndBuildSelectionKey = "endBuildSelection";
-    gv_benchmarkEndBuildMinutesKey = "endBuildMin";
-    gv_benchmarkEndBuildSecondsKey = "endBuildSec";
-    gv_alertConfigurationSectionKey = "alerts";
-    gv_alertMineralsCheckEnabledEntryKey = "alertMineralsEnabled";
-    gv_alertMineralsThresholdKey = "alertMineralsThreshold";
-    gv_alertGasCheckEnabledEntryKey = "alertGasEnabled";
-    gv_alertGasThresholdKey = "alertGasThreshold";
-    gv_alertSupplyBlockCheckEnabledEntryKey = "alertSupplyBlockEnabled";
-    gv_alertSupplyBlockStartKey = "alertSupplyBlockStart";
-    gv_alertSupplyBlockWithinCapKey = "alertSupplyBlockWithinCap";
-    gv_alertMacroEnergyCheckEnabledEntryKey = "alertMacroEnergyEnabled";
-    gv_alertMacroEnergyThresholdKey = "alertMacroEnergyThreshold";
-    gv_alertUpgradeGapCheckEnabledEntryKey = "alertUpgradeGapEnabled";
-    gv_alertUpgradeGapThresholdKey = "alertUpgradeGapThreshold";
-    gv_alertProductionIdleCheckEnabledEntryKey = "alertProductionIdleEnabled";
-    gv_alertProductionIdleThresholdKey = "alertProductionIdleThreshold";
-    gv_bestSpendingQuotientEntryKey = "bestSpendingQuotient";
-    gv_bestTotalWorkersCreatedEntryKey = "bestTotalWorkersCreated";
-    gv_bestTotalArmySupplyEntryKey = "bestTotalArmySupply";
-    gv_bestTotalArmyValueMineralsEntryKey = "bestTotalArmyValueMinerals";
-    gv_bestTotalArmyValueGasEntryKey = "bestTotalArmyValueGas";
-    gv_bestNumUpgradesResearchedEntryKey = "bestNumUpgradesResearched";
-    gv_bestTotalMineralsCollectedEntryKey = "bestTotalMineralsCollected";
-    gv_bestTotalGasCollectedEntryKey = "bestTotalGasCollected";
-    gv_bestTimeSupplyBlockedEntryKey = "bestTimeSupplyBlocked";
-    gv_bestIdleProductionTimeEntryKey = "bestProductionTimeIdle";
-    gv_bestAverageUnspentMineralsEntryKey = "bestAverageUnspentMinerals";
-    gv_bestAverageUnspentGasEntryKey = "bestAverageUnspentGas";
-    gv_bestAverageAPMEntryKey = "bestAverageAPM";
-    gv_vTerranMatchupSectionKey = "vTerran";
-    gv_vZergMatchupSectionKey = "vZerg";
-    gv_vProtossMatchupSectionKey = "vProtoss";
+    gv_workersCreated = 6;
     gv_winButtonHeight = 80;
     gv_winButtonWidth = 150;
     gv_winButtonXPadding = 10;
@@ -528,25 +529,11 @@ void InitGlobals () {
     gv_screenButtonHeight = 50;
     gv_screenButtonXPadding = 10;
     gv_screenButtonYPadding = 125;
-    gv_onehourinsecondsof = 216000;
 }
 
 //--------------------------------------------------------------------------------------------------
 // Global Function Declarations
 //--------------------------------------------------------------------------------------------------
-bool gf_DoesSavedBuildOrderExistForCurrentMatchup ();
-int gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex (int lp_cursor);
-string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
-bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex);
-bool gf_IsSupplyCountCorrectForBenchmarkBuildOrderStep (int lp_supplyCount, int lp_benchmarkBuildOrderStepIndex);
-bool gf_IsNumUnitsCorrectForBenchmarkBuildOrderStep (int lp_numUnits, int lp_benchmarkBuildOrderStepIndex);
-bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType);
-text gf_GetCurrentBuildOrderStepText (int lp_stepNumber);
-text gf_GetBenchmarkBuildOrderStepText (int lp_stepNumber);
-text gf_GetFormattedCompleteBenchmarkBuildOrderStepText (int lp_stepNumber);
-color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber);
-text gf_GetBenchmarkandCurrentStepSupplyasText (int lp_stepNumber);
-text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber);
 string gf_GetNextUpgrade (string lp_currentUpgrade);
 text gf_GetRaceMacroUnitName ();
 bool gf_IsRaceMacroEnergyAboveThreshold ();
@@ -556,6 +543,23 @@ unitgroup gf_GetAllPlayer1UnitsforType (string lp_unitType);
 int gf_GetDefaultMacroEnergyThreshold ();
 string gf_GetIconForBuildingType (string lp_unitType);
 bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType);
+string gf_GetCurrentlySelectedMatchupasBankSectionKey ();
+text gf_GetCurrentlySelectedMatchupasText ();
+int gf_GetEditBoxIntValue (int lp_editBox);
+bool gf_DoesSavedBuildOrderExistForCurrentMatchup ();
+int gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex (int lp_cursor);
+string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
+bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex);
+bool gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex);
+bool gf_IsSupplyCountCorrectForBenchmarkBuildOrderStep (int lp_supplyCount, int lp_benchmarkBuildOrderStepIndex);
+bool gf_IsNumUnitsCorrectForBenchmarkBuildOrderStep (int lp_numUnits, int lp_benchmarkBuildOrderStepIndex);
+bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType);
+text gf_GetCurrentBuildOrderStepText (int lp_stepNumber);
+text gf_GetBenchmarkBuildOrderStepText (int lp_stepNumber);
+text gf_GetFormattedCompleteBenchmarkBuildOrderStepText (int lp_stepNumber);
+color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber);
+text gf_GetBenchmarkandCurrentStepSupplyasText (int lp_stepNumber);
+text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber);
 bool gf_IsProductionIdle ();
 int gf_GetTimeSupplyBlocked ();
 int gf_GetIdleProductionTime ();
@@ -572,36 +576,28 @@ int gf_GetTotalGasCollected ();
 text gf_CalculateIntPercentDifferenceAsText (int lp_value, int lp_previousBest, bool lp_higherisBetter);
 text gf_CalculateRealPercentDifferenceAsText (fixed lp_value, fixed lp_previousBest, bool lp_higherisBetter);
 color gf_GetColorForPercentage (fixed lp_percentage, bool lp_higherIsBetter);
-string gf_GetCurrentlySelectedMatchupasBankSectionKey ();
-text gf_GetCurrentlySelectedMatchupasText ();
-int gf_GetEditBoxIntValue (int lp_editBox);
 int gf_GetWinButtonYPadding ();
 unitgroup gf_GetPlayer1Units ();
 text gf_ConverttoTextWithSign (int lp_int);
 string gf_TrimSOffArmors (string lp_string);
 string gf_FormatCatalogStringwithSpaces (string lp_string);
 bool gf_IsCapitalLetterOrDigit (string lp_letter);
-void gf_InitializeGameArrayDefaults ();
-void gf_InitializeMapResourcesUnitGroup ();
-void gf_ResetGameState ();
-void gf_ResetMapResources ();
-void gf_ResetTechTree ();
-void gf_ResetCamera ();
-void gf_PauseGame ();
-void gf_UnpauseGame ();
-void gf_InitializeBenchmarkBuildOrderObjectives ();
-void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType);
-void gf_AddUpgradeBuildOrderStep (string lp_buildStepUnitType);
-void gf_ResetCurrentBuildOrderStepsVariables ();
-void gf_ResetBenchmarkBuildOrderStepsVariables ();
-void gf_StartBenchmarkTimers ();
-void gf_UnpauseBenchmarkTimers ();
-void gf_PauseBenchmarkTimers ();
-void gf_ResetBenchmarkTimers ();
 void gf_PauseAlertTimers ();
 void gf_UnpauseAlertTimers ();
 void gf_ResetAlertTimers ();
-void gf_ResetStatistics ();
+void gf_SaveCurrentStatsasNewBenchmark ();
+void gf_ResetBenchmarkBuildStatistics ();
+void gf_SaveIntAsSupplyBenchmark (int lp_value, string lp_entryKey);
+void gf_LoadIntFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_entryKey, string lp_sectionKey, int lp_defaultValue);
+void gf_SaveRealAsBuildBenchmark (fixed lp_value, string lp_entryKey);
+void gf_SaveBenchmarkBuildOrder ();
+void gf_LoadBenchmarkBuildOrder ();
+void gf_ClearBenchmarkBuildOrder ();
+void gf_SaveMatchupBenchmarks (string lp_sectionKey);
+void gf_LoadMatchupBenchmarks (string lp_sectionKey);
+void gf_SaveAlertConfigurations ();
+void gf_LoadAlertConfigurations ();
+void gf_LoadAlertRowConfiguration (string lp_alertEnabledKey, string lp_alertThresholdKey, int lp_alertCheckbox, int lp_alertEditBox, int lp_defaultThresholdValue, int lp_rowNumber);
 void gf_SelectAlertMenu ();
 void gf_SelectBenchmarkMenu ();
 void gf_CreateMenuSelectButtons (int lp_menuIndex);
@@ -634,46 +630,40 @@ void gf_OpenMainMenu ();
 void gf_EnablePracticeAgainstBenchmarkBuildOrderOptions ();
 void gf_DisablePracticeAgainstBenchmarkBuildOrderOption ();
 void gf_EvaluateAndDisableEnableBuildHintsOptions ();
-void gf_SaveCurrentStatsasNewBenchmark ();
-void gf_ResetBenchmarkBuildStatistics ();
-void gf_SaveIntAsSupplyBenchmark (int lp_value, string lp_entryKey);
-void gf_LoadIntFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_entryKey, string lp_sectionKey, int lp_defaultValue);
-void gf_SaveRealAsBuildBenchmark (fixed lp_value, string lp_entryKey);
-void gf_SaveBenchmarkBuildOrder ();
-void gf_LoadBenchmarkBuildOrder ();
-void gf_ClearBenchmarkBuildOrder ();
-void gf_SaveMatchupBenchmarks (string lp_sectionKey);
-void gf_LoadMatchupBenchmarks (string lp_sectionKey);
-void gf_SaveAlertConfigurations ();
-void gf_LoadAlertConfigurations ();
-void gf_LoadAlertRowConfiguration (string lp_alertEnabledKey, string lp_alertThresholdKey, int lp_alertCheckbox, int lp_alertEditBox, int lp_defaultThresholdValue, int lp_rowNumber);
+void gf_InitializeGameArrayDefaults ();
+void gf_InitializeMapResourcesUnitGroup ();
+void gf_ResetGameState ();
+void gf_ResetMapResources ();
+void gf_ResetTechTree ();
+void gf_ResetCamera ();
+void gf_PauseGame ();
+void gf_UnpauseGame ();
+void gf_StartBenchmarkTimers ();
+void gf_UnpauseBenchmarkTimers ();
+void gf_PauseBenchmarkTimers ();
+void gf_ResetBenchmarkTimers ();
 void gf_CreateHiddenBenchmarkSupplyObjectives ();
 void gf_HideBenchmarkSupplyObjectives ();
 void gf_ShowBenchmarkSupplyObjectives ();
 void gf_ResetBenchmarkSupplyObjectives ();
-void gf_CreateBenchmarkBuildOrderStepObjective (int lp_buildStep);
 void gf_CreateBenchmarkBuildOrderObjectives ();
+void gf_CreateIndividualBenchmarkBuildOrderStepObjective (int lp_buildStep);
 void gf_EvaluateBenchmarkBuildOrderStepObjective (string lp_unitType);
 void gf_CompleteBenchmarkBuildOrderStepObjective (int lp_benchmarkBuildOrderIndex);
 void gf_FailBenchmarkBuildOrderStepObjective (int lp_benchmarkBuildOrderIndex);
 void gf_CorrectFailedBenchmarkBuildOrderStepObjective ();
 void gf_ResetBenchmarkBuildOrderObjectives ();
+void gf_InitializeBenchmarkBuildOrderObjectives ();
+void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType);
+void gf_AddUpgradeBuildOrderStep (string lp_buildStepUnitType);
+void gf_ResetCurrentBuildOrderStepsVariables ();
+void gf_ResetBenchmarkBuildOrderStepsVariables ();
+void gf_ResetStatistics ();
 void gf_LookatandPanToUnit (unit lp_unit);
 
 //--------------------------------------------------------------------------------------------------
 // Trigger Variables
 //--------------------------------------------------------------------------------------------------
-trigger gt_MapInitialization;
-trigger gt_EndGame;
-trigger gt_StartBuild;
-trigger gt_ResetBuild;
-trigger gt_CloseStatsandResumeBuildfromOkButton;
-trigger gt_CloseStatsandResumeBuildfromHotkey;
-trigger gt_CloseHelpandResumeBuildfromOkButton;
-trigger gt_CloseHelpandResumeBuildfromHotkey;
-trigger gt_EndBuildatMaxSupply;
-trigger gt_EndBuildatSpecifiedGameTime;
-trigger gt_EndBuildFromHotkey;
 trigger gt_MineralsAboveThreshold;
 trigger gt_GasAboveThreshold;
 trigger gt_SupplyBlockImminent;
@@ -684,22 +674,15 @@ trigger gt_UpgradeGapAboveThresholdNewUpgradeStarts;
 trigger gt_ProductionIdleAboveThresholdStartTimer;
 trigger gt_ProductionIdleAboveThresholdTimerExpires;
 trigger gt_ProductionIdleAboveThresholdNewProductionStarts;
-trigger gt_Benchmark1TimerExpires;
-trigger gt_Benchmark2TimerExpires;
-trigger gt_Benchmark3TimerExpires;
-trigger gt_MaxTimeTimerElapsed;
-trigger gt_OnUpgradeUpdateCurrentBuildOrder;
-trigger gt_OnUnitStartUpdateCurrentBuildOrder;
-trigger gt_UpdateGasTaken;
-trigger gt_UpdateProductionIdleTime;
-trigger gt_UpdateTimeSupplyBlocked;
-trigger gt_UpdateMineralsCollectedThisBuild;
-trigger gt_UpdateGasCollectedThisBuild;
-trigger gt_UpdateAverageUnspentMinerals;
-trigger gt_UpdateAverageUnspentGas;
-trigger gt_UpdateCumulativeAPM;
-trigger gt_UpdateTotalWorkers;
-trigger gt_UpdateNumUpgradesResearched;
+trigger gt_StartBuild;
+trigger gt_ResetBuild;
+trigger gt_CloseStatsandResumeBuildfromOkButton;
+trigger gt_CloseStatsandResumeBuildfromHotkey;
+trigger gt_CloseHelpandResumeBuildfromOkButton;
+trigger gt_CloseHelpandResumeBuildfromHotkey;
+trigger gt_EndBuildatMaxSupply;
+trigger gt_EndBuildatSpecifiedGameTime;
+trigger gt_EndBuildFromHotkey;
 trigger gt_OpenStatsDialog;
 trigger gt_OpenHelpDialog;
 trigger gt_OpenMainMenu;
@@ -720,6 +703,24 @@ trigger gt_EnableDisableUpgradeGapAlert;
 trigger gt_EnableDisableProductionIdleAlert;
 trigger gt_SaveBenchmarkBuildStats;
 trigger gt_ResetBenchmarkBuildStats;
+trigger gt_MapInitialization;
+trigger gt_EndGame;
+trigger gt_Benchmark1TimerExpires;
+trigger gt_Benchmark2TimerExpires;
+trigger gt_Benchmark3TimerExpires;
+trigger gt_MaxTimeTimerElapsed;
+trigger gt_OnUpgradeUpdateCurrentBuildOrder;
+trigger gt_OnUnitStartUpdateCurrentBuildOrder;
+trigger gt_UpdateGasTaken;
+trigger gt_UpdateProductionIdleTime;
+trigger gt_UpdateTimeSupplyBlocked;
+trigger gt_UpdateMineralsCollectedThisBuild;
+trigger gt_UpdateGasCollectedThisBuild;
+trigger gt_UpdateAverageUnspentMinerals;
+trigger gt_UpdateAverageUnspentGas;
+trigger gt_UpdateCumulativeAPM;
+trigger gt_UpdateTotalWorkers;
+trigger gt_UpdateNumUpgradesResearched;
 trigger gt_OverlordInProgressFix;
 trigger gt_OverlordCompletedorCancelledFix;
 trigger gt_HatcheryLarvaSpawnFix;
@@ -727,261 +728,6 @@ trigger gt_HatcheryLarvaSpawnFix;
 //--------------------------------------------------------------------------------------------------
 // Global Functions
 //--------------------------------------------------------------------------------------------------
-bool gf_DoesSavedBuildOrderExistForCurrentMatchup () {
-    // Variable Declarations
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if ((BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey) > 0)) {
-        lv_result = true;
-    }
-    else {
-        lv_result = false;
-    }
-    if ((gv_debugBuildOrder == true)) {
-        TextExpressionSetToken("Param/Expression/449A463F", "A", libNtve_gf_ConvertBooleanToText(lv_result));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/449A463F"));
-    }
-    else {
-    }
-    return lv_result;
-}
-
-int gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex (int lp_cursor) {
-    // Variable Declarations
-    int lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    lv_result = lp_cursor;
-    return lv_result;
-}
-
-string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix) {
-    // Variable Declarations
-    string lv_stepKeyString;
-
-    // Variable Initialization
-    lv_stepKeyString = "";
-
-    // Implementation
-    lv_stepKeyString = (gv_benchmarkBuildStepEntryKeyPrefix + "_" + IntToString(lp_stepNumber) + "_" + lp_stepEntryKeySuffix);
-    return lv_stepKeyString;
-}
-
-bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex) {
-    // Variable Declarations
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if ((lp_unitType == gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_unitType)) {
-        lv_result = true;
-    }
-    else {
-        lv_result = false;
-    }
-    if ((gv_debugBuildOrder == true)) {
-        TextExpressionSetToken("Param/Expression/161A937D", "A", UnitTypeGetName(gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_unitType));
-        TextExpressionSetToken("Param/Expression/161A937D", "B", UnitTypeGetName(lp_unitType));
-        TextExpressionSetToken("Param/Expression/161A937D", "C", libNtve_gf_ConvertBooleanToText(lv_result));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/161A937D"));
-    }
-    else {
-    }
-    return lv_result;
-}
-
-bool gf_IsSupplyCountCorrectForBenchmarkBuildOrderStep (int lp_supplyCount, int lp_benchmarkBuildOrderStepIndex) {
-    // Implementation
-    if ((lp_supplyCount <= (gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_supplyCount+15))) {
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-bool gf_IsNumUnitsCorrectForBenchmarkBuildOrderStep (int lp_numUnits, int lp_benchmarkBuildOrderStepIndex) {
-    // Implementation
-    if ((lp_numUnits == gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_numUnits)) {
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType) {
-    // Variable Declarations
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if (((PlayerScoreValueGetAsInt(1, "FoodUsed") <= 40) && ((lp_unitType == "Overlord") || (lp_unitType == "Queen")))) {
-        lv_result = true;
-    }
-    else {
-    }
-    if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (!(((lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon") || (lp_unitType == "CreepTumor")))) && (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery"))))))) {
-        lv_result = true;
-    }
-    else {
-    }
-    if ((gv_debugBuildOrder == true)) {
-        TextExpressionSetToken("Param/Expression/C9374463", "A", UnitTypeGetName(lp_unitType));
-        TextExpressionSetToken("Param/Expression/C9374463", "B", libNtve_gf_ConvertBooleanToText(lv_result));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/C9374463"));
-    }
-    else {
-    }
-    return lv_result;
-}
-
-text gf_GetCurrentBuildOrderStepText (int lp_stepNumber) {
-    // Variable Declarations
-    text lv_numUnits;
-    text lv_unitType;
-    text lv_supplyCount;
-    text lv_elapsedTime;
-    text lv_result;
-
-    // Variable Initialization
-    lv_numUnits = StringExternal("Param/Value/29A8F1DC");
-
-    // Implementation
-    lv_unitType = UnitTypeGetName(gv_currentBuildOrderSteps[lp_stepNumber].lv_unitType);
-    if ((gv_currentBuildOrderSteps[lp_stepNumber].lv_numUnits > 1)) {
-        TextExpressionSetToken("Param/Expression/A6714026", "A", IntToText(gv_currentBuildOrderSteps[lp_stepNumber].lv_numUnits));
-        lv_numUnits = TextExpressionAssemble("Param/Expression/A6714026");
-    }
-    else {
-    }
-    lv_supplyCount = IntToText(gv_currentBuildOrderSteps[lp_stepNumber].lv_supplyCount);
-    lv_elapsedTime = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_currentBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
-    TextExpressionSetToken("Param/Expression/81102448", "A", lv_supplyCount);
-    TextExpressionSetToken("Param/Expression/81102448", "D", lv_numUnits);
-    TextExpressionSetToken("Param/Expression/81102448", "B", lv_unitType);
-    TextExpressionSetToken("Param/Expression/81102448", "C", lv_elapsedTime);
-    lv_result = TextExpressionAssemble("Param/Expression/81102448");
-    return lv_result;
-}
-
-text gf_GetBenchmarkBuildOrderStepText (int lp_stepNumber) {
-    // Variable Declarations
-    text lv_numUnits;
-    text lv_unitType;
-    text lv_supplyCount;
-    text lv_elapsedTime;
-    text lv_result;
-
-    // Variable Initialization
-    lv_numUnits = StringExternal("Param/Value/B286C09B");
-
-    // Implementation
-    lv_unitType = UnitTypeGetName(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_unitType);
-    if ((gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_numUnits > 1)) {
-        TextExpressionSetToken("Param/Expression/02DB92AF", "A", IntToText(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_numUnits));
-        lv_numUnits = TextExpressionAssemble("Param/Expression/02DB92AF");
-    }
-    else {
-    }
-    lv_supplyCount = IntToText(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount);
-    lv_elapsedTime = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
-    TextExpressionSetToken("Param/Expression/1734DB71", "A", lv_supplyCount);
-    TextExpressionSetToken("Param/Expression/1734DB71", "D", lv_numUnits);
-    TextExpressionSetToken("Param/Expression/1734DB71", "B", lv_unitType);
-    TextExpressionSetToken("Param/Expression/1734DB71", "C", lv_elapsedTime);
-    lv_result = TextExpressionAssemble("Param/Expression/1734DB71");
-    return lv_result;
-}
-
-text gf_GetFormattedCompleteBenchmarkBuildOrderStepText (int lp_stepNumber) {
-    // Variable Declarations
-    text lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    TextExpressionSetToken("Param/Expression/C5F8A524", "A", gf_GetBenchmarkandCurrentStepSupplyasText(lp_stepNumber));
-    TextExpressionSetToken("Param/Expression/C5F8A524", "B", gf_GetBenchmarkandCurrentStepSecondsDiffasText(lp_stepNumber));
-    TextExpressionSetToken("Param/Expression/236BD2AB", "A", gf_GetBenchmarkBuildOrderStepText(lp_stepNumber));
-    TextExpressionSetToken("Param/Expression/236BD2AB", "D", TextWithColor(TextExpressionAssemble("Param/Expression/C5F8A524"), gf_GetColorForBenchmarkBuildOrderStepCompletion(lp_stepNumber)));
-    lv_result = TextExpressionAssemble("Param/Expression/236BD2AB");
-    return lv_result;
-}
-
-color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber) {
-    // Variable Declarations
-    int lv_currentElaspedSeconds;
-    int lv_currentSupplyCount;
-    color lv_color;
-    text lv_result;
-
-    // Variable Initialization
-    lv_color = Color(100,100,100);
-
-    // Implementation
-    lv_currentElaspedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
-    lv_currentSupplyCount = PlayerScoreValueGetAsInt(1, "FoodUsed");
-    if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+0)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+0)))) {
-        lv_color = Color(66.67, 79.22, 100.00);
-    }
-    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+gv_greenBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_greenBenchmarkSecondsThreshold)))) {
-        lv_color = Color(50.20, 100.00, 50.20);
-    }
-    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+gv_yellowBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_yellowBenchmarkSecondsThreshold)))) {
-        lv_color = Color(100.00, 100.00, 50.20);
-    }
-    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+gv_orangeBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_orangeBenchmarkSecondsThreshold)))) {
-        lv_color = Color(100.00, 74.51, 40.00);
-    }
-    else if ((true == true)) {
-        lv_color = Color(100.00, 50.20, 50.20);
-    }
-    return lv_color;
-}
-
-text gf_GetBenchmarkandCurrentStepSupplyasText (int lp_stepNumber) {
-    // Variable Declarations
-    int lv_diff;
-    text lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    lv_diff = (PlayerScoreValueGetAsInt(1, "FoodUsed")-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount);
-    lv_diff = (PlayerScoreValueGetAsInt(1, "FoodUsed"));
-    lv_result = IntToText(lv_diff);
-    return lv_result;
-}
-
-text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber) {
-    // Variable Declarations
-    int lv_diff;
-    text lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    lv_diff = (FixedToInt(TimerGetElapsed(gv_buildTimer))-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
-    if ((lv_diff < 0)) {
-        lv_diff = (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds-FixedToInt(TimerGetElapsed(gv_buildTimer)));
-        TextExpressionSetToken("Param/Expression/D17BAC5D", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff));
-        lv_result = TextExpressionAssemble("Param/Expression/D17BAC5D");
-    }
-    else {
-        TextExpressionSetToken("Param/Expression/8F0B85E2", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff));
-        lv_result = TextExpressionAssemble("Param/Expression/8F0B85E2");
-    }
-    return lv_result;
-}
-
 string gf_GetNextUpgrade (string lp_currentUpgrade) {
     string autoB7B7DC32_val;
 
@@ -1331,6 +1077,300 @@ bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
     return lv_queueIsEmpty;
 }
 
+string gf_GetCurrentlySelectedMatchupasBankSectionKey () {
+    // Implementation
+    return ((PlayerRace(1)) + gv_benchmarkMatchupSectionKeys[gv_currentlySelectedMatchupIndex]);
+}
+
+text gf_GetCurrentlySelectedMatchupasText () {
+    // Implementation
+    return libNtve_gf_DialogItemText(gv_matchupSelectionButtons[gv_currentlySelectedMatchupIndex], 1);
+}
+
+int gf_GetEditBoxIntValue (int lp_editBox) {
+    // Implementation
+    return StringToInt(libNtve_gf_DialogItemEditValue(lp_editBox, 1));
+}
+
+bool gf_DoesSavedBuildOrderExistForCurrentMatchup () {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey) > 0)) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    if ((gv_debugBuildOrder == true)) {
+        TextExpressionSetToken("Param/Expression/449A463F", "A", libNtve_gf_ConvertBooleanToText(lv_result));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/449A463F"));
+    }
+    else {
+    }
+    return lv_result;
+}
+
+int gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex (int lp_cursor) {
+    // Variable Declarations
+    int lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_result = lp_cursor;
+    return lv_result;
+}
+
+string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix) {
+    // Variable Declarations
+    string lv_stepKeyString;
+
+    // Variable Initialization
+    lv_stepKeyString = "";
+
+    // Implementation
+    lv_stepKeyString = (gv_benchmarkBuildStepEntryKeyPrefix + "_" + IntToString(lp_stepNumber) + "_" + lp_stepEntryKeySuffix);
+    return lv_stepKeyString;
+}
+
+bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((lp_unitType == gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_unitType)) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    if ((gv_debugBuildOrder == true)) {
+        TextExpressionSetToken("Param/Expression/161A937D", "A", UnitTypeGetName(gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_unitType));
+        TextExpressionSetToken("Param/Expression/161A937D", "B", UnitTypeGetName(lp_unitType));
+        TextExpressionSetToken("Param/Expression/161A937D", "C", libNtve_gf_ConvertBooleanToText(lv_result));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/161A937D"));
+    }
+    else {
+    }
+    return lv_result;
+}
+
+bool gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((lp_unitType == gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_unitType)) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    if ((gv_debugBuildOrder == true)) {
+        TextExpressionSetToken("Param/Expression/FD541E74", "A", UnitTypeGetName(gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_unitType));
+        TextExpressionSetToken("Param/Expression/FD541E74", "B", UnitTypeGetName(lp_unitType));
+        TextExpressionSetToken("Param/Expression/FD541E74", "C", libNtve_gf_ConvertBooleanToText(lv_result));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/FD541E74"));
+    }
+    else {
+    }
+    return lv_result;
+}
+
+bool gf_IsSupplyCountCorrectForBenchmarkBuildOrderStep (int lp_supplyCount, int lp_benchmarkBuildOrderStepIndex) {
+    // Implementation
+    if ((lp_supplyCount <= (gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_supplyCount+15))) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool gf_IsNumUnitsCorrectForBenchmarkBuildOrderStep (int lp_numUnits, int lp_benchmarkBuildOrderStepIndex) {
+    // Implementation
+    if ((lp_numUnits == gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_numUnits)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((PlayerScoreValueGetAsInt(1, "FoodUsed") <= 40) && ((lp_unitType == "Overlord") || (lp_unitType == "Queen")))) {
+        lv_result = true;
+    }
+    else {
+    }
+    if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (!(((lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon") || (lp_unitType == "CreepTumor")))) && (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery"))))))) {
+        lv_result = true;
+    }
+    else {
+    }
+    if ((gv_debugBuildOrder == true)) {
+        TextExpressionSetToken("Param/Expression/C9374463", "A", UnitTypeGetName(lp_unitType));
+        TextExpressionSetToken("Param/Expression/C9374463", "B", libNtve_gf_ConvertBooleanToText(lv_result));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/C9374463"));
+    }
+    else {
+    }
+    return lv_result;
+}
+
+text gf_GetCurrentBuildOrderStepText (int lp_stepNumber) {
+    // Variable Declarations
+    text lv_numUnits;
+    text lv_unitType;
+    text lv_supplyCount;
+    text lv_elapsedTime;
+    text lv_result;
+
+    // Variable Initialization
+    lv_numUnits = StringExternal("Param/Value/29A8F1DC");
+
+    // Implementation
+    lv_unitType = UnitTypeGetName(gv_currentBuildOrderSteps[lp_stepNumber].lv_unitType);
+    if ((gv_currentBuildOrderSteps[lp_stepNumber].lv_numUnits > 1)) {
+        TextExpressionSetToken("Param/Expression/A6714026", "A", IntToText(gv_currentBuildOrderSteps[lp_stepNumber].lv_numUnits));
+        lv_numUnits = TextExpressionAssemble("Param/Expression/A6714026");
+    }
+    else {
+    }
+    lv_supplyCount = IntToText(gv_currentBuildOrderSteps[lp_stepNumber].lv_supplyCount);
+    lv_elapsedTime = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_currentBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
+    TextExpressionSetToken("Param/Expression/81102448", "A", lv_supplyCount);
+    TextExpressionSetToken("Param/Expression/81102448", "D", lv_numUnits);
+    TextExpressionSetToken("Param/Expression/81102448", "B", lv_unitType);
+    TextExpressionSetToken("Param/Expression/81102448", "C", lv_elapsedTime);
+    lv_result = TextExpressionAssemble("Param/Expression/81102448");
+    return lv_result;
+}
+
+text gf_GetBenchmarkBuildOrderStepText (int lp_stepNumber) {
+    // Variable Declarations
+    text lv_numUnits;
+    text lv_unitType;
+    text lv_supplyCount;
+    text lv_elapsedTime;
+    text lv_result;
+
+    // Variable Initialization
+    lv_numUnits = StringExternal("Param/Value/B286C09B");
+
+    // Implementation
+    lv_unitType = UnitTypeGetName(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_unitType);
+    if ((gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_numUnits > 1)) {
+        TextExpressionSetToken("Param/Expression/02DB92AF", "A", IntToText(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_numUnits));
+        lv_numUnits = TextExpressionAssemble("Param/Expression/02DB92AF");
+    }
+    else {
+    }
+    lv_supplyCount = IntToText(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount);
+    lv_elapsedTime = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
+    TextExpressionSetToken("Param/Expression/1734DB71", "A", lv_supplyCount);
+    TextExpressionSetToken("Param/Expression/1734DB71", "D", lv_numUnits);
+    TextExpressionSetToken("Param/Expression/1734DB71", "B", lv_unitType);
+    TextExpressionSetToken("Param/Expression/1734DB71", "C", lv_elapsedTime);
+    lv_result = TextExpressionAssemble("Param/Expression/1734DB71");
+    return lv_result;
+}
+
+text gf_GetFormattedCompleteBenchmarkBuildOrderStepText (int lp_stepNumber) {
+    // Variable Declarations
+    text lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    TextExpressionSetToken("Param/Expression/C5F8A524", "A", gf_GetBenchmarkandCurrentStepSupplyasText(lp_stepNumber));
+    TextExpressionSetToken("Param/Expression/C5F8A524", "B", gf_GetBenchmarkandCurrentStepSecondsDiffasText(lp_stepNumber));
+    TextExpressionSetToken("Param/Expression/236BD2AB", "A", gf_GetBenchmarkBuildOrderStepText(lp_stepNumber));
+    TextExpressionSetToken("Param/Expression/236BD2AB", "D", TextWithColor(TextExpressionAssemble("Param/Expression/C5F8A524"), gf_GetColorForBenchmarkBuildOrderStepCompletion(lp_stepNumber)));
+    lv_result = TextExpressionAssemble("Param/Expression/236BD2AB");
+    return lv_result;
+}
+
+color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber) {
+    // Variable Declarations
+    int lv_currentElaspedSeconds;
+    int lv_currentSupplyCount;
+    color lv_color;
+    text lv_result;
+
+    // Variable Initialization
+    lv_color = Color(100,100,100);
+
+    // Implementation
+    lv_currentElaspedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
+    lv_currentSupplyCount = PlayerScoreValueGetAsInt(1, "FoodUsed");
+    if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+0)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+0)))) {
+        lv_color = Color(66.67, 79.22, 100.00);
+    }
+    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+gv_greenBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_greenBenchmarkSecondsThreshold)))) {
+        lv_color = Color(50.20, 100.00, 50.20);
+    }
+    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+gv_yellowBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_yellowBenchmarkSecondsThreshold)))) {
+        lv_color = Color(100.00, 100.00, 50.20);
+    }
+    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+gv_orangeBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_orangeBenchmarkSecondsThreshold)))) {
+        lv_color = Color(100.00, 74.51, 40.00);
+    }
+    else if ((true == true)) {
+        lv_color = Color(100.00, 50.20, 50.20);
+    }
+    return lv_color;
+}
+
+text gf_GetBenchmarkandCurrentStepSupplyasText (int lp_stepNumber) {
+    // Variable Declarations
+    int lv_diff;
+    text lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_diff = (PlayerScoreValueGetAsInt(1, "FoodUsed")-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount);
+    lv_diff = (PlayerScoreValueGetAsInt(1, "FoodUsed"));
+    lv_result = IntToText(lv_diff);
+    return lv_result;
+}
+
+text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber) {
+    // Variable Declarations
+    int lv_diff;
+    text lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_diff = (FixedToInt(TimerGetElapsed(gv_buildTimer))-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
+    if ((lv_diff < 0)) {
+        lv_diff = (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds-FixedToInt(TimerGetElapsed(gv_buildTimer)));
+        TextExpressionSetToken("Param/Expression/D17BAC5D", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff));
+        lv_result = TextExpressionAssemble("Param/Expression/D17BAC5D");
+    }
+    else {
+        TextExpressionSetToken("Param/Expression/8F0B85E2", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff));
+        lv_result = TextExpressionAssemble("Param/Expression/8F0B85E2");
+    }
+    return lv_result;
+}
+
 bool gf_IsProductionIdle () {
     int autoBD02A5A8_ae;
     int autoBD02A5A8_ai;
@@ -1500,21 +1540,6 @@ color gf_GetColorForPercentage (fixed lp_percentage, bool lp_higherIsBetter) {
     return lv_result;
 }
 
-string gf_GetCurrentlySelectedMatchupasBankSectionKey () {
-    // Implementation
-    return ((PlayerRace(1)) + gv_benchmarkMatchupSectionKeys[gv_currentlySelectedMatchupIndex]);
-}
-
-text gf_GetCurrentlySelectedMatchupasText () {
-    // Implementation
-    return libNtve_gf_DialogItemText(gv_matchupSelectionButtons[gv_currentlySelectedMatchupIndex], 1);
-}
-
-int gf_GetEditBoxIntValue (int lp_editBox) {
-    // Implementation
-    return StringToInt(libNtve_gf_DialogItemEditValue(lp_editBox, 1));
-}
-
 int gf_GetWinButtonYPadding () {
     string autoDB867731_val;
 
@@ -1617,330 +1642,6 @@ bool gf_IsCapitalLetterOrDigit (string lp_letter) {
     }
 }
 
-void gf_InitializeGameArrayDefaults () {
-    string auto6EDFB34C_val;
-
-    // Implementation
-    gv_benchmarkTimerDurations[0] = 360;
-    gv_benchmarkTimerDurations[1] = 480;
-    gv_benchmarkTimerDurations[2] = 600;
-    gv_benchmarkSupplyEntryKeys[0] = "benchmark1";
-    gv_benchmarkSupplyEntryKeys[1] = "benchmark2";
-    gv_benchmarkSupplyEntryKeys[2] = "benchmark3";
-    gv_benchmarkSupplyDefaults[0] = 30;
-    gv_benchmarkSupplyDefaults[1] = 55;
-    gv_benchmarkSupplyDefaults[2] = 80;
-    gv_benchmarkMatchupSectionKeys[0] = gv_vZergMatchupSectionKey;
-    gv_benchmarkMatchupSectionKeys[1] = gv_vTerranMatchupSectionKey;
-    gv_benchmarkMatchupSectionKeys[2] = gv_vProtossMatchupSectionKey;
-    gv_alertRowLabelWidths[0][0] = 335;
-    gv_alertRowLabelWidths[1][0] = 292;
-    gv_alertRowLabelWidths[2][0] = 317;
-    gv_alertRowLabelWidths[2][1] = 252;
-    auto6EDFB34C_val = PlayerRace(1);
-    if (auto6EDFB34C_val == "Prot") {
-        gv_alertRowLabelWidths[3][0] = (gv_alertMenuSupplyBlockBaseWidth+gv_alertMenuNexusNameWidth);
-    }
-    else if (auto6EDFB34C_val == "Terr") {
-        gv_alertRowLabelWidths[3][0] = (gv_alertMenuSupplyBlockBaseWidth+gv_alertMenuOrbitalNameWidth);
-    }
-    else if (auto6EDFB34C_val == "Zerg") {
-        gv_alertRowLabelWidths[3][0] = (gv_alertMenuSupplyBlockBaseWidth+gv_alertMenuQueenNameWidth);
-    }
-    else {
-    }
-    gv_alertRowLabelWidths[4][0] = 400;
-    gv_alertRowLabelWidths[4][1] = gv_secondsLabelWidth;
-    gv_alertRowLabelWidths[5][0] = 483;
-    gv_alertRowLabelWidths[5][1] = gv_secondsLabelWidth;
-    gv_alertRowLabelWidths[6][0] = 357;
-    gv_alertRowLabelWidths[7][0] = 335;
-}
-
-void gf_InitializeMapResourcesUnitGroup () {
-    unitgroup auto59129081_g;
-    int auto59129081_u;
-    unitgroup autoAECA9D28_g;
-    int autoAECA9D28_u;
-
-    // Variable Declarations
-    unit lv_currentResource;
-
-    // Variable Initialization
-
-    // Implementation
-    auto59129081_g = UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter((1 << c_targetFilterHarvestableResource), 0, 0, 0), 0);
-    auto59129081_u = 1;
-    for ( ; auto59129081_u <= UnitGroupCount(auto59129081_g, c_unitCountAll) ; auto59129081_u += BoolToInt(lv_currentResource == UnitGroupUnit(auto59129081_g, auto59129081_u)) ) {
-        lv_currentResource = UnitGroupUnit(auto59129081_g, auto59129081_u);
-        UnitGroupAdd(gv_resources, lv_currentResource);
-        if ((gv_debugMap == true)) {
-            TextExpressionSetToken("Param/Expression/2322ADF7", "A", UnitTypeGetName(UnitGetType(lv_currentResource)));
-            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/2322ADF7"));
-        }
-        else {
-        }
-    }
-    autoAECA9D28_g = UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter((1 << c_targetFilterRawResource), 0, 0, 0), 0);
-    autoAECA9D28_u = 1;
-    for ( ; autoAECA9D28_u <= UnitGroupCount(autoAECA9D28_g, c_unitCountAll) ; autoAECA9D28_u += BoolToInt(lv_currentResource == UnitGroupUnit(autoAECA9D28_g, autoAECA9D28_u)) ) {
-        lv_currentResource = UnitGroupUnit(autoAECA9D28_g, autoAECA9D28_u);
-        UnitGroupAdd(gv_resources, lv_currentResource);
-        if ((gv_debugMap == true)) {
-            TextExpressionSetToken("Param/Expression/1C0F331A", "A", UnitTypeGetName(UnitGetType(lv_currentResource)));
-            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/1C0F331A"));
-        }
-        else {
-        }
-    }
-}
-
-void gf_ResetGameState () {
-    // Variable Declarations
-    unitgroup lv_player1Units;
-
-    // Variable Initialization
-    lv_player1Units = UnitGroupEmpty();
-
-    // Implementation
-    gf_ResetMapResources();
-    lv_player1Units = gf_GetPlayer1Units();
-    if ((UnitGroupCount(lv_player1Units, c_unitCountAlive) >= 0)) {
-        UnitGroupLoopBegin(lv_player1Units);
-        for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
-            UnitRemove(UnitGroupLoopCurrent());
-        }
-        UnitGroupLoopEnd();
-        MeleeInitUnits();
-    }
-    else {
-    }
-    MeleeInitResources();
-    gf_ResetStatistics();
-    gf_ResetCurrentBuildOrderStepsVariables();
-    gf_ResetBenchmarkSupplyObjectives();
-    gf_ResetBenchmarkBuildOrderStepsVariables();
-    gf_ResetBenchmarkBuildOrderObjectives();
-    gf_ResetAlertTimers();
-    gf_ResetBenchmarkTimers();
-    TimerRestart(gv_buildTimer);
-    gf_ResetCamera();
-}
-
-void gf_ResetMapResources () {
-    unitgroup auto239B13AC_g;
-    int auto239B13AC_u;
-
-    // Variable Declarations
-    string lv_currentResourceType;
-    point lv_currentPosition;
-    unit lv_currentResource;
-    int lv_resourcesReplaced;
-
-    // Variable Initialization
-
-    // Implementation
-    auto239B13AC_g = gv_resources;
-    auto239B13AC_u = 1;
-    for ( ; auto239B13AC_u <= UnitGroupCount(auto239B13AC_g, c_unitCountAll) ; auto239B13AC_u += BoolToInt(lv_currentResource == UnitGroupUnit(auto239B13AC_g, auto239B13AC_u)) ) {
-        lv_currentResource = UnitGroupUnit(auto239B13AC_g, auto239B13AC_u);
-        lv_currentResourceType = UnitGetType(lv_currentResource);
-        if (((((lv_currentResourceType == "VespeneGeyser") || (lv_currentResourceType == "RichVespeneGeyser") || (lv_currentResourceType == "ProtossVespeneGeyser") || (lv_currentResourceType == "SpacePlatformGeyser")) && (libNtve_gf_UnitGetPropertyResources(lv_currentResource, c_unitPropCurrent) < 2500)) || (((lv_currentResourceType == "MineralField") || (lv_currentResourceType == "RichMineralField")) && (libNtve_gf_UnitGetPropertyResources(lv_currentResource, c_unitPropCurrent) < 1500)))) {
-            lv_currentPosition = UnitGetPosition(lv_currentResource);
-            UnitRemove(lv_currentResource);
-            UnitGroupRemove(gv_resources, lv_currentResource);
-            libNtve_gf_CreateUnitsWithDefaultFacing(1, lv_currentResourceType, 0, 0, lv_currentPosition);
-            UnitGroupAdd(gv_resources, UnitLastCreated());
-            lv_resourcesReplaced += 1;
-        }
-        else {
-        }
-    }
-    if ((gv_debugMap == true)) {
-        TextExpressionSetToken("Param/Expression/F4AFF87D", "A", IntToText(lv_resourcesReplaced));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/F4AFF87D"));
-    }
-    else {
-    }
-}
-
-void gf_ResetTechTree () {
-    // Implementation
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergGroundArmorsLevel1", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergGroundArmorsLevel2", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergGroundArmorsLevel3", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergFlyerArmorsLevel1", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergFlyerArmorsLevel2", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergFlyerArmorsLevel3", 0);
-}
-
-void gf_ResetCamera () {
-    // Implementation
-    CameraRestore(1, 0.75, -1, 10.0);
-}
-
-void gf_PauseGame () {
-    // Variable Declarations
-    int lv_i;
-
-    // Variable Initialization
-
-    // Implementation
-    gv_paused = true;
-    TimerPause(gv_buildTimer, true);
-    gf_PauseBenchmarkTimers();
-    gf_PauseAlertTimers();
-    UnitPauseAll(true);
-}
-
-void gf_UnpauseGame () {
-    // Variable Declarations
-    int lv_i;
-
-    // Variable Initialization
-
-    // Implementation
-    gv_paused = false;
-    UnitPauseAll(false);
-    gf_UnpauseBenchmarkTimers();
-    gf_UnpauseAlertTimers();
-    TimerPause(gv_buildTimer, false);
-}
-
-void gf_InitializeBenchmarkBuildOrderObjectives () {
-    // Implementation
-    if ((gv_practiceAgainstBenchmarkBuildOrder == true)) {
-        gf_LoadBenchmarkBuildOrder();
-        if ((gv_totalNumBenchmarkBuildOrderSteps > 0)) {
-            gf_CreateBenchmarkBuildOrderObjectives();
-        }
-        else {
-        }
-    }
-    else {
-    }
-}
-
-void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType) {
-    // Variable Declarations
-    int lv_buildOrderStepSupplyCount;
-
-    // Variable Initialization
-
-    // Implementation
-    if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_buildStepUnitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (PlayerRace(EventPlayer()) == "Zerg"))) {
-        lv_buildOrderStepSupplyCount = (PlayerScoreValueGetAsInt(1, "FoodUsed")+1);
-    }
-    else {
-        lv_buildOrderStepSupplyCount = PlayerScoreValueGetAsInt(1, "FoodUsed");
-    }
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_unitType = lp_buildStepUnitType;
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_numUnits = 1;
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_supplyCount = lv_buildOrderStepSupplyCount;
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
-    gv_lastCreatedBuildOrderUnitType = lp_buildStepUnitType;
-    gv_lastCreatedUnitTimestamp = TimerGetElapsed(gv_buildTimer);
-    if ((gv_debugBuildOrder == true)) {
-        TextExpressionSetToken("Param/Expression/7FAB1454", "A", gf_GetCurrentBuildOrderStepText(gv_currentBuildOrderStepCursor));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/7FAB1454"));
-    }
-    else {
-    }
-}
-
-void gf_AddUpgradeBuildOrderStep (string lp_buildStepUnitType) {
-    // Implementation
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_unitType = lp_buildStepUnitType;
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_numUnits = 1;
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_supplyCount = PlayerScoreValueGetAsInt(1, "FoodUsed");
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
-    gv_lastCreatedBuildOrderUnitType = lp_buildStepUnitType;
-    gv_lastCreatedUnitTimestamp = TimerGetElapsed(gv_buildTimer);
-}
-
-void gf_ResetCurrentBuildOrderStepsVariables () {
-    int autoA13422C8_ae;
-    int autoA13422C8_ai;
-
-    // Variable Declarations
-    int lv_i;
-
-    // Variable Initialization
-
-    // Implementation
-    gv_lastCreatedBuildOrderUnitType = null;
-    autoA13422C8_ae = gv_currentBuildOrderStepCursor;
-    autoA13422C8_ai = 1;
-    lv_i = 0;
-    for ( ; ( (autoA13422C8_ai >= 0 && lv_i <= autoA13422C8_ae) || (autoA13422C8_ai <= 0 && lv_i >= autoA13422C8_ae) ) ; lv_i += autoA13422C8_ai ) {
-        gv_currentBuildOrderSteps[lv_i].lv_unitType = null;
-        gv_currentBuildOrderSteps[lv_i].lv_supplyCount = 0;
-        gv_currentBuildOrderSteps[lv_i].lv_numUnits = 0;
-        gv_currentBuildOrderSteps[lv_i].lv_elapsedSeconds = 0;
-    }
-    gv_currentBuildOrderStepCursor = 0;
-}
-
-void gf_ResetBenchmarkBuildOrderStepsVariables () {
-    int auto488B3271_ae;
-    int auto488B3271_ai;
-
-    // Variable Declarations
-    int lv_i;
-
-    // Variable Initialization
-
-    // Implementation
-    auto488B3271_ae = gv_benchmarkBuildOrderStepCursor;
-    auto488B3271_ai = 1;
-    lv_i = 0;
-    for ( ; ( (auto488B3271_ai >= 0 && lv_i <= auto488B3271_ae) || (auto488B3271_ai <= 0 && lv_i >= auto488B3271_ae) ) ; lv_i += auto488B3271_ai ) {
-        gv_benchmarkBuildOrderSteps[lv_i].lv_unitType = null;
-        gv_benchmarkBuildOrderSteps[lv_i].lv_supplyCount = 0;
-        gv_benchmarkBuildOrderSteps[lv_i].lv_numUnits = 0;
-        gv_benchmarkBuildOrderSteps[lv_i].lv_elapsedSeconds = 0;
-    }
-    gv_benchmarkBuildOrderStepCursor = 0;
-    gv_totalNumBenchmarkBuildOrderSteps = 0;
-}
-
-void gf_StartBenchmarkTimers () {
-    // Variable Declarations
-    int lv_i;
-
-    // Variable Initialization
-
-    // Implementation
-    TimerStart(gv_benchmark1Timer, gv_benchmarkTimerDurations[0], false, c_timeGame);
-    TimerStart(gv_benchmark2Timer, gv_benchmarkTimerDurations[1], false, c_timeGame);
-    TimerStart(gv_benchmark3Timer, gv_benchmarkTimerDurations[2], false, c_timeGame);
-    TimerStart(gv_benchmarkMaxTimeTimer, gv_benchmarkMaxTimeTotalSeconds, false, c_timeGame);
-}
-
-void gf_UnpauseBenchmarkTimers () {
-    // Implementation
-    TimerPause(gv_benchmark1Timer, false);
-    TimerPause(gv_benchmark2Timer, false);
-    TimerPause(gv_benchmark3Timer, false);
-    TimerPause(gv_benchmarkMaxTimeTimer, false);
-}
-
-void gf_PauseBenchmarkTimers () {
-    // Implementation
-    TimerPause(gv_benchmark1Timer, true);
-    TimerPause(gv_benchmark2Timer, true);
-    TimerPause(gv_benchmark3Timer, true);
-    TimerPause(gv_benchmarkMaxTimeTimer, true);
-}
-
-void gf_ResetBenchmarkTimers () {
-    // Implementation
-    TimerRestart(gv_benchmark1Timer);
-    TimerRestart(gv_benchmark2Timer);
-    TimerRestart(gv_benchmark3Timer);
-    TimerRestart(gv_benchmarkMaxTimeTimer);
-}
-
 void gf_PauseAlertTimers () {
     int autoDAB23CA2_ae;
     int autoDAB23CA2_ai;
@@ -2030,19 +1731,298 @@ void gf_ResetAlertTimers () {
     }
 }
 
-void gf_ResetStatistics () {
+void gf_SaveCurrentStatsasNewBenchmark () {
     // Implementation
-    gv_workersCreated = 6;
-    gv_timeProductionIdleThisBuild = 0;
-    gv_timeSupplyBlockedThisBuild = 0;
-    gv_cumulativeUnspentMinerals = 0;
-    gv_totalMineralSamplesThisBuild = 0;
-    gv_cumulativeUnspentGas = 0;
-    gv_totalGasSamplesThisBuild = 0;
-    gv_cumulativeAPM = 0;
-    gv_totalAPMSamplesThisBuild = 0;
-    gv_totalMineralsCollected = 50;
-    gv_totalGasCollected = 0;
+    gf_SaveRealAsBuildBenchmark(gf_GetSpendingQuotient(), gv_bestSpendingQuotientEntryKey);
+    gf_SaveIntAsSupplyBenchmark(gv_workersCreated, gv_bestTotalWorkersCreatedEntryKey);
+    gf_SaveIntAsSupplyBenchmark(gf_GetTotalArmySupply(), gv_bestTotalArmySupplyEntryKey);
+    gf_SaveIntAsSupplyBenchmark(gf_GetTotalArmyValueMinerals(), gv_bestTotalArmyValueMineralsEntryKey);
+    gf_SaveIntAsSupplyBenchmark(gf_GetTotalArmyValueGas(), gv_bestTotalArmyValueGasEntryKey);
+    gf_SaveIntAsSupplyBenchmark(gf_GetNumUpgradesResearched(), gv_bestNumUpgradesResearchedEntryKey);
+    gf_SaveIntAsSupplyBenchmark(gf_GetTotalMineralsCollected(), gv_bestTotalMineralsCollectedEntryKey);
+    gf_SaveIntAsSupplyBenchmark(gf_GetTotalGasCollected(), gv_bestTotalGasCollectedEntryKey);
+    gf_SaveIntAsSupplyBenchmark(gf_GetTimeSupplyBlocked(), gv_bestTimeSupplyBlockedEntryKey);
+    gf_SaveIntAsSupplyBenchmark(gf_GetIdleProductionTime(), gv_bestIdleProductionTimeEntryKey);
+    gf_SaveIntAsSupplyBenchmark(gf_GetAverageUnspentMinerals(), gv_bestAverageUnspentMineralsEntryKey);
+    gf_SaveIntAsSupplyBenchmark(gf_GetAverageUnspentGas(), gv_bestAverageUnspentGasEntryKey);
+    gf_SaveRealAsBuildBenchmark(gf_GetAverageBuildAPM(), gv_bestAverageAPMEntryKey);
+    BankSave(gv_benchmarkerBank);
+}
+
+void gf_ResetBenchmarkBuildStatistics () {
+    // Implementation
+    gf_SaveRealAsBuildBenchmark(0.0, gv_bestSpendingQuotientEntryKey);
+    gf_SaveIntAsSupplyBenchmark(0, gv_bestTotalWorkersCreatedEntryKey);
+    gf_SaveIntAsSupplyBenchmark(0, gv_bestTotalArmySupplyEntryKey);
+    gf_SaveIntAsSupplyBenchmark(0, gv_bestTotalArmyValueMineralsEntryKey);
+    gf_SaveIntAsSupplyBenchmark(0, gv_bestTotalArmyValueGasEntryKey);
+    gf_SaveIntAsSupplyBenchmark(0, gv_bestNumUpgradesResearchedEntryKey);
+    gf_SaveIntAsSupplyBenchmark(0, gv_bestTotalMineralsCollectedEntryKey);
+    gf_SaveIntAsSupplyBenchmark(0, gv_bestTotalGasCollectedEntryKey);
+    gf_SaveIntAsSupplyBenchmark(0, gv_bestTimeSupplyBlockedEntryKey);
+    gf_SaveIntAsSupplyBenchmark(0, gv_bestIdleProductionTimeEntryKey);
+    gf_SaveIntAsSupplyBenchmark(0, gv_bestAverageUnspentMineralsEntryKey);
+    gf_SaveIntAsSupplyBenchmark(0, gv_bestAverageUnspentGasEntryKey);
+    gf_SaveRealAsBuildBenchmark(0.0, gv_bestAverageAPMEntryKey);
+}
+
+void gf_SaveIntAsSupplyBenchmark (int lp_value, string lp_entryKey) {
+    // Implementation
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_entryKey, lp_value);
+}
+
+void gf_LoadIntFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_entryKey, string lp_sectionKey, int lp_defaultValue) {
+    // Implementation
+    if (((BankKeyExists(gv_benchmarkerBank, lp_sectionKey, lp_entryKey) == true) && (BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, lp_entryKey) > -1))) {
+        libNtve_gf_SetDialogItemEditorValue(lp_dialogItem, IntToString(BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, lp_entryKey)), PlayerGroupAll());
+    }
+    else {
+        libNtve_gf_SetDialogItemEditorValue(lp_dialogItem, IntToString(lp_defaultValue), PlayerGroupAll());
+    }
+}
+
+void gf_SaveRealAsBuildBenchmark (fixed lp_value, string lp_entryKey) {
+    // Implementation
+    BankValueSetFromFixed(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_entryKey, lp_value);
+}
+
+void gf_SaveBenchmarkBuildOrder () {
+    int auto895F190E_ae;
+    int auto895F190E_ai;
+
+    // Variable Declarations
+    int lv_currentStepNum;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((gv_debugBank == true)) {
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/D246724E"));
+    }
+    else {
+    }
+    auto895F190E_ae = (gv_currentBuildOrderStepCursor-1);
+    auto895F190E_ai = 1;
+    lv_currentStepNum = 0;
+    for ( ; ( (auto895F190E_ai >= 0 && lv_currentStepNum <= auto895F190E_ae) || (auto895F190E_ai <= 0 && lv_currentStepNum >= auto895F190E_ae) ) ; lv_currentStepNum += auto895F190E_ai ) {
+        BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_unitTypeBuildOrderStepEntryKey), (gv_currentBuildOrderSteps[lv_currentStepNum].lv_unitType));
+        BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_supplyCountBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lv_currentStepNum].lv_supplyCount);
+        BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_numUnitsBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lv_currentStepNum].lv_numUnits);
+        BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_elapsedSecondsBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lv_currentStepNum].lv_elapsedSeconds);
+        if ((gv_debugBank == true)) {
+            TextExpressionSetToken("Param/Expression/7AE0547A", "A", gf_GetCurrentBuildOrderStepText(lv_currentStepNum));
+            TextExpressionSetToken("Param/Expression/7AE0547A", "B", IntToText(lv_currentStepNum));
+            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/7AE0547A"));
+        }
+        else {
+        }
+    }
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey, gv_currentBuildOrderStepCursor);
+    if ((gv_debugBank == true)) {
+        TextExpressionSetToken("Param/Expression/D8431969", "A", IntToText(gv_currentBuildOrderStepCursor));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/D8431969"));
+    }
+    else {
+    }
+    BankSave(gv_benchmarkerBank);
+}
+
+void gf_LoadBenchmarkBuildOrder () {
+    int auto8F962F3E_ae;
+    int auto8F962F3E_ai;
+
+    // Variable Declarations
+    int lv_entryKeyPrefix;
+    int lv_currentStepNum;
+
+    // Variable Initialization
+
+    // Implementation
+    gv_totalNumBenchmarkBuildOrderSteps = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey);
+    if ((gv_debugBank == true)) {
+        TextExpressionSetToken("Param/Expression/6EB05484", "A", IntToText(BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey)));
+        TextExpressionSetToken("Param/Expression/6EB05484", "B", StringToText(gf_GetCurrentlySelectedMatchupasBankSectionKey()));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/6EB05484"));
+        TextExpressionSetToken("Param/Expression/A0919CC0", "A", IntToText(gv_totalNumBenchmarkBuildOrderSteps));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/A0919CC0"));
+    }
+    else {
+    }
+    if ((gv_totalNumBenchmarkBuildOrderSteps > 0)) {
+        auto8F962F3E_ae = (gv_totalNumBenchmarkBuildOrderSteps-1);
+        auto8F962F3E_ai = 1;
+        lv_currentStepNum = 0;
+        for ( ; ( (auto8F962F3E_ai >= 0 && lv_currentStepNum <= auto8F962F3E_ae) || (auto8F962F3E_ai <= 0 && lv_currentStepNum >= auto8F962F3E_ae) ) ; lv_currentStepNum += auto8F962F3E_ai ) {
+            gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_unitType = (BankValueGetAsString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_unitTypeBuildOrderStepEntryKey)));
+            gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_supplyCount = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_supplyCountBuildOrderStepEntryKey));
+            gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_numUnits = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_numUnitsBuildOrderStepEntryKey));
+            gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_elapsedSeconds = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_elapsedSecondsBuildOrderStepEntryKey));
+        }
+        if ((gv_debugBank == true)) {
+            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/4E470FCF"));
+        }
+        else {
+        }
+    }
+    else {
+        if ((gv_debugBank == true)) {
+            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/BB4C5D6E"));
+        }
+        else {
+        }
+    }
+}
+
+void gf_ClearBenchmarkBuildOrder () {
+    // Implementation
+}
+
+void gf_SaveMatchupBenchmarks (string lp_sectionKey) {
+    int autoA7CD85DF_ae;
+    int autoA7CD85DF_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    autoA7CD85DF_ae = 2;
+    autoA7CD85DF_ai = 1;
+    lv_i = 0;
+    for ( ; ( (autoA7CD85DF_ai >= 0 && lv_i <= autoA7CD85DF_ae) || (autoA7CD85DF_ai <= 0 && lv_i >= autoA7CD85DF_ae) ) ; lv_i += autoA7CD85DF_ai ) {
+        gv_benchmarkSupplyValues[lv_i] = gf_GetEditBoxIntValue(gv_benchmarkSupplyEditBoxes[lv_i]);
+        BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkSupplyEntryKeys[lv_i], gv_benchmarkSupplyValues[lv_i]);
+    }
+    gv_benchmarkMaxTimeTotalSeconds = ((gf_GetEditBoxIntValue(gv_maxTimeMinutesEditBox)*60)+gf_GetEditBoxIntValue(gv_maxTimeSecondsEditBox));
+    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkMaxTimeMinutesKey, gf_GetEditBoxIntValue(gv_maxTimeMinutesEditBox));
+    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkMaxTimeSecondsKey, gf_GetEditBoxIntValue(gv_maxTimeSecondsEditBox));
+    gv_endBuildPulldownSelection = DialogControlGetSelectedItem(gv_endBuildPulldown, 1);
+    BankValueSetFromInt(gv_benchmarkerBank, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildSelectionKey, DialogControlGetSelectedItem(gv_endBuildPulldown, 1));
+    gv_benchmarkEndBuildatMinutes = gf_GetEditBoxIntValue(gv_endBuildMinutesEditBox);
+    BankValueSetFromInt(gv_benchmarkerBank, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildMinutesKey, gf_GetEditBoxIntValue(gv_endBuildMinutesEditBox));
+    gv_benchmarkEndBuildatSeconds = gf_GetEditBoxIntValue(gv_endBuildSecondsEditBox);
+    BankValueSetFromInt(gv_benchmarkerBank, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildSecondsKey, gf_GetEditBoxIntValue(gv_endBuildSecondsEditBox));
+    BankSave(gv_benchmarkerBank);
+}
+
+void gf_LoadMatchupBenchmarks (string lp_sectionKey) {
+    int autoB80F7580_ae;
+    int autoB80F7580_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    autoB80F7580_ae = 2;
+    autoB80F7580_ai = 1;
+    lv_i = 0;
+    for ( ; ( (autoB80F7580_ai >= 0 && lv_i <= autoB80F7580_ae) || (autoB80F7580_ai <= 0 && lv_i >= autoB80F7580_ae) ) ; lv_i += autoB80F7580_ai ) {
+        gf_LoadIntFromBankIfKeyisSetElseDefault(gv_benchmarkSupplyEditBoxes[lv_i], gv_benchmarkSupplyEntryKeys[lv_i], lp_sectionKey, gv_benchmarkSupplyDefaults[lv_i]);
+    }
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeMinutesEditBox, gv_benchmarkMaxTimeMinutesKey, lp_sectionKey, gv_benchmarkMaxTimeMinutes);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeSecondsEditBox, gv_benchmarkMaxTimeSecondsKey, lp_sectionKey, gv_benchmarkMaxTimeSeconds);
+    if ((BankValueGetAsInt(gv_benchmarkerBank, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildSelectionKey) > 0)) {
+        DialogControlSelectItem(gv_endBuildPulldown, PlayerGroupAll(), BankValueGetAsInt(gv_benchmarkerBank, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildSelectionKey));
+    }
+    else {
+        DialogControlSelectItem(gv_endBuildPulldown, PlayerGroupAll(), gv_endBuildPulldownSelection);
+    }
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildMinutesEditBox, gv_benchmarkEndBuildMinutesKey, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildatMinutes);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildSecondsEditBox, gv_benchmarkEndBuildSecondsKey, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildatSeconds);
+}
+
+void gf_SaveAlertConfigurations () {
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    BankValueSetFromFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertMineralsCheckEnabledEntryKey, gv_alertMineralsCheckEnabled);
+    gv_alertMineralsThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[0][2]);
+    BankValueSetFromInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertMineralsThresholdKey, gv_alertMineralsThreshold);
+    BankValueSetFromFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertGasCheckEnabledEntryKey, gv_alertGasCheckEnabled);
+    gv_alertGasThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[1][2]);
+    BankValueSetFromInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertGasThresholdKey, gv_alertGasThreshold);
+    BankValueSetFromFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertSupplyBlockCheckEnabledEntryKey, gv_alertSupplyBlockCheckEnabled);
+    gv_alertSupplyBlockWithinCapThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[2][2]);
+    BankValueSetFromInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertSupplyBlockWithinCapKey, gv_alertSupplyBlockWithinCapThreshold);
+    gv_alertSupplyBlockStart = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[2][4]);
+    BankValueSetFromInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertSupplyBlockStartKey, gv_alertSupplyBlockStart);
+    BankValueSetFromFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertMacroEnergyCheckEnabledEntryKey, gv_alertMacroEnergyCheckEnabled);
+    gv_alertSelectedMacroEnergyThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[3][2]);
+    BankValueSetFromInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertMacroEnergyThresholdKey, gv_alertSelectedMacroEnergyThreshold);
+    BankValueSetFromFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertUpgradeGapCheckEnabledEntryKey, gv_alertUpgradeGapCheckEnabled);
+    gv_alertUpgradeGapThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[4][2]);
+    BankValueSetFromInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertUpgradeGapThresholdKey, gv_alertUpgradeGapThreshold);
+    BankValueSetFromFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertProductionIdleCheckEnabledEntryKey, gv_alertProductionIdleCheckEnabled);
+    gv_alertProductionIdleThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[5][2]);
+    BankValueSetFromInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertProductionIdleThresholdKey, gv_alertProductionIdleThreshold);
+    BankSave(gv_benchmarkerBank);
+}
+
+void gf_LoadAlertConfigurations () {
+    // Implementation
+    gf_LoadAlertRowConfiguration(gv_alertMineralsCheckEnabledEntryKey, gv_alertMineralsThresholdKey, gv_mineralAboveThresholdAlertCheckbox, gv_alertMenuDialogItemGrid[0][2], gv_alertMineralsThreshold, 0);
+    gv_alertMineralsCheckEnabled = libNtve_gf_DialogItemIsChecked(gv_mineralAboveThresholdAlertCheckbox, 1);
+    gv_alertMineralsThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[0][2]);
+    gf_LoadAlertRowConfiguration(gv_alertGasCheckEnabledEntryKey, gv_alertGasThresholdKey, gv_gasAboveThresholdAlertCheckbox, gv_alertMenuDialogItemGrid[1][2], gv_alertGasThreshold, 1);
+    gv_alertGasCheckEnabled = libNtve_gf_DialogItemIsChecked(gv_gasAboveThresholdAlertCheckbox, 1);
+    gv_alertGasThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[1][2]);
+    if ((BankKeyExists(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertSupplyBlockCheckEnabledEntryKey) == true)) {
+        if ((BankValueGetAsFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertSupplyBlockCheckEnabledEntryKey) == true)) {
+            gv_alertSupplyBlockCheckEnabled = true;
+        }
+        else {
+            gv_alertSupplyBlockCheckEnabled = false;
+        }
+        gv_alertSupplyBlockWithinCapThreshold = BankValueGetAsInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertSupplyBlockWithinCapKey);
+        gv_alertSupplyBlockStart = BankValueGetAsInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertSupplyBlockStartKey);
+    }
+    else {
+    }
+    gf_SetAlertCheckboxState(gv_alertSupplyBlockCheckEnabled, gv_supplyBlockImminentAlertCheckbox);
+    gf_EnableDisableAlertRow(gv_alertSupplyBlockCheckEnabled, 2, 0);
+    libNtve_gf_SetDialogItemEditorValue(gv_alertMenuDialogItemGrid[2][2], IntToString(gv_alertSupplyBlockWithinCapThreshold), PlayerGroupAll());
+    libNtve_gf_SetDialogItemEditorValue(gv_alertMenuDialogItemGrid[2][4], IntToString(gv_alertSupplyBlockStart), PlayerGroupAll());
+    gf_LoadAlertRowConfiguration(gv_alertMacroEnergyCheckEnabledEntryKey, gv_alertMacroEnergyThresholdKey, gv_macroEnergyAboveThresholdAlertCheckbox, gv_alertMenuDialogItemGrid[3][2], gf_GetDefaultMacroEnergyThreshold(), 3);
+    gv_alertMacroEnergyCheckEnabled = libNtve_gf_DialogItemIsChecked(gv_macroEnergyAboveThresholdAlertCheckbox, 1);
+    gv_alertSelectedMacroEnergyThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[3][2]);
+    gf_LoadAlertRowConfiguration(gv_alertUpgradeGapCheckEnabledEntryKey, gv_alertUpgradeGapThresholdKey, gv_upgradeGapAboveThresholdAlertCheckbox, gv_alertMenuDialogItemGrid[4][2], gv_alertUpgradeGapThreshold, 4);
+    gv_alertUpgradeGapCheckEnabled = libNtve_gf_DialogItemIsChecked(gv_upgradeGapAboveThresholdAlertCheckbox, 1);
+    gv_alertSelectedMacroEnergyThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[4][2]);
+    gf_LoadAlertRowConfiguration(gv_alertProductionIdleCheckEnabledEntryKey, gv_alertProductionIdleThresholdKey, gv_productionIdleAboveThresholdAlertCheckbox, gv_alertMenuDialogItemGrid[5][2], gv_alertProductionIdleThreshold, 5);
+    gv_alertProductionIdleCheckEnabled = libNtve_gf_DialogItemIsChecked(gv_productionIdleAboveThresholdAlertCheckbox, 1);
+    gv_alertProductionIdleThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[5][2]);
+}
+
+void gf_LoadAlertRowConfiguration (string lp_alertEnabledKey, string lp_alertThresholdKey, int lp_alertCheckbox, int lp_alertEditBox, int lp_defaultThresholdValue, int lp_rowNumber) {
+    // Variable Declarations
+    bool lv_checkEnabled;
+    int lv_threshold;
+
+    // Variable Initialization
+    lv_checkEnabled = true;
+
+    // Implementation
+    if ((BankKeyExists(gv_benchmarkerBank, gv_alertConfigurationSectionKey, lp_alertEnabledKey) == true)) {
+        if ((BankValueGetAsFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, lp_alertEnabledKey) == true)) {
+            lv_checkEnabled = true;
+        }
+        else {
+            lv_checkEnabled = false;
+        }
+        lv_threshold = BankValueGetAsInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, lp_alertThresholdKey);
+    }
+    else {
+        lv_threshold = lp_defaultThresholdValue;
+    }
+    gf_SetAlertCheckboxState(lv_checkEnabled, lp_alertCheckbox);
+    gf_EnableDisableAlertRow(lv_checkEnabled, lp_rowNumber, 0);
+    libNtve_gf_SetDialogItemEditorValue(lp_alertEditBox, IntToString(lv_threshold), PlayerGroupAll());
 }
 
 void gf_SelectAlertMenu () {
@@ -2634,298 +2614,231 @@ void gf_EvaluateAndDisableEnableBuildHintsOptions () {
     }
 }
 
-void gf_SaveCurrentStatsasNewBenchmark () {
-    // Implementation
-    gf_SaveRealAsBuildBenchmark(gf_GetSpendingQuotient(), gv_bestSpendingQuotientEntryKey);
-    gf_SaveIntAsSupplyBenchmark(gv_workersCreated, gv_bestTotalWorkersCreatedEntryKey);
-    gf_SaveIntAsSupplyBenchmark(gf_GetTotalArmySupply(), gv_bestTotalArmySupplyEntryKey);
-    gf_SaveIntAsSupplyBenchmark(gf_GetTotalArmyValueMinerals(), gv_bestTotalArmyValueMineralsEntryKey);
-    gf_SaveIntAsSupplyBenchmark(gf_GetTotalArmyValueGas(), gv_bestTotalArmyValueGasEntryKey);
-    gf_SaveIntAsSupplyBenchmark(gf_GetNumUpgradesResearched(), gv_bestNumUpgradesResearchedEntryKey);
-    gf_SaveIntAsSupplyBenchmark(gf_GetTotalMineralsCollected(), gv_bestTotalMineralsCollectedEntryKey);
-    gf_SaveIntAsSupplyBenchmark(gf_GetTotalGasCollected(), gv_bestTotalGasCollectedEntryKey);
-    gf_SaveIntAsSupplyBenchmark(gf_GetTimeSupplyBlocked(), gv_bestTimeSupplyBlockedEntryKey);
-    gf_SaveIntAsSupplyBenchmark(gf_GetIdleProductionTime(), gv_bestIdleProductionTimeEntryKey);
-    gf_SaveIntAsSupplyBenchmark(gf_GetAverageUnspentMinerals(), gv_bestAverageUnspentMineralsEntryKey);
-    gf_SaveIntAsSupplyBenchmark(gf_GetAverageUnspentGas(), gv_bestAverageUnspentGasEntryKey);
-    gf_SaveRealAsBuildBenchmark(gf_GetAverageBuildAPM(), gv_bestAverageAPMEntryKey);
-    BankSave(gv_benchmarkerBank);
-}
+void gf_InitializeGameArrayDefaults () {
+    string auto6EDFB34C_val;
 
-void gf_ResetBenchmarkBuildStatistics () {
     // Implementation
-    gf_SaveRealAsBuildBenchmark(0.0, gv_bestSpendingQuotientEntryKey);
-    gf_SaveIntAsSupplyBenchmark(0, gv_bestTotalWorkersCreatedEntryKey);
-    gf_SaveIntAsSupplyBenchmark(0, gv_bestTotalArmySupplyEntryKey);
-    gf_SaveIntAsSupplyBenchmark(0, gv_bestTotalArmyValueMineralsEntryKey);
-    gf_SaveIntAsSupplyBenchmark(0, gv_bestTotalArmyValueGasEntryKey);
-    gf_SaveIntAsSupplyBenchmark(0, gv_bestNumUpgradesResearchedEntryKey);
-    gf_SaveIntAsSupplyBenchmark(0, gv_bestTotalMineralsCollectedEntryKey);
-    gf_SaveIntAsSupplyBenchmark(0, gv_bestTotalGasCollectedEntryKey);
-    gf_SaveIntAsSupplyBenchmark(0, gv_bestTimeSupplyBlockedEntryKey);
-    gf_SaveIntAsSupplyBenchmark(0, gv_bestIdleProductionTimeEntryKey);
-    gf_SaveIntAsSupplyBenchmark(0, gv_bestAverageUnspentMineralsEntryKey);
-    gf_SaveIntAsSupplyBenchmark(0, gv_bestAverageUnspentGasEntryKey);
-    gf_SaveRealAsBuildBenchmark(0.0, gv_bestAverageAPMEntryKey);
-}
-
-void gf_SaveIntAsSupplyBenchmark (int lp_value, string lp_entryKey) {
-    // Implementation
-    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_entryKey, lp_value);
-}
-
-void gf_LoadIntFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_entryKey, string lp_sectionKey, int lp_defaultValue) {
-    // Implementation
-    if (((BankKeyExists(gv_benchmarkerBank, lp_sectionKey, lp_entryKey) == true) && (BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, lp_entryKey) > -1))) {
-        libNtve_gf_SetDialogItemEditorValue(lp_dialogItem, IntToString(BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, lp_entryKey)), PlayerGroupAll());
+    gv_benchmarkTimerDurations[0] = 360;
+    gv_benchmarkTimerDurations[1] = 480;
+    gv_benchmarkTimerDurations[2] = 600;
+    gv_benchmarkSupplyEntryKeys[0] = "benchmark1";
+    gv_benchmarkSupplyEntryKeys[1] = "benchmark2";
+    gv_benchmarkSupplyEntryKeys[2] = "benchmark3";
+    gv_benchmarkSupplyDefaults[0] = 30;
+    gv_benchmarkSupplyDefaults[1] = 55;
+    gv_benchmarkSupplyDefaults[2] = 80;
+    gv_benchmarkMatchupSectionKeys[0] = gv_vZergMatchupSectionKey;
+    gv_benchmarkMatchupSectionKeys[1] = gv_vTerranMatchupSectionKey;
+    gv_benchmarkMatchupSectionKeys[2] = gv_vProtossMatchupSectionKey;
+    gv_alertRowLabelWidths[0][0] = 335;
+    gv_alertRowLabelWidths[1][0] = 292;
+    gv_alertRowLabelWidths[2][0] = 317;
+    gv_alertRowLabelWidths[2][1] = 252;
+    auto6EDFB34C_val = PlayerRace(1);
+    if (auto6EDFB34C_val == "Prot") {
+        gv_alertRowLabelWidths[3][0] = (gv_alertMenuSupplyBlockBaseWidth+gv_alertMenuNexusNameWidth);
+    }
+    else if (auto6EDFB34C_val == "Terr") {
+        gv_alertRowLabelWidths[3][0] = (gv_alertMenuSupplyBlockBaseWidth+gv_alertMenuOrbitalNameWidth);
+    }
+    else if (auto6EDFB34C_val == "Zerg") {
+        gv_alertRowLabelWidths[3][0] = (gv_alertMenuSupplyBlockBaseWidth+gv_alertMenuQueenNameWidth);
     }
     else {
-        libNtve_gf_SetDialogItemEditorValue(lp_dialogItem, IntToString(lp_defaultValue), PlayerGroupAll());
     }
+    gv_alertRowLabelWidths[4][0] = 400;
+    gv_alertRowLabelWidths[4][1] = gv_secondsLabelWidth;
+    gv_alertRowLabelWidths[5][0] = 483;
+    gv_alertRowLabelWidths[5][1] = gv_secondsLabelWidth;
+    gv_alertRowLabelWidths[6][0] = 357;
+    gv_alertRowLabelWidths[7][0] = 335;
 }
 
-void gf_SaveRealAsBuildBenchmark (fixed lp_value, string lp_entryKey) {
-    // Implementation
-    BankValueSetFromFixed(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_entryKey, lp_value);
-}
-
-void gf_SaveBenchmarkBuildOrder () {
-    int auto895F190E_ae;
-    int auto895F190E_ai;
+void gf_InitializeMapResourcesUnitGroup () {
+    unitgroup auto59129081_g;
+    int auto59129081_u;
+    unitgroup autoAECA9D28_g;
+    int autoAECA9D28_u;
 
     // Variable Declarations
-    int lv_currentStepNum;
+    unit lv_currentResource;
 
     // Variable Initialization
 
     // Implementation
-    if ((gv_debugBank == true)) {
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/D246724E"));
-    }
-    else {
-    }
-    auto895F190E_ae = (gv_currentBuildOrderStepCursor-1);
-    auto895F190E_ai = 1;
-    lv_currentStepNum = 0;
-    for ( ; ( (auto895F190E_ai >= 0 && lv_currentStepNum <= auto895F190E_ae) || (auto895F190E_ai <= 0 && lv_currentStepNum >= auto895F190E_ae) ) ; lv_currentStepNum += auto895F190E_ai ) {
-        BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_unitTypeBuildOrderStepEntryKey), (gv_currentBuildOrderSteps[lv_currentStepNum].lv_unitType));
-        BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_supplyCountBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lv_currentStepNum].lv_supplyCount);
-        BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_numUnitsBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lv_currentStepNum].lv_numUnits);
-        BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_elapsedSecondsBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lv_currentStepNum].lv_elapsedSeconds);
-        if ((gv_debugBank == true)) {
-            TextExpressionSetToken("Param/Expression/7AE0547A", "A", gf_GetCurrentBuildOrderStepText(lv_currentStepNum));
-            TextExpressionSetToken("Param/Expression/7AE0547A", "B", IntToText(lv_currentStepNum));
-            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/7AE0547A"));
+    auto59129081_g = UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter((1 << c_targetFilterHarvestableResource), 0, 0, 0), 0);
+    auto59129081_u = 1;
+    for ( ; auto59129081_u <= UnitGroupCount(auto59129081_g, c_unitCountAll) ; auto59129081_u += BoolToInt(lv_currentResource == UnitGroupUnit(auto59129081_g, auto59129081_u)) ) {
+        lv_currentResource = UnitGroupUnit(auto59129081_g, auto59129081_u);
+        UnitGroupAdd(gv_resources, lv_currentResource);
+        if ((gv_debugMap == true)) {
+            TextExpressionSetToken("Param/Expression/2322ADF7", "A", UnitTypeGetName(UnitGetType(lv_currentResource)));
+            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/2322ADF7"));
         }
         else {
         }
     }
-    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey, gv_currentBuildOrderStepCursor);
-    if ((gv_debugBank == true)) {
-        TextExpressionSetToken("Param/Expression/D8431969", "A", IntToText(gv_currentBuildOrderStepCursor));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/D8431969"));
+    autoAECA9D28_g = UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter((1 << c_targetFilterRawResource), 0, 0, 0), 0);
+    autoAECA9D28_u = 1;
+    for ( ; autoAECA9D28_u <= UnitGroupCount(autoAECA9D28_g, c_unitCountAll) ; autoAECA9D28_u += BoolToInt(lv_currentResource == UnitGroupUnit(autoAECA9D28_g, autoAECA9D28_u)) ) {
+        lv_currentResource = UnitGroupUnit(autoAECA9D28_g, autoAECA9D28_u);
+        UnitGroupAdd(gv_resources, lv_currentResource);
+        if ((gv_debugMap == true)) {
+            TextExpressionSetToken("Param/Expression/1C0F331A", "A", UnitTypeGetName(UnitGetType(lv_currentResource)));
+            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/1C0F331A"));
+        }
+        else {
+        }
+    }
+}
+
+void gf_ResetGameState () {
+    // Variable Declarations
+    unitgroup lv_player1Units;
+
+    // Variable Initialization
+    lv_player1Units = UnitGroupEmpty();
+
+    // Implementation
+    gf_ResetMapResources();
+    lv_player1Units = gf_GetPlayer1Units();
+    if ((UnitGroupCount(lv_player1Units, c_unitCountAlive) >= 0)) {
+        UnitGroupLoopBegin(lv_player1Units);
+        for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
+            UnitRemove(UnitGroupLoopCurrent());
+        }
+        UnitGroupLoopEnd();
+        MeleeInitUnits();
     }
     else {
     }
-    BankSave(gv_benchmarkerBank);
+    MeleeInitResources();
+    gf_ResetStatistics();
+    gf_ResetCurrentBuildOrderStepsVariables();
+    gf_ResetBenchmarkSupplyObjectives();
+    gf_ResetBenchmarkBuildOrderStepsVariables();
+    gf_ResetBenchmarkBuildOrderObjectives();
+    gf_ResetAlertTimers();
+    gf_ResetBenchmarkTimers();
+    TimerRestart(gv_buildTimer);
+    gf_ResetCamera();
 }
 
-void gf_LoadBenchmarkBuildOrder () {
-    int auto8F962F3E_ae;
-    int auto8F962F3E_ai;
+void gf_ResetMapResources () {
+    unitgroup auto239B13AC_g;
+    int auto239B13AC_u;
 
     // Variable Declarations
-    int lv_entryKeyPrefix;
-    int lv_currentStepNum;
+    string lv_currentResourceType;
+    point lv_currentPosition;
+    unit lv_currentResource;
+    int lv_resourcesReplaced;
 
     // Variable Initialization
 
     // Implementation
-    gv_totalNumBenchmarkBuildOrderSteps = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey);
-    if ((gv_debugBank == true)) {
-        TextExpressionSetToken("Param/Expression/6EB05484", "A", IntToText(BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey)));
-        TextExpressionSetToken("Param/Expression/6EB05484", "B", StringToText(gf_GetCurrentlySelectedMatchupasBankSectionKey()));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/6EB05484"));
-        TextExpressionSetToken("Param/Expression/A0919CC0", "A", IntToText(gv_totalNumBenchmarkBuildOrderSteps));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/A0919CC0"));
-    }
-    else {
-    }
-    if ((gv_totalNumBenchmarkBuildOrderSteps > 0)) {
-        auto8F962F3E_ae = (gv_totalNumBenchmarkBuildOrderSteps-1);
-        auto8F962F3E_ai = 1;
-        lv_currentStepNum = 0;
-        for ( ; ( (auto8F962F3E_ai >= 0 && lv_currentStepNum <= auto8F962F3E_ae) || (auto8F962F3E_ai <= 0 && lv_currentStepNum >= auto8F962F3E_ae) ) ; lv_currentStepNum += auto8F962F3E_ai ) {
-            gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_unitType = (BankValueGetAsString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_unitTypeBuildOrderStepEntryKey)));
-            gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_supplyCount = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_supplyCountBuildOrderStepEntryKey));
-            gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_numUnits = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_numUnitsBuildOrderStepEntryKey));
-            gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_elapsedSeconds = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_elapsedSecondsBuildOrderStepEntryKey));
-        }
-        if ((gv_debugBank == true)) {
-            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/4E470FCF"));
+    auto239B13AC_g = gv_resources;
+    auto239B13AC_u = 1;
+    for ( ; auto239B13AC_u <= UnitGroupCount(auto239B13AC_g, c_unitCountAll) ; auto239B13AC_u += BoolToInt(lv_currentResource == UnitGroupUnit(auto239B13AC_g, auto239B13AC_u)) ) {
+        lv_currentResource = UnitGroupUnit(auto239B13AC_g, auto239B13AC_u);
+        lv_currentResourceType = UnitGetType(lv_currentResource);
+        if (((((lv_currentResourceType == "VespeneGeyser") || (lv_currentResourceType == "RichVespeneGeyser") || (lv_currentResourceType == "ProtossVespeneGeyser") || (lv_currentResourceType == "SpacePlatformGeyser")) && (libNtve_gf_UnitGetPropertyResources(lv_currentResource, c_unitPropCurrent) < 2500)) || (((lv_currentResourceType == "MineralField") || (lv_currentResourceType == "RichMineralField")) && (libNtve_gf_UnitGetPropertyResources(lv_currentResource, c_unitPropCurrent) < 1500)))) {
+            lv_currentPosition = UnitGetPosition(lv_currentResource);
+            UnitRemove(lv_currentResource);
+            UnitGroupRemove(gv_resources, lv_currentResource);
+            libNtve_gf_CreateUnitsWithDefaultFacing(1, lv_currentResourceType, 0, 0, lv_currentPosition);
+            UnitGroupAdd(gv_resources, UnitLastCreated());
+            lv_resourcesReplaced += 1;
         }
         else {
         }
     }
+    if ((gv_debugMap == true)) {
+        TextExpressionSetToken("Param/Expression/F4AFF87D", "A", IntToText(lv_resourcesReplaced));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/F4AFF87D"));
+    }
     else {
-        if ((gv_debugBank == true)) {
-            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/BB4C5D6E"));
-        }
-        else {
-        }
     }
 }
 
-void gf_ClearBenchmarkBuildOrder () {
+void gf_ResetTechTree () {
     // Implementation
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergGroundArmorsLevel1", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergGroundArmorsLevel2", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergGroundArmorsLevel3", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergFlyerArmorsLevel1", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergFlyerArmorsLevel2", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergFlyerArmorsLevel3", 0);
 }
 
-void gf_SaveMatchupBenchmarks (string lp_sectionKey) {
-    int autoA7CD85DF_ae;
-    int autoA7CD85DF_ai;
+void gf_ResetCamera () {
+    // Implementation
+    CameraRestore(1, 0.75, -1, 10.0);
+}
 
+void gf_PauseGame () {
     // Variable Declarations
     int lv_i;
 
     // Variable Initialization
 
     // Implementation
-    autoA7CD85DF_ae = 2;
-    autoA7CD85DF_ai = 1;
-    lv_i = 0;
-    for ( ; ( (autoA7CD85DF_ai >= 0 && lv_i <= autoA7CD85DF_ae) || (autoA7CD85DF_ai <= 0 && lv_i >= autoA7CD85DF_ae) ) ; lv_i += autoA7CD85DF_ai ) {
-        gv_benchmarkSupplyValues[lv_i] = gf_GetEditBoxIntValue(gv_benchmarkSupplyEditBoxes[lv_i]);
-        BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkSupplyEntryKeys[lv_i], gv_benchmarkSupplyValues[lv_i]);
-    }
-    gv_benchmarkMaxTimeTotalSeconds = ((gf_GetEditBoxIntValue(gv_maxTimeMinutesEditBox)*60)+gf_GetEditBoxIntValue(gv_maxTimeSecondsEditBox));
-    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkMaxTimeMinutesKey, gf_GetEditBoxIntValue(gv_maxTimeMinutesEditBox));
-    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkMaxTimeSecondsKey, gf_GetEditBoxIntValue(gv_maxTimeSecondsEditBox));
-    gv_endBuildPulldownSelection = DialogControlGetSelectedItem(gv_endBuildPulldown, 1);
-    BankValueSetFromInt(gv_benchmarkerBank, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildSelectionKey, DialogControlGetSelectedItem(gv_endBuildPulldown, 1));
-    gv_benchmarkEndBuildatMinutes = gf_GetEditBoxIntValue(gv_endBuildMinutesEditBox);
-    BankValueSetFromInt(gv_benchmarkerBank, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildMinutesKey, gf_GetEditBoxIntValue(gv_endBuildMinutesEditBox));
-    gv_benchmarkEndBuildatSeconds = gf_GetEditBoxIntValue(gv_endBuildSecondsEditBox);
-    BankValueSetFromInt(gv_benchmarkerBank, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildSecondsKey, gf_GetEditBoxIntValue(gv_endBuildSecondsEditBox));
-    BankSave(gv_benchmarkerBank);
+    gv_paused = true;
+    TimerPause(gv_buildTimer, true);
+    gf_PauseBenchmarkTimers();
+    gf_PauseAlertTimers();
+    UnitPauseAll(true);
 }
 
-void gf_LoadMatchupBenchmarks (string lp_sectionKey) {
-    int autoB80F7580_ae;
-    int autoB80F7580_ai;
-
+void gf_UnpauseGame () {
     // Variable Declarations
     int lv_i;
 
     // Variable Initialization
 
     // Implementation
-    autoB80F7580_ae = 2;
-    autoB80F7580_ai = 1;
-    lv_i = 0;
-    for ( ; ( (autoB80F7580_ai >= 0 && lv_i <= autoB80F7580_ae) || (autoB80F7580_ai <= 0 && lv_i >= autoB80F7580_ae) ) ; lv_i += autoB80F7580_ai ) {
-        gf_LoadIntFromBankIfKeyisSetElseDefault(gv_benchmarkSupplyEditBoxes[lv_i], gv_benchmarkSupplyEntryKeys[lv_i], lp_sectionKey, gv_benchmarkSupplyDefaults[lv_i]);
-    }
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeMinutesEditBox, gv_benchmarkMaxTimeMinutesKey, lp_sectionKey, gv_benchmarkMaxTimeMinutes);
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeSecondsEditBox, gv_benchmarkMaxTimeSecondsKey, lp_sectionKey, gv_benchmarkMaxTimeSeconds);
-    if ((BankValueGetAsInt(gv_benchmarkerBank, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildSelectionKey) > 0)) {
-        DialogControlSelectItem(gv_endBuildPulldown, PlayerGroupAll(), BankValueGetAsInt(gv_benchmarkerBank, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildSelectionKey));
-    }
-    else {
-        DialogControlSelectItem(gv_endBuildPulldown, PlayerGroupAll(), gv_endBuildPulldownSelection);
-    }
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildMinutesEditBox, gv_benchmarkEndBuildMinutesKey, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildatMinutes);
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildSecondsEditBox, gv_benchmarkEndBuildSecondsKey, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildatSeconds);
+    gv_paused = false;
+    UnitPauseAll(false);
+    gf_UnpauseBenchmarkTimers();
+    gf_UnpauseAlertTimers();
+    TimerPause(gv_buildTimer, false);
 }
 
-void gf_SaveAlertConfigurations () {
+void gf_StartBenchmarkTimers () {
     // Variable Declarations
     int lv_i;
 
     // Variable Initialization
 
     // Implementation
-    BankValueSetFromFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertMineralsCheckEnabledEntryKey, gv_alertMineralsCheckEnabled);
-    gv_alertMineralsThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[0][2]);
-    BankValueSetFromInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertMineralsThresholdKey, gv_alertMineralsThreshold);
-    BankValueSetFromFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertGasCheckEnabledEntryKey, gv_alertGasCheckEnabled);
-    gv_alertGasThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[1][2]);
-    BankValueSetFromInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertGasThresholdKey, gv_alertGasThreshold);
-    BankValueSetFromFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertSupplyBlockCheckEnabledEntryKey, gv_alertSupplyBlockCheckEnabled);
-    gv_alertSupplyBlockWithinCapThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[2][2]);
-    BankValueSetFromInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertSupplyBlockWithinCapKey, gv_alertSupplyBlockWithinCapThreshold);
-    gv_alertSupplyBlockStart = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[2][4]);
-    BankValueSetFromInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertSupplyBlockStartKey, gv_alertSupplyBlockStart);
-    BankValueSetFromFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertMacroEnergyCheckEnabledEntryKey, gv_alertMacroEnergyCheckEnabled);
-    gv_alertSelectedMacroEnergyThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[3][2]);
-    BankValueSetFromInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertMacroEnergyThresholdKey, gv_alertSelectedMacroEnergyThreshold);
-    BankValueSetFromFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertUpgradeGapCheckEnabledEntryKey, gv_alertUpgradeGapCheckEnabled);
-    gv_alertUpgradeGapThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[4][2]);
-    BankValueSetFromInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertUpgradeGapThresholdKey, gv_alertUpgradeGapThreshold);
-    BankValueSetFromFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertProductionIdleCheckEnabledEntryKey, gv_alertProductionIdleCheckEnabled);
-    gv_alertProductionIdleThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[5][2]);
-    BankValueSetFromInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertProductionIdleThresholdKey, gv_alertProductionIdleThreshold);
-    BankSave(gv_benchmarkerBank);
+    TimerStart(gv_benchmark1Timer, gv_benchmarkTimerDurations[0], false, c_timeGame);
+    TimerStart(gv_benchmark2Timer, gv_benchmarkTimerDurations[1], false, c_timeGame);
+    TimerStart(gv_benchmark3Timer, gv_benchmarkTimerDurations[2], false, c_timeGame);
+    TimerStart(gv_benchmarkMaxTimeTimer, gv_benchmarkMaxTimeTotalSeconds, false, c_timeGame);
 }
 
-void gf_LoadAlertConfigurations () {
+void gf_UnpauseBenchmarkTimers () {
     // Implementation
-    gf_LoadAlertRowConfiguration(gv_alertMineralsCheckEnabledEntryKey, gv_alertMineralsThresholdKey, gv_mineralAboveThresholdAlertCheckbox, gv_alertMenuDialogItemGrid[0][2], gv_alertMineralsThreshold, 0);
-    gv_alertMineralsCheckEnabled = libNtve_gf_DialogItemIsChecked(gv_mineralAboveThresholdAlertCheckbox, 1);
-    gv_alertMineralsThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[0][2]);
-    gf_LoadAlertRowConfiguration(gv_alertGasCheckEnabledEntryKey, gv_alertGasThresholdKey, gv_gasAboveThresholdAlertCheckbox, gv_alertMenuDialogItemGrid[1][2], gv_alertGasThreshold, 1);
-    gv_alertGasCheckEnabled = libNtve_gf_DialogItemIsChecked(gv_gasAboveThresholdAlertCheckbox, 1);
-    gv_alertGasThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[1][2]);
-    if ((BankKeyExists(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertSupplyBlockCheckEnabledEntryKey) == true)) {
-        if ((BankValueGetAsFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertSupplyBlockCheckEnabledEntryKey) == true)) {
-            gv_alertSupplyBlockCheckEnabled = true;
-        }
-        else {
-            gv_alertSupplyBlockCheckEnabled = false;
-        }
-        gv_alertSupplyBlockWithinCapThreshold = BankValueGetAsInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertSupplyBlockWithinCapKey);
-        gv_alertSupplyBlockStart = BankValueGetAsInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertSupplyBlockStartKey);
-    }
-    else {
-    }
-    gf_SetAlertCheckboxState(gv_alertSupplyBlockCheckEnabled, gv_supplyBlockImminentAlertCheckbox);
-    gf_EnableDisableAlertRow(gv_alertSupplyBlockCheckEnabled, 2, 0);
-    libNtve_gf_SetDialogItemEditorValue(gv_alertMenuDialogItemGrid[2][2], IntToString(gv_alertSupplyBlockWithinCapThreshold), PlayerGroupAll());
-    libNtve_gf_SetDialogItemEditorValue(gv_alertMenuDialogItemGrid[2][4], IntToString(gv_alertSupplyBlockStart), PlayerGroupAll());
-    gf_LoadAlertRowConfiguration(gv_alertMacroEnergyCheckEnabledEntryKey, gv_alertMacroEnergyThresholdKey, gv_macroEnergyAboveThresholdAlertCheckbox, gv_alertMenuDialogItemGrid[3][2], gf_GetDefaultMacroEnergyThreshold(), 3);
-    gv_alertMacroEnergyCheckEnabled = libNtve_gf_DialogItemIsChecked(gv_macroEnergyAboveThresholdAlertCheckbox, 1);
-    gv_alertSelectedMacroEnergyThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[3][2]);
-    gf_LoadAlertRowConfiguration(gv_alertUpgradeGapCheckEnabledEntryKey, gv_alertUpgradeGapThresholdKey, gv_upgradeGapAboveThresholdAlertCheckbox, gv_alertMenuDialogItemGrid[4][2], gv_alertUpgradeGapThreshold, 4);
-    gv_alertUpgradeGapCheckEnabled = libNtve_gf_DialogItemIsChecked(gv_upgradeGapAboveThresholdAlertCheckbox, 1);
-    gv_alertSelectedMacroEnergyThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[4][2]);
-    gf_LoadAlertRowConfiguration(gv_alertProductionIdleCheckEnabledEntryKey, gv_alertProductionIdleThresholdKey, gv_productionIdleAboveThresholdAlertCheckbox, gv_alertMenuDialogItemGrid[5][2], gv_alertProductionIdleThreshold, 5);
-    gv_alertProductionIdleCheckEnabled = libNtve_gf_DialogItemIsChecked(gv_productionIdleAboveThresholdAlertCheckbox, 1);
-    gv_alertProductionIdleThreshold = gf_GetEditBoxIntValue(gv_alertMenuDialogItemGrid[5][2]);
+    TimerPause(gv_benchmark1Timer, false);
+    TimerPause(gv_benchmark2Timer, false);
+    TimerPause(gv_benchmark3Timer, false);
+    TimerPause(gv_benchmarkMaxTimeTimer, false);
 }
 
-void gf_LoadAlertRowConfiguration (string lp_alertEnabledKey, string lp_alertThresholdKey, int lp_alertCheckbox, int lp_alertEditBox, int lp_defaultThresholdValue, int lp_rowNumber) {
-    // Variable Declarations
-    bool lv_checkEnabled;
-    int lv_threshold;
-
-    // Variable Initialization
-    lv_checkEnabled = true;
-
+void gf_PauseBenchmarkTimers () {
     // Implementation
-    if ((BankKeyExists(gv_benchmarkerBank, gv_alertConfigurationSectionKey, lp_alertEnabledKey) == true)) {
-        if ((BankValueGetAsFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, lp_alertEnabledKey) == true)) {
-            lv_checkEnabled = true;
-        }
-        else {
-            lv_checkEnabled = false;
-        }
-        lv_threshold = BankValueGetAsInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, lp_alertThresholdKey);
-    }
-    else {
-        lv_threshold = lp_defaultThresholdValue;
-    }
-    gf_SetAlertCheckboxState(lv_checkEnabled, lp_alertCheckbox);
-    gf_EnableDisableAlertRow(lv_checkEnabled, lp_rowNumber, 0);
-    libNtve_gf_SetDialogItemEditorValue(lp_alertEditBox, IntToString(lv_threshold), PlayerGroupAll());
+    TimerPause(gv_benchmark1Timer, true);
+    TimerPause(gv_benchmark2Timer, true);
+    TimerPause(gv_benchmark3Timer, true);
+    TimerPause(gv_benchmarkMaxTimeTimer, true);
+}
+
+void gf_ResetBenchmarkTimers () {
+    // Implementation
+    TimerRestart(gv_benchmark1Timer);
+    TimerRestart(gv_benchmark2Timer);
+    TimerRestart(gv_benchmark3Timer);
+    TimerRestart(gv_benchmarkMaxTimeTimer);
 }
 
 void gf_CreateHiddenBenchmarkSupplyObjectives () {
@@ -3012,17 +2925,6 @@ void gf_ResetBenchmarkSupplyObjectives () {
     ObjectiveSetName(gv_benchmarkMaxTimeObjective, TextExpressionAssemble("Param/Expression/B6B33C58"));
 }
 
-void gf_CreateBenchmarkBuildOrderStepObjective (int lp_buildStep) {
-    // Variable Declarations
-    text lv_stepObjectiveText;
-
-    // Variable Initialization
-
-    // Implementation
-    lv_stepObjectiveText = gf_GetBenchmarkBuildOrderStepText(lp_buildStep);
-    ObjectiveCreate(lv_stepObjectiveText, StringExternal("Param/Value/63BE4A54"), c_objectiveStateActive, false);
-}
-
 void gf_CreateBenchmarkBuildOrderObjectives () {
     int auto98326FC4_ae;
     int auto98326FC4_ai;
@@ -3043,12 +2945,23 @@ void gf_CreateBenchmarkBuildOrderObjectives () {
     lv_i = 0;
     for ( ; ( (auto98326FC4_ai >= 0 && lv_i <= auto98326FC4_ae) || (auto98326FC4_ai <= 0 && lv_i >= auto98326FC4_ae) ) ; lv_i += auto98326FC4_ai ) {
         if ((lv_i < gv_totalNumBenchmarkBuildOrderSteps)) {
-            gf_CreateBenchmarkBuildOrderStepObjective(lv_i);
+            gf_CreateIndividualBenchmarkBuildOrderStepObjective(lv_i);
             gv_benchmarkBuildOrderStepObjectives[lv_i] = ObjectiveLastCreated();
         }
         else {
         }
     }
+}
+
+void gf_CreateIndividualBenchmarkBuildOrderStepObjective (int lp_buildStep) {
+    // Variable Declarations
+    text lv_stepObjectiveText;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_stepObjectiveText = gf_GetBenchmarkBuildOrderStepText(lp_buildStep);
+    ObjectiveCreate(lv_stepObjectiveText, StringExternal("Param/Value/63BE4A54"), c_objectiveStateActive, false);
 }
 
 void gf_EvaluateBenchmarkBuildOrderStepObjective (string lp_unitType) {
@@ -3160,353 +3073,123 @@ void gf_ResetBenchmarkBuildOrderObjectives () {
     }
 }
 
-void gf_LookatandPanToUnit (unit lp_unit) {
+void gf_InitializeBenchmarkBuildOrderObjectives () {
     // Implementation
-    CameraLookAt(1, UnitGetPosition(lp_unit), 0.5, 50.0, 10.0);
-    CameraPan(1, libNtve_gf_PointWithZOffset(UnitGetPosition(lp_unit), ((CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance))+8)), 0.2, 50.0, 10.0, false);
-    libNtve_gf_SwooshCamera(1, CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance), CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance), UnitGetPosition(lp_unit), 0.2);
+    if ((gv_practiceAgainstBenchmarkBuildOrder == true)) {
+        gf_LoadBenchmarkBuildOrder();
+        if ((gv_totalNumBenchmarkBuildOrderSteps > 0)) {
+            gf_CreateBenchmarkBuildOrderObjectives();
+        }
+        else {
+        }
+    }
+    else {
+    }
 }
 
-//--------------------------------------------------------------------------------------------------
-// Trigger: Map Initialization
-//--------------------------------------------------------------------------------------------------
-bool gt_MapInitialization_Func (bool testConds, bool runActions) {
+void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType) {
+    // Variable Declarations
+    int lv_buildOrderStepSupplyCount;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_buildStepUnitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (PlayerRace(EventPlayer()) == "Zerg"))) {
+        lv_buildOrderStepSupplyCount = (PlayerScoreValueGetAsInt(1, "FoodUsed")+1);
+    }
+    else {
+        lv_buildOrderStepSupplyCount = PlayerScoreValueGetAsInt(1, "FoodUsed");
+    }
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_unitType = lp_buildStepUnitType;
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_numUnits = 1;
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_supplyCount = lv_buildOrderStepSupplyCount;
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
+    gv_lastCreatedBuildOrderUnitType = lp_buildStepUnitType;
+    gv_lastCreatedUnitTimestamp = TimerGetElapsed(gv_buildTimer);
+    if ((gv_debugBuildOrder == true)) {
+        TextExpressionSetToken("Param/Expression/7FAB1454", "A", gf_GetCurrentBuildOrderStepText(gv_currentBuildOrderStepCursor));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/7FAB1454"));
+    }
+    else {
+    }
+}
+
+void gf_AddUpgradeBuildOrderStep (string lp_buildStepUnitType) {
+    // Implementation
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_unitType = lp_buildStepUnitType;
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_numUnits = 1;
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_supplyCount = PlayerScoreValueGetAsInt(1, "FoodUsed");
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
+    gv_lastCreatedBuildOrderUnitType = lp_buildStepUnitType;
+    gv_lastCreatedUnitTimestamp = TimerGetElapsed(gv_buildTimer);
+}
+
+void gf_ResetCurrentBuildOrderStepsVariables () {
+    int autoA13422C8_ae;
+    int autoA13422C8_ai;
+
     // Variable Declarations
     int lv_i;
 
     // Variable Initialization
 
-    // Actions
-    if (!runActions) {
-        return true;
+    // Implementation
+    gv_lastCreatedBuildOrderUnitType = null;
+    autoA13422C8_ae = gv_currentBuildOrderStepCursor;
+    autoA13422C8_ai = 1;
+    lv_i = 0;
+    for ( ; ( (autoA13422C8_ai >= 0 && lv_i <= autoA13422C8_ae) || (autoA13422C8_ai <= 0 && lv_i >= autoA13422C8_ae) ) ; lv_i += autoA13422C8_ai ) {
+        gv_currentBuildOrderSteps[lv_i].lv_unitType = null;
+        gv_currentBuildOrderSteps[lv_i].lv_supplyCount = 0;
+        gv_currentBuildOrderSteps[lv_i].lv_numUnits = 0;
+        gv_currentBuildOrderSteps[lv_i].lv_elapsedSeconds = 0;
     }
-
-    GameSetSpeedValue(c_gameSpeedFaster);
-    CameraSave(1);
-    CinematicFade(false, 0.0, c_fadeStyleNormal, Color(0.00, 0.00, 0.00), 0.0, true);
-    gf_InitializeGameArrayDefaults();
-    gf_InitializeMapResourcesUnitGroup();
-    MeleeInitUnits();
-    gf_PauseGame();
-    BankLoad(gv_benchmarkerBankName, 1);
-    BankSectionCreate(BankLastCreated(), gv_vZergMatchupSectionKey);
-    BankSectionCreate(BankLastCreated(), gv_vTerranMatchupSectionKey);
-    BankSectionCreate(BankLastCreated(), gv_vProtossMatchupSectionKey);
-    gv_benchmarkerBank = BankLastCreated();
-    gf_CreateBenchmarkMenuDialog();
-    DialogSetVisible(DialogLastCreated(), PlayerGroupAll(), true);
-    gf_CreateAlertMenuDialog();
-    gf_CreateStatsDialog();
-    gf_CreateHelpDialog();
-    gf_CreatePostBuildReportDialog();
-    TimerWindowCreate(gv_buildTimer, StringExternal("Param/Value/EAED3202"), true, true);
-    TimerWindowSetAnchor(TimerWindowLastCreated(), c_anchorTopRight, 0, 0);
-    libNtve_gf_DisplayScreenButton(1, StringExternal("Param/Value/C0C8E519"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, gv_screenButtonYPadding, gt_OpenMainMenu);
-    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/0944583F"), PlayerGroupAll());
-    libNtve_gf_DisplayScreenButton(2, StringExternal("Param/Value/EACFE916"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+gv_screenButtonHeight), gt_OpenHelpDialog);
-    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/3D6AF1ED"), PlayerGroupAll());
-    libNtve_gf_DisplayScreenButton(3, StringExternal("Param/Value/CD7984D8"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+2*gv_screenButtonHeight), gt_OpenStatsDialog);
-    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/B098BDCB"), PlayerGroupAll());
-    libNtve_gf_DisplayScreenButton(4, StringExternal("Param/Value/6BF2EBC1"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+3*gv_screenButtonHeight), gt_ResetBuild);
-    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/66F0DD53"), PlayerGroupAll());
-    libNtve_gf_DisplayScreenButton(5, StringExternal("Param/Value/13AB0492"), gv_winButtonWidth, gv_winButtonHeight, c_anchorBottomRight, gv_winButtonXPadding, gf_GetWinButtonYPadding(), gt_EndGame);
-    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/1CABB5B1"), PlayerGroupAll());
-    gf_LoadMatchupBenchmarks(gv_vZergMatchupSectionKey);
-    gf_LoadAlertConfigurations();
-    gf_CreateHiddenBenchmarkSupplyObjectives();
-    gv_debugBank = true;
-    return true;
+    gv_currentBuildOrderStepCursor = 0;
 }
 
-//--------------------------------------------------------------------------------------------------
-void gt_MapInitialization_Init () {
-    gt_MapInitialization = TriggerCreate("gt_MapInitialization_Func");
-    TriggerAddEventMapInit(gt_MapInitialization);
+void gf_ResetBenchmarkBuildOrderStepsVariables () {
+    int auto488B3271_ae;
+    int auto488B3271_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    auto488B3271_ae = gv_benchmarkBuildOrderStepCursor;
+    auto488B3271_ai = 1;
+    lv_i = 0;
+    for ( ; ( (auto488B3271_ai >= 0 && lv_i <= auto488B3271_ae) || (auto488B3271_ai <= 0 && lv_i >= auto488B3271_ae) ) ; lv_i += auto488B3271_ai ) {
+        gv_benchmarkBuildOrderSteps[lv_i].lv_unitType = null;
+        gv_benchmarkBuildOrderSteps[lv_i].lv_supplyCount = 0;
+        gv_benchmarkBuildOrderSteps[lv_i].lv_numUnits = 0;
+        gv_benchmarkBuildOrderSteps[lv_i].lv_elapsedSeconds = 0;
+    }
+    gv_benchmarkBuildOrderStepCursor = 0;
+    gv_totalNumBenchmarkBuildOrderSteps = 0;
 }
 
-//--------------------------------------------------------------------------------------------------
-// Trigger: End Game
-//--------------------------------------------------------------------------------------------------
-bool gt_EndGame_Func (bool testConds, bool runActions) {
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    UnitGroupLoopBegin(UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterAlly) | (1 << c_targetFilterNeutral) | (1 << c_targetFilterEnemy) | (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0));
-    for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
-        UnitKill(UnitGroupLoopCurrent());
-    }
-    UnitGroupLoopEnd();
-    GameOver(1, c_gameOverVictory, true, true);
-    return true;
+void gf_ResetStatistics () {
+    // Implementation
+    gv_workersCreated = 6;
+    gv_timeProductionIdleThisBuild = 0;
+    gv_timeSupplyBlockedThisBuild = 0;
+    gv_cumulativeUnspentMinerals = 0;
+    gv_totalMineralSamplesThisBuild = 0;
+    gv_cumulativeUnspentGas = 0;
+    gv_totalGasSamplesThisBuild = 0;
+    gv_cumulativeAPM = 0;
+    gv_totalAPMSamplesThisBuild = 0;
+    gv_totalMineralsCollected = 50;
+    gv_totalGasCollected = 0;
 }
 
-//--------------------------------------------------------------------------------------------------
-void gt_EndGame_Init () {
-    gt_EndGame = TriggerCreate("gt_EndGame_Func");
-    TriggerAddEventChatMessage(gt_EndGame, c_playerAny, "gg", false);
-    TriggerAddEventKeyPressed(gt_EndGame, 1, c_keyW, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Start Build
-//--------------------------------------------------------------------------------------------------
-bool gt_StartBuild_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!(((EventDialogControl() == gv_startButton[0]) || (EventDialogControl() == gv_startButton[1])))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    DialogSetVisible(gv_benchmarkDialog, PlayerGroupAll(), false);
-    DialogSetVisible(gv_alertMenuDialog, PlayerGroupAll(), false);
-    gf_SaveMatchupBenchmarks(gf_GetCurrentlySelectedMatchupasBankSectionKey());
-    gf_SaveAlertConfigurations();
-    gf_ResetGameState();
-    gf_ShowBenchmarkSupplyObjectives();
-    gf_InitializeBenchmarkBuildOrderObjectives();
-    TimerStart(gv_buildTimer, gv_onehourinsecondsof, false, c_timeGame);
-    gf_StartBenchmarkTimers();
-    gf_UnpauseGame();
-    CameraPan(1, PlayerStartLocation(1), 0.5, -1, 5.0, true);
-    CinematicFade(true, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_StartBuild_Init () {
-    gt_StartBuild = TriggerCreate("gt_StartBuild_Func");
-    TriggerAddEventDialogControl(gt_StartBuild, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeClick);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Reset Build
-//--------------------------------------------------------------------------------------------------
-bool gt_ResetBuild_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!((gv_paused == false))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    UIDisplayMessage(PlayerGroupAll(), c_messageAreaDirective, StringExternal("Param/Value/B010EEE3"));
-    CinematicFade(false, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
-    Wait(0.5, c_timeGame);
-    gf_PauseGame();
-    gf_ResetGameState();
-    Wait(0.5, c_timeGame);
-    gf_UnpauseGame();
-    UIClearMessages(PlayerGroupAll(), c_messageAreaAll);
-    CameraPan(1, PlayerStartLocation(1), 0.5, -1, 5.0, true);
-    CinematicFade(true, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_ResetBuild_Init () {
-    gt_ResetBuild = TriggerCreate("gt_ResetBuild_Func");
-    TriggerAddEventChatMessage(gt_ResetBuild, c_playerAny, "-r", true);
-    TriggerAddEventChatMessage(gt_ResetBuild, c_playerAny, "-reset", true);
-    TriggerAddEventKeyPressed(gt_ResetBuild, 1, c_keyR, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Close Stats and Resume Build from Ok Button
-//--------------------------------------------------------------------------------------------------
-bool gt_CloseStatsandResumeBuildfromOkButton_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!((EventDialogControl() == gv_statsOkButton))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gf_CloseStatsDialogandUnpause();
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_CloseStatsandResumeBuildfromOkButton_Init () {
-    gt_CloseStatsandResumeBuildfromOkButton = TriggerCreate("gt_CloseStatsandResumeBuildfromOkButton_Func");
-    TriggerAddEventDialogControl(gt_CloseStatsandResumeBuildfromOkButton, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeClick);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Close Stats and Resume Build from Hotkey
-//--------------------------------------------------------------------------------------------------
-bool gt_CloseStatsandResumeBuildfromHotkey_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!((gv_statsDialogOpen == true))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gf_CloseStatsDialogandUnpause();
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_CloseStatsandResumeBuildfromHotkey_Init () {
-    gt_CloseStatsandResumeBuildfromHotkey = TriggerCreate("gt_CloseStatsandResumeBuildfromHotkey_Func");
-    TriggerAddEventKeyPressed(gt_CloseStatsandResumeBuildfromHotkey, 1, c_keyZ, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Close Help and Resume Build from Ok Button
-//--------------------------------------------------------------------------------------------------
-bool gt_CloseHelpandResumeBuildfromOkButton_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!((EventDialogControl() == gv_helpOkButton))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gf_CloseHelpDialogandUnpause();
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_CloseHelpandResumeBuildfromOkButton_Init () {
-    gt_CloseHelpandResumeBuildfromOkButton = TriggerCreate("gt_CloseHelpandResumeBuildfromOkButton_Func");
-    TriggerAddEventDialogControl(gt_CloseHelpandResumeBuildfromOkButton, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeClick);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Close Help and Resume Build from Hotkey
-//--------------------------------------------------------------------------------------------------
-bool gt_CloseHelpandResumeBuildfromHotkey_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!((gv_helpDialogOpen == true))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gf_CloseHelpDialogandUnpause();
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_CloseHelpandResumeBuildfromHotkey_Init () {
-    gt_CloseHelpandResumeBuildfromHotkey = TriggerCreate("gt_CloseHelpandResumeBuildfromHotkey_Func");
-    TriggerAddEventKeyPressed(gt_CloseHelpandResumeBuildfromHotkey, 1, c_keyX, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: End Build at Max Supply
-//--------------------------------------------------------------------------------------------------
-bool gt_EndBuildatMaxSupply_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!(((DialogControlGetSelectedItem(gv_endBuildPulldown, 1) == 1) && (PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) >= 200) && (gv_paused == false)))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    if ((ObjectiveGetState(gv_benchmarkMaxTimeObjective) == c_objectiveStateActive)) {
-        ObjectiveSetState(gv_benchmarkMaxTimeObjective, c_objectiveStateCompleted);
-        TextExpressionSetToken("Param/Expression/739A89F7", "A", ObjectiveGetName(gv_benchmarkMaxTimeObjective));
-        TextExpressionSetToken("Param/Expression/739A89F7", "B", TextTimeFormat(StringToText("<min2/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_buildTimer))));
-        ObjectiveSetName(gv_benchmarkMaxTimeObjective, TextExpressionAssemble("Param/Expression/739A89F7"));
-    }
-    else {
-    }
-    TriggerExecute(gt_OpenPostBuildReportDialog, false, false);
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_EndBuildatMaxSupply_Init () {
-    gt_EndBuildatMaxSupply = TriggerCreate("gt_EndBuildatMaxSupply_Func");
-    TriggerAddEventUnitCreated(gt_EndBuildatMaxSupply, null, null, null);
-    TriggerAddEventTimePeriodic(gt_EndBuildatMaxSupply, 1.0, c_timeGame);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: End Build at Specified Game Time
-//--------------------------------------------------------------------------------------------------
-bool gt_EndBuildatSpecifiedGameTime_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!(((DialogControlGetSelectedItem(gv_endBuildPulldown, 1) == 2) && (TimerGetElapsed(gv_buildTimer) >= (60*gv_benchmarkEndBuildatMinutes+gv_benchmarkEndBuildatSeconds)) && (gv_paused == false)))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gf_PauseGame();
-    TriggerExecute(gt_OpenPostBuildReportDialog, false, false);
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_EndBuildatSpecifiedGameTime_Init () {
-    gt_EndBuildatSpecifiedGameTime = TriggerCreate("gt_EndBuildatSpecifiedGameTime_Func");
-    TriggerAddEventTimePeriodic(gt_EndBuildatSpecifiedGameTime, 1.0, c_timeGame);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: End Build From Hotkey
-//--------------------------------------------------------------------------------------------------
-bool gt_EndBuildFromHotkey_Func (bool testConds, bool runActions) {
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gf_PauseGame();
-    TriggerExecute(gt_OpenPostBuildReportDialog, false, false);
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_EndBuildFromHotkey_Init () {
-    gt_EndBuildFromHotkey = TriggerCreate("gt_EndBuildFromHotkey_Func");
-    TriggerAddEventKeyPressed(gt_EndBuildFromHotkey, c_playerAny, c_keyNumPad0, true, c_keyModifierStateIgnore, c_keyModifierStateIgnore, c_keyModifierStateIgnore);
+void gf_LookatandPanToUnit (unit lp_unit) {
+    // Implementation
+    CameraLookAt(1, UnitGetPosition(lp_unit), 0.5, 50.0, 10.0);
+    CameraPan(1, libNtve_gf_PointWithZOffset(UnitGetPosition(lp_unit), ((CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance))+8)), 0.2, 50.0, 10.0, false);
+    libNtve_gf_SwooshCamera(1, CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance), CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance), UnitGetPosition(lp_unit), 0.2);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -4029,204 +3712,225 @@ void gt_ProductionIdleAboveThresholdNewProductionStarts_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Benchmark 1 Timer Expires
+// Trigger: Start Build
 //--------------------------------------------------------------------------------------------------
-bool gt_Benchmark1TimerExpires_Func (bool testConds, bool runActions) {
+bool gt_StartBuild_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((EventDialogControl() == gv_startButton[0]) || (EventDialogControl() == gv_startButton[1])))) {
+            return false;
+        }
+    }
+
     // Actions
     if (!runActions) {
         return true;
     }
 
-    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) > gv_benchmarkSupplyValues[0])) {
-        ObjectiveSetState(gv_benchmarkSupplyObjectives[0], c_objectiveStateCompleted);
-    }
-    else {
-        ObjectiveSetState(gv_benchmarkSupplyObjectives[0], c_objectiveStateFailed);
-    }
-    TextExpressionSetToken("Param/Expression/B53438FA", "A", ObjectiveGetName(gv_benchmarkSupplyObjectives[0]));
-    TextExpressionSetToken("Param/Expression/B53438FA", "B", IntToText(PlayerGetPropertyInt(1, c_playerPropSuppliesUsed)));
-    ObjectiveSetName(gv_benchmarkSupplyObjectives[0], TextExpressionAssemble("Param/Expression/B53438FA"));
+    DialogSetVisible(gv_benchmarkDialog, PlayerGroupAll(), false);
+    DialogSetVisible(gv_alertMenuDialog, PlayerGroupAll(), false);
+    gf_SaveMatchupBenchmarks(gf_GetCurrentlySelectedMatchupasBankSectionKey());
+    gf_SaveAlertConfigurations();
+    gf_ResetGameState();
+    gf_ShowBenchmarkSupplyObjectives();
+    gf_InitializeBenchmarkBuildOrderObjectives();
+    TimerStart(gv_buildTimer, gv_onehourinsecondsof, false, c_timeGame);
+    gf_StartBenchmarkTimers();
+    gf_UnpauseGame();
+    CameraPan(1, PlayerStartLocation(1), 0.5, -1, 5.0, true);
+    CinematicFade(true, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
     return true;
 }
 
 //--------------------------------------------------------------------------------------------------
-void gt_Benchmark1TimerExpires_Init () {
-    gt_Benchmark1TimerExpires = TriggerCreate("gt_Benchmark1TimerExpires_Func");
-    TriggerAddEventTimer(gt_Benchmark1TimerExpires, gv_benchmark1Timer);
+void gt_StartBuild_Init () {
+    gt_StartBuild = TriggerCreate("gt_StartBuild_Func");
+    TriggerAddEventDialogControl(gt_StartBuild, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeClick);
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Benchmark 2 Timer Expires
+// Trigger: Reset Build
 //--------------------------------------------------------------------------------------------------
-bool gt_Benchmark2TimerExpires_Func (bool testConds, bool runActions) {
+bool gt_ResetBuild_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_paused == false))) {
+            return false;
+        }
+    }
+
     // Actions
     if (!runActions) {
         return true;
     }
 
-    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) > gv_benchmarkSupplyValues[1])) {
-        ObjectiveSetState(gv_benchmarkSupplyObjectives[1], c_objectiveStateCompleted);
-    }
-    else {
-        ObjectiveSetState(gv_benchmarkSupplyObjectives[1], c_objectiveStateFailed);
-    }
-    TextExpressionSetToken("Param/Expression/E571E892", "A", ObjectiveGetName(gv_benchmarkSupplyObjectives[1]));
-    TextExpressionSetToken("Param/Expression/E571E892", "B", IntToText(PlayerGetPropertyInt(1, c_playerPropSuppliesUsed)));
-    ObjectiveSetName(gv_benchmarkSupplyObjectives[1], TextExpressionAssemble("Param/Expression/E571E892"));
+    UIDisplayMessage(PlayerGroupAll(), c_messageAreaDirective, StringExternal("Param/Value/B010EEE3"));
+    CinematicFade(false, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
+    Wait(0.5, c_timeGame);
+    gf_PauseGame();
+    gf_ResetGameState();
+    Wait(0.5, c_timeGame);
+    gf_UnpauseGame();
+    UIClearMessages(PlayerGroupAll(), c_messageAreaAll);
+    CameraPan(1, PlayerStartLocation(1), 0.5, -1, 5.0, true);
+    CinematicFade(true, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
     return true;
 }
 
 //--------------------------------------------------------------------------------------------------
-void gt_Benchmark2TimerExpires_Init () {
-    gt_Benchmark2TimerExpires = TriggerCreate("gt_Benchmark2TimerExpires_Func");
-    TriggerAddEventTimer(gt_Benchmark2TimerExpires, gv_benchmark2Timer);
+void gt_ResetBuild_Init () {
+    gt_ResetBuild = TriggerCreate("gt_ResetBuild_Func");
+    TriggerAddEventChatMessage(gt_ResetBuild, c_playerAny, "-r", true);
+    TriggerAddEventChatMessage(gt_ResetBuild, c_playerAny, "-reset", true);
+    TriggerAddEventKeyPressed(gt_ResetBuild, 1, c_keyR, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Benchmark 3 Timer Expires
+// Trigger: Close Stats and Resume Build from Ok Button
 //--------------------------------------------------------------------------------------------------
-bool gt_Benchmark3TimerExpires_Func (bool testConds, bool runActions) {
+bool gt_CloseStatsandResumeBuildfromOkButton_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((EventDialogControl() == gv_statsOkButton))) {
+            return false;
+        }
+    }
+
     // Actions
     if (!runActions) {
         return true;
     }
 
-    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) > gv_benchmarkSupplyValues[2])) {
-        ObjectiveSetState(gv_benchmarkSupplyObjectives[2], c_objectiveStateCompleted);
-    }
-    else {
-        ObjectiveSetState(gv_benchmarkSupplyObjectives[2], c_objectiveStateFailed);
-    }
-    TextExpressionSetToken("Param/Expression/D3C9632E", "A", ObjectiveGetName(gv_benchmarkSupplyObjectives[2]));
-    TextExpressionSetToken("Param/Expression/D3C9632E", "B", IntToText(PlayerGetPropertyInt(1, c_playerPropSuppliesUsed)));
-    ObjectiveSetName(gv_benchmarkSupplyObjectives[2], TextExpressionAssemble("Param/Expression/D3C9632E"));
+    gf_CloseStatsDialogandUnpause();
     return true;
 }
 
 //--------------------------------------------------------------------------------------------------
-void gt_Benchmark3TimerExpires_Init () {
-    gt_Benchmark3TimerExpires = TriggerCreate("gt_Benchmark3TimerExpires_Func");
-    TriggerAddEventTimer(gt_Benchmark3TimerExpires, gv_benchmark3Timer);
+void gt_CloseStatsandResumeBuildfromOkButton_Init () {
+    gt_CloseStatsandResumeBuildfromOkButton = TriggerCreate("gt_CloseStatsandResumeBuildfromOkButton_Func");
+    TriggerAddEventDialogControl(gt_CloseStatsandResumeBuildfromOkButton, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeClick);
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: MaxTime Timer Elapsed
+// Trigger: Close Stats and Resume Build from Hotkey
 //--------------------------------------------------------------------------------------------------
-bool gt_MaxTimeTimerElapsed_Func (bool testConds, bool runActions) {
+bool gt_CloseStatsandResumeBuildfromHotkey_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_statsDialogOpen == true))) {
+            return false;
+        }
+    }
+
     // Actions
     if (!runActions) {
         return true;
     }
 
-    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) == 200)) {
+    gf_CloseStatsDialogandUnpause();
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_CloseStatsandResumeBuildfromHotkey_Init () {
+    gt_CloseStatsandResumeBuildfromHotkey = TriggerCreate("gt_CloseStatsandResumeBuildfromHotkey_Func");
+    TriggerAddEventKeyPressed(gt_CloseStatsandResumeBuildfromHotkey, 1, c_keyZ, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Close Help and Resume Build from Ok Button
+//--------------------------------------------------------------------------------------------------
+bool gt_CloseHelpandResumeBuildfromOkButton_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((EventDialogControl() == gv_helpOkButton))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gf_CloseHelpDialogandUnpause();
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_CloseHelpandResumeBuildfromOkButton_Init () {
+    gt_CloseHelpandResumeBuildfromOkButton = TriggerCreate("gt_CloseHelpandResumeBuildfromOkButton_Func");
+    TriggerAddEventDialogControl(gt_CloseHelpandResumeBuildfromOkButton, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeClick);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Close Help and Resume Build from Hotkey
+//--------------------------------------------------------------------------------------------------
+bool gt_CloseHelpandResumeBuildfromHotkey_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_helpDialogOpen == true))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gf_CloseHelpDialogandUnpause();
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_CloseHelpandResumeBuildfromHotkey_Init () {
+    gt_CloseHelpandResumeBuildfromHotkey = TriggerCreate("gt_CloseHelpandResumeBuildfromHotkey_Func");
+    TriggerAddEventKeyPressed(gt_CloseHelpandResumeBuildfromHotkey, 1, c_keyX, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: End Build at Max Supply
+//--------------------------------------------------------------------------------------------------
+bool gt_EndBuildatMaxSupply_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((DialogControlGetSelectedItem(gv_endBuildPulldown, 1) == 1) && (PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) >= 200) && (gv_paused == false)))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    if ((ObjectiveGetState(gv_benchmarkMaxTimeObjective) == c_objectiveStateActive)) {
         ObjectiveSetState(gv_benchmarkMaxTimeObjective, c_objectiveStateCompleted);
-    }
-    else {
-        ObjectiveSetState(gv_benchmarkMaxTimeObjective, c_objectiveStateFailed);
-    }
-    TextExpressionSetToken("Param/Expression/A9D9AADE", "A", ObjectiveGetName(gv_benchmarkMaxTimeObjective));
-    TextExpressionSetToken("Param/Expression/A9D9AADE", "B", IntToText(PlayerGetPropertyInt(1, c_playerPropSuppliesUsed)));
-    ObjectiveSetName(gv_benchmarkMaxTimeObjective, TextExpressionAssemble("Param/Expression/A9D9AADE"));
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_MaxTimeTimerElapsed_Init () {
-    gt_MaxTimeTimerElapsed = TriggerCreate("gt_MaxTimeTimerElapsed_Func");
-    TriggerAddEventTimer(gt_MaxTimeTimerElapsed, gv_benchmarkMaxTimeTimer);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: On Upgrade - Update Current Build Order
-//--------------------------------------------------------------------------------------------------
-bool gt_OnUpgradeUpdateCurrentBuildOrder_Func (bool testConds, bool runActions) {
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_OnUpgradeUpdateCurrentBuildOrder_Init () {
-    gt_OnUpgradeUpdateCurrentBuildOrder = TriggerCreate("gt_OnUpgradeUpdateCurrentBuildOrder_Func");
-    TriggerAddEventUnitResearchProgress(gt_OnUpgradeUpdateCurrentBuildOrder, null, c_unitProgressStageComplete);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: On Unit Start - Update Current Build Order
-//--------------------------------------------------------------------------------------------------
-bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!((gf_IsUnitTypeValidForBuildOrder(libNtve_gf_TriggeringProgressUnitType()) == true))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    if ((gv_debugBuildOrder == true)) {
-        TextExpressionSetToken("Param/Expression/776434DE", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/776434DE"));
+        TextExpressionSetToken("Param/Expression/739A89F7", "A", ObjectiveGetName(gv_benchmarkMaxTimeObjective));
+        TextExpressionSetToken("Param/Expression/739A89F7", "B", TextTimeFormat(StringToText("<min2/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_buildTimer))));
+        ObjectiveSetName(gv_benchmarkMaxTimeObjective, TextExpressionAssemble("Param/Expression/739A89F7"));
     }
     else {
     }
-    if ((((TimerGetElapsed(gv_buildTimer)-gv_lastCreatedUnitTimestamp) <= 15.0) && (UnitGetType(EventUnitProgressUnit()) == gv_lastCreatedBuildOrderUnitType))) {
-        if ((gv_debugBuildOrder == true)) {
-            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/50D360E2"));
-            TextExpressionSetToken("Param/Expression/2A0E9DD3", "A", gf_GetCurrentBuildOrderStepText((gv_currentBuildOrderStepCursor-1)));
-            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/2A0E9DD3"));
-        }
-        else {
-        }
-        gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor-1)].lv_numUnits += 1;
-    }
-    else {
-        if (((gv_currentBuildOrderStepCursor) < gv_maxCurrentBuildOrderStepsTracked)) {
-            gf_AddUnitBuildOrderStep(libNtve_gf_TriggeringProgressUnitType());
-            if (((gv_totalNumBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && ((gv_currentBuildOrderStepCursor) < (gv_totalNumBenchmarkBuildOrderSteps+gv_numCorrectedBenchmarkBuildOrderSteps)))) {
-                if ((gv_debugBuildOrder == true)) {
-                    TextExpressionSetToken("Param/Expression/F78FD77D", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
-                    UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/F78FD77D"));
-                }
-                else {
-                }
-                gf_EvaluateBenchmarkBuildOrderStepObjective(libNtve_gf_TriggeringProgressUnitType());
-            }
-            else {
-                if ((gv_debugBuildOrder == true)) {
-                    UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/E10856B1"));
-                }
-                else {
-                }
-            }
-            gv_currentBuildOrderStepCursor += 1;
-        }
-        else {
-            if ((gv_debugBuildOrder == true)) {
-                UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/15C40397"));
-            }
-            else {
-            }
-        }
-    }
+    TriggerExecute(gt_OpenPostBuildReportDialog, false, false);
     return true;
 }
 
 //--------------------------------------------------------------------------------------------------
-void gt_OnUnitStartUpdateCurrentBuildOrder_Init () {
-    gt_OnUnitStartUpdateCurrentBuildOrder = TriggerCreate("gt_OnUnitStartUpdateCurrentBuildOrder_Func");
-    TriggerAddEventUnitTrainProgress(gt_OnUnitStartUpdateCurrentBuildOrder, null, c_unitProgressStageStart);
-    TriggerAddEventUnitConstructProgress(gt_OnUnitStartUpdateCurrentBuildOrder, null, c_unitProgressStageStart);
+void gt_EndBuildatMaxSupply_Init () {
+    gt_EndBuildatMaxSupply = TriggerCreate("gt_EndBuildatMaxSupply_Func");
+    TriggerAddEventUnitCreated(gt_EndBuildatMaxSupply, null, null, null);
+    TriggerAddEventTimePeriodic(gt_EndBuildatMaxSupply, 1.0, c_timeGame);
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Update Gas Taken
+// Trigger: End Build at Specified Game Time
 //--------------------------------------------------------------------------------------------------
-bool gt_UpdateGasTaken_Func (bool testConds, bool runActions) {
+bool gt_EndBuildatSpecifiedGameTime_Func (bool testConds, bool runActions) {
     // Conditions
     if (testConds) {
-        if (!(((UnitGetType(EventUnit()) == "Assimilator") || (UnitGetType(EventUnit()) == "Extractor") || (UnitGetType(EventUnit()) == "Refinery")))) {
+        if (!(((DialogControlGetSelectedItem(gv_endBuildPulldown, 1) == 2) && (TimerGetElapsed(gv_buildTimer) >= (60*gv_benchmarkEndBuildatMinutes+gv_benchmarkEndBuildatSeconds)) && (gv_paused == false)))) {
             return false;
         }
     }
@@ -4236,244 +3940,35 @@ bool gt_UpdateGasTaken_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    gv_gasTaken = true;
+    gf_PauseGame();
+    TriggerExecute(gt_OpenPostBuildReportDialog, false, false);
     return true;
 }
 
 //--------------------------------------------------------------------------------------------------
-void gt_UpdateGasTaken_Init () {
-    gt_UpdateGasTaken = TriggerCreate("gt_UpdateGasTaken_Func");
-    TriggerAddEventUnitConstructProgress(gt_UpdateGasTaken, null, c_unitProgressStageComplete);
+void gt_EndBuildatSpecifiedGameTime_Init () {
+    gt_EndBuildatSpecifiedGameTime = TriggerCreate("gt_EndBuildatSpecifiedGameTime_Func");
+    TriggerAddEventTimePeriodic(gt_EndBuildatSpecifiedGameTime, 1.0, c_timeGame);
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Update Production Idle Time
+// Trigger: End Build From Hotkey
 //--------------------------------------------------------------------------------------------------
-bool gt_UpdateProductionIdleTime_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!(((gf_IsProductionIdle() == true) && (gv_paused == false)))) {
-            return false;
-        }
-    }
-
+bool gt_EndBuildFromHotkey_Func (bool testConds, bool runActions) {
     // Actions
     if (!runActions) {
         return true;
     }
 
-    gv_timeProductionIdleThisBuild += 1;
+    gf_PauseGame();
+    TriggerExecute(gt_OpenPostBuildReportDialog, false, false);
     return true;
 }
 
 //--------------------------------------------------------------------------------------------------
-void gt_UpdateProductionIdleTime_Init () {
-    gt_UpdateProductionIdleTime = TriggerCreate("gt_UpdateProductionIdleTime_Func");
-    TriggerAddEventTimePeriodic(gt_UpdateProductionIdleTime, 1.0, c_timeGame);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Update Time Supply Blocked
-//--------------------------------------------------------------------------------------------------
-bool gt_UpdateTimeSupplyBlocked_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") == PlayerScoreValueGetAsInt(1, "FoodMade")) && (gv_paused == false)))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gv_timeSupplyBlockedThisBuild += 1;
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_UpdateTimeSupplyBlocked_Init () {
-    gt_UpdateTimeSupplyBlocked = TriggerCreate("gt_UpdateTimeSupplyBlocked_Func");
-    TriggerAddEventTimePeriodic(gt_UpdateTimeSupplyBlocked, 1.0, c_timeGame);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Update Minerals Collected This Build
-//--------------------------------------------------------------------------------------------------
-bool gt_UpdateMineralsCollectedThisBuild_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!((EventPlayerPropertyChangeInt() > 0))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gv_totalMineralsCollected += EventPlayerPropertyChangeInt();
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_UpdateMineralsCollectedThisBuild_Init () {
-    gt_UpdateMineralsCollectedThisBuild = TriggerCreate("gt_UpdateMineralsCollectedThisBuild_Func");
-    TriggerAddEventPlayerPropChange(gt_UpdateMineralsCollectedThisBuild, 1, c_playerPropMinerals);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Update Gas Collected This Build
-//--------------------------------------------------------------------------------------------------
-bool gt_UpdateGasCollectedThisBuild_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!((EventPlayerPropertyChangeInt() > 0))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gv_totalGasCollected += EventPlayerPropertyChangeInt();
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_UpdateGasCollectedThisBuild_Init () {
-    gt_UpdateGasCollectedThisBuild = TriggerCreate("gt_UpdateGasCollectedThisBuild_Func");
-    TriggerAddEventPlayerPropChange(gt_UpdateGasCollectedThisBuild, 1, c_playerPropVespene);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Update Average Unspent Minerals
-//--------------------------------------------------------------------------------------------------
-bool gt_UpdateAverageUnspentMinerals_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!((gv_paused == false))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gv_cumulativeUnspentMinerals += PlayerScoreValueGetAsInt(1, "MineralsCurrent");
-    gv_totalMineralSamplesThisBuild += 1;
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_UpdateAverageUnspentMinerals_Init () {
-    gt_UpdateAverageUnspentMinerals = TriggerCreate("gt_UpdateAverageUnspentMinerals_Func");
-    TriggerAddEventTimePeriodic(gt_UpdateAverageUnspentMinerals, 1.0, c_timeGame);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Update Average Unspent Gas
-//--------------------------------------------------------------------------------------------------
-bool gt_UpdateAverageUnspentGas_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!(((gv_gasTaken == true) && (gv_paused == false)))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gv_cumulativeUnspentGas += PlayerScoreValueGetAsInt(1, "VespeneCurrent");
-    gv_totalGasSamplesThisBuild += 1;
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_UpdateAverageUnspentGas_Init () {
-    gt_UpdateAverageUnspentGas = TriggerCreate("gt_UpdateAverageUnspentGas_Func");
-    TriggerAddEventTimePeriodic(gt_UpdateAverageUnspentGas, 1.0, c_timeGame);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Update Cumulative APM
-//--------------------------------------------------------------------------------------------------
-bool gt_UpdateCumulativeAPM_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!((gv_paused == false))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gv_cumulativeAPM += PlayerScoreValueGetAsInt(1, "APM");
-    gv_totalAPMSamplesThisBuild += 1;
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_UpdateCumulativeAPM_Init () {
-    gt_UpdateCumulativeAPM = TriggerCreate("gt_UpdateCumulativeAPM_Func");
-    TriggerAddEventTimePeriodic(gt_UpdateCumulativeAPM, 0.5, c_timeGame);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Update Total Workers
-//--------------------------------------------------------------------------------------------------
-bool gt_UpdateTotalWorkers_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!(((UnitGetOwner(EventUnitCreatedUnit()) == 1) && ((UnitGetType(EventUnitCreatedUnit()) == "Drone") || (UnitGetType(EventUnitCreatedUnit()) == "Probe") || (UnitGetType(EventUnitCreatedUnit()) == "SCV"))))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gv_workersCreated += 1;
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_UpdateTotalWorkers_Init () {
-    gt_UpdateTotalWorkers = TriggerCreate("gt_UpdateTotalWorkers_Func");
-    TriggerAddEventUnitCreated(gt_UpdateTotalWorkers, null, null, null);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Update Num Upgrades Researched
-//--------------------------------------------------------------------------------------------------
-bool gt_UpdateNumUpgradesResearched_Func (bool testConds, bool runActions) {
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gv_totalNumberofUpgradesResearched += 1;
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_UpdateNumUpgradesResearched_Init () {
-    gt_UpdateNumUpgradesResearched = TriggerCreate("gt_UpdateNumUpgradesResearched_Func");
-    TriggerAddEventUnitResearchProgress(gt_UpdateNumUpgradesResearched, null, c_unitProgressStageStart);
+void gt_EndBuildFromHotkey_Init () {
+    gt_EndBuildFromHotkey = TriggerCreate("gt_EndBuildFromHotkey_Func");
+    TriggerAddEventKeyPressed(gt_EndBuildFromHotkey, c_playerAny, c_keyNumPad0, true, c_keyModifierStateIgnore, c_keyModifierStateIgnore, c_keyModifierStateIgnore);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -5115,6 +4610,536 @@ void gt_ResetBenchmarkBuildStats_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Map Initialization
+//--------------------------------------------------------------------------------------------------
+bool gt_MapInitialization_Func (bool testConds, bool runActions) {
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    GameSetSpeedValue(c_gameSpeedFaster);
+    CameraSave(1);
+    CinematicFade(false, 0.0, c_fadeStyleNormal, Color(0.00, 0.00, 0.00), 0.0, true);
+    gf_InitializeGameArrayDefaults();
+    gf_InitializeMapResourcesUnitGroup();
+    MeleeInitUnits();
+    gf_PauseGame();
+    BankLoad(gv_benchmarkerBankName, 1);
+    BankSectionCreate(BankLastCreated(), gv_vZergMatchupSectionKey);
+    BankSectionCreate(BankLastCreated(), gv_vTerranMatchupSectionKey);
+    BankSectionCreate(BankLastCreated(), gv_vProtossMatchupSectionKey);
+    gv_benchmarkerBank = BankLastCreated();
+    gf_CreateBenchmarkMenuDialog();
+    DialogSetVisible(DialogLastCreated(), PlayerGroupAll(), true);
+    gf_CreateAlertMenuDialog();
+    gf_CreateStatsDialog();
+    gf_CreateHelpDialog();
+    gf_CreatePostBuildReportDialog();
+    TimerWindowCreate(gv_buildTimer, StringExternal("Param/Value/EAED3202"), true, true);
+    TimerWindowSetAnchor(TimerWindowLastCreated(), c_anchorTopRight, 0, 0);
+    libNtve_gf_DisplayScreenButton(1, StringExternal("Param/Value/C0C8E519"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, gv_screenButtonYPadding, gt_OpenMainMenu);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/0944583F"), PlayerGroupAll());
+    libNtve_gf_DisplayScreenButton(2, StringExternal("Param/Value/EACFE916"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+gv_screenButtonHeight), gt_OpenHelpDialog);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/3D6AF1ED"), PlayerGroupAll());
+    libNtve_gf_DisplayScreenButton(3, StringExternal("Param/Value/CD7984D8"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+2*gv_screenButtonHeight), gt_OpenStatsDialog);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/B098BDCB"), PlayerGroupAll());
+    libNtve_gf_DisplayScreenButton(4, StringExternal("Param/Value/6BF2EBC1"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+3*gv_screenButtonHeight), gt_ResetBuild);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/66F0DD53"), PlayerGroupAll());
+    libNtve_gf_DisplayScreenButton(5, StringExternal("Param/Value/13AB0492"), gv_winButtonWidth, gv_winButtonHeight, c_anchorBottomRight, gv_winButtonXPadding, gf_GetWinButtonYPadding(), gt_EndGame);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/1CABB5B1"), PlayerGroupAll());
+    gf_LoadMatchupBenchmarks(gv_vZergMatchupSectionKey);
+    gf_LoadAlertConfigurations();
+    gf_CreateHiddenBenchmarkSupplyObjectives();
+    gv_debugBank = true;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_MapInitialization_Init () {
+    gt_MapInitialization = TriggerCreate("gt_MapInitialization_Func");
+    TriggerAddEventMapInit(gt_MapInitialization);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: End Game
+//--------------------------------------------------------------------------------------------------
+bool gt_EndGame_Func (bool testConds, bool runActions) {
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    UnitGroupLoopBegin(UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterAlly) | (1 << c_targetFilterNeutral) | (1 << c_targetFilterEnemy) | (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0));
+    for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
+        UnitKill(UnitGroupLoopCurrent());
+    }
+    UnitGroupLoopEnd();
+    GameOver(1, c_gameOverVictory, true, true);
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_EndGame_Init () {
+    gt_EndGame = TriggerCreate("gt_EndGame_Func");
+    TriggerAddEventChatMessage(gt_EndGame, c_playerAny, "gg", false);
+    TriggerAddEventKeyPressed(gt_EndGame, 1, c_keyW, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Benchmark 1 Timer Expires
+//--------------------------------------------------------------------------------------------------
+bool gt_Benchmark1TimerExpires_Func (bool testConds, bool runActions) {
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) > gv_benchmarkSupplyValues[0])) {
+        ObjectiveSetState(gv_benchmarkSupplyObjectives[0], c_objectiveStateCompleted);
+    }
+    else {
+        ObjectiveSetState(gv_benchmarkSupplyObjectives[0], c_objectiveStateFailed);
+    }
+    TextExpressionSetToken("Param/Expression/B53438FA", "A", ObjectiveGetName(gv_benchmarkSupplyObjectives[0]));
+    TextExpressionSetToken("Param/Expression/B53438FA", "B", IntToText(PlayerGetPropertyInt(1, c_playerPropSuppliesUsed)));
+    ObjectiveSetName(gv_benchmarkSupplyObjectives[0], TextExpressionAssemble("Param/Expression/B53438FA"));
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_Benchmark1TimerExpires_Init () {
+    gt_Benchmark1TimerExpires = TriggerCreate("gt_Benchmark1TimerExpires_Func");
+    TriggerAddEventTimer(gt_Benchmark1TimerExpires, gv_benchmark1Timer);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Benchmark 2 Timer Expires
+//--------------------------------------------------------------------------------------------------
+bool gt_Benchmark2TimerExpires_Func (bool testConds, bool runActions) {
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) > gv_benchmarkSupplyValues[1])) {
+        ObjectiveSetState(gv_benchmarkSupplyObjectives[1], c_objectiveStateCompleted);
+    }
+    else {
+        ObjectiveSetState(gv_benchmarkSupplyObjectives[1], c_objectiveStateFailed);
+    }
+    TextExpressionSetToken("Param/Expression/E571E892", "A", ObjectiveGetName(gv_benchmarkSupplyObjectives[1]));
+    TextExpressionSetToken("Param/Expression/E571E892", "B", IntToText(PlayerGetPropertyInt(1, c_playerPropSuppliesUsed)));
+    ObjectiveSetName(gv_benchmarkSupplyObjectives[1], TextExpressionAssemble("Param/Expression/E571E892"));
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_Benchmark2TimerExpires_Init () {
+    gt_Benchmark2TimerExpires = TriggerCreate("gt_Benchmark2TimerExpires_Func");
+    TriggerAddEventTimer(gt_Benchmark2TimerExpires, gv_benchmark2Timer);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Benchmark 3 Timer Expires
+//--------------------------------------------------------------------------------------------------
+bool gt_Benchmark3TimerExpires_Func (bool testConds, bool runActions) {
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) > gv_benchmarkSupplyValues[2])) {
+        ObjectiveSetState(gv_benchmarkSupplyObjectives[2], c_objectiveStateCompleted);
+    }
+    else {
+        ObjectiveSetState(gv_benchmarkSupplyObjectives[2], c_objectiveStateFailed);
+    }
+    TextExpressionSetToken("Param/Expression/D3C9632E", "A", ObjectiveGetName(gv_benchmarkSupplyObjectives[2]));
+    TextExpressionSetToken("Param/Expression/D3C9632E", "B", IntToText(PlayerGetPropertyInt(1, c_playerPropSuppliesUsed)));
+    ObjectiveSetName(gv_benchmarkSupplyObjectives[2], TextExpressionAssemble("Param/Expression/D3C9632E"));
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_Benchmark3TimerExpires_Init () {
+    gt_Benchmark3TimerExpires = TriggerCreate("gt_Benchmark3TimerExpires_Func");
+    TriggerAddEventTimer(gt_Benchmark3TimerExpires, gv_benchmark3Timer);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: MaxTime Timer Elapsed
+//--------------------------------------------------------------------------------------------------
+bool gt_MaxTimeTimerElapsed_Func (bool testConds, bool runActions) {
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) == 200)) {
+        ObjectiveSetState(gv_benchmarkMaxTimeObjective, c_objectiveStateCompleted);
+    }
+    else {
+        ObjectiveSetState(gv_benchmarkMaxTimeObjective, c_objectiveStateFailed);
+    }
+    TextExpressionSetToken("Param/Expression/A9D9AADE", "A", ObjectiveGetName(gv_benchmarkMaxTimeObjective));
+    TextExpressionSetToken("Param/Expression/A9D9AADE", "B", IntToText(PlayerGetPropertyInt(1, c_playerPropSuppliesUsed)));
+    ObjectiveSetName(gv_benchmarkMaxTimeObjective, TextExpressionAssemble("Param/Expression/A9D9AADE"));
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_MaxTimeTimerElapsed_Init () {
+    gt_MaxTimeTimerElapsed = TriggerCreate("gt_MaxTimeTimerElapsed_Func");
+    TriggerAddEventTimer(gt_MaxTimeTimerElapsed, gv_benchmarkMaxTimeTimer);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: On Upgrade - Update Current Build Order
+//--------------------------------------------------------------------------------------------------
+bool gt_OnUpgradeUpdateCurrentBuildOrder_Func (bool testConds, bool runActions) {
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_OnUpgradeUpdateCurrentBuildOrder_Init () {
+    gt_OnUpgradeUpdateCurrentBuildOrder = TriggerCreate("gt_OnUpgradeUpdateCurrentBuildOrder_Func");
+    TriggerAddEventUnitResearchProgress(gt_OnUpgradeUpdateCurrentBuildOrder, null, c_unitProgressStageComplete);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: On Unit Start - Update Current Build Order
+//--------------------------------------------------------------------------------------------------
+bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gf_IsUnitTypeValidForBuildOrder(libNtve_gf_TriggeringProgressUnitType()) == true))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    if ((gv_debugBuildOrder == true)) {
+        TextExpressionSetToken("Param/Expression/776434DE", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/776434DE"));
+    }
+    else {
+    }
+    if ((((TimerGetElapsed(gv_buildTimer)-gv_lastCreatedUnitTimestamp) <= 15.0) && (UnitGetType(EventUnitProgressUnit()) == gv_lastCreatedBuildOrderUnitType))) {
+        if ((gv_debugBuildOrder == true)) {
+            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/50D360E2"));
+            TextExpressionSetToken("Param/Expression/2A0E9DD3", "A", gf_GetCurrentBuildOrderStepText((gv_currentBuildOrderStepCursor-1)));
+            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/2A0E9DD3"));
+        }
+        else {
+        }
+        gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor-1)].lv_numUnits += 1;
+    }
+    else {
+        if (((gv_currentBuildOrderStepCursor) < gv_maxCurrentBuildOrderStepsTracked)) {
+            gf_AddUnitBuildOrderStep(libNtve_gf_TriggeringProgressUnitType());
+            if (((gv_totalNumBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && ((gv_currentBuildOrderStepCursor) < (gv_totalNumBenchmarkBuildOrderSteps+gv_numCorrectedBenchmarkBuildOrderSteps)))) {
+                if ((gv_debugBuildOrder == true)) {
+                    TextExpressionSetToken("Param/Expression/F78FD77D", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
+                    UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/F78FD77D"));
+                }
+                else {
+                }
+                gf_EvaluateBenchmarkBuildOrderStepObjective(libNtve_gf_TriggeringProgressUnitType());
+            }
+            else {
+                if ((gv_debugBuildOrder == true)) {
+                    UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/E10856B1"));
+                }
+                else {
+                }
+            }
+            gv_currentBuildOrderStepCursor += 1;
+        }
+        else {
+            if ((gv_debugBuildOrder == true)) {
+                UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/15C40397"));
+            }
+            else {
+            }
+        }
+    }
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_OnUnitStartUpdateCurrentBuildOrder_Init () {
+    gt_OnUnitStartUpdateCurrentBuildOrder = TriggerCreate("gt_OnUnitStartUpdateCurrentBuildOrder_Func");
+    TriggerAddEventUnitTrainProgress(gt_OnUnitStartUpdateCurrentBuildOrder, null, c_unitProgressStageStart);
+    TriggerAddEventUnitConstructProgress(gt_OnUnitStartUpdateCurrentBuildOrder, null, c_unitProgressStageStart);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Gas Taken
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateGasTaken_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((UnitGetType(EventUnit()) == "Assimilator") || (UnitGetType(EventUnit()) == "Extractor") || (UnitGetType(EventUnit()) == "Refinery")))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_gasTaken = true;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateGasTaken_Init () {
+    gt_UpdateGasTaken = TriggerCreate("gt_UpdateGasTaken_Func");
+    TriggerAddEventUnitConstructProgress(gt_UpdateGasTaken, null, c_unitProgressStageComplete);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Production Idle Time
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateProductionIdleTime_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((gf_IsProductionIdle() == true) && (gv_paused == false)))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_timeProductionIdleThisBuild += 1;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateProductionIdleTime_Init () {
+    gt_UpdateProductionIdleTime = TriggerCreate("gt_UpdateProductionIdleTime_Func");
+    TriggerAddEventTimePeriodic(gt_UpdateProductionIdleTime, 1.0, c_timeGame);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Time Supply Blocked
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateTimeSupplyBlocked_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") == PlayerScoreValueGetAsInt(1, "FoodMade")) && (gv_paused == false)))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_timeSupplyBlockedThisBuild += 1;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateTimeSupplyBlocked_Init () {
+    gt_UpdateTimeSupplyBlocked = TriggerCreate("gt_UpdateTimeSupplyBlocked_Func");
+    TriggerAddEventTimePeriodic(gt_UpdateTimeSupplyBlocked, 1.0, c_timeGame);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Minerals Collected This Build
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateMineralsCollectedThisBuild_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((EventPlayerPropertyChangeInt() > 0))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_totalMineralsCollected += EventPlayerPropertyChangeInt();
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateMineralsCollectedThisBuild_Init () {
+    gt_UpdateMineralsCollectedThisBuild = TriggerCreate("gt_UpdateMineralsCollectedThisBuild_Func");
+    TriggerAddEventPlayerPropChange(gt_UpdateMineralsCollectedThisBuild, 1, c_playerPropMinerals);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Gas Collected This Build
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateGasCollectedThisBuild_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((EventPlayerPropertyChangeInt() > 0))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_totalGasCollected += EventPlayerPropertyChangeInt();
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateGasCollectedThisBuild_Init () {
+    gt_UpdateGasCollectedThisBuild = TriggerCreate("gt_UpdateGasCollectedThisBuild_Func");
+    TriggerAddEventPlayerPropChange(gt_UpdateGasCollectedThisBuild, 1, c_playerPropVespene);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Average Unspent Minerals
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateAverageUnspentMinerals_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_paused == false))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_cumulativeUnspentMinerals += PlayerScoreValueGetAsInt(1, "MineralsCurrent");
+    gv_totalMineralSamplesThisBuild += 1;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateAverageUnspentMinerals_Init () {
+    gt_UpdateAverageUnspentMinerals = TriggerCreate("gt_UpdateAverageUnspentMinerals_Func");
+    TriggerAddEventTimePeriodic(gt_UpdateAverageUnspentMinerals, 1.0, c_timeGame);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Average Unspent Gas
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateAverageUnspentGas_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((gv_gasTaken == true) && (gv_paused == false)))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_cumulativeUnspentGas += PlayerScoreValueGetAsInt(1, "VespeneCurrent");
+    gv_totalGasSamplesThisBuild += 1;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateAverageUnspentGas_Init () {
+    gt_UpdateAverageUnspentGas = TriggerCreate("gt_UpdateAverageUnspentGas_Func");
+    TriggerAddEventTimePeriodic(gt_UpdateAverageUnspentGas, 1.0, c_timeGame);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Cumulative APM
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateCumulativeAPM_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_paused == false))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_cumulativeAPM += PlayerScoreValueGetAsInt(1, "APM");
+    gv_totalAPMSamplesThisBuild += 1;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateCumulativeAPM_Init () {
+    gt_UpdateCumulativeAPM = TriggerCreate("gt_UpdateCumulativeAPM_Func");
+    TriggerAddEventTimePeriodic(gt_UpdateCumulativeAPM, 0.5, c_timeGame);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Total Workers
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateTotalWorkers_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((UnitGetOwner(EventUnitCreatedUnit()) == 1) && ((UnitGetType(EventUnitCreatedUnit()) == "Drone") || (UnitGetType(EventUnitCreatedUnit()) == "Probe") || (UnitGetType(EventUnitCreatedUnit()) == "SCV"))))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_workersCreated += 1;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateTotalWorkers_Init () {
+    gt_UpdateTotalWorkers = TriggerCreate("gt_UpdateTotalWorkers_Func");
+    TriggerAddEventUnitCreated(gt_UpdateTotalWorkers, null, null, null);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Num Upgrades Researched
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateNumUpgradesResearched_Func (bool testConds, bool runActions) {
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_totalNumberofUpgradesResearched += 1;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateNumUpgradesResearched_Init () {
+    gt_UpdateNumUpgradesResearched = TriggerCreate("gt_UpdateNumUpgradesResearched_Func");
+    TriggerAddEventUnitResearchProgress(gt_UpdateNumUpgradesResearched, null, c_unitProgressStageStart);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Overlord InProgress Fix
 //--------------------------------------------------------------------------------------------------
 bool gt_OverlordInProgressFix_Func (bool testConds, bool runActions) {
@@ -5198,17 +5223,6 @@ void gt_HatcheryLarvaSpawnFix_Init () {
 // Trigger Initialization
 //--------------------------------------------------------------------------------------------------
 void InitTriggers () {
-    gt_MapInitialization_Init();
-    gt_EndGame_Init();
-    gt_StartBuild_Init();
-    gt_ResetBuild_Init();
-    gt_CloseStatsandResumeBuildfromOkButton_Init();
-    gt_CloseStatsandResumeBuildfromHotkey_Init();
-    gt_CloseHelpandResumeBuildfromOkButton_Init();
-    gt_CloseHelpandResumeBuildfromHotkey_Init();
-    gt_EndBuildatMaxSupply_Init();
-    gt_EndBuildatSpecifiedGameTime_Init();
-    gt_EndBuildFromHotkey_Init();
     gt_MineralsAboveThreshold_Init();
     gt_GasAboveThreshold_Init();
     gt_SupplyBlockImminent_Init();
@@ -5219,22 +5233,15 @@ void InitTriggers () {
     gt_ProductionIdleAboveThresholdStartTimer_Init();
     gt_ProductionIdleAboveThresholdTimerExpires_Init();
     gt_ProductionIdleAboveThresholdNewProductionStarts_Init();
-    gt_Benchmark1TimerExpires_Init();
-    gt_Benchmark2TimerExpires_Init();
-    gt_Benchmark3TimerExpires_Init();
-    gt_MaxTimeTimerElapsed_Init();
-    gt_OnUpgradeUpdateCurrentBuildOrder_Init();
-    gt_OnUnitStartUpdateCurrentBuildOrder_Init();
-    gt_UpdateGasTaken_Init();
-    gt_UpdateProductionIdleTime_Init();
-    gt_UpdateTimeSupplyBlocked_Init();
-    gt_UpdateMineralsCollectedThisBuild_Init();
-    gt_UpdateGasCollectedThisBuild_Init();
-    gt_UpdateAverageUnspentMinerals_Init();
-    gt_UpdateAverageUnspentGas_Init();
-    gt_UpdateCumulativeAPM_Init();
-    gt_UpdateTotalWorkers_Init();
-    gt_UpdateNumUpgradesResearched_Init();
+    gt_StartBuild_Init();
+    gt_ResetBuild_Init();
+    gt_CloseStatsandResumeBuildfromOkButton_Init();
+    gt_CloseStatsandResumeBuildfromHotkey_Init();
+    gt_CloseHelpandResumeBuildfromOkButton_Init();
+    gt_CloseHelpandResumeBuildfromHotkey_Init();
+    gt_EndBuildatMaxSupply_Init();
+    gt_EndBuildatSpecifiedGameTime_Init();
+    gt_EndBuildFromHotkey_Init();
     gt_OpenStatsDialog_Init();
     gt_OpenHelpDialog_Init();
     gt_OpenMainMenu_Init();
@@ -5255,6 +5262,24 @@ void InitTriggers () {
     gt_EnableDisableProductionIdleAlert_Init();
     gt_SaveBenchmarkBuildStats_Init();
     gt_ResetBenchmarkBuildStats_Init();
+    gt_MapInitialization_Init();
+    gt_EndGame_Init();
+    gt_Benchmark1TimerExpires_Init();
+    gt_Benchmark2TimerExpires_Init();
+    gt_Benchmark3TimerExpires_Init();
+    gt_MaxTimeTimerElapsed_Init();
+    gt_OnUpgradeUpdateCurrentBuildOrder_Init();
+    gt_OnUnitStartUpdateCurrentBuildOrder_Init();
+    gt_UpdateGasTaken_Init();
+    gt_UpdateProductionIdleTime_Init();
+    gt_UpdateTimeSupplyBlocked_Init();
+    gt_UpdateMineralsCollectedThisBuild_Init();
+    gt_UpdateGasCollectedThisBuild_Init();
+    gt_UpdateAverageUnspentMinerals_Init();
+    gt_UpdateAverageUnspentGas_Init();
+    gt_UpdateCumulativeAPM_Init();
+    gt_UpdateTotalWorkers_Init();
+    gt_UpdateNumUpgradesResearched_Init();
     gt_OverlordInProgressFix_Init();
     gt_OverlordCompletedorCancelledFix_Init();
     gt_HatcheryLarvaSpawnFix_Init();
