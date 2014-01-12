@@ -110,8 +110,8 @@ string gv_vTerranMatchupSectionKey;
 string gv_vZergMatchupSectionKey;
 string gv_vProtossMatchupSectionKey;
 timer gv_buildTimer;
-bool gv_debugBuildOrder;
-bool gv_debugMap;
+bool gv_debugBuildOrderTracking;
+bool gv_debugMapMechanics;
 bool gv_debugAlerts;
 bool gv_debugBank;
 color gv_objectiveSupplyColor;
@@ -534,54 +534,6 @@ void InitGlobals () {
 //--------------------------------------------------------------------------------------------------
 // Global Function Declarations
 //--------------------------------------------------------------------------------------------------
-string gf_GetNextUpgrade (string lp_currentUpgrade);
-text gf_GetRaceMacroUnitName ();
-bool gf_IsRaceMacroEnergyAboveThreshold ();
-bool gf_IsOverlordCurrentlyInProgress ();
-bool gf_IsSupplyDepotorPylonUnderConstruction ();
-unitgroup gf_GetAllPlayer1UnitsforType (string lp_unitType);
-int gf_GetDefaultMacroEnergyThreshold ();
-string gf_GetIconForBuildingType (string lp_unitType);
-bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType);
-string gf_GetCurrentlySelectedMatchupasBankSectionKey ();
-text gf_GetCurrentlySelectedMatchupasText ();
-int gf_GetEditBoxIntValue (int lp_editBox);
-bool gf_DoesSavedBuildOrderExistForCurrentMatchup ();
-int gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex (int lp_cursor);
-string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
-bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex);
-bool gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex);
-bool gf_IsSupplyCountCorrectForBenchmarkBuildOrderStep (int lp_supplyCount, int lp_benchmarkBuildOrderStepIndex);
-bool gf_IsNumUnitsCorrectForBenchmarkBuildOrderStep (int lp_numUnits, int lp_benchmarkBuildOrderStepIndex);
-bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType);
-text gf_GetCurrentBuildOrderStepText (int lp_stepNumber);
-text gf_GetBenchmarkBuildOrderStepText (int lp_stepNumber);
-text gf_GetFormattedCompleteBenchmarkBuildOrderStepText (int lp_stepNumber);
-color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber);
-text gf_GetBenchmarkandCurrentStepSupplyasText (int lp_stepNumber);
-text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber);
-bool gf_IsProductionIdle ();
-int gf_GetTimeSupplyBlocked ();
-int gf_GetIdleProductionTime ();
-int gf_GetAverageUnspentMinerals ();
-int gf_GetAverageUnspentGas ();
-int gf_GetAverageBuildAPM ();
-fixed gf_GetSpendingQuotient ();
-int gf_GetTotalArmySupply ();
-int gf_GetTotalArmyValueMinerals ();
-int gf_GetTotalArmyValueGas ();
-int gf_GetNumUpgradesResearched ();
-int gf_GetTotalMineralsCollected ();
-int gf_GetTotalGasCollected ();
-text gf_CalculateIntPercentDifferenceAsText (int lp_value, int lp_previousBest, bool lp_higherisBetter);
-text gf_CalculateRealPercentDifferenceAsText (fixed lp_value, fixed lp_previousBest, bool lp_higherisBetter);
-color gf_GetColorForPercentage (fixed lp_percentage, bool lp_higherIsBetter);
-int gf_GetWinButtonYPadding ();
-unitgroup gf_GetPlayer1Units ();
-text gf_ConverttoTextWithSign (int lp_int);
-string gf_TrimSOffArmors (string lp_string);
-string gf_FormatCatalogStringwithSpaces (string lp_string);
-bool gf_IsCapitalLetterOrDigit (string lp_letter);
 void gf_PauseAlertTimers ();
 void gf_UnpauseAlertTimers ();
 void gf_ResetAlertTimers ();
@@ -660,6 +612,55 @@ void gf_ResetCurrentBuildOrderStepsVariables ();
 void gf_ResetBenchmarkBuildOrderStepsVariables ();
 void gf_ResetStatistics ();
 void gf_LookatandPanToUnit (unit lp_unit);
+string gf_GetNextUpgrade (string lp_currentUpgrade);
+text gf_GetRaceMacroUnitName ();
+bool gf_IsRaceMacroEnergyAboveThreshold ();
+bool gf_IsOverlordCurrentlyInProgress ();
+bool gf_IsSupplyDepotorPylonUnderConstruction ();
+unitgroup gf_GetAllPlayer1UnitsforType (string lp_unitType);
+int gf_GetDefaultMacroEnergyThreshold ();
+string gf_GetIconForBuildingType (string lp_unitType);
+bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType);
+string gf_GetCurrentlySelectedMatchupasBankSectionKey ();
+text gf_GetCurrentlySelectedMatchupasText ();
+int gf_GetEditBoxIntValue (int lp_editBox);
+bool gf_DoesSavedBuildOrderExistForCurrentMatchup ();
+int gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex (int lp_cursor);
+string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
+bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex);
+bool gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep (string lp_upgrade, int lp_benchmarkBuildOrderStepIndex);
+bool gf_IsSupplyCountCorrectForBenchmarkBuildOrderStep (int lp_supplyCount, int lp_benchmarkBuildOrderStepIndex);
+bool gf_IsNumUnitsCorrectForBenchmarkBuildOrderStep (int lp_numUnits, int lp_benchmarkBuildOrderStepIndex);
+bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType);
+bool gf_IsUpgradeTypeValidForBuildOrder (string lp_upgrade);
+text gf_GetCurrentBuildOrderStepText (int lp_stepNumber);
+text gf_GetBenchmarkBuildOrderStepText (int lp_stepNumber);
+text gf_GetFormattedCompleteBenchmarkBuildOrderStepText (int lp_stepNumber);
+color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber);
+text gf_GetBenchmarkandCurrentStepSupplyasText (int lp_stepNumber);
+text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber);
+bool gf_IsProductionIdle ();
+int gf_GetTimeSupplyBlocked ();
+int gf_GetIdleProductionTime ();
+int gf_GetAverageUnspentMinerals ();
+int gf_GetAverageUnspentGas ();
+int gf_GetAverageBuildAPM ();
+fixed gf_GetSpendingQuotient ();
+int gf_GetTotalArmySupply ();
+int gf_GetTotalArmyValueMinerals ();
+int gf_GetTotalArmyValueGas ();
+int gf_GetNumUpgradesResearched ();
+int gf_GetTotalMineralsCollected ();
+int gf_GetTotalGasCollected ();
+text gf_CalculateIntPercentDifferenceAsText (int lp_value, int lp_previousBest, bool lp_higherisBetter);
+text gf_CalculateRealPercentDifferenceAsText (fixed lp_value, fixed lp_previousBest, bool lp_higherisBetter);
+color gf_GetColorForPercentage (fixed lp_percentage, bool lp_higherIsBetter);
+int gf_GetWinButtonYPadding ();
+unitgroup gf_GetPlayer1Units ();
+text gf_ConverttoTextWithSign (int lp_int);
+string gf_TrimSOffArmors (string lp_string);
+string gf_FormatCatalogStringwithSpaces (string lp_string);
+bool gf_IsCapitalLetterOrDigit (string lp_letter);
 
 //--------------------------------------------------------------------------------------------------
 // Trigger Variables
@@ -728,920 +729,6 @@ trigger gt_HatcheryLarvaSpawnFix;
 //--------------------------------------------------------------------------------------------------
 // Global Functions
 //--------------------------------------------------------------------------------------------------
-string gf_GetNextUpgrade (string lp_currentUpgrade) {
-    string autoB7B7DC32_val;
-
-    // Implementation
-    autoB7B7DC32_val = lp_currentUpgrade;
-    if (autoB7B7DC32_val == "ProtossAirArmorsLevel1") {
-        return "ProtossAirArmorsLevel2";
-    }
-    else if (autoB7B7DC32_val == "ProtossAirArmorsLevel2") {
-        return "ProtossAirArmorsLevel3";
-    }
-    else if (autoB7B7DC32_val == "ProtossGroundArmorsLevel1") {
-        return "ProtossGroundArmorsLevel2";
-    }
-    else if (autoB7B7DC32_val == "ProtossGroundArmorsLevel2") {
-        return "ProtossGroundArmorsLevel3";
-    }
-    else if (autoB7B7DC32_val == "ProtossShieldsLevel1") {
-        return "ProtossShieldsLevel2";
-    }
-    else if (autoB7B7DC32_val == "ProtossShieldsLevel2") {
-        return "ProtossShieldsLevel3";
-    }
-    else if (autoB7B7DC32_val == "ProtossAirWeaponsLevel1") {
-        return "ProtossAirWeaponsLevel2";
-    }
-    else if (autoB7B7DC32_val == "ProtossAirWeaponsLevel2") {
-        return "ProtossAirWeaponsLevel3";
-    }
-    else if (autoB7B7DC32_val == "ProtossGroundWeaponsLevel1") {
-        return "ProtossGroundWeaponsLevel2";
-    }
-    else if (autoB7B7DC32_val == "ProtossGroundWeaponsLevel2") {
-        return "ProtossGroundWeaponsLevel3";
-    }
-    else if (autoB7B7DC32_val == "TerranInfantryArmorsLevel1") {
-        return "TerranInfantryArmorsLevel2";
-    }
-    else if (autoB7B7DC32_val == "TerranInfantryArmorsLevel2") {
-        return "TerranInfantryArmorsLevel3";
-    }
-    else if (autoB7B7DC32_val == "TerranShipArmorsLevel1") {
-        return "TerranShipArmorsLevel2";
-    }
-    else if (autoB7B7DC32_val == "TerranShipArmorsLevel2") {
-        return "TerranShipArmorsLevel3";
-    }
-    else if (autoB7B7DC32_val == "TerranVehicleArmorsLevel1") {
-        return "TerranVehicleArmorsLevel2";
-    }
-    else if (autoB7B7DC32_val == "TerranVehicleArmorsLevel2") {
-        return "TerranVehicleArmorsLevel3";
-    }
-    else if (autoB7B7DC32_val == "TerranInfantryWeaponsLevel1") {
-        return "TerranInfantryWeaponsLevel2";
-    }
-    else if (autoB7B7DC32_val == "TerranInfantryWeaponsLevel2") {
-        return "TerranInfantryWeaponsLevel3";
-    }
-    else if (autoB7B7DC32_val == "TerranShipWeaponsLevel1") {
-        return "TerranShipWeaponsLevel2";
-    }
-    else if (autoB7B7DC32_val == "TerranShipWeaponsLevel2") {
-        return "TerranShipWeaponsLevel3";
-    }
-    else if (autoB7B7DC32_val == "TerranVehicleWeaponsLevel1") {
-        return "TerranVehicleWeaponsLevel2";
-    }
-    else if (autoB7B7DC32_val == "TerranVehicleWeaponsLevel2") {
-        return "TerranVehicleWeaponsLevel3";
-    }
-    else if (autoB7B7DC32_val == "ZergFlyerArmorsLevel1") {
-        return "ZergFlyerArmorsLevel2";
-    }
-    else if (autoB7B7DC32_val == "ZergFlyerArmorsLevel2") {
-        return "ZergFlyerArmorsLevel3";
-    }
-    else if (autoB7B7DC32_val == "ZergGroundArmorsLevel1") {
-        return "ZergGroundArmorsLevel2";
-    }
-    else if (autoB7B7DC32_val == "ZergGroundArmorsLevel2") {
-        return "ZergGroundArmorsLevel3";
-    }
-    else if (autoB7B7DC32_val == "ZergFlyerWeaponsLevel1") {
-        return "ZergFlyerWeaponsLevel2";
-    }
-    else if (autoB7B7DC32_val == "ZergFlyerWeaponsLevel2") {
-        return "ZergFlyerWeaponsLevel3";
-    }
-    else if (autoB7B7DC32_val == "ZergMeleeWeaponsLevel1") {
-        return "ZergMeleeWeaponsLevel2";
-    }
-    else if (autoB7B7DC32_val == "ZergMeleeWeaponsLevel2") {
-        return "ZergMeleeWeaponsLevel3";
-    }
-    else if (autoB7B7DC32_val == "ZergMissileWeaponsLevel1") {
-        return "ZergMissileWeaponsLevel2";
-    }
-    else if (autoB7B7DC32_val == "ZergMissileWeaponsLevel2") {
-        return "ZergMissileWeaponsLevel3";
-    }
-    else {
-        return "";
-    }
-}
-
-text gf_GetRaceMacroUnitName () {
-    string auto30CFABC8_val;
-
-    // Implementation
-    auto30CFABC8_val = PlayerRace(1);
-    if (auto30CFABC8_val == "Terr") {
-        return UnitTypeGetName("OrbitalCommand");
-    }
-    else if (auto30CFABC8_val == "Prot") {
-        return UnitTypeGetName("Nexus");
-    }
-    else if (auto30CFABC8_val == "Zerg") {
-        return UnitTypeGetName("Queen");
-    }
-    else {
-        return StringExternal("Param/Value/584FC4D9");
-    }
-}
-
-bool gf_IsRaceMacroEnergyAboveThreshold () {
-    unitgroup autoEE6E2050_g;
-    int autoEE6E2050_u;
-
-    // Variable Declarations
-    bool lv_result;
-    unit lv_currentunit;
-
-    // Variable Initialization
-
-    // Implementation
-    autoEE6E2050_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, (1 << (c_targetFilterHasEnergy - 32)), (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0);
-    autoEE6E2050_u = 1;
-    for ( ; autoEE6E2050_u <= UnitGroupCount(autoEE6E2050_g, c_unitCountAll) ; autoEE6E2050_u += BoolToInt(lv_currentunit == UnitGroupUnit(autoEE6E2050_g, autoEE6E2050_u)) ) {
-        lv_currentunit = UnitGroupUnit(autoEE6E2050_g, autoEE6E2050_u);
-        if (((UnitGetPropertyFixed(lv_currentunit, c_unitPropEnergy, c_unitPropCurrent) > gv_alertSelectedMacroEnergyThreshold) && ((UnitGetType(lv_currentunit) == "Queen") || (UnitGetType(lv_currentunit) == "QueenBurrowed") || (UnitGetType(lv_currentunit) == "OrbitalCommand") || (UnitGetType(lv_currentunit) == "OrbitalCommandFlying") || (UnitGetType(lv_currentunit) == "Nexus")))) {
-            lv_result = true;
-        }
-        else {
-        }
-    }
-    return lv_result;
-}
-
-bool gf_IsOverlordCurrentlyInProgress () {
-    // Implementation
-    if ((gv_numMorphingOverlords > 0)) {
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-bool gf_IsSupplyDepotorPylonUnderConstruction () {
-    unitgroup auto54B9016D_g;
-    int auto54B9016D_u;
-
-    // Variable Declarations
-    unit lv_currentUnit;
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    auto54B9016D_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, (1 << (c_targetFilterUnderConstruction - 32)), 0, 0), 0);
-    auto54B9016D_u = 1;
-    for ( ; auto54B9016D_u <= UnitGroupCount(auto54B9016D_g, c_unitCountAll) ; auto54B9016D_u += BoolToInt(lv_currentUnit == UnitGroupUnit(auto54B9016D_g, auto54B9016D_u)) ) {
-        lv_currentUnit = UnitGroupUnit(auto54B9016D_g, auto54B9016D_u);
-        if (((UnitGetType(lv_currentUnit) == "SupplyDepot") || (UnitGetType(lv_currentUnit) == "Pylon"))) {
-            lv_result = true;
-        }
-        else {
-        }
-    }
-    return lv_result;
-}
-
-unitgroup gf_GetAllPlayer1UnitsforType (string lp_unitType) {
-    unitgroup auto7054DA5F_g;
-    int auto7054DA5F_u;
-
-    // Variable Declarations
-    unit lv_currentUnit;
-    unitgroup lv_result;
-
-    // Variable Initialization
-    lv_result = UnitGroupEmpty();
-
-    // Implementation
-    auto7054DA5F_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0);
-    auto7054DA5F_u = 1;
-    for ( ; auto7054DA5F_u <= UnitGroupCount(auto7054DA5F_g, c_unitCountAll) ; auto7054DA5F_u += BoolToInt(lv_currentUnit == UnitGroupUnit(auto7054DA5F_g, auto7054DA5F_u)) ) {
-        lv_currentUnit = UnitGroupUnit(auto7054DA5F_g, auto7054DA5F_u);
-        if ((UnitGetType(lv_currentUnit) == lp_unitType)) {
-            UnitGroupAdd(lv_result, lv_currentUnit);
-        }
-        else {
-        }
-    }
-    return lv_result;
-}
-
-int gf_GetDefaultMacroEnergyThreshold () {
-    string autoBAC892F0_val;
-
-    // Variable Declarations
-    int lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    autoBAC892F0_val = PlayerRace(1);
-    if (autoBAC892F0_val == "Terr") {
-        lv_result = gv_alertTerranDefaultMacroEnergyThreshold;
-    }
-    else if (autoBAC892F0_val == "Zerg") {
-        lv_result = gv_alertZergDefaultMacroEnergyThreshold;
-    }
-    else if (autoBAC892F0_val == "Prot") {
-        lv_result = gv_alertProtossDefaultMacroEnergyThreshold;
-    }
-    else {
-    }
-    return lv_result;
-}
-
-string gf_GetIconForBuildingType (string lp_unitType) {
-    string auto77F30C81_val;
-
-    // Implementation
-    auto77F30C81_val = lp_unitType;
-    if (auto77F30C81_val == "Nexus") {
-        return "Assets\\Textures\\btn-building-protoss-nexus.dds";
-    }
-    else if (auto77F30C81_val == "Gateway") {
-        return "Assets\\Textures\\btn-building-protoss-gateway.dds";
-    }
-    else if (auto77F30C81_val == "RoboticsFacility") {
-        return "Assets\\Textures\\btn-building-protoss-roboticsfacility.dds";
-    }
-    else if (auto77F30C81_val == "Stargate") {
-        return "Assets\\Textures\\btn-building-protoss-stargate.dds";
-    }
-    else if (auto77F30C81_val == "CommandCenter") {
-        return "Assets\\Textures\\btn-building-terran-commandcenter.dds";
-    }
-    else if (auto77F30C81_val == "OrbitalCommand") {
-        return "Assets\\Textures\\btn-techupgrade-terran-orbitalcommand.dds";
-    }
-    else if (auto77F30C81_val == "PlanetaryFortress") {
-        return "Assets\\Textures\\btn-building-terran-planetaryfortress.dds";
-    }
-    else if (auto77F30C81_val == "Barracks") {
-        return "Assets\\Textures\\btn-building-terran-barracks.dds";
-    }
-    else if (auto77F30C81_val == "Factory") {
-        return "Assets\\Textures\\btn-building-terran-factory.dds";
-    }
-    else if (auto77F30C81_val == "Starport") {
-        return "Assets\\Textures\\btn-building-terran-starport.dds";
-    }
-    else if (auto77F30C81_val == "Larva") {
-        return "Assets\\Textures\\btn-unit-zerg-larva.dds";
-    }
-    else if (auto77F30C81_val == "Hatchery") {
-        return "Assets\\Textures\\btn-building-zerg-hatchery.dds";
-    }
-    else if (auto77F30C81_val == "Lair") {
-        return "Assets\\Textures\\btn-building-zerg-lair.dds";
-    }
-    else if (auto77F30C81_val == "Hive") {
-        return "Assets\\Textures\\btn-building-zerg-hive.dds";
-    }
-    else {
-        return null;
-    }
-}
-
-bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
-    unitgroup auto9BA590D3_g;
-    int auto9BA590D3_u;
-
-    // Variable Declarations
-    unit lv_currenUnit;
-    bool lv_queueIsEmpty;
-
-    // Variable Initialization
-
-    // Implementation
-    if ((PlayerRace(1) == "Zerg")) {
-        if (((lp_unitType == "Larva") && (TechTreeUnitCount(1, "Egg", c_techCountQueuedOrBetter) == 0) && (TechTreeUnitCount(1, "Larva", c_techCountQueuedOrBetter) > 0) && (PlayerScoreValueGetAsInt(1, "FoodUsed") >= 12))) {
-            lv_queueIsEmpty = true;
-            if ((gv_debugAlerts == true)) {
-                TextExpressionSetToken("Param/Expression/40B9E7CE", "A", IntToText(TechTreeUnitCount(1, "Larva", c_techCountQueuedOrBetter)));
-                UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/40B9E7CE"));
-            }
-            else {
-            }
-        }
-        else {
-            lv_queueIsEmpty = false;
-        }
-    }
-    else {
-        lv_queueIsEmpty = true;
-        auto9BA590D3_g = gf_GetAllPlayer1UnitsforType(lp_unitType);
-        auto9BA590D3_u = 1;
-        for ( ; auto9BA590D3_u <= UnitGroupCount(auto9BA590D3_g, c_unitCountAll) ; auto9BA590D3_u += BoolToInt(lv_currenUnit == UnitGroupUnit(auto9BA590D3_g, auto9BA590D3_u)) ) {
-            lv_currenUnit = UnitGroupUnit(auto9BA590D3_g, auto9BA590D3_u);
-            if ((UnitQueueGetProperty(lv_currenUnit, c_unitQueuePropertyUsed) > 0)) {
-                lv_queueIsEmpty = false;
-                if ((gv_debugAlerts == true)) {
-                    TextExpressionSetToken("Param/Expression/7886B8D3", "A", UnitTypeGetName(lp_unitType));
-                    UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/7886B8D3"));
-                }
-                else {
-                }
-            }
-            else {
-            }
-            if (((lp_unitType == "CommandCenter") && (TechTreeUnitCount(1, "OrbitalCommand", c_techCountInProgressOnly) > 0))) {
-                lv_queueIsEmpty = false;
-                if ((gv_debugAlerts == true)) {
-                    TextExpressionSetToken("Param/Expression/63F41F72", "A", UnitTypeGetName(lp_unitType));
-                    UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/63F41F72"));
-                }
-                else {
-                }
-            }
-            else {
-            }
-        }
-    }
-    if ((gv_debugAlerts == true)) {
-        TextExpressionSetToken("Param/Expression/8865A9BB", "A", UnitTypeGetName(lp_unitType));
-        TextExpressionSetToken("Param/Expression/8865A9BB", "B", libNtve_gf_ConvertBooleanToText(lv_queueIsEmpty));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/8865A9BB"));
-    }
-    else {
-    }
-    return lv_queueIsEmpty;
-}
-
-string gf_GetCurrentlySelectedMatchupasBankSectionKey () {
-    // Implementation
-    return ((PlayerRace(1)) + gv_benchmarkMatchupSectionKeys[gv_currentlySelectedMatchupIndex]);
-}
-
-text gf_GetCurrentlySelectedMatchupasText () {
-    // Implementation
-    return libNtve_gf_DialogItemText(gv_matchupSelectionButtons[gv_currentlySelectedMatchupIndex], 1);
-}
-
-int gf_GetEditBoxIntValue (int lp_editBox) {
-    // Implementation
-    return StringToInt(libNtve_gf_DialogItemEditValue(lp_editBox, 1));
-}
-
-bool gf_DoesSavedBuildOrderExistForCurrentMatchup () {
-    // Variable Declarations
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if ((BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey) > 0)) {
-        lv_result = true;
-    }
-    else {
-        lv_result = false;
-    }
-    if ((gv_debugBuildOrder == true)) {
-        TextExpressionSetToken("Param/Expression/449A463F", "A", libNtve_gf_ConvertBooleanToText(lv_result));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/449A463F"));
-    }
-    else {
-    }
-    return lv_result;
-}
-
-int gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex (int lp_cursor) {
-    // Variable Declarations
-    int lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    lv_result = lp_cursor;
-    return lv_result;
-}
-
-string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix) {
-    // Variable Declarations
-    string lv_stepKeyString;
-
-    // Variable Initialization
-    lv_stepKeyString = "";
-
-    // Implementation
-    lv_stepKeyString = (gv_benchmarkBuildStepEntryKeyPrefix + "_" + IntToString(lp_stepNumber) + "_" + lp_stepEntryKeySuffix);
-    return lv_stepKeyString;
-}
-
-bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex) {
-    // Variable Declarations
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if ((lp_unitType == gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_unitType)) {
-        lv_result = true;
-    }
-    else {
-        lv_result = false;
-    }
-    if ((gv_debugBuildOrder == true)) {
-        TextExpressionSetToken("Param/Expression/161A937D", "A", UnitTypeGetName(gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_unitType));
-        TextExpressionSetToken("Param/Expression/161A937D", "B", UnitTypeGetName(lp_unitType));
-        TextExpressionSetToken("Param/Expression/161A937D", "C", libNtve_gf_ConvertBooleanToText(lv_result));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/161A937D"));
-    }
-    else {
-    }
-    return lv_result;
-}
-
-bool gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex) {
-    // Variable Declarations
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if ((lp_unitType == gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_unitType)) {
-        lv_result = true;
-    }
-    else {
-        lv_result = false;
-    }
-    if ((gv_debugBuildOrder == true)) {
-        TextExpressionSetToken("Param/Expression/FD541E74", "A", UnitTypeGetName(gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_unitType));
-        TextExpressionSetToken("Param/Expression/FD541E74", "B", UnitTypeGetName(lp_unitType));
-        TextExpressionSetToken("Param/Expression/FD541E74", "C", libNtve_gf_ConvertBooleanToText(lv_result));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/FD541E74"));
-    }
-    else {
-    }
-    return lv_result;
-}
-
-bool gf_IsSupplyCountCorrectForBenchmarkBuildOrderStep (int lp_supplyCount, int lp_benchmarkBuildOrderStepIndex) {
-    // Implementation
-    if ((lp_supplyCount <= (gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_supplyCount+15))) {
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-bool gf_IsNumUnitsCorrectForBenchmarkBuildOrderStep (int lp_numUnits, int lp_benchmarkBuildOrderStepIndex) {
-    // Implementation
-    if ((lp_numUnits == gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_numUnits)) {
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType) {
-    // Variable Declarations
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if (((PlayerScoreValueGetAsInt(1, "FoodUsed") <= 40) && ((lp_unitType == "Overlord") || (lp_unitType == "Queen")))) {
-        lv_result = true;
-    }
-    else {
-    }
-    if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (!(((lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon") || (lp_unitType == "CreepTumor")))) && (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery"))))))) {
-        lv_result = true;
-    }
-    else {
-    }
-    if ((gv_debugBuildOrder == true)) {
-        TextExpressionSetToken("Param/Expression/C9374463", "A", UnitTypeGetName(lp_unitType));
-        TextExpressionSetToken("Param/Expression/C9374463", "B", libNtve_gf_ConvertBooleanToText(lv_result));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/C9374463"));
-    }
-    else {
-    }
-    return lv_result;
-}
-
-text gf_GetCurrentBuildOrderStepText (int lp_stepNumber) {
-    // Variable Declarations
-    text lv_numUnits;
-    text lv_unitType;
-    text lv_supplyCount;
-    text lv_elapsedTime;
-    text lv_result;
-
-    // Variable Initialization
-    lv_numUnits = StringExternal("Param/Value/29A8F1DC");
-
-    // Implementation
-    lv_unitType = UnitTypeGetName(gv_currentBuildOrderSteps[lp_stepNumber].lv_unitType);
-    if ((gv_currentBuildOrderSteps[lp_stepNumber].lv_numUnits > 1)) {
-        TextExpressionSetToken("Param/Expression/A6714026", "A", IntToText(gv_currentBuildOrderSteps[lp_stepNumber].lv_numUnits));
-        lv_numUnits = TextExpressionAssemble("Param/Expression/A6714026");
-    }
-    else {
-    }
-    lv_supplyCount = IntToText(gv_currentBuildOrderSteps[lp_stepNumber].lv_supplyCount);
-    lv_elapsedTime = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_currentBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
-    TextExpressionSetToken("Param/Expression/81102448", "A", lv_supplyCount);
-    TextExpressionSetToken("Param/Expression/81102448", "D", lv_numUnits);
-    TextExpressionSetToken("Param/Expression/81102448", "B", lv_unitType);
-    TextExpressionSetToken("Param/Expression/81102448", "C", lv_elapsedTime);
-    lv_result = TextExpressionAssemble("Param/Expression/81102448");
-    return lv_result;
-}
-
-text gf_GetBenchmarkBuildOrderStepText (int lp_stepNumber) {
-    // Variable Declarations
-    text lv_numUnits;
-    text lv_unitType;
-    text lv_supplyCount;
-    text lv_elapsedTime;
-    text lv_result;
-
-    // Variable Initialization
-    lv_numUnits = StringExternal("Param/Value/B286C09B");
-
-    // Implementation
-    lv_unitType = UnitTypeGetName(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_unitType);
-    if ((gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_numUnits > 1)) {
-        TextExpressionSetToken("Param/Expression/02DB92AF", "A", IntToText(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_numUnits));
-        lv_numUnits = TextExpressionAssemble("Param/Expression/02DB92AF");
-    }
-    else {
-    }
-    lv_supplyCount = IntToText(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount);
-    lv_elapsedTime = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
-    TextExpressionSetToken("Param/Expression/1734DB71", "A", lv_supplyCount);
-    TextExpressionSetToken("Param/Expression/1734DB71", "D", lv_numUnits);
-    TextExpressionSetToken("Param/Expression/1734DB71", "B", lv_unitType);
-    TextExpressionSetToken("Param/Expression/1734DB71", "C", lv_elapsedTime);
-    lv_result = TextExpressionAssemble("Param/Expression/1734DB71");
-    return lv_result;
-}
-
-text gf_GetFormattedCompleteBenchmarkBuildOrderStepText (int lp_stepNumber) {
-    // Variable Declarations
-    text lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    TextExpressionSetToken("Param/Expression/C5F8A524", "A", gf_GetBenchmarkandCurrentStepSupplyasText(lp_stepNumber));
-    TextExpressionSetToken("Param/Expression/C5F8A524", "B", gf_GetBenchmarkandCurrentStepSecondsDiffasText(lp_stepNumber));
-    TextExpressionSetToken("Param/Expression/236BD2AB", "A", gf_GetBenchmarkBuildOrderStepText(lp_stepNumber));
-    TextExpressionSetToken("Param/Expression/236BD2AB", "D", TextWithColor(TextExpressionAssemble("Param/Expression/C5F8A524"), gf_GetColorForBenchmarkBuildOrderStepCompletion(lp_stepNumber)));
-    lv_result = TextExpressionAssemble("Param/Expression/236BD2AB");
-    return lv_result;
-}
-
-color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber) {
-    // Variable Declarations
-    int lv_currentElaspedSeconds;
-    int lv_currentSupplyCount;
-    color lv_color;
-    text lv_result;
-
-    // Variable Initialization
-    lv_color = Color(100,100,100);
-
-    // Implementation
-    lv_currentElaspedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
-    lv_currentSupplyCount = PlayerScoreValueGetAsInt(1, "FoodUsed");
-    if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+0)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+0)))) {
-        lv_color = Color(66.67, 79.22, 100.00);
-    }
-    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+gv_greenBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_greenBenchmarkSecondsThreshold)))) {
-        lv_color = Color(50.20, 100.00, 50.20);
-    }
-    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+gv_yellowBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_yellowBenchmarkSecondsThreshold)))) {
-        lv_color = Color(100.00, 100.00, 50.20);
-    }
-    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+gv_orangeBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_orangeBenchmarkSecondsThreshold)))) {
-        lv_color = Color(100.00, 74.51, 40.00);
-    }
-    else if ((true == true)) {
-        lv_color = Color(100.00, 50.20, 50.20);
-    }
-    return lv_color;
-}
-
-text gf_GetBenchmarkandCurrentStepSupplyasText (int lp_stepNumber) {
-    // Variable Declarations
-    int lv_diff;
-    text lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    lv_diff = (PlayerScoreValueGetAsInt(1, "FoodUsed")-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount);
-    lv_diff = (PlayerScoreValueGetAsInt(1, "FoodUsed"));
-    lv_result = IntToText(lv_diff);
-    return lv_result;
-}
-
-text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber) {
-    // Variable Declarations
-    int lv_diff;
-    text lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    lv_diff = (FixedToInt(TimerGetElapsed(gv_buildTimer))-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
-    if ((lv_diff < 0)) {
-        lv_diff = (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds-FixedToInt(TimerGetElapsed(gv_buildTimer)));
-        TextExpressionSetToken("Param/Expression/D17BAC5D", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff));
-        lv_result = TextExpressionAssemble("Param/Expression/D17BAC5D");
-    }
-    else {
-        TextExpressionSetToken("Param/Expression/8F0B85E2", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff));
-        lv_result = TextExpressionAssemble("Param/Expression/8F0B85E2");
-    }
-    return lv_result;
-}
-
-bool gf_IsProductionIdle () {
-    int autoBD02A5A8_ae;
-    int autoBD02A5A8_ai;
-
-    // Variable Declarations
-    bool lv_result;
-    int lv_i;
-
-    // Variable Initialization
-
-    // Implementation
-    if ((gv_alertProductionIdleNumProductionTypes > 0)) {
-        autoBD02A5A8_ae = (gv_alertProductionIdleNumProductionTypes-1);
-        autoBD02A5A8_ai = 1;
-        lv_i = 0;
-        for ( ; ( (autoBD02A5A8_ai >= 0 && lv_i <= autoBD02A5A8_ae) || (autoBD02A5A8_ai <= 0 && lv_i >= autoBD02A5A8_ae) ) ; lv_i += autoBD02A5A8_ai ) {
-            if ((gf_IsUnitTypeTrainingQueueEmpty(gv_alertProductionIdleUnitTypes[lv_i]) == true)) {
-                lv_result = true;
-            }
-            else {
-            }
-        }
-    }
-    else {
-    }
-    return lv_result;
-}
-
-int gf_GetTimeSupplyBlocked () {
-    // Implementation
-    return gv_timeSupplyBlockedThisBuild;
-}
-
-int gf_GetIdleProductionTime () {
-    // Implementation
-    if ((TimerGetElapsed(gv_buildTimer) >= 1)) {
-        return gv_timeProductionIdleThisBuild;
-    }
-    else {
-        return 0;
-    }
-}
-
-int gf_GetAverageUnspentMinerals () {
-    // Implementation
-    if ((gv_totalMineralSamplesThisBuild >= 1)) {
-        return FixedToInt((gv_cumulativeUnspentMinerals/gv_totalMineralSamplesThisBuild));
-    }
-    else {
-        return 0;
-    }
-}
-
-int gf_GetAverageUnspentGas () {
-    // Implementation
-    if ((gv_totalGasSamplesThisBuild >= 1)) {
-        return FixedToInt((gv_cumulativeUnspentGas/gv_totalGasSamplesThisBuild));
-    }
-    else {
-        return 0;
-    }
-}
-
-int gf_GetAverageBuildAPM () {
-    // Implementation
-    if ((gv_totalAPMSamplesThisBuild >= 1)) {
-        return FixedToInt((gv_cumulativeAPM/gv_totalAPMSamplesThisBuild));
-    }
-    else {
-        return 0;
-    }
-}
-
-fixed gf_GetSpendingQuotient () {
-    // Implementation
-    return (35*(0.00137*0.0-0.0)+240);
-}
-
-int gf_GetTotalArmySupply () {
-    // Implementation
-    return PlayerScoreValueGetAsInt(1, "FoodUsedArmy");
-}
-
-int gf_GetTotalArmyValueMinerals () {
-    // Implementation
-    return PlayerScoreValueGetAsInt(1, "MineralsUsedTotalArmy");
-}
-
-int gf_GetTotalArmyValueGas () {
-    // Implementation
-    return PlayerScoreValueGetAsInt(1, "VespeneUsedTotalArmy");
-}
-
-int gf_GetNumUpgradesResearched () {
-    // Implementation
-    return gv_totalNumberofUpgradesResearched;
-}
-
-int gf_GetTotalMineralsCollected () {
-    // Implementation
-    return gv_totalMineralsCollected;
-}
-
-int gf_GetTotalGasCollected () {
-    // Implementation
-    return gv_totalGasCollected;
-}
-
-text gf_CalculateIntPercentDifferenceAsText (int lp_value, int lp_previousBest, bool lp_higherisBetter) {
-    // Variable Declarations
-    fixed lv_percentDifference;
-    text lv_percentDifferenceText;
-    text lv_coloredPercentDifferenceText;
-
-    // Variable Initialization
-
-    // Implementation
-    if (((lp_value > 0) && (lp_previousBest > 0))) {
-        lv_percentDifference = (100*((IntToFixed(lp_value)-IntToFixed(lp_previousBest))/IntToFixed(lp_previousBest)));
-        TextExpressionSetToken("Param/Expression/C52C6861", "A", FixedToText(lv_percentDifference, 2));
-        lv_percentDifferenceText = TextExpressionAssemble("Param/Expression/C52C6861");
-    }
-    else {
-        lv_percentDifferenceText = StringExternal("Param/Value/69E3E79E");
-    }
-    TextExpressionSetToken("Param/Expression/627D2026", "A", TextWithColor(lv_percentDifferenceText, gf_GetColorForPercentage(lv_percentDifference, lp_higherisBetter)));
-    lv_coloredPercentDifferenceText = TextExpressionAssemble("Param/Expression/627D2026");
-    return lv_coloredPercentDifferenceText;
-}
-
-text gf_CalculateRealPercentDifferenceAsText (fixed lp_value, fixed lp_previousBest, bool lp_higherisBetter) {
-    // Variable Declarations
-    fixed lv_percentDifference;
-    text lv_percentDifferenceText;
-    text lv_coloredPercentDifferenceText;
-
-    // Variable Initialization
-
-    // Implementation
-    if (((lp_value > 0) && (lp_previousBest > 0))) {
-        lv_percentDifference = (100*((lp_value-lp_previousBest)/lp_previousBest));
-        TextExpressionSetToken("Param/Expression/57AF9E6B", "A", FixedToText(lv_percentDifference, 2));
-        lv_percentDifferenceText = TextExpressionAssemble("Param/Expression/57AF9E6B");
-    }
-    else {
-        lv_percentDifferenceText = StringExternal("Param/Value/5EC7DC33");
-    }
-    TextExpressionSetToken("Param/Expression/25E9AAD7", "A", TextWithColor(lv_percentDifferenceText, gf_GetColorForPercentage(lv_percentDifference, lp_higherisBetter)));
-    lv_coloredPercentDifferenceText = TextExpressionAssemble("Param/Expression/25E9AAD7");
-    return lv_coloredPercentDifferenceText;
-}
-
-color gf_GetColorForPercentage (fixed lp_percentage, bool lp_higherIsBetter) {
-    // Variable Declarations
-    color lv_result;
-
-    // Variable Initialization
-    lv_result = Color(149*100/255,150*100/255,151*100/255);
-
-    // Implementation
-    if ((((lp_percentage > 0.0) && (lp_higherIsBetter == true)) || ((lp_percentage < 0.0) && (lp_higherIsBetter == false)))) {
-        lv_result = Color(22*100/255,128*100/255,0);
-    }
-    else if ((((lp_percentage < 0.0) && (lp_higherIsBetter == true)) || ((lp_percentage > 0.0) && (lp_higherIsBetter == false)))) {
-        lv_result = Color(100.00, 0.00, 0.00);
-    }
-    return lv_result;
-}
-
-int gf_GetWinButtonYPadding () {
-    string autoDB867731_val;
-
-    // Implementation
-    autoDB867731_val = PlayerRace(1);
-    if (autoDB867731_val == "Terr") {
-        return gv_winButtonTerranYPadding;
-    }
-    else if (autoDB867731_val == "Prot") {
-        return gv_winButtonProtossYPadding;
-    }
-    else if (autoDB867731_val == "Zerg") {
-        return gv_winButtonZergYPadding;
-    }
-    else {
-        return 0;
-    }
-}
-
-unitgroup gf_GetPlayer1Units () {
-    // Variable Declarations
-    unitgroup lv_result;
-
-    // Variable Initialization
-    lv_result = UnitGroupEmpty();
-
-    // Implementation
-    UnitGroupLoopBegin(UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0));
-    for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
-        UnitGroupAdd(lv_result, UnitGroupLoopCurrent());
-    }
-    UnitGroupLoopEnd();
-    return lv_result;
-}
-
-text gf_ConverttoTextWithSign (int lp_int) {
-    // Variable Declarations
-    text lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if ((lp_int > 0)) {
-        TextExpressionSetToken("Param/Expression/B99F7846", "A", IntToText(lp_int));
-        lv_result = TextExpressionAssemble("Param/Expression/B99F7846");
-    }
-    else {
-        TextExpressionSetToken("Param/Expression/DD4AB624", "A", IntToText(lp_int));
-        lv_result = TextExpressionAssemble("Param/Expression/DD4AB624");
-    }
-    return lv_result;
-}
-
-string gf_TrimSOffArmors (string lp_string) {
-    // Implementation
-    if ((lp_string == "Armors")) {
-        return "Armor";
-    }
-    else {
-        return lp_string;
-    }
-}
-
-string gf_FormatCatalogStringwithSpaces (string lp_string) {
-    int auto6F8A5183_ae;
-    int auto6F8A5183_ai;
-
-    // Variable Declarations
-    string lv_currentLetter;
-    string lv_result;
-    int lv_i;
-
-    // Variable Initialization
-    lv_currentLetter = "";
-    lv_result = "";
-
-    // Implementation
-    auto6F8A5183_ae = StringLength(lp_string);
-    auto6F8A5183_ai = 1;
-    lv_i = 0;
-    for ( ; ( (auto6F8A5183_ai >= 0 && lv_i <= auto6F8A5183_ae) || (auto6F8A5183_ai <= 0 && lv_i >= auto6F8A5183_ae) ) ; lv_i += auto6F8A5183_ai ) {
-        lv_currentLetter = StringSub(lp_string, lv_i, lv_i);
-        if ((gf_IsCapitalLetterOrDigit(lv_currentLetter) == true)) {
-            lv_result = (lv_result + " " + lv_currentLetter);
-        }
-        else {
-            lv_result = (lv_result + lv_currentLetter);
-        }
-    }
-    return lv_result;
-}
-
-bool gf_IsCapitalLetterOrDigit (string lp_letter) {
-    // Implementation
-    if (((lp_letter == "A") || (lp_letter == "B") || (lp_letter == "C") || (lp_letter == "D") || (lp_letter == "E") || (lp_letter == "F") || (lp_letter == "G") || (lp_letter == "H") || (lp_letter == "I") || (lp_letter == "J") || (lp_letter == "K") || (lp_letter == "L") || (lp_letter == "M") || (lp_letter == "N") || (lp_letter == "O") || (lp_letter == "P") || (lp_letter == "Q") || (lp_letter == "R") || (lp_letter == "S") || (lp_letter == "T") || (lp_letter == "U") || (lp_letter == "V") || (lp_letter == "W") || (lp_letter == "X") || (lp_letter == "Y") || (lp_letter == "Z") || (lp_letter == "1") || (lp_letter == "2") || (lp_letter == "3") || (lp_letter == "4") || (lp_letter == "5") || (lp_letter == "6") || (lp_letter == "7") || (lp_letter == "8") || (lp_letter == "9") || (lp_letter == "0"))) {
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
 void gf_PauseAlertTimers () {
     int autoDAB23CA2_ae;
     int autoDAB23CA2_ai;
@@ -2671,7 +1758,7 @@ void gf_InitializeMapResourcesUnitGroup () {
     for ( ; auto59129081_u <= UnitGroupCount(auto59129081_g, c_unitCountAll) ; auto59129081_u += BoolToInt(lv_currentResource == UnitGroupUnit(auto59129081_g, auto59129081_u)) ) {
         lv_currentResource = UnitGroupUnit(auto59129081_g, auto59129081_u);
         UnitGroupAdd(gv_resources, lv_currentResource);
-        if ((gv_debugMap == true)) {
+        if ((gv_debugMapMechanics == true)) {
             TextExpressionSetToken("Param/Expression/2322ADF7", "A", UnitTypeGetName(UnitGetType(lv_currentResource)));
             UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/2322ADF7"));
         }
@@ -2683,7 +1770,7 @@ void gf_InitializeMapResourcesUnitGroup () {
     for ( ; autoAECA9D28_u <= UnitGroupCount(autoAECA9D28_g, c_unitCountAll) ; autoAECA9D28_u += BoolToInt(lv_currentResource == UnitGroupUnit(autoAECA9D28_g, autoAECA9D28_u)) ) {
         lv_currentResource = UnitGroupUnit(autoAECA9D28_g, autoAECA9D28_u);
         UnitGroupAdd(gv_resources, lv_currentResource);
-        if ((gv_debugMap == true)) {
+        if ((gv_debugMapMechanics == true)) {
             TextExpressionSetToken("Param/Expression/1C0F331A", "A", UnitTypeGetName(UnitGetType(lv_currentResource)));
             UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/1C0F331A"));
         }
@@ -2753,7 +1840,7 @@ void gf_ResetMapResources () {
         else {
         }
     }
-    if ((gv_debugMap == true)) {
+    if ((gv_debugMapMechanics == true)) {
         TextExpressionSetToken("Param/Expression/F4AFF87D", "A", IntToText(lv_resourcesReplaced));
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/F4AFF87D"));
     }
@@ -2935,7 +2022,7 @@ void gf_CreateBenchmarkBuildOrderObjectives () {
     // Variable Initialization
 
     // Implementation
-    if ((gv_debugBuildOrder == true)) {
+    if ((gv_debugBuildOrderTracking == true)) {
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/8B1A10FA"));
     }
     else {
@@ -2967,7 +2054,7 @@ void gf_CreateIndividualBenchmarkBuildOrderStepObjective (int lp_buildStep) {
 void gf_EvaluateBenchmarkBuildOrderStepObjective (string lp_unitType) {
     // Implementation
     if ((gv_benchmarkBuildOrderStepCursor > 0) && ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[(gv_benchmarkBuildOrderStepCursor-1)]) == c_objectiveStateFailed) && (gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep(lp_unitType, (gv_benchmarkBuildOrderStepCursor-1)) == true))) {
-        if ((gv_debugBuildOrder == true)) {
+        if ((gv_debugBuildOrderTracking == true)) {
             TextExpressionSetToken("Param/Expression/FB79BAF4", "B", UnitTypeGetName(lp_unitType));
             TextExpressionSetToken("Param/Expression/FB79BAF4", "A", IntToText((gv_benchmarkBuildOrderStepCursor-1)));
             UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/FB79BAF4"));
@@ -2978,14 +2065,14 @@ void gf_EvaluateBenchmarkBuildOrderStepObjective (string lp_unitType) {
     }
     else {
         if ((gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep(lp_unitType, gv_benchmarkBuildOrderStepCursor) == true)) {
-            if ((gv_debugBuildOrder == true)) {
+            if ((gv_debugBuildOrderTracking == true)) {
                 TextExpressionSetToken("Param/Expression/6697D031", "A", IntToText(gv_benchmarkBuildOrderStepCursor));
                 UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/6697D031"));
             }
             else {
             }
             if (((gf_IsNumUnitsCorrectForBenchmarkBuildOrderStep(gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor)].lv_numUnits, gv_benchmarkBuildOrderStepCursor) == true) && (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[(gv_benchmarkBuildOrderStepCursor)]) == c_objectiveStateActive))) {
-                if ((gv_debugBuildOrder == true)) {
+                if ((gv_debugBuildOrderTracking == true)) {
                     UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/36B26B35"));
                 }
                 else {
@@ -2993,7 +2080,7 @@ void gf_EvaluateBenchmarkBuildOrderStepObjective (string lp_unitType) {
                 gf_CompleteBenchmarkBuildOrderStepObjective(gv_benchmarkBuildOrderStepCursor);
             }
             else {
-                if ((gv_debugBuildOrder == true)) {
+                if ((gv_debugBuildOrderTracking == true)) {
                     TextExpressionSetToken("Param/Expression/0A0B2E84", "A", IntToText(gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor)].lv_numUnits));
                     TextExpressionSetToken("Param/Expression/0A0B2E84", "B", IntToText(gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_numUnits));
                     UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/0A0B2E84"));
@@ -3003,7 +2090,7 @@ void gf_EvaluateBenchmarkBuildOrderStepObjective (string lp_unitType) {
             }
         }
         else {
-            if ((gv_debugBuildOrder == true)) {
+            if ((gv_debugBuildOrderTracking == true)) {
                 TextExpressionSetToken("Param/Expression/53A44017", "A", IntToText((gv_benchmarkBuildOrderStepCursor-1)));
                 UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/53A44017"));
             }
@@ -3021,7 +2108,7 @@ void gf_CompleteBenchmarkBuildOrderStepObjective (int lp_benchmarkBuildOrderInde
     // Variable Initialization
 
     // Implementation
-    if ((gv_debugBuildOrder == true)) {
+    if ((gv_debugBuildOrderTracking == true)) {
         TextExpressionSetToken("Param/Expression/83361AD6", "A", IntToText(lp_benchmarkBuildOrderIndex));
         TextExpressionSetToken("Param/Expression/83361AD6", "B", IntToText(gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex(lp_benchmarkBuildOrderIndex)));
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/83361AD6"));
@@ -3037,7 +2124,7 @@ void gf_CompleteBenchmarkBuildOrderStepObjective (int lp_benchmarkBuildOrderInde
 
 void gf_FailBenchmarkBuildOrderStepObjective (int lp_benchmarkBuildOrderIndex) {
     // Implementation
-    if ((gv_debugBuildOrder == true)) {
+    if ((gv_debugBuildOrderTracking == true)) {
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/C8622CB1"));
     }
     else {
@@ -3106,7 +2193,7 @@ void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType) {
     gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
     gv_lastCreatedBuildOrderUnitType = lp_buildStepUnitType;
     gv_lastCreatedUnitTimestamp = TimerGetElapsed(gv_buildTimer);
-    if ((gv_debugBuildOrder == true)) {
+    if ((gv_debugBuildOrderTracking == true)) {
         TextExpressionSetToken("Param/Expression/7FAB1454", "A", gf_GetCurrentBuildOrderStepText(gv_currentBuildOrderStepCursor));
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/7FAB1454"));
     }
@@ -3190,6 +2277,942 @@ void gf_LookatandPanToUnit (unit lp_unit) {
     CameraLookAt(1, UnitGetPosition(lp_unit), 0.5, 50.0, 10.0);
     CameraPan(1, libNtve_gf_PointWithZOffset(UnitGetPosition(lp_unit), ((CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance))+8)), 0.2, 50.0, 10.0, false);
     libNtve_gf_SwooshCamera(1, CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance), CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance), UnitGetPosition(lp_unit), 0.2);
+}
+
+string gf_GetNextUpgrade (string lp_currentUpgrade) {
+    string autoB7B7DC32_val;
+
+    // Implementation
+    autoB7B7DC32_val = lp_currentUpgrade;
+    if (autoB7B7DC32_val == "ProtossAirArmorsLevel1") {
+        return "ProtossAirArmorsLevel2";
+    }
+    else if (autoB7B7DC32_val == "ProtossAirArmorsLevel2") {
+        return "ProtossAirArmorsLevel3";
+    }
+    else if (autoB7B7DC32_val == "ProtossGroundArmorsLevel1") {
+        return "ProtossGroundArmorsLevel2";
+    }
+    else if (autoB7B7DC32_val == "ProtossGroundArmorsLevel2") {
+        return "ProtossGroundArmorsLevel3";
+    }
+    else if (autoB7B7DC32_val == "ProtossShieldsLevel1") {
+        return "ProtossShieldsLevel2";
+    }
+    else if (autoB7B7DC32_val == "ProtossShieldsLevel2") {
+        return "ProtossShieldsLevel3";
+    }
+    else if (autoB7B7DC32_val == "ProtossAirWeaponsLevel1") {
+        return "ProtossAirWeaponsLevel2";
+    }
+    else if (autoB7B7DC32_val == "ProtossAirWeaponsLevel2") {
+        return "ProtossAirWeaponsLevel3";
+    }
+    else if (autoB7B7DC32_val == "ProtossGroundWeaponsLevel1") {
+        return "ProtossGroundWeaponsLevel2";
+    }
+    else if (autoB7B7DC32_val == "ProtossGroundWeaponsLevel2") {
+        return "ProtossGroundWeaponsLevel3";
+    }
+    else if (autoB7B7DC32_val == "TerranInfantryArmorsLevel1") {
+        return "TerranInfantryArmorsLevel2";
+    }
+    else if (autoB7B7DC32_val == "TerranInfantryArmorsLevel2") {
+        return "TerranInfantryArmorsLevel3";
+    }
+    else if (autoB7B7DC32_val == "TerranShipArmorsLevel1") {
+        return "TerranShipArmorsLevel2";
+    }
+    else if (autoB7B7DC32_val == "TerranShipArmorsLevel2") {
+        return "TerranShipArmorsLevel3";
+    }
+    else if (autoB7B7DC32_val == "TerranVehicleArmorsLevel1") {
+        return "TerranVehicleArmorsLevel2";
+    }
+    else if (autoB7B7DC32_val == "TerranVehicleArmorsLevel2") {
+        return "TerranVehicleArmorsLevel3";
+    }
+    else if (autoB7B7DC32_val == "TerranInfantryWeaponsLevel1") {
+        return "TerranInfantryWeaponsLevel2";
+    }
+    else if (autoB7B7DC32_val == "TerranInfantryWeaponsLevel2") {
+        return "TerranInfantryWeaponsLevel3";
+    }
+    else if (autoB7B7DC32_val == "TerranShipWeaponsLevel1") {
+        return "TerranShipWeaponsLevel2";
+    }
+    else if (autoB7B7DC32_val == "TerranShipWeaponsLevel2") {
+        return "TerranShipWeaponsLevel3";
+    }
+    else if (autoB7B7DC32_val == "TerranVehicleWeaponsLevel1") {
+        return "TerranVehicleWeaponsLevel2";
+    }
+    else if (autoB7B7DC32_val == "TerranVehicleWeaponsLevel2") {
+        return "TerranVehicleWeaponsLevel3";
+    }
+    else if (autoB7B7DC32_val == "ZergFlyerArmorsLevel1") {
+        return "ZergFlyerArmorsLevel2";
+    }
+    else if (autoB7B7DC32_val == "ZergFlyerArmorsLevel2") {
+        return "ZergFlyerArmorsLevel3";
+    }
+    else if (autoB7B7DC32_val == "ZergGroundArmorsLevel1") {
+        return "ZergGroundArmorsLevel2";
+    }
+    else if (autoB7B7DC32_val == "ZergGroundArmorsLevel2") {
+        return "ZergGroundArmorsLevel3";
+    }
+    else if (autoB7B7DC32_val == "ZergFlyerWeaponsLevel1") {
+        return "ZergFlyerWeaponsLevel2";
+    }
+    else if (autoB7B7DC32_val == "ZergFlyerWeaponsLevel2") {
+        return "ZergFlyerWeaponsLevel3";
+    }
+    else if (autoB7B7DC32_val == "ZergMeleeWeaponsLevel1") {
+        return "ZergMeleeWeaponsLevel2";
+    }
+    else if (autoB7B7DC32_val == "ZergMeleeWeaponsLevel2") {
+        return "ZergMeleeWeaponsLevel3";
+    }
+    else if (autoB7B7DC32_val == "ZergMissileWeaponsLevel1") {
+        return "ZergMissileWeaponsLevel2";
+    }
+    else if (autoB7B7DC32_val == "ZergMissileWeaponsLevel2") {
+        return "ZergMissileWeaponsLevel3";
+    }
+    else {
+        return "";
+    }
+}
+
+text gf_GetRaceMacroUnitName () {
+    string auto30CFABC8_val;
+
+    // Implementation
+    auto30CFABC8_val = PlayerRace(1);
+    if (auto30CFABC8_val == "Terr") {
+        return UnitTypeGetName("OrbitalCommand");
+    }
+    else if (auto30CFABC8_val == "Prot") {
+        return UnitTypeGetName("Nexus");
+    }
+    else if (auto30CFABC8_val == "Zerg") {
+        return UnitTypeGetName("Queen");
+    }
+    else {
+        return StringExternal("Param/Value/584FC4D9");
+    }
+}
+
+bool gf_IsRaceMacroEnergyAboveThreshold () {
+    unitgroup autoEE6E2050_g;
+    int autoEE6E2050_u;
+
+    // Variable Declarations
+    bool lv_result;
+    unit lv_currentunit;
+
+    // Variable Initialization
+
+    // Implementation
+    autoEE6E2050_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, (1 << (c_targetFilterHasEnergy - 32)), (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0);
+    autoEE6E2050_u = 1;
+    for ( ; autoEE6E2050_u <= UnitGroupCount(autoEE6E2050_g, c_unitCountAll) ; autoEE6E2050_u += BoolToInt(lv_currentunit == UnitGroupUnit(autoEE6E2050_g, autoEE6E2050_u)) ) {
+        lv_currentunit = UnitGroupUnit(autoEE6E2050_g, autoEE6E2050_u);
+        if (((UnitGetPropertyFixed(lv_currentunit, c_unitPropEnergy, c_unitPropCurrent) > gv_alertSelectedMacroEnergyThreshold) && ((UnitGetType(lv_currentunit) == "Queen") || (UnitGetType(lv_currentunit) == "QueenBurrowed") || (UnitGetType(lv_currentunit) == "OrbitalCommand") || (UnitGetType(lv_currentunit) == "OrbitalCommandFlying") || (UnitGetType(lv_currentunit) == "Nexus")))) {
+            lv_result = true;
+        }
+        else {
+        }
+    }
+    return lv_result;
+}
+
+bool gf_IsOverlordCurrentlyInProgress () {
+    // Implementation
+    if ((gv_numMorphingOverlords > 0)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool gf_IsSupplyDepotorPylonUnderConstruction () {
+    unitgroup auto54B9016D_g;
+    int auto54B9016D_u;
+
+    // Variable Declarations
+    unit lv_currentUnit;
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    auto54B9016D_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, (1 << (c_targetFilterUnderConstruction - 32)), 0, 0), 0);
+    auto54B9016D_u = 1;
+    for ( ; auto54B9016D_u <= UnitGroupCount(auto54B9016D_g, c_unitCountAll) ; auto54B9016D_u += BoolToInt(lv_currentUnit == UnitGroupUnit(auto54B9016D_g, auto54B9016D_u)) ) {
+        lv_currentUnit = UnitGroupUnit(auto54B9016D_g, auto54B9016D_u);
+        if (((UnitGetType(lv_currentUnit) == "SupplyDepot") || (UnitGetType(lv_currentUnit) == "Pylon"))) {
+            lv_result = true;
+        }
+        else {
+        }
+    }
+    return lv_result;
+}
+
+unitgroup gf_GetAllPlayer1UnitsforType (string lp_unitType) {
+    unitgroup auto7054DA5F_g;
+    int auto7054DA5F_u;
+
+    // Variable Declarations
+    unit lv_currentUnit;
+    unitgroup lv_result;
+
+    // Variable Initialization
+    lv_result = UnitGroupEmpty();
+
+    // Implementation
+    auto7054DA5F_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0);
+    auto7054DA5F_u = 1;
+    for ( ; auto7054DA5F_u <= UnitGroupCount(auto7054DA5F_g, c_unitCountAll) ; auto7054DA5F_u += BoolToInt(lv_currentUnit == UnitGroupUnit(auto7054DA5F_g, auto7054DA5F_u)) ) {
+        lv_currentUnit = UnitGroupUnit(auto7054DA5F_g, auto7054DA5F_u);
+        if ((UnitGetType(lv_currentUnit) == lp_unitType)) {
+            UnitGroupAdd(lv_result, lv_currentUnit);
+        }
+        else {
+        }
+    }
+    return lv_result;
+}
+
+int gf_GetDefaultMacroEnergyThreshold () {
+    string autoBAC892F0_val;
+
+    // Variable Declarations
+    int lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    autoBAC892F0_val = PlayerRace(1);
+    if (autoBAC892F0_val == "Terr") {
+        lv_result = gv_alertTerranDefaultMacroEnergyThreshold;
+    }
+    else if (autoBAC892F0_val == "Zerg") {
+        lv_result = gv_alertZergDefaultMacroEnergyThreshold;
+    }
+    else if (autoBAC892F0_val == "Prot") {
+        lv_result = gv_alertProtossDefaultMacroEnergyThreshold;
+    }
+    else {
+    }
+    return lv_result;
+}
+
+string gf_GetIconForBuildingType (string lp_unitType) {
+    string auto77F30C81_val;
+
+    // Implementation
+    auto77F30C81_val = lp_unitType;
+    if (auto77F30C81_val == "Nexus") {
+        return "Assets\\Textures\\btn-building-protoss-nexus.dds";
+    }
+    else if (auto77F30C81_val == "Gateway") {
+        return "Assets\\Textures\\btn-building-protoss-gateway.dds";
+    }
+    else if (auto77F30C81_val == "RoboticsFacility") {
+        return "Assets\\Textures\\btn-building-protoss-roboticsfacility.dds";
+    }
+    else if (auto77F30C81_val == "Stargate") {
+        return "Assets\\Textures\\btn-building-protoss-stargate.dds";
+    }
+    else if (auto77F30C81_val == "CommandCenter") {
+        return "Assets\\Textures\\btn-building-terran-commandcenter.dds";
+    }
+    else if (auto77F30C81_val == "OrbitalCommand") {
+        return "Assets\\Textures\\btn-techupgrade-terran-orbitalcommand.dds";
+    }
+    else if (auto77F30C81_val == "PlanetaryFortress") {
+        return "Assets\\Textures\\btn-building-terran-planetaryfortress.dds";
+    }
+    else if (auto77F30C81_val == "Barracks") {
+        return "Assets\\Textures\\btn-building-terran-barracks.dds";
+    }
+    else if (auto77F30C81_val == "Factory") {
+        return "Assets\\Textures\\btn-building-terran-factory.dds";
+    }
+    else if (auto77F30C81_val == "Starport") {
+        return "Assets\\Textures\\btn-building-terran-starport.dds";
+    }
+    else if (auto77F30C81_val == "Larva") {
+        return "Assets\\Textures\\btn-unit-zerg-larva.dds";
+    }
+    else if (auto77F30C81_val == "Hatchery") {
+        return "Assets\\Textures\\btn-building-zerg-hatchery.dds";
+    }
+    else if (auto77F30C81_val == "Lair") {
+        return "Assets\\Textures\\btn-building-zerg-lair.dds";
+    }
+    else if (auto77F30C81_val == "Hive") {
+        return "Assets\\Textures\\btn-building-zerg-hive.dds";
+    }
+    else {
+        return null;
+    }
+}
+
+bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
+    unitgroup auto9BA590D3_g;
+    int auto9BA590D3_u;
+
+    // Variable Declarations
+    unit lv_currenUnit;
+    bool lv_queueIsEmpty;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((PlayerRace(1) == "Zerg")) {
+        if (((lp_unitType == "Larva") && (TechTreeUnitCount(1, "Egg", c_techCountQueuedOrBetter) == 0) && (TechTreeUnitCount(1, "Larva", c_techCountQueuedOrBetter) > 0) && (PlayerScoreValueGetAsInt(1, "FoodUsed") >= 12))) {
+            lv_queueIsEmpty = true;
+            if ((gv_debugAlerts == true)) {
+                TextExpressionSetToken("Param/Expression/40B9E7CE", "A", IntToText(TechTreeUnitCount(1, "Larva", c_techCountQueuedOrBetter)));
+                UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/40B9E7CE"));
+            }
+            else {
+            }
+        }
+        else {
+            lv_queueIsEmpty = false;
+        }
+    }
+    else {
+        lv_queueIsEmpty = true;
+        auto9BA590D3_g = gf_GetAllPlayer1UnitsforType(lp_unitType);
+        auto9BA590D3_u = 1;
+        for ( ; auto9BA590D3_u <= UnitGroupCount(auto9BA590D3_g, c_unitCountAll) ; auto9BA590D3_u += BoolToInt(lv_currenUnit == UnitGroupUnit(auto9BA590D3_g, auto9BA590D3_u)) ) {
+            lv_currenUnit = UnitGroupUnit(auto9BA590D3_g, auto9BA590D3_u);
+            if ((UnitQueueGetProperty(lv_currenUnit, c_unitQueuePropertyUsed) > 0)) {
+                lv_queueIsEmpty = false;
+                if ((gv_debugAlerts == true)) {
+                    TextExpressionSetToken("Param/Expression/7886B8D3", "A", UnitTypeGetName(lp_unitType));
+                    UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/7886B8D3"));
+                }
+                else {
+                }
+            }
+            else {
+            }
+            if (((lp_unitType == "CommandCenter") && (TechTreeUnitCount(1, "OrbitalCommand", c_techCountInProgressOnly) > 0))) {
+                lv_queueIsEmpty = false;
+                if ((gv_debugAlerts == true)) {
+                    TextExpressionSetToken("Param/Expression/63F41F72", "A", UnitTypeGetName(lp_unitType));
+                    UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/63F41F72"));
+                }
+                else {
+                }
+            }
+            else {
+            }
+        }
+    }
+    if ((gv_debugAlerts == true)) {
+        TextExpressionSetToken("Param/Expression/8865A9BB", "A", UnitTypeGetName(lp_unitType));
+        TextExpressionSetToken("Param/Expression/8865A9BB", "B", libNtve_gf_ConvertBooleanToText(lv_queueIsEmpty));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/8865A9BB"));
+    }
+    else {
+    }
+    return lv_queueIsEmpty;
+}
+
+string gf_GetCurrentlySelectedMatchupasBankSectionKey () {
+    // Implementation
+    return ((PlayerRace(1)) + gv_benchmarkMatchupSectionKeys[gv_currentlySelectedMatchupIndex]);
+}
+
+text gf_GetCurrentlySelectedMatchupasText () {
+    // Implementation
+    return libNtve_gf_DialogItemText(gv_matchupSelectionButtons[gv_currentlySelectedMatchupIndex], 1);
+}
+
+int gf_GetEditBoxIntValue (int lp_editBox) {
+    // Implementation
+    return StringToInt(libNtve_gf_DialogItemEditValue(lp_editBox, 1));
+}
+
+bool gf_DoesSavedBuildOrderExistForCurrentMatchup () {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey) > 0)) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    if ((gv_debugBuildOrderTracking == true)) {
+        TextExpressionSetToken("Param/Expression/449A463F", "A", libNtve_gf_ConvertBooleanToText(lv_result));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/449A463F"));
+    }
+    else {
+    }
+    return lv_result;
+}
+
+int gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex (int lp_cursor) {
+    // Variable Declarations
+    int lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_result = lp_cursor;
+    return lv_result;
+}
+
+string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix) {
+    // Variable Declarations
+    string lv_stepKeyString;
+
+    // Variable Initialization
+    lv_stepKeyString = "";
+
+    // Implementation
+    lv_stepKeyString = (gv_benchmarkBuildStepEntryKeyPrefix + "_" + IntToString(lp_stepNumber) + "_" + lp_stepEntryKeySuffix);
+    return lv_stepKeyString;
+}
+
+bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((lp_unitType == gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_unitType)) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    if ((gv_debugBuildOrderTracking == true)) {
+        TextExpressionSetToken("Param/Expression/161A937D", "A", UnitTypeGetName(gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_unitType));
+        TextExpressionSetToken("Param/Expression/161A937D", "B", UnitTypeGetName(lp_unitType));
+        TextExpressionSetToken("Param/Expression/161A937D", "C", libNtve_gf_ConvertBooleanToText(lv_result));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/161A937D"));
+    }
+    else {
+    }
+    return lv_result;
+}
+
+bool gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep (string lp_upgrade, int lp_benchmarkBuildOrderStepIndex) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((lp_upgrade == gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_upgradeType)) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    if ((gv_debugBuildOrderTracking == true)) {
+        TextExpressionSetToken("Param/Expression/FD541E74", "A", UnitTypeGetName(gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_upgradeType));
+        TextExpressionSetToken("Param/Expression/FD541E74", "B", StringToText((lp_upgrade)));
+        TextExpressionSetToken("Param/Expression/FD541E74", "C", libNtve_gf_ConvertBooleanToText(lv_result));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/FD541E74"));
+    }
+    else {
+    }
+    return lv_result;
+}
+
+bool gf_IsSupplyCountCorrectForBenchmarkBuildOrderStep (int lp_supplyCount, int lp_benchmarkBuildOrderStepIndex) {
+    // Implementation
+    if ((lp_supplyCount <= (gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_supplyCount+15))) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool gf_IsNumUnitsCorrectForBenchmarkBuildOrderStep (int lp_numUnits, int lp_benchmarkBuildOrderStepIndex) {
+    // Implementation
+    if ((lp_numUnits == gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_numUnits)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((PlayerScoreValueGetAsInt(1, "FoodUsed") <= 40) && ((lp_unitType == "Overlord") || (lp_unitType == "Queen")))) {
+        lv_result = true;
+    }
+    else {
+    }
+    if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (!(((lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon") || (lp_unitType == "CreepTumor")))) && (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery"))))))) {
+        lv_result = true;
+    }
+    else {
+    }
+    if ((gv_debugBuildOrderTracking == true)) {
+        TextExpressionSetToken("Param/Expression/C9374463", "A", UnitTypeGetName(lp_unitType));
+        TextExpressionSetToken("Param/Expression/C9374463", "B", libNtve_gf_ConvertBooleanToText(lv_result));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/C9374463"));
+    }
+    else {
+    }
+    return lv_result;
+}
+
+bool gf_IsUpgradeTypeValidForBuildOrder (string lp_upgrade) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((lp_upgrade == "WarpGateResearch") || (lp_upgrade == "BlinkTech") || (lp_upgrade == "ExtendedThermalLance") || (lp_upgrade == "Stimpack") || (lp_upgrade == "PunisherGrenades") || (lp_upgrade == "ShieldWall") || (lp_upgrade == "zerglingmovementspeed") || (lp_upgrade == "Burrow") || (lp_upgrade == "ProtossAirArmorsLevel1") || (lp_upgrade == "ProtossAirArmorsLevel2") || (lp_upgrade == "ProtossAirArmorsLevel3") || (lp_upgrade == "ProtossGroundArmorsLevel1") || (lp_upgrade == "ProtossGroundArmorsLevel2") || (lp_upgrade == "ProtossGroundArmorsLevel3") || (lp_upgrade == "ProtossShieldsLevel1") || (lp_upgrade == "ProtossShieldsLevel2") || (lp_upgrade == "ProtossShieldsLevel3") || (lp_upgrade == "ProtossAirWeaponsLevel1") || (lp_upgrade == "ProtossAirWeaponsLevel2") || (lp_upgrade == "ProtossAirWeaponsLevel3") || (lp_upgrade == "ProtossGroundWeaponsLevel1") || (lp_upgrade == "ProtossGroundWeaponsLevel2") || (lp_upgrade == "ProtossGroundWeaponsLevel3") || (lp_upgrade == "TerranInfantryArmorsLevel1") || (lp_upgrade == "TerranInfantryArmorsLevel2") || (lp_upgrade == "TerranInfantryArmorsLevel3") || (lp_upgrade == "TerranShipArmorsLevel1") || (lp_upgrade == "TerranShipArmorsLevel2") || (lp_upgrade == "TerranShipArmorsLevel3") || (lp_upgrade == "TerranVehicleArmorsLevel1") || (lp_upgrade == "TerranVehicleArmorsLevel2") || (lp_upgrade == "TerranVehicleArmorsLevel3") || (lp_upgrade == "TerranInfantryWeaponsLevel1") || (lp_upgrade == "TerranInfantryWeaponsLevel2") || (lp_upgrade == "TerranInfantryWeaponsLevel3") || (lp_upgrade == "TerranShipWeaponsLevel1") || (lp_upgrade == "TerranShipWeaponsLevel2") || (lp_upgrade == "TerranShipWeaponsLevel3") || (lp_upgrade == "TerranVehicleWeaponsLevel1") || (lp_upgrade == "TerranVehicleWeaponsLevel2") || (lp_upgrade == "TerranVehicleWeaponsLevel3") || (lp_upgrade == "ZergFlyerArmorsLevel1") || (lp_upgrade == "ZergFlyerArmorsLevel2") || (lp_upgrade == "ZergFlyerArmorsLevel3") || (lp_upgrade == "ZergGroundArmorsLevel1") || (lp_upgrade == "ZergGroundArmorsLevel2") || (lp_upgrade == "ZergGroundArmorsLevel3") || (lp_upgrade == "ZergFlyerWeaponsLevel1") || (lp_upgrade == "ZergFlyerWeaponsLevel2") || (lp_upgrade == "ZergFlyerWeaponsLevel3") || (lp_upgrade == "ZergMeleeWeaponsLevel1") || (lp_upgrade == "ZergMeleeWeaponsLevel2") || (lp_upgrade == "ZergMeleeWeaponsLevel3") || (lp_upgrade == "ZergMissileWeaponsLevel1") || (lp_upgrade == "ZergMissileWeaponsLevel2") || (lp_upgrade == "ZergMissileWeaponsLevel3"))) {
+        lv_result = true;
+    }
+    else {
+    }
+    if ((gv_debugBuildOrderTracking == true)) {
+        TextExpressionSetToken("Param/Expression/D87C562D", "A", StringToText((lp_upgrade)));
+        TextExpressionSetToken("Param/Expression/D87C562D", "B", libNtve_gf_ConvertBooleanToText(lv_result));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/D87C562D"));
+    }
+    else {
+    }
+    return lv_result;
+}
+
+text gf_GetCurrentBuildOrderStepText (int lp_stepNumber) {
+    // Variable Declarations
+    text lv_numUnits;
+    text lv_unitType;
+    text lv_supplyCount;
+    text lv_elapsedTime;
+    text lv_result;
+
+    // Variable Initialization
+    lv_numUnits = StringExternal("Param/Value/29A8F1DC");
+
+    // Implementation
+    lv_unitType = UnitTypeGetName(gv_currentBuildOrderSteps[lp_stepNumber].lv_unitType);
+    if ((gv_currentBuildOrderSteps[lp_stepNumber].lv_numUnits > 1)) {
+        TextExpressionSetToken("Param/Expression/A6714026", "A", IntToText(gv_currentBuildOrderSteps[lp_stepNumber].lv_numUnits));
+        lv_numUnits = TextExpressionAssemble("Param/Expression/A6714026");
+    }
+    else {
+    }
+    lv_supplyCount = IntToText(gv_currentBuildOrderSteps[lp_stepNumber].lv_supplyCount);
+    lv_elapsedTime = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_currentBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
+    TextExpressionSetToken("Param/Expression/81102448", "A", lv_supplyCount);
+    TextExpressionSetToken("Param/Expression/81102448", "D", lv_numUnits);
+    TextExpressionSetToken("Param/Expression/81102448", "B", lv_unitType);
+    TextExpressionSetToken("Param/Expression/81102448", "C", lv_elapsedTime);
+    lv_result = TextExpressionAssemble("Param/Expression/81102448");
+    return lv_result;
+}
+
+text gf_GetBenchmarkBuildOrderStepText (int lp_stepNumber) {
+    // Variable Declarations
+    text lv_numUnits;
+    text lv_unitType;
+    text lv_supplyCount;
+    text lv_elapsedTime;
+    text lv_result;
+
+    // Variable Initialization
+    lv_numUnits = StringExternal("Param/Value/B286C09B");
+
+    // Implementation
+    lv_unitType = UnitTypeGetName(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_unitType);
+    if ((gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_numUnits > 1)) {
+        TextExpressionSetToken("Param/Expression/02DB92AF", "A", IntToText(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_numUnits));
+        lv_numUnits = TextExpressionAssemble("Param/Expression/02DB92AF");
+    }
+    else {
+    }
+    lv_supplyCount = IntToText(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount);
+    lv_elapsedTime = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
+    TextExpressionSetToken("Param/Expression/1734DB71", "A", lv_supplyCount);
+    TextExpressionSetToken("Param/Expression/1734DB71", "D", lv_numUnits);
+    TextExpressionSetToken("Param/Expression/1734DB71", "B", lv_unitType);
+    TextExpressionSetToken("Param/Expression/1734DB71", "C", lv_elapsedTime);
+    lv_result = TextExpressionAssemble("Param/Expression/1734DB71");
+    return lv_result;
+}
+
+text gf_GetFormattedCompleteBenchmarkBuildOrderStepText (int lp_stepNumber) {
+    // Variable Declarations
+    text lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    TextExpressionSetToken("Param/Expression/C5F8A524", "A", gf_GetBenchmarkandCurrentStepSupplyasText(lp_stepNumber));
+    TextExpressionSetToken("Param/Expression/C5F8A524", "B", gf_GetBenchmarkandCurrentStepSecondsDiffasText(lp_stepNumber));
+    TextExpressionSetToken("Param/Expression/236BD2AB", "A", gf_GetBenchmarkBuildOrderStepText(lp_stepNumber));
+    TextExpressionSetToken("Param/Expression/236BD2AB", "D", TextWithColor(TextExpressionAssemble("Param/Expression/C5F8A524"), gf_GetColorForBenchmarkBuildOrderStepCompletion(lp_stepNumber)));
+    lv_result = TextExpressionAssemble("Param/Expression/236BD2AB");
+    return lv_result;
+}
+
+color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber) {
+    // Variable Declarations
+    int lv_currentElaspedSeconds;
+    int lv_currentSupplyCount;
+    color lv_color;
+    text lv_result;
+
+    // Variable Initialization
+    lv_color = Color(100,100,100);
+
+    // Implementation
+    lv_currentElaspedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
+    lv_currentSupplyCount = PlayerScoreValueGetAsInt(1, "FoodUsed");
+    if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+0)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+0)))) {
+        lv_color = Color(66.67, 79.22, 100.00);
+    }
+    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+gv_greenBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_greenBenchmarkSecondsThreshold)))) {
+        lv_color = Color(50.20, 100.00, 50.20);
+    }
+    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+gv_yellowBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_yellowBenchmarkSecondsThreshold)))) {
+        lv_color = Color(100.00, 100.00, 50.20);
+    }
+    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+gv_orangeBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_orangeBenchmarkSecondsThreshold)))) {
+        lv_color = Color(100.00, 74.51, 40.00);
+    }
+    else if ((true == true)) {
+        lv_color = Color(100.00, 50.20, 50.20);
+    }
+    return lv_color;
+}
+
+text gf_GetBenchmarkandCurrentStepSupplyasText (int lp_stepNumber) {
+    // Variable Declarations
+    int lv_diff;
+    text lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_diff = (PlayerScoreValueGetAsInt(1, "FoodUsed")-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount);
+    lv_diff = (PlayerScoreValueGetAsInt(1, "FoodUsed"));
+    lv_result = IntToText(lv_diff);
+    return lv_result;
+}
+
+text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber) {
+    // Variable Declarations
+    int lv_diff;
+    text lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_diff = (FixedToInt(TimerGetElapsed(gv_buildTimer))-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
+    if ((lv_diff < 0)) {
+        lv_diff = (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds-FixedToInt(TimerGetElapsed(gv_buildTimer)));
+        TextExpressionSetToken("Param/Expression/D17BAC5D", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff));
+        lv_result = TextExpressionAssemble("Param/Expression/D17BAC5D");
+    }
+    else {
+        TextExpressionSetToken("Param/Expression/8F0B85E2", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff));
+        lv_result = TextExpressionAssemble("Param/Expression/8F0B85E2");
+    }
+    return lv_result;
+}
+
+bool gf_IsProductionIdle () {
+    int autoBD02A5A8_ae;
+    int autoBD02A5A8_ai;
+
+    // Variable Declarations
+    bool lv_result;
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((gv_alertProductionIdleNumProductionTypes > 0)) {
+        autoBD02A5A8_ae = (gv_alertProductionIdleNumProductionTypes-1);
+        autoBD02A5A8_ai = 1;
+        lv_i = 0;
+        for ( ; ( (autoBD02A5A8_ai >= 0 && lv_i <= autoBD02A5A8_ae) || (autoBD02A5A8_ai <= 0 && lv_i >= autoBD02A5A8_ae) ) ; lv_i += autoBD02A5A8_ai ) {
+            if ((gf_IsUnitTypeTrainingQueueEmpty(gv_alertProductionIdleUnitTypes[lv_i]) == true)) {
+                lv_result = true;
+            }
+            else {
+            }
+        }
+    }
+    else {
+    }
+    return lv_result;
+}
+
+int gf_GetTimeSupplyBlocked () {
+    // Implementation
+    return gv_timeSupplyBlockedThisBuild;
+}
+
+int gf_GetIdleProductionTime () {
+    // Implementation
+    if ((TimerGetElapsed(gv_buildTimer) >= 1)) {
+        return gv_timeProductionIdleThisBuild;
+    }
+    else {
+        return 0;
+    }
+}
+
+int gf_GetAverageUnspentMinerals () {
+    // Implementation
+    if ((gv_totalMineralSamplesThisBuild >= 1)) {
+        return FixedToInt((gv_cumulativeUnspentMinerals/gv_totalMineralSamplesThisBuild));
+    }
+    else {
+        return 0;
+    }
+}
+
+int gf_GetAverageUnspentGas () {
+    // Implementation
+    if ((gv_totalGasSamplesThisBuild >= 1)) {
+        return FixedToInt((gv_cumulativeUnspentGas/gv_totalGasSamplesThisBuild));
+    }
+    else {
+        return 0;
+    }
+}
+
+int gf_GetAverageBuildAPM () {
+    // Implementation
+    if ((gv_totalAPMSamplesThisBuild >= 1)) {
+        return FixedToInt((gv_cumulativeAPM/gv_totalAPMSamplesThisBuild));
+    }
+    else {
+        return 0;
+    }
+}
+
+fixed gf_GetSpendingQuotient () {
+    // Implementation
+    return (35*(0.00137*0.0-0.0)+240);
+}
+
+int gf_GetTotalArmySupply () {
+    // Implementation
+    return PlayerScoreValueGetAsInt(1, "FoodUsedArmy");
+}
+
+int gf_GetTotalArmyValueMinerals () {
+    // Implementation
+    return PlayerScoreValueGetAsInt(1, "MineralsUsedTotalArmy");
+}
+
+int gf_GetTotalArmyValueGas () {
+    // Implementation
+    return PlayerScoreValueGetAsInt(1, "VespeneUsedTotalArmy");
+}
+
+int gf_GetNumUpgradesResearched () {
+    // Implementation
+    return gv_totalNumberofUpgradesResearched;
+}
+
+int gf_GetTotalMineralsCollected () {
+    // Implementation
+    return gv_totalMineralsCollected;
+}
+
+int gf_GetTotalGasCollected () {
+    // Implementation
+    return gv_totalGasCollected;
+}
+
+text gf_CalculateIntPercentDifferenceAsText (int lp_value, int lp_previousBest, bool lp_higherisBetter) {
+    // Variable Declarations
+    fixed lv_percentDifference;
+    text lv_percentDifferenceText;
+    text lv_coloredPercentDifferenceText;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((lp_value > 0) && (lp_previousBest > 0))) {
+        lv_percentDifference = (100*((IntToFixed(lp_value)-IntToFixed(lp_previousBest))/IntToFixed(lp_previousBest)));
+        TextExpressionSetToken("Param/Expression/C52C6861", "A", FixedToText(lv_percentDifference, 2));
+        lv_percentDifferenceText = TextExpressionAssemble("Param/Expression/C52C6861");
+    }
+    else {
+        lv_percentDifferenceText = StringExternal("Param/Value/69E3E79E");
+    }
+    TextExpressionSetToken("Param/Expression/627D2026", "A", TextWithColor(lv_percentDifferenceText, gf_GetColorForPercentage(lv_percentDifference, lp_higherisBetter)));
+    lv_coloredPercentDifferenceText = TextExpressionAssemble("Param/Expression/627D2026");
+    return lv_coloredPercentDifferenceText;
+}
+
+text gf_CalculateRealPercentDifferenceAsText (fixed lp_value, fixed lp_previousBest, bool lp_higherisBetter) {
+    // Variable Declarations
+    fixed lv_percentDifference;
+    text lv_percentDifferenceText;
+    text lv_coloredPercentDifferenceText;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((lp_value > 0) && (lp_previousBest > 0))) {
+        lv_percentDifference = (100*((lp_value-lp_previousBest)/lp_previousBest));
+        TextExpressionSetToken("Param/Expression/57AF9E6B", "A", FixedToText(lv_percentDifference, 2));
+        lv_percentDifferenceText = TextExpressionAssemble("Param/Expression/57AF9E6B");
+    }
+    else {
+        lv_percentDifferenceText = StringExternal("Param/Value/5EC7DC33");
+    }
+    TextExpressionSetToken("Param/Expression/25E9AAD7", "A", TextWithColor(lv_percentDifferenceText, gf_GetColorForPercentage(lv_percentDifference, lp_higherisBetter)));
+    lv_coloredPercentDifferenceText = TextExpressionAssemble("Param/Expression/25E9AAD7");
+    return lv_coloredPercentDifferenceText;
+}
+
+color gf_GetColorForPercentage (fixed lp_percentage, bool lp_higherIsBetter) {
+    // Variable Declarations
+    color lv_result;
+
+    // Variable Initialization
+    lv_result = Color(149*100/255,150*100/255,151*100/255);
+
+    // Implementation
+    if ((((lp_percentage > 0.0) && (lp_higherIsBetter == true)) || ((lp_percentage < 0.0) && (lp_higherIsBetter == false)))) {
+        lv_result = Color(22*100/255,128*100/255,0);
+    }
+    else if ((((lp_percentage < 0.0) && (lp_higherIsBetter == true)) || ((lp_percentage > 0.0) && (lp_higherIsBetter == false)))) {
+        lv_result = Color(100.00, 0.00, 0.00);
+    }
+    return lv_result;
+}
+
+int gf_GetWinButtonYPadding () {
+    string autoDB867731_val;
+
+    // Implementation
+    autoDB867731_val = PlayerRace(1);
+    if (autoDB867731_val == "Terr") {
+        return gv_winButtonTerranYPadding;
+    }
+    else if (autoDB867731_val == "Prot") {
+        return gv_winButtonProtossYPadding;
+    }
+    else if (autoDB867731_val == "Zerg") {
+        return gv_winButtonZergYPadding;
+    }
+    else {
+        return 0;
+    }
+}
+
+unitgroup gf_GetPlayer1Units () {
+    // Variable Declarations
+    unitgroup lv_result;
+
+    // Variable Initialization
+    lv_result = UnitGroupEmpty();
+
+    // Implementation
+    UnitGroupLoopBegin(UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0));
+    for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
+        UnitGroupAdd(lv_result, UnitGroupLoopCurrent());
+    }
+    UnitGroupLoopEnd();
+    return lv_result;
+}
+
+text gf_ConverttoTextWithSign (int lp_int) {
+    // Variable Declarations
+    text lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((lp_int > 0)) {
+        TextExpressionSetToken("Param/Expression/B99F7846", "A", IntToText(lp_int));
+        lv_result = TextExpressionAssemble("Param/Expression/B99F7846");
+    }
+    else {
+        TextExpressionSetToken("Param/Expression/DD4AB624", "A", IntToText(lp_int));
+        lv_result = TextExpressionAssemble("Param/Expression/DD4AB624");
+    }
+    return lv_result;
+}
+
+string gf_TrimSOffArmors (string lp_string) {
+    // Implementation
+    if ((lp_string == "Armors")) {
+        return "Armor";
+    }
+    else {
+        return lp_string;
+    }
+}
+
+string gf_FormatCatalogStringwithSpaces (string lp_string) {
+    int auto6F8A5183_ae;
+    int auto6F8A5183_ai;
+
+    // Variable Declarations
+    string lv_currentLetter;
+    string lv_result;
+    int lv_i;
+
+    // Variable Initialization
+    lv_currentLetter = "";
+    lv_result = "";
+
+    // Implementation
+    auto6F8A5183_ae = StringLength(lp_string);
+    auto6F8A5183_ai = 1;
+    lv_i = 0;
+    for ( ; ( (auto6F8A5183_ai >= 0 && lv_i <= auto6F8A5183_ae) || (auto6F8A5183_ai <= 0 && lv_i >= auto6F8A5183_ae) ) ; lv_i += auto6F8A5183_ai ) {
+        lv_currentLetter = StringSub(lp_string, lv_i, lv_i);
+        if ((gf_IsCapitalLetterOrDigit(lv_currentLetter) == true)) {
+            lv_result = (lv_result + " " + lv_currentLetter);
+        }
+        else {
+            lv_result = (lv_result + lv_currentLetter);
+        }
+    }
+    return lv_result;
+}
+
+bool gf_IsCapitalLetterOrDigit (string lp_letter) {
+    // Implementation
+    if (((lp_letter == "A") || (lp_letter == "B") || (lp_letter == "C") || (lp_letter == "D") || (lp_letter == "E") || (lp_letter == "F") || (lp_letter == "G") || (lp_letter == "H") || (lp_letter == "I") || (lp_letter == "J") || (lp_letter == "K") || (lp_letter == "L") || (lp_letter == "M") || (lp_letter == "N") || (lp_letter == "O") || (lp_letter == "P") || (lp_letter == "Q") || (lp_letter == "R") || (lp_letter == "S") || (lp_letter == "T") || (lp_letter == "U") || (lp_letter == "V") || (lp_letter == "W") || (lp_letter == "X") || (lp_letter == "Y") || (lp_letter == "Z") || (lp_letter == "1") || (lp_letter == "2") || (lp_letter == "3") || (lp_letter == "4") || (lp_letter == "5") || (lp_letter == "6") || (lp_letter == "7") || (lp_letter == "8") || (lp_letter == "9") || (lp_letter == "0"))) {
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -4656,7 +4679,10 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_LoadMatchupBenchmarks(gv_vZergMatchupSectionKey);
     gf_LoadAlertConfigurations();
     gf_CreateHiddenBenchmarkSupplyObjectives();
-    gv_debugBank = true;
+    gv_debugMapMechanics = false;
+    gv_debugBuildOrderTracking = true;
+    gv_debugAlerts = false;
+    gv_debugBank = false;
     return true;
 }
 
@@ -4803,6 +4829,24 @@ void gt_MaxTimeTimerElapsed_Init () {
 // Trigger: On Upgrade - Update Current Build Order
 //--------------------------------------------------------------------------------------------------
 bool gt_OnUpgradeUpdateCurrentBuildOrder_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gf_IsUpgradeTypeValidForBuildOrder(libNtve_gf_TriggeringProgressUpgrade()) == true))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    if ((gv_debugBuildOrderTracking == true)) {
+        TextExpressionSetToken("Param/Expression/4B44ADEB", "A", StringToText((libNtve_gf_TriggeringProgressUpgrade())));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/4B44ADEB"));
+    }
+    else {
+    }
     return true;
 }
 
@@ -4828,14 +4872,14 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
         return true;
     }
 
-    if ((gv_debugBuildOrder == true)) {
+    if ((gv_debugBuildOrderTracking == true)) {
         TextExpressionSetToken("Param/Expression/776434DE", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/776434DE"));
     }
     else {
     }
     if ((((TimerGetElapsed(gv_buildTimer)-gv_lastCreatedUnitTimestamp) <= 15.0) && (UnitGetType(EventUnitProgressUnit()) == gv_lastCreatedBuildOrderUnitType))) {
-        if ((gv_debugBuildOrder == true)) {
+        if ((gv_debugBuildOrderTracking == true)) {
             UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/50D360E2"));
             TextExpressionSetToken("Param/Expression/2A0E9DD3", "A", gf_GetCurrentBuildOrderStepText((gv_currentBuildOrderStepCursor-1)));
             UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/2A0E9DD3"));
@@ -4848,7 +4892,7 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
         if (((gv_currentBuildOrderStepCursor) < gv_maxCurrentBuildOrderStepsTracked)) {
             gf_AddUnitBuildOrderStep(libNtve_gf_TriggeringProgressUnitType());
             if (((gv_totalNumBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && ((gv_currentBuildOrderStepCursor) < (gv_totalNumBenchmarkBuildOrderSteps+gv_numCorrectedBenchmarkBuildOrderSteps)))) {
-                if ((gv_debugBuildOrder == true)) {
+                if ((gv_debugBuildOrderTracking == true)) {
                     TextExpressionSetToken("Param/Expression/F78FD77D", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
                     UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/F78FD77D"));
                 }
@@ -4857,7 +4901,7 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
                 gf_EvaluateBenchmarkBuildOrderStepObjective(libNtve_gf_TriggeringProgressUnitType());
             }
             else {
-                if ((gv_debugBuildOrder == true)) {
+                if ((gv_debugBuildOrderTracking == true)) {
                     UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/E10856B1"));
                 }
                 else {
@@ -4866,7 +4910,7 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
             gv_currentBuildOrderStepCursor += 1;
         }
         else {
-            if ((gv_debugBuildOrder == true)) {
+            if ((gv_debugBuildOrderTracking == true)) {
                 UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/15C40397"));
             }
             else {
