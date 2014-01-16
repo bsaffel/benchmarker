@@ -30,9 +30,6 @@ struct gs_BuildOrderStep {
 //--------------------------------------------------------------------------------------------------
 bool gv_muteAlertsEnabled;
 int gv_numMorphingOverlords;
-timer gv_overlordInProgressTimer;
-int gv_overlordMorphDuration;
-unitgroup gv_morphingOverlords;
 fixed gv_warningPingCooldownSeconds;
 int gv_alertCooldownSeconds;
 int gv_alertMineralsThreshold;
@@ -54,31 +51,21 @@ timer gv_alertMacroEnergyCooldownTimer;
 bool gv_alertUpgradeGapCheckEnabled;
 int gv_alertUpgradeGapThreshold;
 int gv_alertUpgradeGapNumUpgrades;
-timer[15] gv_alertUpgradeGapTimers;
-timer[15] gv_alertUpgradeGapCooldownTimers;
-string[15] gv_alertUpgradeGapUpgrades;
+timer[31] gv_alertUpgradeGapTimers;
+timer[31] gv_alertUpgradeGapCooldownTimers;
+string[31] gv_alertUpgradeGapUpgrades;
 bool gv_alertProductionIdleCheckEnabled;
 int gv_alertProductionIdleThreshold;
 int gv_alertProductionIdleNumProductionTypes;
-timer[7] gv_alertProductionIdleBuildingTimers;
-timer[7] gv_alertProductionIdleCooldownTimers;
-string[7] gv_alertProductionIdleUnitTypes;
-string gv_benchmarkBuildStepEntryKeyPrefix;
-string gv_numBenchmarkBuildOrderStepsEntryKey;
-string gv_unitTypeBuildOrderStepEntryKey;
-string gv_supplyCountBuildOrderStepEntryKey;
-string gv_numUnitsBuildOrderStepEntryKey;
-string gv_elapsedSecondsBuildOrderStepEntryKey;
+timer[11] gv_alertProductionIdleBuildingTimers;
+timer[11] gv_alertProductionIdleCooldownTimers;
+string[11] gv_alertProductionIdleUnitTypes;
+timer gv_overlordInProgressTimer;
+int gv_overlordMorphDuration;
+unitgroup gv_morphingOverlords;
 string gv_benchmarkerBankName;
 bank gv_benchmarkerBank;
 string gv_configurationOptionsSectionKey;
-string gv_benchmarkMaxTimeMinutesKey;
-string gv_benchmarkMaxTimeSecondsKey;
-string[4] gv_benchmarkMatchupSectionKeys;
-string[4] gv_benchmarkSupplyEntryKeys;
-string gv_benchmarkEndBuildSelectionKey;
-string gv_benchmarkEndBuildMinutesKey;
-string gv_benchmarkEndBuildSecondsKey;
 string gv_alertConfigurationSectionKey;
 string gv_alertMineralsCheckEnabledEntryKey;
 string gv_alertMineralsThresholdKey;
@@ -93,6 +80,22 @@ string gv_alertUpgradeGapCheckEnabledEntryKey;
 string gv_alertUpgradeGapThresholdKey;
 string gv_alertProductionIdleCheckEnabledEntryKey;
 string gv_alertProductionIdleThresholdKey;
+string gv_benchmarkMaxTimeMinutesKey;
+string gv_benchmarkMaxTimeSecondsKey;
+string[4] gv_benchmarkMatchupSectionKeys;
+string[4] gv_benchmarkSupplyEntryKeys;
+string gv_benchmarkEndBuildSelectionKey;
+string gv_benchmarkEndBuildMinutesKey;
+string gv_benchmarkEndBuildSecondsKey;
+string gv_benchmarkBuildStepEntryKeyPrefix;
+string gv_numBenchmarkBuildOrderStepsEntryKey;
+string gv_unitTypeBuildOrderStepEntryKey;
+string gv_supplyCountBuildOrderStepEntryKey;
+string gv_numUnitsBuildOrderStepEntryKey;
+string gv_elapsedSecondsBuildOrderStepEntryKey;
+string gv_vTerranMatchupSectionKey;
+string gv_vZergMatchupSectionKey;
+string gv_vProtossMatchupSectionKey;
 string gv_bestSpendingQuotientEntryKey;
 string gv_bestTotalWorkersCreatedEntryKey;
 string gv_bestTotalArmySupplyEntryKey;
@@ -106,9 +109,6 @@ string gv_bestIdleProductionTimeEntryKey;
 string gv_bestAverageUnspentMineralsEntryKey;
 string gv_bestAverageUnspentGasEntryKey;
 string gv_bestAverageAPMEntryKey;
-string gv_vTerranMatchupSectionKey;
-string gv_vZergMatchupSectionKey;
-string gv_vProtossMatchupSectionKey;
 color gv_objectiveSupplyColor;
 int gv_labelAlignmentSpacer;
 int gv_menuPadding;
@@ -293,49 +293,20 @@ void InitGlobals () {
     int init_i;
     int init_j;
 
-    gv_overlordInProgressTimer = TimerCreate();
-    gv_overlordMorphDuration = 25;
-    gv_morphingOverlords = UnitGroupEmpty();
-    gv_warningPingCooldownSeconds = 1.5;
-    gv_alertCooldownSeconds = 15;
-    gv_alertMineralsThreshold = 800;
     gv_alertMineralsCooldownTimer = TimerCreate();
     gv_alertMineralsCheckEnabled = true;
-    gv_alertGasThreshold = 400;
     gv_alertGasCooldownTimer = TimerCreate();
     gv_alertGasCheckEnabled = true;
-    gv_alertSupplyBlockStart = 50;
     gv_alertSupplyBlockCheckEnabled = true;
-    gv_alertSupplyBlockWithinCapThreshold = 6;
     gv_alertSupplyBlockCooldownTimer = TimerCreate();
-    gv_alertZergDefaultMacroEnergyThreshold = 40;
-    gv_alertTerranDefaultMacroEnergyThreshold = 65;
-    gv_alertProtossDefaultMacroEnergyThreshold = 60;
     gv_alertMacroEnergyCheckEnabled = true;
     gv_alertMacroEnergyCooldownTimer = TimerCreate();
     gv_alertUpgradeGapCheckEnabled = true;
-    gv_alertUpgradeGapThreshold = 20;
     gv_alertProductionIdleCheckEnabled = true;
-    gv_alertProductionIdleThreshold = 20;
-    gv_benchmarkBuildStepEntryKeyPrefix = "benchmarkBuildStep";
-    gv_numBenchmarkBuildOrderStepsEntryKey = "numBenchmarkBuildOrderSteps";
-    gv_unitTypeBuildOrderStepEntryKey = "unitType";
-    gv_supplyCountBuildOrderStepEntryKey = "supplyCount";
-    gv_numUnitsBuildOrderStepEntryKey = "numUnits";
-    gv_elapsedSecondsBuildOrderStepEntryKey = "elapsedSeconds";
+    gv_overlordInProgressTimer = TimerCreate();
+    gv_morphingOverlords = UnitGroupEmpty();
     gv_benchmarkerBankName = "benchmarker";
     gv_configurationOptionsSectionKey = "options";
-    gv_benchmarkMaxTimeMinutesKey = "maxTimeMin";
-    gv_benchmarkMaxTimeSecondsKey = "maxTimeSec";
-    for (init_i = 0; init_i <= 3; init_i += 1) {
-        gv_benchmarkMatchupSectionKeys[init_i] = "";
-    }
-    for (init_i = 0; init_i <= 3; init_i += 1) {
-        gv_benchmarkSupplyEntryKeys[init_i] = "";
-    }
-    gv_benchmarkEndBuildSelectionKey = "endBuildSelection";
-    gv_benchmarkEndBuildMinutesKey = "endBuildMin";
-    gv_benchmarkEndBuildSecondsKey = "endBuildSec";
     gv_alertConfigurationSectionKey = "alerts";
     gv_alertMineralsCheckEnabledEntryKey = "alertMineralsEnabled";
     gv_alertMineralsThresholdKey = "alertMineralsThreshold";
@@ -350,6 +321,26 @@ void InitGlobals () {
     gv_alertUpgradeGapThresholdKey = "alertUpgradeGapThreshold";
     gv_alertProductionIdleCheckEnabledEntryKey = "alertProductionIdleEnabled";
     gv_alertProductionIdleThresholdKey = "alertProductionIdleThreshold";
+    gv_benchmarkMaxTimeMinutesKey = "maxTimeMin";
+    gv_benchmarkMaxTimeSecondsKey = "maxTimeSec";
+    for (init_i = 0; init_i <= 3; init_i += 1) {
+        gv_benchmarkMatchupSectionKeys[init_i] = "";
+    }
+    for (init_i = 0; init_i <= 3; init_i += 1) {
+        gv_benchmarkSupplyEntryKeys[init_i] = "";
+    }
+    gv_benchmarkEndBuildSelectionKey = "endBuildSelection";
+    gv_benchmarkEndBuildMinutesKey = "endBuildMin";
+    gv_benchmarkEndBuildSecondsKey = "endBuildSec";
+    gv_benchmarkBuildStepEntryKeyPrefix = "benchmarkBuildStep";
+    gv_numBenchmarkBuildOrderStepsEntryKey = "numBenchmarkBuildOrderSteps";
+    gv_unitTypeBuildOrderStepEntryKey = "unitType";
+    gv_supplyCountBuildOrderStepEntryKey = "supplyCount";
+    gv_numUnitsBuildOrderStepEntryKey = "numUnits";
+    gv_elapsedSecondsBuildOrderStepEntryKey = "elapsedSeconds";
+    gv_vTerranMatchupSectionKey = "vTerran";
+    gv_vZergMatchupSectionKey = "vZerg";
+    gv_vProtossMatchupSectionKey = "vProtoss";
     gv_bestSpendingQuotientEntryKey = "bestSpendingQuotient";
     gv_bestTotalWorkersCreatedEntryKey = "bestTotalWorkersCreated";
     gv_bestTotalArmySupplyEntryKey = "bestTotalArmySupply";
@@ -363,9 +354,6 @@ void InitGlobals () {
     gv_bestAverageUnspentMineralsEntryKey = "bestAverageUnspentMinerals";
     gv_bestAverageUnspentGasEntryKey = "bestAverageUnspentGas";
     gv_bestAverageAPMEntryKey = "bestAverageAPM";
-    gv_vTerranMatchupSectionKey = "vTerran";
-    gv_vZergMatchupSectionKey = "vZerg";
-    gv_vProtossMatchupSectionKey = "vProtoss";
     gv_objectiveSupplyColor = Color(100.00, 53.33, 6.67);
     gv_labelAlignmentSpacer = 15;
     gv_menuPadding = 60;
@@ -583,15 +571,17 @@ void gf_RefreshStatsDialog ();
 void gf_CloseStatsDialogandUnpause ();
 void gf_UpdateStatValueDialogItemText (int lp_rowOffset, text lp_statValue);
 void gf_CreateStatsDialogRow (text lp_labelText, int lp_rowOffset);
-void gf_InitializeGameArrayDefaults ();
+void gf_InitializeBankDefaults ();
+void gf_InitializeDialogDefaults ();
+void gf_InitializeGameDefaults ();
 void gf_InitializeMapResourcesUnitGroup ();
+void gf_InitializeBank ();
 void gf_ResetGameState ();
 void gf_ResetMapResources ();
 void gf_ResetTechTree ();
 void gf_ResetCamera ();
 void gf_PauseGame ();
 void gf_UnpauseGame ();
-void gf_ResetStatistics ();
 void gf_StartBenchmarkTimers ();
 void gf_UnpauseBenchmarkTimers ();
 void gf_PauseBenchmarkTimers ();
@@ -612,6 +602,8 @@ void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType);
 void gf_AddUpgradeBuildOrderStep (string lp_buildStepUnitType);
 void gf_ResetCurrentBuildOrderStepsVariables ();
 void gf_ResetBenchmarkBuildOrderStepsVariables ();
+void gf_ResetStatistics ();
+void gf_CreateScreenButtons ();
 void gf_LookatandPanToUnit (unit lp_unit);
 string gf_GetNextUpgrade (string lp_currentUpgrade);
 text gf_GetRaceMacroUnitName ();
@@ -1703,22 +1695,17 @@ void gf_CreateStatsDialogRow (text lp_labelText, int lp_rowOffset) {
     gv_statValueDialogItems[lp_rowOffset] = DialogControlLastCreated();
 }
 
-void gf_InitializeGameArrayDefaults () {
-    string auto6EDFB34C_val;
-
+void gf_InitializeBankDefaults () {
     // Implementation
-    gv_benchmarkTimerDurations[0] = 360;
-    gv_benchmarkTimerDurations[1] = 480;
-    gv_benchmarkTimerDurations[2] = 600;
     gv_benchmarkSupplyEntryKeys[0] = "benchmark1";
     gv_benchmarkSupplyEntryKeys[1] = "benchmark2";
     gv_benchmarkSupplyEntryKeys[2] = "benchmark3";
-    gv_benchmarkSupplyDefaults[0] = 30;
-    gv_benchmarkSupplyDefaults[1] = 55;
-    gv_benchmarkSupplyDefaults[2] = 80;
-    gv_benchmarkMatchupSectionKeys[0] = gv_vZergMatchupSectionKey;
-    gv_benchmarkMatchupSectionKeys[1] = gv_vTerranMatchupSectionKey;
-    gv_benchmarkMatchupSectionKeys[2] = gv_vProtossMatchupSectionKey;
+}
+
+void gf_InitializeDialogDefaults () {
+    string auto6EDFB34C_val;
+
+    // Implementation
     gv_alertRowLabelWidths[0][0] = 335;
     gv_alertRowLabelWidths[1][0] = 292;
     gv_alertRowLabelWidths[2][0] = 317;
@@ -1741,6 +1728,28 @@ void gf_InitializeGameArrayDefaults () {
     gv_alertRowLabelWidths[5][1] = gv_secondsLabelWidth;
     gv_alertRowLabelWidths[6][0] = 357;
     gv_alertRowLabelWidths[7][0] = 335;
+}
+
+void gf_InitializeGameDefaults () {
+    // Implementation
+    gv_overlordMorphDuration = 25;
+    gv_warningPingCooldownSeconds = 1.5;
+    gv_alertCooldownSeconds = 15;
+    gv_alertMineralsThreshold = 800;
+    gv_alertGasThreshold = 400;
+    gv_alertSupplyBlockStart = 50;
+    gv_alertUpgradeGapThreshold = 20;
+    gv_alertProductionIdleThreshold = 20;
+    gv_alertSupplyBlockWithinCapThreshold = 6;
+    gv_alertZergDefaultMacroEnergyThreshold = 40;
+    gv_alertTerranDefaultMacroEnergyThreshold = 65;
+    gv_alertProtossDefaultMacroEnergyThreshold = 60;
+    gv_benchmarkTimerDurations[0] = 360;
+    gv_benchmarkTimerDurations[1] = 480;
+    gv_benchmarkTimerDurations[2] = 600;
+    gv_benchmarkSupplyDefaults[0] = 30;
+    gv_benchmarkSupplyDefaults[1] = 55;
+    gv_benchmarkSupplyDefaults[2] = 80;
 }
 
 void gf_InitializeMapResourcesUnitGroup () {
@@ -1779,6 +1788,15 @@ void gf_InitializeMapResourcesUnitGroup () {
         else {
         }
     }
+}
+
+void gf_InitializeBank () {
+    // Implementation
+    BankLoad(gv_benchmarkerBankName, 1);
+    BankSectionCreate(BankLastCreated(), gv_vZergMatchupSectionKey);
+    BankSectionCreate(BankLastCreated(), gv_vTerranMatchupSectionKey);
+    BankSectionCreate(BankLastCreated(), gv_vProtossMatchupSectionKey);
+    gv_benchmarkerBank = BankLastCreated();
 }
 
 void gf_ResetGameState () {
@@ -1891,21 +1909,6 @@ void gf_UnpauseGame () {
     gf_UnpauseBenchmarkTimers();
     gf_UnpauseAlertTimers();
     TimerPause(gv_buildTimer, false);
-}
-
-void gf_ResetStatistics () {
-    // Implementation
-    gv_workersCreated = 6;
-    gv_timeProductionIdleThisBuild = 0;
-    gv_timeSupplyBlockedThisBuild = 0;
-    gv_cumulativeUnspentMinerals = 0;
-    gv_totalMineralSamplesThisBuild = 0;
-    gv_cumulativeUnspentGas = 0;
-    gv_totalGasSamplesThisBuild = 0;
-    gv_cumulativeAPM = 0;
-    gv_totalAPMSamplesThisBuild = 0;
-    gv_totalMineralsCollected = 50;
-    gv_totalGasCollected = 0;
 }
 
 void gf_StartBenchmarkTimers () {
@@ -2272,6 +2275,35 @@ void gf_ResetBenchmarkBuildOrderStepsVariables () {
     }
     gv_benchmarkBuildOrderStepCursor = 0;
     gv_totalNumBenchmarkBuildOrderSteps = 0;
+}
+
+void gf_ResetStatistics () {
+    // Implementation
+    gv_workersCreated = 6;
+    gv_timeProductionIdleThisBuild = 0;
+    gv_timeSupplyBlockedThisBuild = 0;
+    gv_cumulativeUnspentMinerals = 0;
+    gv_totalMineralSamplesThisBuild = 0;
+    gv_cumulativeUnspentGas = 0;
+    gv_totalGasSamplesThisBuild = 0;
+    gv_cumulativeAPM = 0;
+    gv_totalAPMSamplesThisBuild = 0;
+    gv_totalMineralsCollected = 50;
+    gv_totalGasCollected = 0;
+}
+
+void gf_CreateScreenButtons () {
+    // Implementation
+    libNtve_gf_DisplayScreenButton(1, StringExternal("Param/Value/91F27B53"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, gv_screenButtonYPadding, gt_OpenMainMenu);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/B441E0B5"), PlayerGroupAll());
+    libNtve_gf_DisplayScreenButton(2, StringExternal("Param/Value/A77D2D5B"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+gv_screenButtonHeight), gt_OpenHelpDialog);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/D2D6DF2E"), PlayerGroupAll());
+    libNtve_gf_DisplayScreenButton(3, StringExternal("Param/Value/70C261D0"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+2*gv_screenButtonHeight), gt_OpenStatsDialog);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/E706FEFB"), PlayerGroupAll());
+    libNtve_gf_DisplayScreenButton(4, StringExternal("Param/Value/5091C154"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+3*gv_screenButtonHeight), gt_ResetBuild);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/55E832AB"), PlayerGroupAll());
+    libNtve_gf_DisplayScreenButton(5, StringExternal("Param/Value/13AB0492"), gv_winButtonWidth, gv_winButtonHeight, c_anchorBottomRight, gv_winButtonXPadding, gf_GetWinButtonYPadding(), gt_EndGame);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/1CABB5B1"), PlayerGroupAll());
 }
 
 void gf_LookatandPanToUnit (unit lp_unit) {
@@ -4651,33 +4683,22 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     GameSetSpeedValue(c_gameSpeedFaster);
     CameraSave(1);
     CinematicFade(false, 0.0, c_fadeStyleNormal, Color(0.00, 0.00, 0.00), 0.0, true);
-    gf_InitializeGameArrayDefaults();
+    gf_InitializeGameDefaults();
+    gf_InitializeDialogDefaults();
+    gf_InitializeBankDefaults();
     gf_InitializeMapResourcesUnitGroup();
     MeleeInitUnits();
     gf_PauseGame();
-    BankLoad(gv_benchmarkerBankName, 1);
-    BankSectionCreate(BankLastCreated(), gv_vZergMatchupSectionKey);
-    BankSectionCreate(BankLastCreated(), gv_vTerranMatchupSectionKey);
-    BankSectionCreate(BankLastCreated(), gv_vProtossMatchupSectionKey);
-    gv_benchmarkerBank = BankLastCreated();
+    gf_InitializeBank();
     gf_CreateBenchmarkMenuDialog();
     DialogSetVisible(DialogLastCreated(), PlayerGroupAll(), true);
     gf_CreateAlertMenuDialog();
     gf_CreateStatsDialog();
     gf_CreateHelpDialog();
     gf_CreatePostBuildReportDialog();
+    gf_CreateScreenButtons();
     TimerWindowCreate(gv_buildTimer, StringExternal("Param/Value/EAED3202"), true, true);
     TimerWindowSetAnchor(TimerWindowLastCreated(), c_anchorTopRight, 0, 0);
-    libNtve_gf_DisplayScreenButton(1, StringExternal("Param/Value/C0C8E519"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, gv_screenButtonYPadding, gt_OpenMainMenu);
-    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/0944583F"), PlayerGroupAll());
-    libNtve_gf_DisplayScreenButton(2, StringExternal("Param/Value/EACFE916"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+gv_screenButtonHeight), gt_OpenHelpDialog);
-    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/3D6AF1ED"), PlayerGroupAll());
-    libNtve_gf_DisplayScreenButton(3, StringExternal("Param/Value/CD7984D8"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+2*gv_screenButtonHeight), gt_OpenStatsDialog);
-    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/B098BDCB"), PlayerGroupAll());
-    libNtve_gf_DisplayScreenButton(4, StringExternal("Param/Value/6BF2EBC1"), gv_screenButtonWidth, gv_screenButtonHeight, c_anchorTopRight, gv_screenButtonXPadding, (gv_screenButtonYPadding+3*gv_screenButtonHeight), gt_ResetBuild);
-    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/66F0DD53"), PlayerGroupAll());
-    libNtve_gf_DisplayScreenButton(5, StringExternal("Param/Value/13AB0492"), gv_winButtonWidth, gv_winButtonHeight, c_anchorBottomRight, gv_winButtonXPadding, gf_GetWinButtonYPadding(), gt_EndGame);
-    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/1CABB5B1"), PlayerGroupAll());
     gf_LoadMatchupBenchmarks(gv_vZergMatchupSectionKey);
     gf_LoadAlertConfigurations();
     gf_CreateHiddenBenchmarkSupplyObjectives();
