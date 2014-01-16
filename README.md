@@ -15,7 +15,7 @@ Track personal supply benchmarks by matchup in-game
 - Benchmarks are tracked separately for each match-up so you can switch between builds quickly and easily
 
 Save "benchmark" build orders and practice against them
-- Tracks 
+- Play against "benchmark" build order objectives for real-time feedback
 
 Display customizable alerts designed to help players get into the “rhythm” of macroing correctly.  
 - Alert when your minerals or gas becomes too high
@@ -33,9 +33,10 @@ Provide performance reports after each build to help you create and refine the p
 - Reports average unspent minerals
 - Reports average unspent gas
 - Reports total army size/value/supply
-- Reports build order steps
+- Reports build order steps from current build
 
 A [WIN] button... because who doesn’t want a win button?
 
 Supports chat commands and hotkeys for accessing menus in game
+
 Supports versions for all current ladder pool maps
