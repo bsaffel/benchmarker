@@ -18,10 +18,11 @@ void InitLibs () {
 // Global Structures
 //--------------------------------------------------------------------------------------------------
 struct gs_BuildOrderStep {
+    string lv_stepType;
     string lv_upgradeType;
     string lv_unitType;
-    int lv_numUnits;
-    int lv_supplyCount;
+    int lv_amount;
+    int lv_supply;
     int lv_elapsedSeconds;
 };
 
@@ -63,8 +64,8 @@ string[11] gv_alertProductionIdleUnitTypes;
 timer gv_overlordInProgressTimer;
 int gv_overlordMorphDuration;
 unitgroup gv_morphingOverlords;
-string gv_benchmarkerBankName;
 bank gv_benchmarkerBank;
+string gv_benchmarkerBankName;
 string gv_configurationOptionsSectionKey;
 string gv_alertConfigurationSectionKey;
 string gv_alertMineralsCheckEnabledEntryKey;
@@ -89,9 +90,11 @@ string gv_benchmarkEndBuildMinutesKey;
 string gv_benchmarkEndBuildSecondsKey;
 string gv_benchmarkBuildStepEntryKeyPrefix;
 string gv_numBenchmarkBuildOrderStepsEntryKey;
+string gv_stepTypeBuildOrderStepEntryKey;
 string gv_unitTypeBuildOrderStepEntryKey;
-string gv_supplyCountBuildOrderStepEntryKey;
-string gv_numUnitsBuildOrderStepEntryKey;
+string gv_upgradeBuildOrderStepEntryKey;
+string gv_supplyBuildOrderStepEntryKey;
+string gv_amountBuildOrderStepEntryKey;
 string gv_elapsedSecondsBuildOrderStepEntryKey;
 string gv_vTerranMatchupSectionKey;
 string gv_vZergMatchupSectionKey;
@@ -109,6 +112,10 @@ string gv_bestIdleProductionTimeEntryKey;
 string gv_bestAverageUnspentMineralsEntryKey;
 string gv_bestAverageUnspentGasEntryKey;
 string gv_bestAverageAPMEntryKey;
+bool gv_debugBuildOrderTracking;
+bool gv_debugMapMechanics;
+bool gv_debugAlerts;
+bool gv_debugBank;
 color gv_objectiveSupplyColor;
 int gv_labelAlignmentSpacer;
 int gv_menuPadding;
@@ -219,15 +226,11 @@ int gv_practiceAgainstSavedBuildOrderLabel;
 int gv_displayBuildOrderHintsLabelWidth;
 int gv_displayBuildOrderHintsCheckbox;
 int gv_displayBuildOrderHintsLabel;
-bool gv_debugBuildOrderTracking;
-bool gv_debugMapMechanics;
-bool gv_debugAlerts;
-bool gv_debugBank;
+int gv_onehourinsecondsof;
 timer gv_buildTimer;
 int gv_selectedMaxSupply;
 unitgroup gv_resources;
 bool gv_paused;
-int gv_onehourinsecondsof;
 timer gv_benchmark1Timer;
 timer gv_benchmark2Timer;
 timer gv_benchmark3Timer;
@@ -243,20 +246,17 @@ int[4] gv_benchmarkSupplyDefaults;
 int gv_benchmarkEndBuildatMinutes;
 int gv_benchmarkEndBuildatSeconds;
 int gv_benchmarkEndBuildTotalSeconds;
-int gv_greenBenchmarkSupplyThreshold;
-int gv_greenBenchmarkSecondsThreshold;
-int gv_yellowBenchmarkSupplyThreshold;
-int gv_yellowBenchmarkSecondsThreshold;
-int gv_orangeBenchmarkSupplyThreshold;
-int gv_orangeBenchmarkSecondsThreshold;
-int gv_trackSupplyUnitObjectivesUntil;
 bool gv_trackSupplyUnitsAsObjectives;
+int gv_trackSupplyUnitObjectivesUntil;
 int gv_buildOrderMaxGasSupply;
 string gv_lastCreatedBuildOrderUnitType;
 fixed gv_lastCreatedUnitTimestamp;
+string gv_unitStepType;
+string gv_upgradeStepType;
 int gv_maxCurrentBuildOrderStepsTracked;
 int gv_currentBuildOrderStepCursor;
 gs_BuildOrderStep[51] gv_currentBuildOrderSteps;
+int gv_incrementifSameUnitThreshold;
 int gv_numFailedBenchmarkBuildOrderSteps;
 int gv_numCorrectedBenchmarkBuildOrderSteps;
 int gv_totalNumBenchmarkBuildOrderSteps;
@@ -264,6 +264,12 @@ bool gv_practiceAgainstBenchmarkBuildOrder;
 int[11] gv_benchmarkBuildOrderStepObjectives;
 gs_BuildOrderStep[21] gv_benchmarkBuildOrderSteps;
 int gv_benchmarkBuildOrderStepCursor;
+int gv_greenBenchmarkSupplyThreshold;
+int gv_greenBenchmarkSecondsThreshold;
+int gv_yellowBenchmarkSupplyThreshold;
+int gv_yellowBenchmarkSecondsThreshold;
+int gv_orangeBenchmarkSupplyThreshold;
+int gv_orangeBenchmarkSecondsThreshold;
 fixed gv_spendingQuotient;
 bool gv_gasTaken;
 int gv_totalMineralSamplesThisBuild;
@@ -334,9 +340,11 @@ void InitGlobals () {
     gv_benchmarkEndBuildSecondsKey = "endBuildSec";
     gv_benchmarkBuildStepEntryKeyPrefix = "benchmarkBuildStep";
     gv_numBenchmarkBuildOrderStepsEntryKey = "numBenchmarkBuildOrderSteps";
+    gv_stepTypeBuildOrderStepEntryKey = "benchmarkBuildStep";
     gv_unitTypeBuildOrderStepEntryKey = "unitType";
-    gv_supplyCountBuildOrderStepEntryKey = "supplyCount";
-    gv_numUnitsBuildOrderStepEntryKey = "numUnits";
+    gv_upgradeBuildOrderStepEntryKey = "upgrade";
+    gv_supplyBuildOrderStepEntryKey = "supply";
+    gv_amountBuildOrderStepEntryKey = "amount";
     gv_elapsedSecondsBuildOrderStepEntryKey = "elapsedSeconds";
     gv_vTerranMatchupSectionKey = "vTerran";
     gv_vZergMatchupSectionKey = "vZerg";
@@ -480,10 +488,10 @@ void InitGlobals () {
     gv_displayBuildOrderHintsLabelWidth = 300;
     gv_displayBuildOrderHintsCheckbox = c_invalidDialogControlId;
     gv_displayBuildOrderHintsLabel = c_invalidDialogControlId;
+    gv_onehourinsecondsof = 216000;
     gv_buildTimer = TimerCreate();
     gv_resources = UnitGroupEmpty();
     gv_paused = true;
-    gv_onehourinsecondsof = 216000;
     gv_benchmark1Timer = TimerCreate();
     gv_benchmark2Timer = TimerCreate();
     gv_benchmark3Timer = TimerCreate();
@@ -491,22 +499,26 @@ void InitGlobals () {
         gv_benchmarkSupplyObjectives[init_i] = c_invalidObjectiveId;
     }
     gv_benchmarkMaxTimeObjective = c_invalidObjectiveId;
-    gv_benchmarkMaxTimeMinutes = 15;
     gv_benchmarkMaxTimeTimer = TimerCreate();
-    gv_benchmarkEndBuildatMinutes = 15;
+    gv_unitStepType = "unit";
+    gv_upgradeStepType = "upgrade";
+    gv_maxCurrentBuildOrderStepsTracked = 50;
+    for (init_i = 0; init_i <= 50; init_i += 1) {
+        gv_currentBuildOrderSteps[init_i].lv_stepType = "";
+    }
+    gv_practiceAgainstBenchmarkBuildOrder = true;
+    for (init_i = 0; init_i <= 10; init_i += 1) {
+        gv_benchmarkBuildOrderStepObjectives[init_i] = c_invalidObjectiveId;
+    }
+    for (init_i = 0; init_i <= 20; init_i += 1) {
+        gv_benchmarkBuildOrderSteps[init_i].lv_stepType = "";
+    }
     gv_greenBenchmarkSupplyThreshold = 2;
     gv_greenBenchmarkSecondsThreshold = 5;
     gv_yellowBenchmarkSupplyThreshold = 4;
     gv_yellowBenchmarkSecondsThreshold = 10;
     gv_orangeBenchmarkSupplyThreshold = 6;
     gv_orangeBenchmarkSecondsThreshold = 15;
-    gv_trackSupplyUnitObjectivesUntil = 40;
-    gv_buildOrderMaxGasSupply = 60;
-    gv_maxCurrentBuildOrderStepsTracked = 50;
-    gv_practiceAgainstBenchmarkBuildOrder = true;
-    for (init_i = 0; init_i <= 10; init_i += 1) {
-        gv_benchmarkBuildOrderStepObjectives[init_i] = c_invalidObjectiveId;
-    }
     gv_workersCreated = 6;
     gv_winButtonHeight = 80;
     gv_winButtonWidth = 150;
@@ -533,6 +545,8 @@ void gf_SaveMatchupBenchmarks (string lp_sectionKey);
 void gf_LoadMatchupBenchmarks (string lp_sectionKey);
 void gf_SaveBenchmarkBuildOrder ();
 void gf_LoadBenchmarkBuildOrder ();
+void gf_SaveBenchmarkBuildStep (int lp_stepNumber);
+void gf_LoadBenchmarkBuildStep (int lp_stepNumber);
 void gf_ClearBenchmarkBuildOrder ();
 void gf_SaveCurrentStatsasNewBenchmark ();
 void gf_ResetBenchmarkBuildStatistics ();
@@ -599,12 +613,11 @@ void gf_CorrectFailedBenchmarkBuildOrderStepObjective ();
 void gf_ResetBenchmarkBuildOrderObjectives ();
 void gf_InitializeBenchmarkBuildOrderObjectives ();
 void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType);
-void gf_AddUpgradeBuildOrderStep (string lp_buildStepUnitType);
+void gf_AddUpgradeBuildOrderStep (string lp_buildStepUpgrade);
 void gf_ResetCurrentBuildOrderStepsVariables ();
 void gf_ResetBenchmarkBuildOrderStepsVariables ();
 void gf_ResetStatistics ();
 void gf_CreateScreenButtons ();
-void gf_LookatandPanToUnit (unit lp_unit);
 string gf_GetNextUpgrade (string lp_currentUpgrade);
 text gf_GetRaceMacroUnitName ();
 bool gf_IsRaceMacroEnergyAboveThreshold ();
@@ -617,21 +630,23 @@ bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType);
 string gf_GetCurrentlySelectedMatchupasBankSectionKey ();
 text gf_GetCurrentlySelectedMatchupasText ();
 int gf_GetEditBoxIntValue (int lp_editBox);
-bool gf_DoesSavedBuildOrderExistForCurrentMatchup ();
-int gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex (int lp_cursor);
-string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
-bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex);
-bool gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep (string lp_upgrade, int lp_benchmarkBuildOrderStepIndex);
-bool gf_IsSupplyCountCorrectForBenchmarkBuildOrderStep (int lp_supplyCount, int lp_benchmarkBuildOrderStepIndex);
-bool gf_IsNumUnitsCorrectForBenchmarkBuildOrderStep (int lp_numUnits, int lp_benchmarkBuildOrderStepIndex);
-bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType);
-bool gf_IsUpgradeTypeValidForBuildOrder (string lp_upgrade);
+text gf_GetTypeTextForBuildOrderStep (int lp_stepNumber);
 text gf_GetCurrentBuildOrderStepText (int lp_stepNumber);
 text gf_GetBenchmarkBuildOrderStepText (int lp_stepNumber);
 text gf_GetFormattedCompleteBenchmarkBuildOrderStepText (int lp_stepNumber);
 color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber);
 text gf_GetBenchmarkandCurrentStepSupplyasText (int lp_stepNumber);
 text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber);
+int gf_GetCurrentBuildOrderSupply (string lp_unitType);
+bool gf_DoesSavedBuildOrderExistForCurrentMatchup ();
+int gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex (int lp_cursor);
+string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
+bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex);
+bool gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep (string lp_upgrade, int lp_benchmarkBuildOrderStepIndex);
+bool gf_IsSupplyCorrectForBenchmarkBuildOrderStep (int lp_supplyCount, int lp_benchmarkBuildOrderStepIndex);
+bool gf_IsNumberCorrectForBenchmarkBuildOrderStep (int lp_numUnits, int lp_benchmarkBuildOrderStepIndex);
+bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType);
+bool gf_IsUpgradeTypeValidForBuildOrder (string lp_upgrade);
 bool gf_IsProductionIdle ();
 int gf_GetTimeSupplyBlocked ();
 int gf_GetIdleProductionTime ();
@@ -979,10 +994,7 @@ void gf_SaveBenchmarkBuildOrder () {
     auto895F190E_ai = 1;
     lv_currentStepNum = 0;
     for ( ; ( (auto895F190E_ai >= 0 && lv_currentStepNum <= auto895F190E_ae) || (auto895F190E_ai <= 0 && lv_currentStepNum >= auto895F190E_ae) ) ; lv_currentStepNum += auto895F190E_ai ) {
-        BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_unitTypeBuildOrderStepEntryKey), (gv_currentBuildOrderSteps[lv_currentStepNum].lv_unitType));
-        BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_supplyCountBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lv_currentStepNum].lv_supplyCount);
-        BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_numUnitsBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lv_currentStepNum].lv_numUnits);
-        BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_elapsedSecondsBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lv_currentStepNum].lv_elapsedSeconds);
+        gf_SaveBenchmarkBuildStep(lv_currentStepNum);
         if ((gv_debugBank == true)) {
             TextExpressionSetToken("Param/Expression/7AE0547A", "A", gf_GetCurrentBuildOrderStepText(lv_currentStepNum));
             TextExpressionSetToken("Param/Expression/7AE0547A", "B", IntToText(lv_currentStepNum));
@@ -1027,10 +1039,7 @@ void gf_LoadBenchmarkBuildOrder () {
         auto8F962F3E_ai = 1;
         lv_currentStepNum = 0;
         for ( ; ( (auto8F962F3E_ai >= 0 && lv_currentStepNum <= auto8F962F3E_ae) || (auto8F962F3E_ai <= 0 && lv_currentStepNum >= auto8F962F3E_ae) ) ; lv_currentStepNum += auto8F962F3E_ai ) {
-            gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_unitType = (BankValueGetAsString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_unitTypeBuildOrderStepEntryKey)));
-            gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_supplyCount = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_supplyCountBuildOrderStepEntryKey));
-            gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_numUnits = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_numUnitsBuildOrderStepEntryKey));
-            gv_benchmarkBuildOrderSteps[lv_currentStepNum].lv_elapsedSeconds = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lv_currentStepNum, gv_elapsedSecondsBuildOrderStepEntryKey));
+            gf_LoadBenchmarkBuildStep(lv_currentStepNum);
         }
         if ((gv_debugBank == true)) {
             UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/4E470FCF"));
@@ -1045,6 +1054,23 @@ void gf_LoadBenchmarkBuildOrder () {
         else {
         }
     }
+}
+
+void gf_SaveBenchmarkBuildStep (int lp_stepNumber) {
+    // Implementation
+    BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_unitTypeBuildOrderStepEntryKey), (gv_currentBuildOrderSteps[lp_stepNumber].lv_unitType));
+    BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_unitTypeBuildOrderStepEntryKey), (gv_currentBuildOrderSteps[lp_stepNumber].lv_unitType));
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_supplyBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lp_stepNumber].lv_supply);
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_amountBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lp_stepNumber].lv_amount);
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_elapsedSecondsBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
+}
+
+void gf_LoadBenchmarkBuildStep (int lp_stepNumber) {
+    // Implementation
+    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_unitType = (BankValueGetAsString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_unitTypeBuildOrderStepEntryKey)));
+    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supply = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_supplyBuildOrderStepEntryKey));
+    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_amount = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_amountBuildOrderStepEntryKey));
+    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_elapsedSecondsBuildOrderStepEntryKey));
 }
 
 void gf_ClearBenchmarkBuildOrder () {
@@ -1744,9 +1770,17 @@ void gf_InitializeGameDefaults () {
     gv_alertZergDefaultMacroEnergyThreshold = 40;
     gv_alertTerranDefaultMacroEnergyThreshold = 65;
     gv_alertProtossDefaultMacroEnergyThreshold = 60;
+    gv_benchmarkMaxTimeMinutes = 15;
+    gv_benchmarkMaxTimeSeconds = 0;
+    gv_benchmarkEndBuildatMinutes = 15;
+    gv_benchmarkEndBuildatSeconds = 0;
     gv_benchmarkTimerDurations[0] = 360;
     gv_benchmarkTimerDurations[1] = 480;
     gv_benchmarkTimerDurations[2] = 600;
+    gv_incrementifSameUnitThreshold = 15;
+    gv_trackSupplyUnitsAsObjectives = false;
+    gv_trackSupplyUnitObjectivesUntil = 40;
+    gv_buildOrderMaxGasSupply = 60;
     gv_benchmarkSupplyDefaults[0] = 30;
     gv_benchmarkSupplyDefaults[1] = 55;
     gv_benchmarkSupplyDefaults[2] = 80;
@@ -2091,7 +2125,7 @@ void gf_EvaluateBenchmarkBuildOrderStepObjective (string lp_unitType) {
             }
             else {
             }
-            if (((gf_IsNumUnitsCorrectForBenchmarkBuildOrderStep(gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor)].lv_numUnits, gv_benchmarkBuildOrderStepCursor) == true) && (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[(gv_benchmarkBuildOrderStepCursor)]) == c_objectiveStateActive))) {
+            if (((gf_IsNumberCorrectForBenchmarkBuildOrderStep(gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor)].lv_amount, gv_benchmarkBuildOrderStepCursor) == true) && (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[(gv_benchmarkBuildOrderStepCursor)]) == c_objectiveStateActive))) {
                 if ((gv_debugBuildOrderTracking == true)) {
                     UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/36B26B35"));
                 }
@@ -2101,8 +2135,8 @@ void gf_EvaluateBenchmarkBuildOrderStepObjective (string lp_unitType) {
             }
             else {
                 if ((gv_debugBuildOrderTracking == true)) {
-                    TextExpressionSetToken("Param/Expression/0A0B2E84", "A", IntToText(gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor)].lv_numUnits));
-                    TextExpressionSetToken("Param/Expression/0A0B2E84", "B", IntToText(gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_numUnits));
+                    TextExpressionSetToken("Param/Expression/0A0B2E84", "A", IntToText(gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor)].lv_amount));
+                    TextExpressionSetToken("Param/Expression/0A0B2E84", "B", IntToText(gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_amount));
                     UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/0A0B2E84"));
                 }
                 else {
@@ -2201,15 +2235,10 @@ void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType) {
     // Variable Initialization
 
     // Implementation
-    if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_buildStepUnitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (PlayerRace(EventPlayer()) == "Zerg"))) {
-        lv_buildOrderStepSupplyCount = (PlayerScoreValueGetAsInt(1, "FoodUsed")+1);
-    }
-    else {
-        lv_buildOrderStepSupplyCount = PlayerScoreValueGetAsInt(1, "FoodUsed");
-    }
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_stepType = gv_unitStepType;
     gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_unitType = lp_buildStepUnitType;
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_numUnits = 1;
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_supplyCount = lv_buildOrderStepSupplyCount;
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_amount = 1;
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_supply = gf_GetCurrentBuildOrderSupply(lp_buildStepUnitType);
     gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
     gv_lastCreatedBuildOrderUnitType = lp_buildStepUnitType;
     gv_lastCreatedUnitTimestamp = TimerGetElapsed(gv_buildTimer);
@@ -2219,16 +2248,25 @@ void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType) {
     }
     else {
     }
+    gv_currentBuildOrderStepCursor += 1;
 }
 
-void gf_AddUpgradeBuildOrderStep (string lp_buildStepUnitType) {
+void gf_AddUpgradeBuildOrderStep (string lp_buildStepUpgrade) {
     // Implementation
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_unitType = lp_buildStepUnitType;
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_numUnits = 1;
-    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_supplyCount = PlayerScoreValueGetAsInt(1, "FoodUsed");
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_stepType = gv_upgradeStepType;
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_upgradeType = lp_buildStepUpgrade;
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_amount = 1;
+    gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_supply = PlayerScoreValueGetAsInt(1, "FoodUsed");
     gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
-    gv_lastCreatedBuildOrderUnitType = lp_buildStepUnitType;
+    gv_lastCreatedBuildOrderUnitType = lp_buildStepUpgrade;
     gv_lastCreatedUnitTimestamp = TimerGetElapsed(gv_buildTimer);
+    if ((gv_debugBuildOrderTracking == true)) {
+        TextExpressionSetToken("Param/Expression/9D303459", "A", gf_GetCurrentBuildOrderStepText(gv_currentBuildOrderStepCursor));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/9D303459"));
+    }
+    else {
+    }
+    gv_currentBuildOrderStepCursor += 1;
 }
 
 void gf_ResetCurrentBuildOrderStepsVariables () {
@@ -2247,8 +2285,8 @@ void gf_ResetCurrentBuildOrderStepsVariables () {
     lv_i = 0;
     for ( ; ( (autoA13422C8_ai >= 0 && lv_i <= autoA13422C8_ae) || (autoA13422C8_ai <= 0 && lv_i >= autoA13422C8_ae) ) ; lv_i += autoA13422C8_ai ) {
         gv_currentBuildOrderSteps[lv_i].lv_unitType = null;
-        gv_currentBuildOrderSteps[lv_i].lv_supplyCount = 0;
-        gv_currentBuildOrderSteps[lv_i].lv_numUnits = 0;
+        gv_currentBuildOrderSteps[lv_i].lv_supply = 0;
+        gv_currentBuildOrderSteps[lv_i].lv_amount = 0;
         gv_currentBuildOrderSteps[lv_i].lv_elapsedSeconds = 0;
     }
     gv_currentBuildOrderStepCursor = 0;
@@ -2269,8 +2307,8 @@ void gf_ResetBenchmarkBuildOrderStepsVariables () {
     lv_i = 0;
     for ( ; ( (auto488B3271_ai >= 0 && lv_i <= auto488B3271_ae) || (auto488B3271_ai <= 0 && lv_i >= auto488B3271_ae) ) ; lv_i += auto488B3271_ai ) {
         gv_benchmarkBuildOrderSteps[lv_i].lv_unitType = null;
-        gv_benchmarkBuildOrderSteps[lv_i].lv_supplyCount = 0;
-        gv_benchmarkBuildOrderSteps[lv_i].lv_numUnits = 0;
+        gv_benchmarkBuildOrderSteps[lv_i].lv_supply = 0;
+        gv_benchmarkBuildOrderSteps[lv_i].lv_amount = 0;
         gv_benchmarkBuildOrderSteps[lv_i].lv_elapsedSeconds = 0;
     }
     gv_benchmarkBuildOrderStepCursor = 0;
@@ -2304,13 +2342,6 @@ void gf_CreateScreenButtons () {
     libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/55E832AB"), PlayerGroupAll());
     libNtve_gf_DisplayScreenButton(5, StringExternal("Param/Value/13AB0492"), gv_winButtonWidth, gv_winButtonHeight, c_anchorBottomRight, gv_winButtonXPadding, gf_GetWinButtonYPadding(), gt_EndGame);
     libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/1CABB5B1"), PlayerGroupAll());
-}
-
-void gf_LookatandPanToUnit (unit lp_unit) {
-    // Implementation
-    CameraLookAt(1, UnitGetPosition(lp_unit), 0.5, 50.0, 10.0);
-    CameraPan(1, libNtve_gf_PointWithZOffset(UnitGetPosition(lp_unit), ((CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance))+8)), 0.2, 50.0, 10.0, false);
-    libNtve_gf_SwooshCamera(1, CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance), CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance), UnitGetPosition(lp_unit), 0.2);
 }
 
 string gf_GetNextUpgrade (string lp_currentUpgrade) {
@@ -2677,6 +2708,175 @@ int gf_GetEditBoxIntValue (int lp_editBox) {
     return StringToInt(libNtve_gf_DialogItemEditValue(lp_editBox, 1));
 }
 
+text gf_GetTypeTextForBuildOrderStep (int lp_stepNumber) {
+    // Variable Declarations
+    gs_BuildOrderStep lv_buildStep;
+    text lv_text;
+
+    // Variable Initialization
+    lv_buildStep.lv_stepType = "";
+
+    // Implementation
+    if (true) {
+    }
+    else if (true) {
+    }
+    return lv_text;
+}
+
+text gf_GetCurrentBuildOrderStepText (int lp_stepNumber) {
+    // Variable Declarations
+    text lv_numUnitsText;
+    text lv_supplyCountText;
+    text lv_elapsedTimeText;
+    text lv_resultText;
+
+    // Variable Initialization
+    lv_numUnitsText = StringExternal("Param/Value/29A8F1DC");
+
+    // Implementation
+    if ((gv_currentBuildOrderSteps[lp_stepNumber].lv_amount > 1)) {
+        TextExpressionSetToken("Param/Expression/A6714026", "A", IntToText(gv_currentBuildOrderSteps[lp_stepNumber].lv_amount));
+        lv_numUnitsText = TextExpressionAssemble("Param/Expression/A6714026");
+    }
+    else {
+    }
+    lv_supplyCountText = IntToText(gv_currentBuildOrderSteps[lp_stepNumber].lv_supply);
+    lv_elapsedTimeText = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_currentBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
+    TextExpressionSetToken("Param/Expression/81102448", "A", lv_supplyCountText);
+    TextExpressionSetToken("Param/Expression/81102448", "D", lv_numUnitsText);
+    TextExpressionSetToken("Param/Expression/81102448", "B", gf_GetTypeTextForBuildOrderStep(lp_stepNumber));
+    TextExpressionSetToken("Param/Expression/81102448", "C", lv_elapsedTimeText);
+    lv_resultText = TextExpressionAssemble("Param/Expression/81102448");
+    return lv_resultText;
+}
+
+text gf_GetBenchmarkBuildOrderStepText (int lp_stepNumber) {
+    // Variable Declarations
+    text lv_numUnits;
+    text lv_unitType;
+    text lv_supplyCount;
+    text lv_elapsedTime;
+    text lv_result;
+
+    // Variable Initialization
+    lv_numUnits = StringExternal("Param/Value/B286C09B");
+
+    // Implementation
+    lv_unitType = UnitTypeGetName(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_unitType);
+    if ((gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_amount > 1)) {
+        TextExpressionSetToken("Param/Expression/02DB92AF", "A", IntToText(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_amount));
+        lv_numUnits = TextExpressionAssemble("Param/Expression/02DB92AF");
+    }
+    else {
+    }
+    lv_supplyCount = IntToText(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supply);
+    lv_elapsedTime = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
+    TextExpressionSetToken("Param/Expression/1734DB71", "A", lv_supplyCount);
+    TextExpressionSetToken("Param/Expression/1734DB71", "D", lv_numUnits);
+    TextExpressionSetToken("Param/Expression/1734DB71", "B", gf_GetTypeTextForBuildOrderStep(lp_stepNumber));
+    TextExpressionSetToken("Param/Expression/1734DB71", "C", lv_elapsedTime);
+    lv_result = TextExpressionAssemble("Param/Expression/1734DB71");
+    return lv_result;
+}
+
+text gf_GetFormattedCompleteBenchmarkBuildOrderStepText (int lp_stepNumber) {
+    // Variable Declarations
+    text lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    TextExpressionSetToken("Param/Expression/C5F8A524", "A", gf_GetBenchmarkandCurrentStepSupplyasText(lp_stepNumber));
+    TextExpressionSetToken("Param/Expression/C5F8A524", "B", gf_GetBenchmarkandCurrentStepSecondsDiffasText(lp_stepNumber));
+    TextExpressionSetToken("Param/Expression/236BD2AB", "A", gf_GetBenchmarkBuildOrderStepText(lp_stepNumber));
+    TextExpressionSetToken("Param/Expression/236BD2AB", "D", TextWithColor(TextExpressionAssemble("Param/Expression/C5F8A524"), gf_GetColorForBenchmarkBuildOrderStepCompletion(lp_stepNumber)));
+    lv_result = TextExpressionAssemble("Param/Expression/236BD2AB");
+    return lv_result;
+}
+
+color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber) {
+    // Variable Declarations
+    int lv_currentElaspedSeconds;
+    int lv_currentSupplyCount;
+    color lv_color;
+    text lv_result;
+
+    // Variable Initialization
+    lv_color = Color(100,100,100);
+
+    // Implementation
+    lv_currentElaspedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
+    lv_currentSupplyCount = PlayerScoreValueGetAsInt(1, "FoodUsed");
+    if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supply+0)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+0)))) {
+        lv_color = Color(66.67, 79.22, 100.00);
+    }
+    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supply+gv_greenBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_greenBenchmarkSecondsThreshold)))) {
+        lv_color = Color(50.20, 100.00, 50.20);
+    }
+    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supply+gv_yellowBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_yellowBenchmarkSecondsThreshold)))) {
+        lv_color = Color(100.00, 100.00, 50.20);
+    }
+    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supply+gv_orangeBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_orangeBenchmarkSecondsThreshold)))) {
+        lv_color = Color(100.00, 74.51, 40.00);
+    }
+    else if ((true == true)) {
+        lv_color = Color(100.00, 50.20, 50.20);
+    }
+    return lv_color;
+}
+
+text gf_GetBenchmarkandCurrentStepSupplyasText (int lp_stepNumber) {
+    // Variable Declarations
+    int lv_diff;
+    text lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_diff = (PlayerScoreValueGetAsInt(1, "FoodUsed")-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supply);
+    lv_diff = (PlayerScoreValueGetAsInt(1, "FoodUsed"));
+    lv_result = IntToText(lv_diff);
+    return lv_result;
+}
+
+text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber) {
+    // Variable Declarations
+    int lv_diff;
+    text lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_diff = (FixedToInt(TimerGetElapsed(gv_buildTimer))-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
+    if ((lv_diff < 0)) {
+        lv_diff = (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds-FixedToInt(TimerGetElapsed(gv_buildTimer)));
+        TextExpressionSetToken("Param/Expression/D17BAC5D", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff));
+        lv_result = TextExpressionAssemble("Param/Expression/D17BAC5D");
+    }
+    else {
+        TextExpressionSetToken("Param/Expression/8F0B85E2", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff));
+        lv_result = TextExpressionAssemble("Param/Expression/8F0B85E2");
+    }
+    return lv_result;
+}
+
+int gf_GetCurrentBuildOrderSupply (string lp_unitType) {
+    // Variable Declarations
+    int lv_supply;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (PlayerRace(EventPlayer()) == "Zerg"))) {
+        lv_supply = (PlayerScoreValueGetAsInt(1, "FoodUsed")+1);
+    }
+    else {
+        lv_supply = PlayerScoreValueGetAsInt(1, "FoodUsed");
+    }
+    return lv_supply;
+}
+
 bool gf_DoesSavedBuildOrderExistForCurrentMatchup () {
     // Variable Declarations
     bool lv_result;
@@ -2770,9 +2970,9 @@ bool gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep (string lp_upgrade, int l
     return lv_result;
 }
 
-bool gf_IsSupplyCountCorrectForBenchmarkBuildOrderStep (int lp_supplyCount, int lp_benchmarkBuildOrderStepIndex) {
+bool gf_IsSupplyCorrectForBenchmarkBuildOrderStep (int lp_supplyCount, int lp_benchmarkBuildOrderStepIndex) {
     // Implementation
-    if ((lp_supplyCount <= (gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_supplyCount+15))) {
+    if ((lp_supplyCount <= (gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_supply+15))) {
         return true;
     }
     else {
@@ -2780,9 +2980,9 @@ bool gf_IsSupplyCountCorrectForBenchmarkBuildOrderStep (int lp_supplyCount, int 
     }
 }
 
-bool gf_IsNumUnitsCorrectForBenchmarkBuildOrderStep (int lp_numUnits, int lp_benchmarkBuildOrderStepIndex) {
+bool gf_IsNumberCorrectForBenchmarkBuildOrderStep (int lp_numUnits, int lp_benchmarkBuildOrderStepIndex) {
     // Implementation
-    if ((lp_numUnits == gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_numUnits)) {
+    if ((lp_numUnits == gv_benchmarkBuildOrderSteps[lp_benchmarkBuildOrderStepIndex].lv_amount)) {
         return true;
     }
     else {
@@ -2835,145 +3035,6 @@ bool gf_IsUpgradeTypeValidForBuildOrder (string lp_upgrade) {
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/D87C562D"));
     }
     else {
-    }
-    return lv_result;
-}
-
-text gf_GetCurrentBuildOrderStepText (int lp_stepNumber) {
-    // Variable Declarations
-    text lv_numUnits;
-    text lv_unitType;
-    text lv_supplyCount;
-    text lv_elapsedTime;
-    text lv_result;
-
-    // Variable Initialization
-    lv_numUnits = StringExternal("Param/Value/29A8F1DC");
-
-    // Implementation
-    lv_unitType = UnitTypeGetName(gv_currentBuildOrderSteps[lp_stepNumber].lv_unitType);
-    if ((gv_currentBuildOrderSteps[lp_stepNumber].lv_numUnits > 1)) {
-        TextExpressionSetToken("Param/Expression/A6714026", "A", IntToText(gv_currentBuildOrderSteps[lp_stepNumber].lv_numUnits));
-        lv_numUnits = TextExpressionAssemble("Param/Expression/A6714026");
-    }
-    else {
-    }
-    lv_supplyCount = IntToText(gv_currentBuildOrderSteps[lp_stepNumber].lv_supplyCount);
-    lv_elapsedTime = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_currentBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
-    TextExpressionSetToken("Param/Expression/81102448", "A", lv_supplyCount);
-    TextExpressionSetToken("Param/Expression/81102448", "D", lv_numUnits);
-    TextExpressionSetToken("Param/Expression/81102448", "B", lv_unitType);
-    TextExpressionSetToken("Param/Expression/81102448", "C", lv_elapsedTime);
-    lv_result = TextExpressionAssemble("Param/Expression/81102448");
-    return lv_result;
-}
-
-text gf_GetBenchmarkBuildOrderStepText (int lp_stepNumber) {
-    // Variable Declarations
-    text lv_numUnits;
-    text lv_unitType;
-    text lv_supplyCount;
-    text lv_elapsedTime;
-    text lv_result;
-
-    // Variable Initialization
-    lv_numUnits = StringExternal("Param/Value/B286C09B");
-
-    // Implementation
-    lv_unitType = UnitTypeGetName(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_unitType);
-    if ((gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_numUnits > 1)) {
-        TextExpressionSetToken("Param/Expression/02DB92AF", "A", IntToText(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_numUnits));
-        lv_numUnits = TextExpressionAssemble("Param/Expression/02DB92AF");
-    }
-    else {
-    }
-    lv_supplyCount = IntToText(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount);
-    lv_elapsedTime = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
-    TextExpressionSetToken("Param/Expression/1734DB71", "A", lv_supplyCount);
-    TextExpressionSetToken("Param/Expression/1734DB71", "D", lv_numUnits);
-    TextExpressionSetToken("Param/Expression/1734DB71", "B", lv_unitType);
-    TextExpressionSetToken("Param/Expression/1734DB71", "C", lv_elapsedTime);
-    lv_result = TextExpressionAssemble("Param/Expression/1734DB71");
-    return lv_result;
-}
-
-text gf_GetFormattedCompleteBenchmarkBuildOrderStepText (int lp_stepNumber) {
-    // Variable Declarations
-    text lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    TextExpressionSetToken("Param/Expression/C5F8A524", "A", gf_GetBenchmarkandCurrentStepSupplyasText(lp_stepNumber));
-    TextExpressionSetToken("Param/Expression/C5F8A524", "B", gf_GetBenchmarkandCurrentStepSecondsDiffasText(lp_stepNumber));
-    TextExpressionSetToken("Param/Expression/236BD2AB", "A", gf_GetBenchmarkBuildOrderStepText(lp_stepNumber));
-    TextExpressionSetToken("Param/Expression/236BD2AB", "D", TextWithColor(TextExpressionAssemble("Param/Expression/C5F8A524"), gf_GetColorForBenchmarkBuildOrderStepCompletion(lp_stepNumber)));
-    lv_result = TextExpressionAssemble("Param/Expression/236BD2AB");
-    return lv_result;
-}
-
-color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber) {
-    // Variable Declarations
-    int lv_currentElaspedSeconds;
-    int lv_currentSupplyCount;
-    color lv_color;
-    text lv_result;
-
-    // Variable Initialization
-    lv_color = Color(100,100,100);
-
-    // Implementation
-    lv_currentElaspedSeconds = FixedToInt(TimerGetElapsed(gv_buildTimer));
-    lv_currentSupplyCount = PlayerScoreValueGetAsInt(1, "FoodUsed");
-    if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+0)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+0)))) {
-        lv_color = Color(66.67, 79.22, 100.00);
-    }
-    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+gv_greenBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_greenBenchmarkSecondsThreshold)))) {
-        lv_color = Color(50.20, 100.00, 50.20);
-    }
-    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+gv_yellowBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_yellowBenchmarkSecondsThreshold)))) {
-        lv_color = Color(100.00, 100.00, 50.20);
-    }
-    else if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount+gv_orangeBenchmarkSupplyThreshold)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+gv_orangeBenchmarkSecondsThreshold)))) {
-        lv_color = Color(100.00, 74.51, 40.00);
-    }
-    else if ((true == true)) {
-        lv_color = Color(100.00, 50.20, 50.20);
-    }
-    return lv_color;
-}
-
-text gf_GetBenchmarkandCurrentStepSupplyasText (int lp_stepNumber) {
-    // Variable Declarations
-    int lv_diff;
-    text lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    lv_diff = (PlayerScoreValueGetAsInt(1, "FoodUsed")-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supplyCount);
-    lv_diff = (PlayerScoreValueGetAsInt(1, "FoodUsed"));
-    lv_result = IntToText(lv_diff);
-    return lv_result;
-}
-
-text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber) {
-    // Variable Declarations
-    int lv_diff;
-    text lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    lv_diff = (FixedToInt(TimerGetElapsed(gv_buildTimer))-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
-    if ((lv_diff < 0)) {
-        lv_diff = (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds-FixedToInt(TimerGetElapsed(gv_buildTimer)));
-        TextExpressionSetToken("Param/Expression/D17BAC5D", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff));
-        lv_result = TextExpressionAssemble("Param/Expression/D17BAC5D");
-    }
-    else {
-        TextExpressionSetToken("Param/Expression/8F0B85E2", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff));
-        lv_result = TextExpressionAssemble("Param/Expression/8F0B85E2");
     }
     return lv_result;
 }
@@ -4870,6 +4931,16 @@ bool gt_OnUpgradeStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActi
     }
     else {
     }
+    if (((gv_currentBuildOrderStepCursor) < gv_maxCurrentBuildOrderStepsTracked)) {
+        gf_AddUpgradeBuildOrderStep(libNtve_gf_TriggeringProgressUpgrade());
+    }
+    else {
+        if ((gv_debugBuildOrderTracking == true)) {
+            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/CC6B9CB4"));
+        }
+        else {
+        }
+    }
     return true;
 }
 
@@ -4901,7 +4972,7 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
     }
     else {
     }
-    if ((((TimerGetElapsed(gv_buildTimer)-gv_lastCreatedUnitTimestamp) <= 15.0) && (UnitGetType(EventUnitProgressUnit()) == gv_lastCreatedBuildOrderUnitType))) {
+    if ((((TimerGetElapsed(gv_buildTimer)-gv_lastCreatedUnitTimestamp) <= gv_incrementifSameUnitThreshold) && (UnitGetType(EventUnitProgressUnit()) == gv_lastCreatedBuildOrderUnitType))) {
         if ((gv_debugBuildOrderTracking == true)) {
             UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/50D360E2"));
             TextExpressionSetToken("Param/Expression/2A0E9DD3", "A", gf_GetCurrentBuildOrderStepText((gv_currentBuildOrderStepCursor-1)));
@@ -4909,7 +4980,7 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
         }
         else {
         }
-        gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor-1)].lv_numUnits += 1;
+        gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor-1)].lv_amount += 1;
     }
     else {
         if (((gv_currentBuildOrderStepCursor) < gv_maxCurrentBuildOrderStepsTracked)) {
@@ -4930,7 +5001,6 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
                 else {
                 }
             }
-            gv_currentBuildOrderStepCursor += 1;
         }
         else {
             if ((gv_debugBuildOrderTracking == true)) {
