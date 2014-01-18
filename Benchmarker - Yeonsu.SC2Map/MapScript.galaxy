@@ -116,6 +116,7 @@ bool gv_debugBuildOrderTracking;
 bool gv_debugMapMechanics;
 bool gv_debugAlerts;
 bool gv_debugBank;
+bool gv_debugStats;
 color gv_objectiveSupplyColor;
 int gv_labelAlignmentSpacer;
 int gv_menuPadding;
@@ -579,7 +580,8 @@ void gf_EvaluateAndDisableEnableBuildHintsOptions ();
 void gf_CreatePostBuildReportDialog ();
 void gf_CreatePostBuildDialogSectionLabel ();
 void gf_CreatePostBuildMacroStatRow (text lp_labelText, int lp_rowOffset);
-void gf_UpdatePostBuildReportDialogValues ();
+void gf_UpdatePostBuildMatchupText ();
+void gf_UpdatePostBuildReportDialogValues (bool lp_updateBuildOrderListBox);
 void gf_UpdatePostBuildSupplyRowValueInt (int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter);
 void gf_UpdatePostBuildSupplyRowValueReal (fixed lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter);
 void gf_ResetBuildOrderListBox ();
@@ -1590,12 +1592,16 @@ void gf_CreatePostBuildMacroStatRow (text lp_labelText, int lp_rowOffset) {
     gv_postBuildReportDialogItems[lp_rowOffset][3] = DialogControlLastCreated();
 }
 
-void gf_UpdatePostBuildReportDialogValues () {
+void gf_UpdatePostBuildMatchupText () {
     // Implementation
     libNtve_gf_SetDialogItemTextWriteout(gv_postBuildReportMatchupLabel, true, PlayerGroupAll());
     libNtve_gf_SetDialogItemTextWriteoutDuration(gv_postBuildReportMatchupLabel, 1.0, PlayerGroupAll());
     TextExpressionSetToken("Param/Expression/122973C8", "A", gf_GetCurrentlySelectedMatchupasText());
     libNtve_gf_SetDialogItemText(gv_postBuildReportMatchupLabel, TextExpressionAssemble("Param/Expression/122973C8"), PlayerGroupAll());
+}
+
+void gf_UpdatePostBuildReportDialogValues (bool lp_updateBuildOrderListBox) {
+    // Implementation
     gf_UpdatePostBuildSupplyRowValueReal(gf_CalculateSpendingQuotient(), gv_bestSpendingQuotientEntryKey, 0, true);
     gf_UpdatePostBuildSupplyRowValueInt(gv_workersCreatedCurrentBuild, gv_bestTotalWorkersCreatedEntryKey, 1, true);
     gf_UpdatePostBuildSupplyRowValueInt(gf_GetTotalArmySupply(), gv_bestTotalArmySupplyEntryKey, 2, true);
@@ -1609,9 +1615,11 @@ void gf_UpdatePostBuildReportDialogValues () {
     gf_UpdatePostBuildSupplyRowValueInt(gf_GetAverageUnspentMinerals(), gv_bestAverageUnspentMineralsEntryKey, 10, false);
     gf_UpdatePostBuildSupplyRowValueInt(gf_GetAverageUnspentGas(), gv_bestAverageUnspentGasEntryKey, 11, false);
     gf_UpdatePostBuildSupplyRowValueReal(gf_GetAverageBuildAPM(), gv_bestAverageAPMEntryKey, 12, true);
-    gf_ResetBuildOrderListBox();
-    gf_UpdateBuildStepsListBox();
-    BankSave(gv_benchmarkerBank);
+    if ((lp_updateBuildOrderListBox == true)) {
+        gf_UpdateBuildStepsListBox();
+    }
+    else {
+    }
 }
 
 void gf_UpdatePostBuildSupplyRowValueInt (int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter) {
@@ -1645,21 +1653,13 @@ void gf_UpdatePostBuildSupplyRowValueReal (fixed lp_value, string lp_benchmarkEn
 }
 
 void gf_ResetBuildOrderListBox () {
-    int autoA02A982D_ae;
-    int autoA02A982D_ai;
-
     // Variable Declarations
     int lv_i;
 
     // Variable Initialization
 
     // Implementation
-    autoA02A982D_ae = (gv_currentBuildOrderStepCursor+1);
-    autoA02A982D_ai = 1;
-    lv_i = 1;
-    for ( ; ( (autoA02A982D_ai >= 0 && lv_i <= autoA02A982D_ae) || (autoA02A982D_ai <= 0 && lv_i >= autoA02A982D_ae) ) ; lv_i += autoA02A982D_ai ) {
-        DialogControlRemoveItem(gv_postBuildReportBuildOrderListBox, PlayerGroupAll(), lv_i);
-    }
+    DialogControlRemoveAllItems(gv_postBuildReportBuildOrderListBox, PlayerGroupAll());
 }
 
 void gf_UpdateBuildStepsListBox () {
@@ -1672,7 +1672,6 @@ void gf_UpdateBuildStepsListBox () {
     // Variable Initialization
 
     // Implementation
-    gf_ResetBuildOrderListBox();
     autoF990DA09_ae = (gv_currentBuildOrderStepCursor-1);
     autoF990DA09_ai = 1;
     lv_i = 0;
@@ -4725,8 +4724,9 @@ bool gt_OpenPostBuildReportDialog_Func (bool testConds, bool runActions) {
 
     Wait(1.0, c_timeGame);
     gf_PauseGame();
-    gf_UpdatePostBuildReportDialogValues();
+    gf_UpdatePostBuildReportDialogValues(true);
     DialogSetVisible(gv_postBuildReportDialog, PlayerGroupAll(), true);
+    gf_UpdatePostBuildMatchupText();
     libNtve_gf_SwooshCamera(1, ((CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance)) + 0.0), (CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance)+10), PlayerStartLocation(1), 10.0);
     auto8DF230F2_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, 0, 0), 0);
     auto8DF230F2_u = 1;
@@ -4760,7 +4760,7 @@ bool gt_SaveBenchmarkBuildStats_Func (bool testConds, bool runActions) {
     }
 
     gf_SaveCurrentStatsasNewBenchmark();
-    gf_UpdatePostBuildReportDialogValues();
+    gf_UpdatePostBuildReportDialogValues(false);
     gf_SaveBenchmarkBuildOrder();
     return true;
 }
@@ -4788,7 +4788,7 @@ bool gt_ResetBenchmarkBuildStats_Func (bool testConds, bool runActions) {
     }
 
     gf_ResetBenchmarkBuildStatistics();
-    gf_UpdatePostBuildReportDialogValues();
+    gf_UpdatePostBuildReportDialogValues(false);
     gf_ClearBenchmarkBuildOrder();
     return true;
 }
@@ -4901,9 +4901,10 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_LoadAlertConfigurations();
     gf_CreateHiddenBenchmarkSupplyObjectives();
     gv_debugMapMechanics = false;
-    gv_debugBuildOrderTracking = true;
+    gv_debugBuildOrderTracking = false;
     gv_debugAlerts = false;
     gv_debugBank = false;
+    gv_debugStats = false;
     return true;
 }
 
