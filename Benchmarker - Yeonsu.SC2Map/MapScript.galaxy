@@ -3331,7 +3331,7 @@ text gf_GetFormattedUpgradeNameasText (string lp_upgrade) {
     // Implementation
     lv_upgradeCatalogString = CatalogFieldValueGet(c_gameCatalogUpgrade, lp_upgrade, "Name", c_playerAny);
     lv_formattedUpgradeCatalogString = gf_FormatCatalogStringwithSpaces(lv_upgradeCatalogString);
-    lv_condensedFormattedUpgradeCatalogString = (StringWord(lv_formattedUpgradeCatalogString, 4) + " " + gf_TrimSOffArmorsUpgradeName(StringWord(lv_formattedUpgradeCatalogString, 1)) + " " + StringWord(lv_formattedUpgradeCatalogString, 7));
+    lv_condensedFormattedUpgradeCatalogString = (StringWord(lv_formattedUpgradeCatalogString, 4) + " " + gf_TrimSOffArmorsUpgradeName(StringWord(lv_formattedUpgradeCatalogString, 5)) + " " + StringWord(lv_formattedUpgradeCatalogString, 7));
     return StringToText(lv_condensedFormattedUpgradeCatalogString);
 }
 
@@ -3664,11 +3664,7 @@ bool gt_UpgradeGapAboveThresholdTimerExpires_Func (bool testConds, bool runActio
     for ( ; ( (auto4B6990F6_ai >= 0 && lv_i <= auto4B6990F6_ae) || (auto4B6990F6_ai <= 0 && lv_i >= auto4B6990F6_ae) ) ; lv_i += auto4B6990F6_ai ) {
         if (((EventTimer() == gv_alertUpgradeGapTimers[lv_i]) || (EventTimer() == gv_alertUpgradeGapCooldownTimers[lv_i]))) {
             lv_currentNextUpgrade = gf_GetNextUpgrade(gv_alertUpgradeGapUpgrades[lv_i]);
-            lv_currentNextUpgradeName = CatalogFieldValueGet(c_gameCatalogUpgrade, lv_currentNextUpgrade, "Name", c_playerAny);
-            lv_currentNextUpgradeNameFormatted = gf_FormatCatalogStringwithSpaces(lv_currentNextUpgradeName);
-            TextExpressionSetToken("Param/Expression/DDA3FDF3", "A", StringToText(StringWord(lv_currentNextUpgradeNameFormatted, 4)));
-            TextExpressionSetToken("Param/Expression/DDA3FDF3", "B", StringToText(gf_TrimSOffArmorsUpgradeName(StringWord(lv_currentNextUpgradeNameFormatted, 5))));
-            TextExpressionSetToken("Param/Expression/DDA3FDF3", "C", StringToText(StringWord(lv_currentNextUpgradeNameFormatted, 7)));
+            TextExpressionSetToken("Param/Expression/DDA3FDF3", "A", gf_GetFormattedUpgradeNameasText(lv_currentNextUpgrade));
             UIAlert("UpgradeDelayed", 1, TextExpressionAssemble("Param/Expression/DDA3FDF3"), (CatalogFieldValueGet(c_gameCatalogUpgrade, lv_currentNextUpgrade, "Icon", c_playerAny)));
             if ((gv_muteAlertsEnabled == false)) {
                 SoundPlay(SoundLink("UI_ObjectiveUpdate", -1), PlayerGroupAll(), 50.0, 0.0);
