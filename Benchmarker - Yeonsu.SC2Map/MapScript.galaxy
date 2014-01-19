@@ -607,7 +607,7 @@ void gf_UpdatePostBuildSupplyRowValueasInt (int lp_value, string lp_benchmarkEnt
 void gf_UpdatePostBuildSupplyRowValueasReal (fixed lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter);
 void gf_UpdatePostBuildSupplyRowValueasTime (int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter);
 void gf_ResetBuildOrderListBox ();
-void gf_UpdateBuildStepsListBox ();
+void gf_UpdateBuildOrderListBox ();
 void gf_CreateStatsDialog ();
 void gf_RefreshStatsDialog ();
 void gf_CloseStatsDialogandUnpause ();
@@ -1304,6 +1304,12 @@ void gf_OpenBenchmarkMainDialog () {
     Wait(0.25, c_timeGame);
     gf_LoadMatchupBenchmarks(gf_GetCurrentlySelectedMatchupasBankSectionKey());
     gf_LoadAlertConfigurations();
+    if ((gf_DoesSavedBuildOrderExistForCurrentMatchup() == true)) {
+        gf_EnablePracticeAgainstBenchmarkBuildOrderOptions();
+    }
+    else {
+        gf_DisablePracticeAgainstBenchmarkBuildOrderOptions();
+    }
     DialogSetVisible(gv_benchmarkDialog, PlayerGroupAll(), true);
     Wait(0.25, c_timeGame);
     UnitGroupLoopBegin(UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterAlly) | (1 << c_targetFilterNeutral) | (1 << c_targetFilterEnemy), 0), 0));
@@ -1476,7 +1482,6 @@ void gf_EnablePracticeAgainstBenchmarkBuildOrderOptions () {
     // Implementation
     DialogControlSetEnabled(gv_practiceAgainstSavedBuildOrderCheckbox, PlayerGroupAll(), true);
     DialogControlSetEnabled(gv_practiceAgainstSavedBuildOrderLabel, PlayerGroupAll(), true);
-    libNtve_gf_SetDialogItemChecked(gv_practiceAgainstSavedBuildOrderCheckbox, true, PlayerGroupAll());
     gf_EvaluateAndDisableEnableBuildHintsOptions();
 }
 
@@ -1493,7 +1498,6 @@ void gf_EvaluateAndDisableEnableBuildHintsOptions () {
     if (((gf_DoesSavedBuildOrderExistForCurrentMatchup() == true) && (libNtve_gf_DialogItemIsChecked(gv_practiceAgainstSavedBuildOrderCheckbox, 1) == true))) {
         DialogControlSetEnabled(gv_displayBuildOrderHintsCheckbox, PlayerGroupAll(), true);
         DialogControlSetEnabled(gv_displayBuildOrderHintsLabel, PlayerGroupAll(), true);
-        libNtve_gf_SetDialogItemChecked(gv_displayBuildOrderHintsCheckbox, true, PlayerGroupAll());
     }
     else {
         DialogControlSetEnabled(gv_displayBuildOrderHintsCheckbox, PlayerGroupAll(), false);
@@ -1705,7 +1709,8 @@ void gf_UpdatePostBuildReportDialogValues (bool lp_updateBuildOrderListBox) {
     gf_UpdatePostBuildSupplyRowValueasInt(gf_GetAverageUnspentGas(), gv_bestAverageUnspentGasEntryKey, 11, false);
     gf_UpdatePostBuildSupplyRowValueasReal(gf_GetAverageBuildAPM(), gv_bestAverageAPMEntryKey, 12, true);
     if ((lp_updateBuildOrderListBox == true)) {
-        gf_UpdateBuildStepsListBox();
+        gf_ResetBuildOrderListBox();
+        gf_UpdateBuildOrderListBox();
     }
     else {
     }
@@ -1766,7 +1771,7 @@ void gf_ResetBuildOrderListBox () {
     DialogControlRemoveAllItems(gv_postBuildReportBuildOrderListBox, PlayerGroupAll());
 }
 
-void gf_UpdateBuildStepsListBox () {
+void gf_UpdateBuildOrderListBox () {
     int autoF990DA09_ae;
     int autoF990DA09_ai;
 
@@ -1966,15 +1971,21 @@ void gf_InitializeMapResourcesUnitGroup () {
 void gf_InitializeBank () {
     // Implementation
     BankLoad(gv_benchmarkerBankName, 1);
-    gf_CreateMatchupBankSections();
     gv_benchmarkerBank = BankLastCreated();
+    gf_CreateMatchupBankSections();
 }
 
 void gf_CreateMatchupBankSections () {
     // Implementation
-    BankSectionCreate(BankLastCreated(), gv_zvZMatchupSectionKey);
-    BankSectionCreate(BankLastCreated(), gv_zvTMatchupSectionKey);
-    BankSectionCreate(BankLastCreated(), gv_zvPMatchupSectionKey);
+    BankSectionCreate(gv_benchmarkerBank, gv_zvZMatchupSectionKey);
+    BankSectionCreate(gv_benchmarkerBank, gv_zvTMatchupSectionKey);
+    BankSectionCreate(gv_benchmarkerBank, gv_zvPMatchupSectionKey);
+    BankSectionCreate(gv_benchmarkerBank, gv_tvZMatchupSectionKey);
+    BankSectionCreate(gv_benchmarkerBank, gv_tvTMatchupSectionKey);
+    BankSectionCreate(gv_benchmarkerBank, gv_tvPMatchupSectionKey);
+    BankSectionCreate(gv_benchmarkerBank, gv_pvZMatchupSectionKey);
+    BankSectionCreate(gv_benchmarkerBank, gv_pvTMatchupSectionKey);
+    BankSectionCreate(gv_benchmarkerBank, gv_pvPMatchupSectionKey);
 }
 
 void gf_ResetGameState () {
@@ -2905,12 +2916,14 @@ int gf_GetEditBoxValueasInt (int lp_editBox) {
 
 bool gf_DoesSavedBuildOrderExistForCurrentMatchup () {
     // Variable Declarations
+    int lv_numSteps;
     bool lv_result;
 
     // Variable Initialization
 
     // Implementation
-    if ((BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey) > 0)) {
+    lv_numSteps = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey);
+    if ((lv_numSteps > 0)) {
         lv_result = true;
     }
     else {
@@ -2919,6 +2932,8 @@ bool gf_DoesSavedBuildOrderExistForCurrentMatchup () {
     if ((gv_debugBuildOrder == true)) {
         TextExpressionSetToken("Param/Expression/449A463F", "B", StringToText(gf_GetCurrentlySelectedMatchupasBankSectionKey()));
         TextExpressionSetToken("Param/Expression/449A463F", "A", libNtve_gf_ConvertBooleanToText(lv_result));
+        TextExpressionSetToken("Param/Expression/449A463F", "C", IntToText(lv_numSteps));
+        TextExpressionSetToken("Param/Expression/449A463F", "D", StringToText(gf_GetCurrentlySelectedMatchupasBankSectionKey()));
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/449A463F"));
     }
     else {
@@ -4950,7 +4965,12 @@ bool gt_TogglePracticeAgainstSavedBuild_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    gv_practiceAgainstBenchmarkBuildOrder = libNtve_gf_DialogItemIsChecked(EventDialogControl(), 1);
+    if ((libNtve_gf_DialogItemIsChecked(gv_practiceAgainstSavedBuildOrderCheckbox, 1) == false)) {
+        gv_practiceAgainstBenchmarkBuildOrder = true;
+    }
+    else {
+        gv_practiceAgainstBenchmarkBuildOrder = false;
+    }
     gf_EvaluateAndDisableEnableBuildHintsOptions();
     return true;
 }
@@ -4958,7 +4978,7 @@ bool gt_TogglePracticeAgainstSavedBuild_Func (bool testConds, bool runActions) {
 //--------------------------------------------------------------------------------------------------
 void gt_TogglePracticeAgainstSavedBuild_Init () {
     gt_TogglePracticeAgainstSavedBuild = TriggerCreate("gt_TogglePracticeAgainstSavedBuild_Func");
-    TriggerAddEventDialogControl(gt_TogglePracticeAgainstSavedBuild, 1, c_invalidDialogControlId, c_triggerControlEventTypeChecked);
+    TriggerAddEventDialogControl(gt_TogglePracticeAgainstSavedBuild, 1, c_invalidDialogControlId, c_triggerControlEventTypeAny);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -5175,9 +5195,9 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_InitializeDialogDefaults();
     gf_InitializeBankDefaults();
     gf_InitializeMapResourcesUnitGroup();
+    gf_InitializeBank();
     MeleeInitUnits();
     gf_PauseGame();
-    gf_InitializeBank();
     gf_InitializeBenchmarkDialog();
     DialogSetVisible(DialogLastCreated(), PlayerGroupAll(), true);
     gf_CreateAlertMenuDialog();
