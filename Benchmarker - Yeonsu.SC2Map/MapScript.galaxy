@@ -1907,7 +1907,7 @@ void gf_InitializeGameDefaults () {
     gv_alertSupplyBlockWithinCapThreshold = 6;
     gv_alertZergDefaultMacroEnergyThreshold = 40;
     gv_alertTerranDefaultMacroEnergyThreshold = 65;
-    gv_alertProtossDefaultMacroEnergyThreshold = 60;
+    gv_alertProtossDefaultMacroEnergyThreshold = 55;
     gv_benchmarkMaxTimeMinutes = 15;
     gv_benchmarkMaxTimeSeconds = 0;
     gv_benchmarkEndBuildatMinutes = 15;
@@ -2847,13 +2847,6 @@ bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
             }
         }
     }
-    if ((gv_debugAlerts == true)) {
-        TextExpressionSetToken("Param/Expression/8865A9BB", "A", UnitTypeGetName(lp_unitType));
-        TextExpressionSetToken("Param/Expression/8865A9BB", "B", libNtve_gf_ConvertBooleanToText(lv_queueIsEmpty));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/8865A9BB"));
-    }
-    else {
-    }
     return lv_queueIsEmpty;
 }
 
@@ -3736,7 +3729,7 @@ bool gt_RaceMacroEnergyAboveThreshold_Func (bool testConds, bool runActions) {
 
     // Conditions
     if (testConds) {
-        if (!(((EventPlayer() == 1) && (gf_IsRaceMacroEnergyAboveThreshold() == true) && (TimerGetRemaining(gv_alertMacroEnergyCooldownTimer) == 0.0) && (gv_paused == false) && (gv_alertMacroEnergyCheckEnabled == true)))) {
+        if (!(((gf_IsRaceMacroEnergyAboveThreshold() == true) && (TimerGetRemaining(gv_alertMacroEnergyCooldownTimer) == 0.0) && (gv_paused == false) && (gv_alertMacroEnergyCheckEnabled == true)))) {
             return false;
         }
     }
@@ -3751,6 +3744,12 @@ bool gt_RaceMacroEnergyAboveThreshold_Func (bool testConds, bool runActions) {
     autoF5F9D5CD_u = 1;
     for ( ; autoF5F9D5CD_u <= UnitGroupCount(autoF5F9D5CD_g, c_unitCountAll) ; autoF5F9D5CD_u += BoolToInt(lv_currentunit == UnitGroupUnit(autoF5F9D5CD_g, autoF5F9D5CD_u)) ) {
         lv_currentunit = UnitGroupUnit(autoF5F9D5CD_g, autoF5F9D5CD_u);
+        if ((gv_debugAlerts == true)) {
+            TextExpressionSetToken("Param/Expression/B4F05C64", "A", UnitTypeGetName(UnitGetType(lv_currentunit)));
+            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/B4F05C64"));
+        }
+        else {
+        }
         if (((UnitGetPropertyFixed(lv_currentunit, c_unitPropEnergy, c_unitPropCurrent) > gv_alertSelectedMacroEnergyThreshold) && ((UnitGetType(lv_currentunit) == "Queen") || (UnitGetType(lv_currentunit) == "QueenBurrowed") || (UnitGetType(lv_currentunit) == "OrbitalCommand") || (UnitGetType(lv_currentunit) == "OrbitalCommandFlying") || (UnitGetType(lv_currentunit) == "Nexus")))) {
             autoB329AA1E_val = PlayerRace(1);
             if (autoB329AA1E_val == "Zerg") {
