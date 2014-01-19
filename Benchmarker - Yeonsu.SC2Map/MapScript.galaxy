@@ -657,8 +657,10 @@ int gf_GetDefaultMacroEnergyThreshold ();
 string gf_GetIconForBuildingType (string lp_unitType);
 bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType);
 string gf_GetCurrentlySelectedMatchupasBankSectionKey ();
+string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
 text gf_GetCurrentlySelectedMatchupasText ();
 int gf_GetEditBoxValueasInt (int lp_editBox);
+bool gf_DoesSavedBuildOrderExistForCurrentMatchup ();
 fixed gf_ln (fixed lp_x);
 fixed gf_log10 (fixed lp_x);
 text gf_GetTypeTextForCurrentBuildOrderStep (int lp_stepNumber);
@@ -670,9 +672,7 @@ color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber);
 text gf_GetBenchmarkandCurrentStepSupplyDiffasText (int lp_stepNumber);
 text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber);
 int gf_GetCurrentBuildOrderSupply (string lp_unitType);
-bool gf_DoesSavedBuildOrderExistForCurrentMatchup ();
 int gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex (int lp_cursor);
-string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
 bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex);
 bool gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep (string lp_upgrade, int lp_benchmarkBuildOrderStepIndex);
 bool gf_IsSupplyCorrectForBenchmarkBuildOrderStep (int lp_supplyCount, int lp_benchmarkBuildOrderStepIndex);
@@ -1294,7 +1294,7 @@ void gf_OpenBenchmarkMainDialog () {
     gv_statsDialogOpen = false;
     DialogSetVisible(gv_postBuildReportDialog, PlayerGroupAll(), false);
     Wait(0.25, c_timeGame);
-    gf_LoadMatchupBenchmarks(gv_currentMatchupSectionKeys[gv_currentlySelectedMatchupIndex]);
+    gf_LoadMatchupBenchmarks(gf_GetCurrentlySelectedMatchupasBankSectionKey());
     gf_LoadAlertConfigurations();
     DialogSetVisible(gv_benchmarkDialog, PlayerGroupAll(), true);
     Wait(0.25, c_timeGame);
@@ -1855,6 +1855,7 @@ void gf_InitializeBankDefaults () {
     }
     else {
     }
+    gv_alertConfigurationSectionKey = ((PlayerRace(1)) + "AlertConfigurations");
 }
 
 void gf_InitializeDialogDefaults () {
@@ -2849,7 +2850,19 @@ bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
 
 string gf_GetCurrentlySelectedMatchupasBankSectionKey () {
     // Implementation
-    return ((PlayerRace(1)) + gv_currentMatchupSectionKeys[gv_currentlySelectedMatchupIndex]);
+    return (gv_currentMatchupSectionKeys[gv_currentlySelectedMatchupIndex]);
+}
+
+string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix) {
+    // Variable Declarations
+    string lv_stepKeyString;
+
+    // Variable Initialization
+    lv_stepKeyString = "";
+
+    // Implementation
+    lv_stepKeyString = (gv_benchmarkBuildStepEntryKeyPrefix + "_" + IntToString(lp_stepNumber) + "_" + lp_stepEntryKeySuffix);
+    return lv_stepKeyString;
 }
 
 text gf_GetCurrentlySelectedMatchupasText () {
@@ -2860,6 +2873,29 @@ text gf_GetCurrentlySelectedMatchupasText () {
 int gf_GetEditBoxValueasInt (int lp_editBox) {
     // Implementation
     return StringToInt(libNtve_gf_DialogItemEditValue(lp_editBox, 1));
+}
+
+bool gf_DoesSavedBuildOrderExistForCurrentMatchup () {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey) > 0)) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    if ((gv_debugBuildOrderTracking == true)) {
+        TextExpressionSetToken("Param/Expression/449A463F", "B", StringToText(gf_GetCurrentlySelectedMatchupasBankSectionKey()));
+        TextExpressionSetToken("Param/Expression/449A463F", "A", libNtve_gf_ConvertBooleanToText(lv_result));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/449A463F"));
+    }
+    else {
+    }
+    return lv_result;
 }
 
 fixed gf_ln (fixed lp_x) {
@@ -3094,28 +3130,6 @@ int gf_GetCurrentBuildOrderSupply (string lp_unitType) {
     return lv_supply;
 }
 
-bool gf_DoesSavedBuildOrderExistForCurrentMatchup () {
-    // Variable Declarations
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if ((BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey) > 0)) {
-        lv_result = true;
-    }
-    else {
-        lv_result = false;
-    }
-    if ((gv_debugBuildOrderTracking == true)) {
-        TextExpressionSetToken("Param/Expression/449A463F", "A", libNtve_gf_ConvertBooleanToText(lv_result));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/449A463F"));
-    }
-    else {
-    }
-    return lv_result;
-}
-
 int gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex (int lp_cursor) {
     // Variable Declarations
     int lv_result;
@@ -3125,18 +3139,6 @@ int gf_GetBenchmarkBuildOrderObjectiveIndexforBenchmarkBuildOrderIndex (int lp_c
     // Implementation
     lv_result = lp_cursor;
     return lv_result;
-}
-
-string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix) {
-    // Variable Declarations
-    string lv_stepKeyString;
-
-    // Variable Initialization
-    lv_stepKeyString = "";
-
-    // Implementation
-    lv_stepKeyString = (gv_benchmarkBuildStepEntryKeyPrefix + "_" + IntToString(lp_stepNumber) + "_" + lp_stepEntryKeySuffix);
-    return lv_stepKeyString;
 }
 
 bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex) {
@@ -5018,7 +5020,7 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_CreateScreenButtons();
     TimerWindowCreate(gv_currentBuildBuildTimer, StringExternal("Param/Value/EAED3202"), true, true);
     TimerWindowSetAnchor(TimerWindowLastCreated(), c_anchorTopRight, 0, 0);
-    gf_LoadMatchupBenchmarks(gv_zvZMatchupSectionKey);
+    gf_LoadMatchupBenchmarks(gf_GetCurrentlySelectedMatchupasBankSectionKey());
     gf_LoadAlertConfigurations();
     gf_CreateHiddenBenchmarkSupplyObjectives();
     gv_debugMapMechanics = false;
