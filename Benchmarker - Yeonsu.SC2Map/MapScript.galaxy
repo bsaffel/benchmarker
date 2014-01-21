@@ -24,6 +24,7 @@ struct gs_BuildOrderStep {
     int lv_amount;
     int lv_supply;
     int lv_elapsedSeconds;
+    bool lv_cancelled;
 };
 
 //--------------------------------------------------------------------------------------------------
@@ -645,6 +646,7 @@ void gf_InitializeBenchmarkBuildOrder ();
 void gf_EvaluateBenchmarkBuildOrderStep (string lp_unitType);
 void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType);
 void gf_AddUpgradeBuildOrderStep (string lp_buildStepUpgrade);
+void gf_DestroyBenchmarkBuildOrderObjectives ();
 void gf_ResetBenchmarkBuildOrderObjectives ();
 void gf_ResetCurrentBuildOrderStepsVariables ();
 void gf_ResetBenchmarkBuildOrderStepsVariables ();
@@ -1301,7 +1303,7 @@ void gf_OpenBenchmarkMainDialog () {
     CinematicFade(false, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, false);
     gf_SelectBenchmarkMenu();
     gf_HideBenchmarkSupplyObjectives();
-    gf_ResetBenchmarkBuildOrderObjectives();
+    gf_DestroyBenchmarkBuildOrderObjectives();
     DialogSetVisible(gv_helpDialog, PlayerGroupAll(), false);
     gv_helpDialogOpen = false;
     DialogSetVisible(gv_statsDialog, PlayerGroupAll(), false);
@@ -2019,7 +2021,6 @@ void gf_ResetGameState () {
     gf_ResetStatistics();
     gf_ResetCurrentBuildOrderStepsVariables();
     gf_ResetBenchmarkSupplyObjectives();
-    gf_ResetBenchmarkBuildOrderStepsVariables();
     gf_ResetBenchmarkBuildOrderObjectives();
     gf_ResetAlertTimers();
     gf_ResetBenchmarkTimers();
@@ -2428,7 +2429,7 @@ void gf_AddUpgradeBuildOrderStep (string lp_buildStepUpgrade) {
     gv_currentBuildOrderStepCursor += 1;
 }
 
-void gf_ResetBenchmarkBuildOrderObjectives () {
+void gf_DestroyBenchmarkBuildOrderObjectives () {
     int auto8EFD539D_ae;
     int auto8EFD539D_ai;
 
@@ -2444,6 +2445,25 @@ void gf_ResetBenchmarkBuildOrderObjectives () {
     for ( ; ( (auto8EFD539D_ai >= 0 && lv_i <= auto8EFD539D_ae) || (auto8EFD539D_ai <= 0 && lv_i >= auto8EFD539D_ae) ) ; lv_i += auto8EFD539D_ai ) {
         ObjectiveDestroy(gv_benchmarkBuildOrderStepObjectives[lv_i]);
     }
+}
+
+void gf_ResetBenchmarkBuildOrderObjectives () {
+    int autoDBD3DAAA_ae;
+    int autoDBD3DAAA_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    autoDBD3DAAA_ae = 9;
+    autoDBD3DAAA_ai = 1;
+    lv_i = 0;
+    for ( ; ( (autoDBD3DAAA_ai >= 0 && lv_i <= autoDBD3DAAA_ae) || (autoDBD3DAAA_ai <= 0 && lv_i >= autoDBD3DAAA_ae) ) ; lv_i += autoDBD3DAAA_ai ) {
+        ObjectiveDestroy(gv_benchmarkBuildOrderStepObjectives[lv_i]);
+    }
+    gf_CreateBenchmarkBuildOrderObjectives();
 }
 
 void gf_ResetCurrentBuildOrderStepsVariables () {
