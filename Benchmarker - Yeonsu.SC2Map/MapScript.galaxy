@@ -601,9 +601,14 @@ void gf_CreateMenuSelectButtons (int lp_menuIndex);
 void gf_CreateHelpDialog ();
 void gf_CreateHelpInfoRow (text lp_commandText, text lp_hotkeyText, text lp_descriptionText, int lp_rowNum);
 void gf_CloseHelpDialogandUnpause ();
+void gf_InitializePostBuildReportDialog ();
+void gf_CreatePostBuildReportDialogButtons ();
 void gf_CreatePostBuildReportDialog ();
+void gf_CreatePostBuildReportHeaderRowLabels ();
 void gf_CreatePostBuildDialogSectionLabel ();
+void gf_CreatePostBuildReportStatsSection ();
 void gf_CreatePostBuildMacroStatRow (text lp_labelText, int lp_rowOffset);
+void gf_CreatePostBuildBuildStepsListBox ();
 void gf_UpdatePostBuildMatchupText ();
 void gf_UpdatePostBuildReportDialogValues (bool lp_updateBuildOrderListBox);
 void gf_UpdatePostBuildSupplyRowValueasInt (int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter);
@@ -705,6 +710,7 @@ text gf_CalculateIntPercentDifferenceasText (int lp_value, int lp_previousBest, 
 text gf_CalculateRealPercentDifferenceasText (fixed lp_value, fixed lp_previousBest, bool lp_higherisBetter);
 color gf_GetColorForPercentage (fixed lp_percentage, bool lp_higherIsBetter);
 int gf_GetWinButtonYPadding ();
+bool gf_IsUpgradeof1Variety (string lp_upgrade);
 text gf_GetFormattedUpgradeNameasText (string lp_upgrade);
 string gf_FormatCatalogStringwithSpaces (string lp_string);
 string gf_TrimSOffArmorsUpgradeName (string lp_string);
@@ -1612,19 +1618,47 @@ void gf_CloseHelpDialogandUnpause () {
     gv_helpDialogOpen = false;
 }
 
-void gf_CreatePostBuildReportDialog () {
+void gf_InitializePostBuildReportDialog () {
     // Variable Declarations
-    int lv_rowNum;
     int lv_labelHeightOffset;
 
     // Variable Initialization
     lv_labelHeightOffset = (gv_menuPadding+gv_benchmarkDialogTitleSpacer);
 
     // Implementation
+    gf_CreatePostBuildReportDialog();
+    gf_CreatePostBuildReportHeaderRowLabels();
+    gf_CreatePostBuildReportStatsSection();
+    gf_CreatePostBuildBuildStepsListBox();
+    gf_CreatePostBuildReportDialogButtons();
+}
+
+void gf_CreatePostBuildReportDialogButtons () {
+    // Implementation
+    libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_postBuildReportBuildButtonWidth, gv_postBuildReportBuildButtonHeight, c_anchorTopRight, (gv_menuPadding+gv_postBuildReportBuildButtonWidth), gv_menuPadding, StringExternal("Param/Value/6781271F"), StringExternal("Param/Value/81D36081"), "");
+    gv_postBuildReportSaveBuildButton = DialogControlLastCreated();
+    libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_postBuildReportBuildButtonWidth, gv_postBuildReportBuildButtonHeight, c_anchorTopRight, (gv_menuPadding), gv_menuPadding, StringExternal("Param/Value/F104DC19"), StringExternal("Param/Value/755A8EDF"), "");
+    gv_postBuildReportResetBuildButton = DialogControlLastCreated();
+    libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_startButtonWidth, gv_startButtonHeight, c_anchorBottom, 0, gv_menuPadding, StringExternal("Param/Value/2C18426B"), StringExternal("Param/Value/12E7CB88"), "");
+    gv_backToMenuButton = DialogControlLastCreated();
+}
+
+void gf_CreatePostBuildReportDialog () {
+    // Implementation
     DialogCreate(gv_postBuildReportDialogWidth, gv_benchmarkDialogHeight, c_anchorCenter, 0, -150, true);
     gv_postBuildReportDialog = DialogLastCreated();
     DialogSetTitle(DialogLastCreated(), gv_postBuildReportDialogTitle);
     DialogSetTransparency(DialogLastCreated(), 0.0);
+}
+
+void gf_CreatePostBuildReportHeaderRowLabels () {
+    // Variable Declarations
+    int lv_labelHeightOffset;
+
+    // Variable Initialization
+    lv_labelHeightOffset = (gv_menuPadding+gv_benchmarkDialogTitleSpacer);
+
+    // Implementation
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_postBuildReportMatchupLabelWidth, gv_postBuildReportMatchupLabelHeight, c_anchorTopLeft, gv_postBuildReportMatchupLabelXOffset, gv_postBuildReportMatchupLabelYOffset, StringExternal("Param/Value/CAB58423"), ColorWithAlpha(0,0,0,0), false, 2.0);
     gv_postBuildReportMatchupLabel = DialogControlLastCreated();
     TextExpressionSetToken("Param/Expression/14A9E66D", "A", StringExternal("Param/Value/F716237B"));
@@ -1633,6 +1667,18 @@ void gf_CreatePostBuildReportDialog () {
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_postBuildReportStatBestWidth, gv_postBuildReportDialogItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_postBuildReportStatLabelWidth+gv_postBuildReportStatValueWidth), lv_labelHeightOffset, StringExternal("Param/Value/F85B1717"), ColorWithAlpha(0,0,0,0), false, 2.0);
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_postBuildReportStatPercentDifferenceWidth, gv_postBuildReportDialogItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_postBuildReportStatLabelWidth+gv_postBuildReportStatValueWidth+gv_postBuildReportStatBestWidth), lv_labelHeightOffset, StringExternal("Param/Value/E400253A"), ColorWithAlpha(0,0,0,0), false, 2.0);
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_postBuildReportBuildStepsListBoxWidth, gv_postBuildReportDialogItemHeight, c_anchorTopRight, (gv_menuPadding), lv_labelHeightOffset, StringExternal("Param/Value/C9C07C6F"), ColorWithAlpha(0,0,0,0), false, 2.0);
+}
+
+void gf_CreatePostBuildDialogSectionLabel () {
+}
+
+void gf_CreatePostBuildReportStatsSection () {
+    // Variable Declarations
+    int lv_rowNum;
+
+    // Variable Initialization
+
+    // Implementation
     gf_CreatePostBuildMacroStatRow(StringExternal("Param/Value/6B84EE69"), lv_rowNum);
     lv_rowNum += 1;
     gf_CreatePostBuildMacroStatRow(StringExternal("Param/Value/0E4EEB09"), lv_rowNum);
@@ -1659,19 +1705,6 @@ void gf_CreatePostBuildReportDialog () {
     lv_rowNum += 1;
     gf_CreatePostBuildMacroStatRow(StringExternal("Param/Value/C219FD1E"), lv_rowNum);
     lv_rowNum += 1;
-    DialogControlCreate(DialogLastCreated(), c_triggerControlTypeListBox);
-    DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv_postBuildReportBuildStepsListBoxWidth, gv_postBuildReportBuildStepsListBoxHeight);
-    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopRight, gv_menuPadding, (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_sectionLabelHeight));
-    gv_postBuildReportBuildOrderListBox = DialogControlLastCreated();
-    libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_postBuildReportBuildButtonWidth, gv_postBuildReportBuildButtonHeight, c_anchorTopRight, (gv_menuPadding+gv_postBuildReportBuildButtonWidth), gv_menuPadding, StringExternal("Param/Value/6781271F"), StringExternal("Param/Value/81D36081"), "");
-    gv_postBuildReportSaveBuildButton = DialogControlLastCreated();
-    libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_postBuildReportBuildButtonWidth, gv_postBuildReportBuildButtonHeight, c_anchorTopRight, (gv_menuPadding), gv_menuPadding, StringExternal("Param/Value/F104DC19"), StringExternal("Param/Value/755A8EDF"), "");
-    gv_postBuildReportResetBuildButton = DialogControlLastCreated();
-    libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_startButtonWidth, gv_startButtonHeight, c_anchorBottom, 0, gv_menuPadding, StringExternal("Param/Value/2C18426B"), StringExternal("Param/Value/12E7CB88"), "");
-    gv_backToMenuButton = DialogControlLastCreated();
-}
-
-void gf_CreatePostBuildDialogSectionLabel () {
 }
 
 void gf_CreatePostBuildMacroStatRow (text lp_labelText, int lp_rowOffset) {
@@ -1691,6 +1724,14 @@ void gf_CreatePostBuildMacroStatRow (text lp_labelText, int lp_rowOffset) {
     gv_postBuildReportDialogItems[lp_rowOffset][2] = DialogControlLastCreated();
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_postBuildReportStatPercentDifferenceWidth, gv_postBuildReportDialogItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_postBuildReportStatLabelWidth+gv_postBuildReportStatValueWidth+gv_postBuildReportStatBestWidth), lv_yOffset, StringExternal("Param/Value/A474714C"), ColorWithAlpha(0,0,0,0), false, 2.0);
     gv_postBuildReportDialogItems[lp_rowOffset][3] = DialogControlLastCreated();
+}
+
+void gf_CreatePostBuildBuildStepsListBox () {
+    // Implementation
+    DialogControlCreate(DialogLastCreated(), c_triggerControlTypeListBox);
+    DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv_postBuildReportBuildStepsListBoxWidth, gv_postBuildReportBuildStepsListBoxHeight);
+    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopRight, gv_menuPadding, (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_sectionLabelHeight));
+    gv_postBuildReportBuildOrderListBox = DialogControlLastCreated();
 }
 
 void gf_UpdatePostBuildMatchupText () {
@@ -3545,13 +3586,25 @@ int gf_GetWinButtonYPadding () {
     }
 }
 
+bool gf_IsUpgradeof1Variety (string lp_upgrade) {
+    // Implementation
+    if (((lp_upgrade == "ProtossAirArmorsLevel1") || (lp_upgrade == "ProtossAirArmorsLevel2") || (lp_upgrade == "ProtossAirArmorsLevel3") || (lp_upgrade == "ProtossGroundArmorsLevel1") || (lp_upgrade == "ProtossGroundArmorsLevel2") || (lp_upgrade == "ProtossGroundArmorsLevel3") || (lp_upgrade == "ProtossShieldsLevel1") || (lp_upgrade == "ProtossShieldsLevel2") || (lp_upgrade == "ProtossShieldsLevel3") || (lp_upgrade == "ProtossAirWeaponsLevel1") || (lp_upgrade == "ProtossAirWeaponsLevel2") || (lp_upgrade == "ProtossAirWeaponsLevel3") || (lp_upgrade == "ProtossGroundWeaponsLevel1") || (lp_upgrade == "ProtossGroundWeaponsLevel2") || (lp_upgrade == "ProtossGroundWeaponsLevel3") || (lp_upgrade == "TerranInfantryArmorsLevel1") || (lp_upgrade == "TerranInfantryArmorsLevel2") || (lp_upgrade == "TerranInfantryArmorsLevel3") || (lp_upgrade == "TerranShipArmorsLevel1") || (lp_upgrade == "TerranShipArmorsLevel2") || (lp_upgrade == "TerranShipArmorsLevel3") || (lp_upgrade == "TerranVehicleArmorsLevel1") || (lp_upgrade == "TerranVehicleArmorsLevel2") || (lp_upgrade == "TerranVehicleArmorsLevel3") || (lp_upgrade == "TerranInfantryWeaponsLevel1") || (lp_upgrade == "TerranInfantryWeaponsLevel2") || (lp_upgrade == "TerranInfantryWeaponsLevel3") || (lp_upgrade == "TerranShipWeaponsLevel1") || (lp_upgrade == "TerranShipWeaponsLevel2") || (lp_upgrade == "TerranShipWeaponsLevel3") || (lp_upgrade == "TerranVehicleWeaponsLevel1") || (lp_upgrade == "TerranVehicleWeaponsLevel2") || (lp_upgrade == "TerranVehicleWeaponsLevel3") || (lp_upgrade == "ZergFlyerArmorsLevel1") || (lp_upgrade == "ZergFlyerArmorsLevel2") || (lp_upgrade == "ZergFlyerArmorsLevel3") || (lp_upgrade == "ZergGroundArmorsLevel1") || (lp_upgrade == "ZergGroundArmorsLevel2") || (lp_upgrade == "ZergGroundArmorsLevel3") || (lp_upgrade == "ZergFlyerWeaponsLevel1") || (lp_upgrade == "ZergFlyerWeaponsLevel2") || (lp_upgrade == "ZergFlyerWeaponsLevel3") || (lp_upgrade == "ZergMeleeWeaponsLevel1") || (lp_upgrade == "ZergMeleeWeaponsLevel2") || (lp_upgrade == "ZergMeleeWeaponsLevel3") || (lp_upgrade == "ZergMissileWeaponsLevel1") || (lp_upgrade == "ZergMissileWeaponsLevel2") || (lp_upgrade == "ZergMissileWeaponsLevel3"))) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 text gf_GetFormattedUpgradeNameasText (string lp_upgrade) {
     // Variable Declarations
+    string lv_result;
     string lv_upgradeCatalogString;
     string lv_formattedUpgradeCatalogString;
     string lv_condensedFormattedUpgradeCatalogString;
 
     // Variable Initialization
+    lv_result = "";
     lv_upgradeCatalogString = "";
     lv_formattedUpgradeCatalogString = "";
     lv_condensedFormattedUpgradeCatalogString = "";
@@ -3559,8 +3612,13 @@ text gf_GetFormattedUpgradeNameasText (string lp_upgrade) {
     // Implementation
     lv_upgradeCatalogString = CatalogFieldValueGet(c_gameCatalogUpgrade, lp_upgrade, "Name", c_playerAny);
     lv_formattedUpgradeCatalogString = gf_FormatCatalogStringwithSpaces(lv_upgradeCatalogString);
-    lv_condensedFormattedUpgradeCatalogString = (StringWord(lv_formattedUpgradeCatalogString, 4) + " " + gf_TrimSOffArmorsUpgradeName(StringWord(lv_formattedUpgradeCatalogString, 5)) + " " + StringWord(lv_formattedUpgradeCatalogString, 7));
-    return StringToText(lv_condensedFormattedUpgradeCatalogString);
+    if ((gf_IsUpgradeof1Variety(lp_upgrade) == true)) {
+        lv_result = (StringWord(lv_formattedUpgradeCatalogString, 4) + " " + gf_TrimSOffArmorsUpgradeName(StringWord(lv_formattedUpgradeCatalogString, 5)) + " " + StringWord(lv_formattedUpgradeCatalogString, 7));
+    }
+    else {
+        lv_result = (StringWord(lv_formattedUpgradeCatalogString, 3) + " " + StringWord(lv_formattedUpgradeCatalogString, 4) + " " + StringWord(lv_formattedUpgradeCatalogString, 5));
+    }
+    return StringToText(lv_result);
 }
 
 string gf_FormatCatalogStringwithSpaces (string lp_string) {
@@ -5223,7 +5281,7 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_CreateAlertMenuDialog();
     gf_CreateStatsDialog();
     gf_CreateHelpDialog();
-    gf_CreatePostBuildReportDialog();
+    gf_InitializePostBuildReportDialog();
     gf_CreateScreenButtons();
     TimerWindowCreate(gv_currentBuildBuildTimer, StringExternal("Param/Value/EAED3202"), true, true);
     TimerWindowSetAnchor(TimerWindowLastCreated(), c_anchorTopRight, 0, 0);
