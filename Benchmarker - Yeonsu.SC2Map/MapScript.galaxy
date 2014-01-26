@@ -257,7 +257,6 @@ int gv_selectedMaxSupplyBenchmark;
 int gv_benchmarkEndBuildatMinutes;
 int gv_benchmarkEndBuildatSeconds;
 int gv_benchmarkEndBuildTotalSeconds;
-int gv_trackQueensUntil;
 bool gv_practiceAgainstBenchmarkBuildOrder;
 bool gv_displayBuildHints;
 bool gv_trackSupplyUnitsAsObjectives;
@@ -267,6 +266,7 @@ string gv_lastCreatedBuildOrderUnitType;
 fixed gv_lastCreatedUnitTimestamp;
 string gv_unitStepType;
 string gv_upgradeStepType;
+int gv_trackQueensUntil;
 int gv_maxCurrentBuildOrderStepsTracked;
 int gv_currentBuildOrderStepCursor;
 gs_BuildOrderStep[51] gv_currentBuildOrderSteps;
@@ -1737,7 +1737,7 @@ void gf_CreatePostBuildBuildStepsListBox () {
 void gf_UpdatePostBuildMatchupText () {
     // Implementation
     libNtve_gf_SetDialogItemTextWriteout(gv_postBuildReportMatchupLabel, true, PlayerGroupAll());
-    libNtve_gf_SetDialogItemTextWriteoutDuration(gv_postBuildReportMatchupLabel, 1.0, PlayerGroupAll());
+    libNtve_gf_SetDialogItemTextWriteoutDuration(gv_postBuildReportMatchupLabel, 0.3, PlayerGroupAll());
     TextExpressionSetToken("Param/Expression/122973C8", "A", gf_GetCurrentlySelectedMatchupasText());
     libNtve_gf_SetDialogItemText(gv_postBuildReportMatchupLabel, TextExpressionAssemble("Param/Expression/122973C8"), PlayerGroupAll());
 }
@@ -3329,16 +3329,14 @@ bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType) {
     if (((PlayerScoreValueGetAsInt(1, "FoodUsed") <= gv_trackQueensUntil) && ((lp_unitType == "Queen")))) {
         lv_result = true;
     }
-    else {
-    }
-    if (((lp_unitType == "Overlord") || (lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon"))) {
-    }
-    else {
-    }
-    if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (!(((lp_unitType == "CreepTumor")))) && (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery"))))))) {
+    else if ((lp_unitType == "MothershipCore")) {
         lv_result = true;
     }
-    else {
+    else if (((gv_trackSupplyUnitsAsObjectives == true) && (PlayerScoreValueGetAsInt(1, "FoodUsed") <= gv_trackSupplyUnitObjectivesUntil) && ((lp_unitType == "Overlord") || (lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon")))) {
+        lv_result = true;
+    }
+    else if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (!(((lp_unitType == "CreepTumorQueen")))) && (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery"))))))) {
+        lv_result = true;
     }
     if ((gv_debugBuildOrder == true)) {
         TextExpressionSetToken("Param/Expression/C9374463", "A", UnitTypeGetName(lp_unitType));
