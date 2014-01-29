@@ -135,6 +135,8 @@ int gv__3DigitEditBoxWidth;
 int gv__4DigitEditBoxWidth;
 int gv_benchmarkEditBoxHeight;
 int gv_alertThresholdEditBoxHeight;
+int gv_buildOrderListBoxWidth;
+int gv_buildOrderListBoxHeight;
 int gv_menuSelectButtonWidth;
 int gv_menuSelectButtonHeight;
 int[3] gv_benchmarksMenuButton;
@@ -219,15 +221,14 @@ int gv_postBuildReportStatValueWidth;
 int gv_postBuildReportStatBestWidth;
 int gv_postBuildReportStatPercentDifferenceWidth;
 int gv_postBuildReportBuildOrderListBox;
-int gv_postBuildReportBuildStepsListBoxWidth;
-int gv_postBuildReportBuildStepsListBoxHeight;
 int gv_postBuildReportBuildButtonWidth;
 int gv_postBuildReportBuildButtonHeight;
 int gv_postBuildReportSaveBuildButton;
 int gv_postBuildReportResetBuildButton;
+int gv_statsDialogMaxItems;
 int gv_statsDialogWidth;
 int gv_statsDialogHeight;
-int[11] gv_statValueDialogItems;
+int[11][3] gv_statValueDialogItems;
 int gv_statValueWidth;
 int gv_statLabelWidth;
 int gv_statRowHeight;
@@ -235,6 +236,7 @@ text gv_statsDialogTitle;
 int gv_statsDialog;
 int gv_statsOkButton;
 bool gv_statsDialogOpen;
+int gv_statsDialogBuildOrderListBox;
 fixed gv_e;
 int gv_onehourinseconds;
 bool gv_paused;
@@ -286,9 +288,9 @@ int gv_orangeBenchmarkSupplyThreshold;
 int gv_orangeBenchmarkSecondsThreshold;
 int gv_totalAPMSamplesThisBuild;
 int gv_cumulativeAPM;
-fixed gv_cumulativeAverageMineralResourceColelctionRateCurrentBuild;
-fixed gv_cumulativeAverageGasResourceColelctionRateCurrentBuild;
-int gv_resourceColelctionRateSamplesCurrentBuild;
+fixed gv_cumulativeAverageMineralResourceCollectionRateCurrentBuild;
+fixed gv_cumulativeAverageGasResourceCollectionRateCurrentBuild;
+int gv_resourceCollectionRateSamplesCurrentBuild;
 int gv_totalMineralSamplesThisBuild;
 int gv_totalMineralsCollectedCurrentBuild;
 int gv_totalGasSamplesThisBuild;
@@ -395,6 +397,8 @@ void InitGlobals () {
     gv__4DigitEditBoxWidth = 90;
     gv_benchmarkEditBoxHeight = 50;
     gv_alertThresholdEditBoxHeight = 50;
+    gv_buildOrderListBoxWidth = 325;
+    gv_buildOrderListBoxHeight = 450;
     gv_menuSelectButtonWidth = 200;
     gv_menuSelectButtonHeight = 40;
     for (init_i = 0; init_i <= 2; init_i += 1) {
@@ -494,23 +498,25 @@ void InitGlobals () {
     gv_postBuildReportStatBestWidth = 150;
     gv_postBuildReportStatPercentDifferenceWidth = 150;
     gv_postBuildReportBuildOrderListBox = c_invalidDialogControlId;
-    gv_postBuildReportBuildStepsListBoxWidth = 325;
-    gv_postBuildReportBuildStepsListBoxHeight = 450;
     gv_postBuildReportBuildButtonWidth = 115;
     gv_postBuildReportBuildButtonHeight = 45;
     gv_postBuildReportSaveBuildButton = c_invalidDialogControlId;
     gv_postBuildReportResetBuildButton = c_invalidDialogControlId;
-    gv_statsDialogWidth = 650;
+    gv_statsDialogMaxItems = 10;
+    gv_statsDialogWidth = 900;
     gv_statsDialogHeight = 525;
     for (init_i = 0; init_i <= 10; init_i += 1) {
-        gv_statValueDialogItems[init_i] = c_invalidDialogControlId;
+        for (init_j = 0; init_j <= 2; init_j += 1) {
+            gv_statValueDialogItems[init_i][init_j] = c_invalidDialogControlId;
+        }
     }
-    gv_statValueWidth = 200;
-    gv_statLabelWidth = 350;
+    gv_statValueWidth = 300;
+    gv_statLabelWidth = 375;
     gv_statRowHeight = 40;
     gv_statsDialogTitle = StringExternal("Param/Value/F4075B4B");
     gv_statsDialog = c_invalidDialogId;
     gv_statsOkButton = c_invalidDialogControlId;
+    gv_statsDialogBuildOrderListBox = c_invalidDialogControlId;
     gv_e = 2.7183;
     gv_onehourinseconds = 216000;
     gv_paused = true;
@@ -600,29 +606,31 @@ void gf_EvaluateAndDisableEnableBuildHintsOptions ();
 void gf_SelectAlertMenu ();
 void gf_SelectBenchmarkMenu ();
 void gf_CreateMenuSelectButtons (int lp_menuIndex);
+void gf_ResetBuildOrderListBox (int lp_listBox);
+void gf_UpdateBuildOrderListBoxwithCurrentBuild (int lp_listBox);
 void gf_CreateHelpDialog ();
 void gf_CreateHelpInfoRow (text lp_commandText, text lp_hotkeyText, text lp_descriptionText, int lp_rowNum);
 void gf_CloseHelpDialogandUnpause ();
 void gf_InitializePostBuildReportDialog ();
-void gf_CreatePostBuildReportDialogButtons ();
 void gf_CreatePostBuildReportDialog ();
+void gf_CreatePostBuildReportDialogButtons ();
 void gf_CreatePostBuildReportHeaderRowLabels ();
 void gf_CreatePostBuildDialogSectionLabel ();
 void gf_CreatePostBuildReportStatsSection ();
-void gf_CreatePostBuildMacroStatRow (text lp_labelText, int lp_rowOffset);
-void gf_CreatePostBuildBuildStepsListBox ();
+void gf_CreatePostBuildStatAnalysisRow (text lp_labelText, int lp_rowOffset);
+void gf_CreatePostBuildBuildOrderListBox ();
 void gf_UpdatePostBuildMatchupText ();
 void gf_UpdatePostBuildReportDialogValues (bool lp_updateBuildOrderListBox);
 void gf_UpdatePostBuildStatRowValueasInt (int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter);
 void gf_UpdatePostBuildStatRowValueasReal (fixed lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter);
 void gf_UpdatePostBuildStatRowValueasTime (int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter);
-void gf_ResetBuildOrderListBox ();
-void gf_UpdateBuildOrderListBox ();
 void gf_CreateStatsDialog ();
+void gf_CreateStatsDialogHeaderRowLabels ();
+void gf_CreateStatsDialogRow (int lp_rowOffset);
+void gf_CreateStatsBuildOrderListBox ();
 void gf_RefreshStatsDialog ();
+void gf_RefreshStatsDialogRow (int lp_rowOffset, text lp_labelText, text lp_statValueText);
 void gf_CloseStatsDialogandUnpause ();
-void gf_UpdateStatValueDialogItemText (int lp_rowOffset, text lp_statValue);
-void gf_CreateStatsDialogRow (text lp_labelText, int lp_rowOffset);
 void gf_InitializeBankDefaults ();
 void gf_InitializeDialogDefaults ();
 void gf_InitializeGameDefaults ();
@@ -1640,6 +1648,34 @@ void gf_CreateMenuSelectButtons (int lp_menuIndex) {
     gv_alertMenuButton[lp_menuIndex] = DialogControlLastCreated();
 }
 
+void gf_ResetBuildOrderListBox (int lp_listBox) {
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    DialogControlRemoveAllItems(lp_listBox, PlayerGroupAll());
+}
+
+void gf_UpdateBuildOrderListBoxwithCurrentBuild (int lp_listBox) {
+    int autoF990DA09_ae;
+    int autoF990DA09_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    autoF990DA09_ae = (gv_currentBuildOrderStepCursor-1);
+    autoF990DA09_ai = 1;
+    lv_i = 0;
+    for ( ; ( (autoF990DA09_ai >= 0 && lv_i <= autoF990DA09_ae) || (autoF990DA09_ai <= 0 && lv_i >= autoF990DA09_ae) ) ; lv_i += autoF990DA09_ai ) {
+        DialogControlAddItem(lp_listBox, PlayerGroupAll(), gf_GetCurrentBuildOrderStepText(lv_i));
+    }
+}
+
 void gf_CreateHelpDialog () {
     // Implementation
     DialogCreate(gv_benchmarkDialogWidth, gv_benchmarkDialogHeight, c_anchorCenter, 0, -150, true);
@@ -1696,8 +1732,16 @@ void gf_InitializePostBuildReportDialog () {
     gf_CreatePostBuildReportDialog();
     gf_CreatePostBuildReportHeaderRowLabels();
     gf_CreatePostBuildReportStatsSection();
-    gf_CreatePostBuildBuildStepsListBox();
+    gf_CreatePostBuildBuildOrderListBox();
     gf_CreatePostBuildReportDialogButtons();
+}
+
+void gf_CreatePostBuildReportDialog () {
+    // Implementation
+    DialogCreate(gv_postBuildReportDialogWidth, gv_benchmarkDialogHeight, c_anchorCenter, 0, -150, true);
+    gv_postBuildReportDialog = DialogLastCreated();
+    DialogSetTitle(DialogLastCreated(), gv_postBuildReportDialogTitle);
+    DialogSetTransparency(DialogLastCreated(), 0.0);
 }
 
 void gf_CreatePostBuildReportDialogButtons () {
@@ -1708,14 +1752,6 @@ void gf_CreatePostBuildReportDialogButtons () {
     gv_postBuildReportResetBuildButton = DialogControlLastCreated();
     libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_startButtonWidth, gv_startButtonHeight, c_anchorBottom, 0, gv_menuPadding, StringExternal("Param/Value/2C18426B"), StringExternal("Param/Value/12E7CB88"), "");
     gv_backToMenuButton = DialogControlLastCreated();
-}
-
-void gf_CreatePostBuildReportDialog () {
-    // Implementation
-    DialogCreate(gv_postBuildReportDialogWidth, gv_benchmarkDialogHeight, c_anchorCenter, 0, -150, true);
-    gv_postBuildReportDialog = DialogLastCreated();
-    DialogSetTitle(DialogLastCreated(), gv_postBuildReportDialogTitle);
-    DialogSetTransparency(DialogLastCreated(), 0.0);
 }
 
 void gf_CreatePostBuildReportHeaderRowLabels () {
@@ -1733,7 +1769,7 @@ void gf_CreatePostBuildReportHeaderRowLabels () {
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_postBuildReportStatValueWidth, gv_postBuildReportDialogItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_postBuildReportStatLabelWidth), lv_labelHeightOffset, StringExternal("Param/Value/F5E658E8"), ColorWithAlpha(0,0,0,0), false, 2.0);
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_postBuildReportStatBestWidth, gv_postBuildReportDialogItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_postBuildReportStatLabelWidth+gv_postBuildReportStatValueWidth), lv_labelHeightOffset, StringExternal("Param/Value/F85B1717"), ColorWithAlpha(0,0,0,0), false, 2.0);
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_postBuildReportStatPercentDifferenceWidth, gv_postBuildReportDialogItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_postBuildReportStatLabelWidth+gv_postBuildReportStatValueWidth+gv_postBuildReportStatBestWidth), lv_labelHeightOffset, StringExternal("Param/Value/E400253A"), ColorWithAlpha(0,0,0,0), false, 2.0);
-    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_postBuildReportBuildStepsListBoxWidth, gv_postBuildReportDialogItemHeight, c_anchorTopRight, (gv_menuPadding), lv_labelHeightOffset, StringExternal("Param/Value/C9C07C6F"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_buildOrderListBoxWidth, gv_postBuildReportDialogItemHeight, c_anchorTopRight, (gv_menuPadding), lv_labelHeightOffset, StringExternal("Param/Value/C9C07C6F"), ColorWithAlpha(0,0,0,0), false, 2.0);
 }
 
 void gf_CreatePostBuildDialogSectionLabel () {
@@ -1746,35 +1782,35 @@ void gf_CreatePostBuildReportStatsSection () {
     // Variable Initialization
 
     // Implementation
-    gf_CreatePostBuildMacroStatRow(StringExternal("Param/Value/6B84EE69"), lv_rowNum);
+    gf_CreatePostBuildStatAnalysisRow(StringExternal("Param/Value/6B84EE69"), lv_rowNum);
     lv_rowNum += 1;
-    gf_CreatePostBuildMacroStatRow(StringExternal("Param/Value/0E4EEB09"), lv_rowNum);
+    gf_CreatePostBuildStatAnalysisRow(StringExternal("Param/Value/0E4EEB09"), lv_rowNum);
     lv_rowNum += 1;
-    gf_CreatePostBuildMacroStatRow(StringExternal("Param/Value/20678D32"), lv_rowNum);
+    gf_CreatePostBuildStatAnalysisRow(StringExternal("Param/Value/20678D32"), lv_rowNum);
     lv_rowNum += 1;
-    gf_CreatePostBuildMacroStatRow(StringExternal("Param/Value/3C294871"), lv_rowNum);
+    gf_CreatePostBuildStatAnalysisRow(StringExternal("Param/Value/3C294871"), lv_rowNum);
     lv_rowNum += 1;
-    gf_CreatePostBuildMacroStatRow(StringExternal("Param/Value/73C24276"), lv_rowNum);
+    gf_CreatePostBuildStatAnalysisRow(StringExternal("Param/Value/73C24276"), lv_rowNum);
     lv_rowNum += 1;
-    gf_CreatePostBuildMacroStatRow(StringExternal("Param/Value/63136B44"), lv_rowNum);
+    gf_CreatePostBuildStatAnalysisRow(StringExternal("Param/Value/63136B44"), lv_rowNum);
     lv_rowNum += 1;
-    gf_CreatePostBuildMacroStatRow(StringExternal("Param/Value/EC88E789"), lv_rowNum);
+    gf_CreatePostBuildStatAnalysisRow(StringExternal("Param/Value/EC88E789"), lv_rowNum);
     lv_rowNum += 1;
-    gf_CreatePostBuildMacroStatRow(StringExternal("Param/Value/5AB70D09"), lv_rowNum);
+    gf_CreatePostBuildStatAnalysisRow(StringExternal("Param/Value/5AB70D09"), lv_rowNum);
     lv_rowNum += 1;
-    gf_CreatePostBuildMacroStatRow(StringExternal("Param/Value/F41844C5"), lv_rowNum);
+    gf_CreatePostBuildStatAnalysisRow(StringExternal("Param/Value/F41844C5"), lv_rowNum);
     lv_rowNum += 1;
-    gf_CreatePostBuildMacroStatRow(StringExternal("Param/Value/E2A18B66"), lv_rowNum);
+    gf_CreatePostBuildStatAnalysisRow(StringExternal("Param/Value/E2A18B66"), lv_rowNum);
     lv_rowNum += 1;
-    gf_CreatePostBuildMacroStatRow(StringExternal("Param/Value/36C10325"), lv_rowNum);
+    gf_CreatePostBuildStatAnalysisRow(StringExternal("Param/Value/36C10325"), lv_rowNum);
     lv_rowNum += 1;
-    gf_CreatePostBuildMacroStatRow(StringExternal("Param/Value/60211347"), lv_rowNum);
+    gf_CreatePostBuildStatAnalysisRow(StringExternal("Param/Value/60211347"), lv_rowNum);
     lv_rowNum += 1;
-    gf_CreatePostBuildMacroStatRow(StringExternal("Param/Value/C219FD1E"), lv_rowNum);
+    gf_CreatePostBuildStatAnalysisRow(StringExternal("Param/Value/C219FD1E"), lv_rowNum);
     lv_rowNum += 1;
 }
 
-void gf_CreatePostBuildMacroStatRow (text lp_labelText, int lp_rowOffset) {
+void gf_CreatePostBuildStatAnalysisRow (text lp_labelText, int lp_rowOffset) {
     // Variable Declarations
     int lv_yOffset;
 
@@ -1793,10 +1829,10 @@ void gf_CreatePostBuildMacroStatRow (text lp_labelText, int lp_rowOffset) {
     gv_postBuildReportDialogItems[lp_rowOffset][3] = DialogControlLastCreated();
 }
 
-void gf_CreatePostBuildBuildStepsListBox () {
+void gf_CreatePostBuildBuildOrderListBox () {
     // Implementation
     DialogControlCreate(DialogLastCreated(), c_triggerControlTypeListBox);
-    DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv_postBuildReportBuildStepsListBoxWidth, gv_postBuildReportBuildStepsListBoxHeight);
+    DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv_buildOrderListBoxWidth, gv_buildOrderListBoxHeight);
     DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopRight, gv_menuPadding, (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_sectionLabelHeight));
     gv_postBuildReportBuildOrderListBox = DialogControlLastCreated();
 }
@@ -1825,8 +1861,8 @@ void gf_UpdatePostBuildReportDialogValues (bool lp_updateBuildOrderListBox) {
     gf_UpdatePostBuildStatRowValueasInt(gf_GetAverageUnspentGas(), gv_bestAverageUnspentGasEntryKey, 11, false);
     gf_UpdatePostBuildStatRowValueasReal(gf_GetAverageBuildAPM(), gv_bestAverageAPMEntryKey, 12, true);
     if ((lp_updateBuildOrderListBox == true)) {
-        gf_ResetBuildOrderListBox();
-        gf_UpdateBuildOrderListBox();
+        gf_ResetBuildOrderListBox(gv_postBuildReportBuildOrderListBox);
+        gf_UpdateBuildOrderListBoxwithCurrentBuild(gv_postBuildReportBuildOrderListBox);
     }
     else {
     }
@@ -1877,58 +1913,101 @@ void gf_UpdatePostBuildStatRowValueasTime (int lp_value, string lp_benchmarkEntr
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[lp_rowNumber][3], gf_CalculateIntPercentDifferenceasText(lp_value, lv_benchmarkValue, lp_higherIsBetter), PlayerGroupAll());
 }
 
-void gf_ResetBuildOrderListBox () {
-    // Variable Declarations
-    int lv_i;
-
-    // Variable Initialization
-
-    // Implementation
-    DialogControlRemoveAllItems(gv_postBuildReportBuildOrderListBox, PlayerGroupAll());
-}
-
-void gf_UpdateBuildOrderListBox () {
-    int autoF990DA09_ae;
-    int autoF990DA09_ai;
-
-    // Variable Declarations
-    int lv_i;
-
-    // Variable Initialization
-
-    // Implementation
-    autoF990DA09_ae = (gv_currentBuildOrderStepCursor-1);
-    autoF990DA09_ai = 1;
-    lv_i = 0;
-    for ( ; ( (autoF990DA09_ai >= 0 && lv_i <= autoF990DA09_ae) || (autoF990DA09_ai <= 0 && lv_i >= autoF990DA09_ae) ) ; lv_i += autoF990DA09_ai ) {
-        DialogControlAddItem(gv_postBuildReportBuildOrderListBox, PlayerGroupAll(), gf_GetCurrentBuildOrderStepText(lv_i));
-    }
-}
-
 void gf_CreateStatsDialog () {
+    int autoF8DF752B_ae;
+    int autoF8DF752B_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
     // Implementation
-    DialogCreate(gv_statsDialogWidth, gv_statsDialogHeight, c_anchorCenter, 0, -150, true);
+    DialogCreate(gv_statsDialogWidth, gv_benchmarkDialogHeight, c_anchorCenter, 0, -150, true);
     gv_statsDialog = DialogLastCreated();
     DialogSetTransparency(DialogLastCreated(), 0.0);
     DialogSetTitle(gv_statsDialog, gv_statsDialogTitle);
-    gf_CreateStatsDialogRow(StringExternal("Param/Value/2C91DE39"), 0);
-    gf_CreateStatsDialogRow(StringExternal("Param/Value/9765AA5A"), 1);
-    gf_CreateStatsDialogRow(StringExternal("Param/Value/B4C85F93"), 2);
-    gf_CreateStatsDialogRow(StringExternal("Param/Value/1D91E2F2"), 3);
-    gf_CreateStatsDialogRow(StringExternal("Param/Value/D81ABE05"), 4);
-    gf_CreateStatsDialogRow(StringExternal("Param/Value/8274E9D4"), 5);
+    gf_CreateStatsDialogHeaderRowLabels();
+    autoF8DF752B_ae = gv_statsDialogMaxItems;
+    autoF8DF752B_ai = 1;
+    lv_i = 0;
+    for ( ; ( (autoF8DF752B_ai >= 0 && lv_i <= autoF8DF752B_ae) || (autoF8DF752B_ai <= 0 && lv_i >= autoF8DF752B_ae) ) ; lv_i += autoF8DF752B_ai ) {
+        gf_CreateStatsDialogRow(lv_i);
+    }
+    gf_CreateStatsBuildOrderListBox();
     libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_startButtonWidth, gv_startButtonHeight, c_anchorBottom, 0, gv_menuPadding, StringExternal("Param/Value/5BF28F50"), StringExternal("Param/Value/35192382"), "");
     gv_statsOkButton = DialogControlLastCreated();
 }
 
-void gf_RefreshStatsDialog () {
+void gf_CreateStatsDialogHeaderRowLabels () {
+    // Variable Declarations
+    int lv_labelHeightOffset;
+
+    // Variable Initialization
+    lv_labelHeightOffset = (gv_menuPadding+gv_benchmarkDialogTitleSpacer);
+
     // Implementation
-    gf_UpdateStatValueDialogItemText(0, IntToText(gv_workersCreatedCurrentBuild));
-    gf_UpdateStatValueDialogItemText(1, IntToText(gf_GetIdleProductionTime()));
-    gf_UpdateStatValueDialogItemText(2, IntToText(gf_GetTimeSupplyBlocked()));
-    gf_UpdateStatValueDialogItemText(3, IntToText(gf_GetAverageUnspentMinerals()));
-    gf_UpdateStatValueDialogItemText(4, IntToText(gf_GetAverageUnspentGas()));
-    gf_UpdateStatValueDialogItemText(5, IntToText(gf_GetAverageBuildAPM()));
+    TextExpressionSetToken("Param/Expression/CC2AD512", "A", StringExternal("Param/Value/6B6264D9"));
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_statLabelWidth, gv_postBuildReportDialogItemHeight, c_anchorTopLeft, gv_menuPadding, lv_labelHeightOffset, TextExpressionAssemble("Param/Expression/CC2AD512"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_statValueWidth, gv_postBuildReportDialogItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_statLabelWidth), lv_labelHeightOffset, StringExternal("Param/Value/469EC4F5"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_buildOrderListBoxWidth, gv_postBuildReportDialogItemHeight, c_anchorTopRight, (gv_menuPadding), lv_labelHeightOffset, StringExternal("Param/Value/527AE2D2"), ColorWithAlpha(0,0,0,0), false, 2.0);
+}
+
+void gf_CreateStatsDialogRow (int lp_rowOffset) {
+    // Variable Declarations
+    int lv_xOffset;
+    int lv_yOffset;
+
+    // Variable Initialization
+    lv_xOffset = gv_menuPadding;
+    lv_yOffset = (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_sectionLabelHeight+lp_rowOffset*gv_postBuildReportDialogItemHeight);
+
+    // Implementation
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_statLabelWidth, gv_menuItemHeight, c_anchorTopLeft, lv_xOffset, lv_yOffset, StringExternal("Param/Value/0D0D4C72"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_statValueDialogItems[lp_rowOffset][0] = DialogControlLastCreated();
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_statValueWidth, gv_menuItemHeight, c_anchorTopLeft, (gv_statLabelWidth+lv_xOffset), lv_yOffset, StringExternal("Param/Value/FA90A0B2"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_statValueDialogItems[lp_rowOffset][1] = DialogControlLastCreated();
+}
+
+void gf_CreateStatsBuildOrderListBox () {
+    // Implementation
+    DialogControlCreate(DialogLastCreated(), c_triggerControlTypeListBox);
+    DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv_buildOrderListBoxWidth, gv_buildOrderListBoxHeight);
+    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopRight, gv_menuPadding, (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_sectionLabelHeight));
+    gv_statsDialogBuildOrderListBox = DialogControlLastCreated();
+}
+
+void gf_RefreshStatsDialog () {
+    // Variable Declarations
+    int lv_rowNum;
+
+    // Variable Initialization
+
+    // Implementation
+    gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/79A57BD9"), IntToText(gv_workersCreatedCurrentBuild));
+    lv_rowNum += 1;
+    gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/67D50843"), TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gf_GetIdleProductionTime()));
+    lv_rowNum += 1;
+    gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/C1F8724A"), TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gf_GetTimeSupplyBlocked()));
+    lv_rowNum += 1;
+    gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/1D3859A8"), IntToText(gf_GetAverageBuildAPM()));
+    lv_rowNum += 1;
+    gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/97924FC0"), FixedToText(gf_GetAverageResourceCollectionRate(), 0));
+    lv_rowNum += 1;
+    gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/A871F70E"), IntToText(gf_GetAverageUnspentMinerals()));
+    lv_rowNum += 1;
+    gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/5B6AA620"), IntToText(gf_GetAverageUnspentGas()));
+    lv_rowNum += 1;
+    gf_ResetBuildOrderListBox(gv_statsDialogBuildOrderListBox);
+    gf_UpdateBuildOrderListBoxwithCurrentBuild(gv_statsDialogBuildOrderListBox);
+}
+
+void gf_RefreshStatsDialogRow (int lp_rowOffset, text lp_labelText, text lp_statValueText) {
+    // Implementation
+    TextExpressionSetToken("Param/Expression/AFE69EE0", "A", lp_labelText);
+    libNtve_gf_SetDialogItemText(gv_statValueDialogItems[lp_rowOffset][0], TextExpressionAssemble("Param/Expression/AFE69EE0"), PlayerGroupAll());
+    TextExpressionSetToken("Param/Expression/2A19E61D", "A", lp_statValueText);
+    libNtve_gf_SetDialogItemText(gv_statValueDialogItems[lp_rowOffset][1], TextExpressionAssemble("Param/Expression/2A19E61D"), PlayerGroupAll());
 }
 
 void gf_CloseStatsDialogandUnpause () {
@@ -1937,26 +2016,6 @@ void gf_CloseStatsDialogandUnpause () {
     gf_UnpauseGame();
     Wait(0.1, c_timeGame);
     gv_statsDialogOpen = false;
-}
-
-void gf_UpdateStatValueDialogItemText (int lp_rowOffset, text lp_statValue) {
-    // Implementation
-    TextExpressionSetToken("Param/Expression/AFE69EE0", "A", lp_statValue);
-    libNtve_gf_SetDialogItemText(gv_statValueDialogItems[lp_rowOffset], TextExpressionAssemble("Param/Expression/AFE69EE0"), PlayerGroupAll());
-}
-
-void gf_CreateStatsDialogRow (text lp_labelText, int lp_rowOffset) {
-    // Variable Declarations
-    int lv_offset;
-
-    // Variable Initialization
-    lv_offset = -60;
-
-    // Implementation
-    TextExpressionSetToken("Param/Expression/0D0D4C72", "A", lp_labelText);
-    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_statLabelWidth, gv_menuItemHeight, c_anchorTop, lv_offset, (gv_menuPadding+gv_benchmarkDialogTitleSpacer+lp_rowOffset*gv_menuItemHeight), TextExpressionAssemble("Param/Expression/0D0D4C72"), ColorWithAlpha(0,0,0,0), false, 2.0);
-    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_statValueWidth, gv_menuItemHeight, c_anchorTop, (gv_statLabelWidth+lv_offset), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+lp_rowOffset*gv_menuItemHeight), StringExternal("Param/Value/FA90A0B2"), ColorWithAlpha(0,0,0,0), false, 2.0);
-    gv_statValueDialogItems[lp_rowOffset] = DialogControlLastCreated();
 }
 
 void gf_InitializeBankDefaults () {
@@ -2194,12 +2253,14 @@ void gf_ResetGameVariables () {
     gv_timeProductionIdleThisBuild = 0;
     gv_timeSupplyBlockedThisBuild = 0;
     gv_cumulativeAverageUnspentMineralsCurrentBuild = 0;
-    gv_totalMineralSamplesThisBuild = 0;
     gv_cumulativeAverageUnspentGasCurrentBuild = 0;
-    gv_totalGasSamplesThisBuild = 0;
+    gv_averageUnspentResourceSamples = 0;
+    gv_cumulativeAverageMineralResourceCollectionRateCurrentBuild = 0;
+    gv_cumulativeAverageGasResourceCollectionRateCurrentBuild = 0;
+    gv_resourceCollectionRateSamplesCurrentBuild = 0;
     gv_cumulativeAPM = 0;
     gv_totalAPMSamplesThisBuild = 0;
-    gv_totalMineralsCollectedCurrentBuild = 50;
+    gv_totalMineralsCollectedCurrentBuild = 0;
     gv_totalGasCollectedCurrentBuild = 0;
 }
 
@@ -2629,9 +2690,9 @@ void gf_ResetStatistics () {
     gv_totalGasSamplesThisBuild = 0;
     gv_cumulativeAPM = 0;
     gv_totalAPMSamplesThisBuild = 0;
-    gv_cumulativeAverageMineralResourceColelctionRateCurrentBuild = 0;
-    gv_cumulativeAverageGasResourceColelctionRateCurrentBuild = 0;
-    gv_resourceColelctionRateSamplesCurrentBuild = 0;
+    gv_cumulativeAverageMineralResourceCollectionRateCurrentBuild = 0;
+    gv_cumulativeAverageGasResourceCollectionRateCurrentBuild = 0;
+    gv_resourceCollectionRateSamplesCurrentBuild = 0;
     gv_cumulativeAverageUnspentMineralsCurrentBuild = 0;
     gv_cumulativeAverageUnspentGasCurrentBuild = 0;
     gv_averageUnspentResourceSamples = 0;
@@ -3444,8 +3505,8 @@ fixed gf_GetAverageResourceCollectionRate () {
     // Variable Initialization
 
     // Implementation
-    if ((gv_resourceColelctionRateSamplesCurrentBuild >= 1)) {
-        lv_result = ((gv_cumulativeAverageMineralResourceColelctionRateCurrentBuild+gv_cumulativeAverageGasResourceColelctionRateCurrentBuild)/gv_resourceColelctionRateSamplesCurrentBuild);
+    if ((gv_resourceCollectionRateSamplesCurrentBuild >= 1)) {
+        lv_result = ((gv_cumulativeAverageMineralResourceCollectionRateCurrentBuild+gv_cumulativeAverageGasResourceCollectionRateCurrentBuild)/gv_resourceCollectionRateSamplesCurrentBuild);
     }
     else {
         lv_result = 0.0;
@@ -3465,8 +3526,8 @@ fixed gf_GetAverageUnspentResources () {
 
 int gf_GetAverageUnspentMinerals () {
     // Implementation
-    if ((gv_totalMineralSamplesThisBuild >= 1)) {
-        return FixedToInt((gv_cumulativeAverageUnspentMineralsCurrentBuild/gv_totalMineralSamplesThisBuild));
+    if ((gv_averageUnspentResourceSamples >= 1)) {
+        return FixedToInt((gv_cumulativeAverageUnspentMineralsCurrentBuild/gv_averageUnspentResourceSamples));
     }
     else {
         return 0;
@@ -3475,8 +3536,8 @@ int gf_GetAverageUnspentMinerals () {
 
 int gf_GetAverageUnspentGas () {
     // Implementation
-    if ((gv_totalGasSamplesThisBuild >= 1)) {
-        return FixedToInt((gv_cumulativeAverageUnspentGasCurrentBuild/gv_totalGasSamplesThisBuild));
+    if ((gv_averageUnspentResourceSamples >= 1)) {
+        return FixedToInt((gv_cumulativeAverageUnspentGasCurrentBuild/gv_averageUnspentResourceSamples));
     }
     else {
         return 0;
@@ -5692,6 +5753,7 @@ bool gt_UpdateMineralsCollectedThisBuild_Func (bool testConds, bool runActions) 
     }
 
     gv_totalMineralsCollectedCurrentBuild += EventPlayerPropertyChangeInt();
+    gv_totalMineralSamplesThisBuild += 1;
     return true;
 }
 
@@ -5718,6 +5780,7 @@ bool gt_UpdateGasCollectedThisBuild_Func (bool testConds, bool runActions) {
     }
 
     gv_totalGasCollectedCurrentBuild += EventPlayerPropertyChangeInt();
+    gv_totalGasSamplesThisBuild += 1;
     return true;
 }
 
@@ -5815,9 +5878,9 @@ bool gt_UpdateResourceCollectionRate_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    gv_cumulativeAverageMineralResourceColelctionRateCurrentBuild += PlayerScoreValueGetAsFixed(1, "MineralsCollectionRate");
-    gv_cumulativeAverageGasResourceColelctionRateCurrentBuild += PlayerScoreValueGetAsFixed(1, "VespeneCollectionRate");
-    gv_resourceColelctionRateSamplesCurrentBuild += 1;
+    gv_cumulativeAverageMineralResourceCollectionRateCurrentBuild += PlayerScoreValueGetAsFixed(1, "MineralsCollectionRate");
+    gv_cumulativeAverageGasResourceCollectionRateCurrentBuild += PlayerScoreValueGetAsFixed(1, "VespeneCollectionRate");
+    gv_resourceCollectionRateSamplesCurrentBuild += 1;
     return true;
 }
 
