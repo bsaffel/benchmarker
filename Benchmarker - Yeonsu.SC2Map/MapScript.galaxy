@@ -572,9 +572,10 @@ void gf_SaveBenchmarkMenuConfiguration (string lp_sectionKey);
 void gf_LoadBenchmarkMenuConfiguration (string lp_sectionKey);
 void gf_SaveBenchmarkBuildOrder ();
 void gf_LoadBenchmarkBuildOrder ();
+void gf_ClearBenchmarkBuildOrder ();
 void gf_SaveBenchmarkBuildStep (int lp_stepNumber);
 void gf_LoadBenchmarkBuildStep (int lp_stepNumber);
-void gf_ClearBenchmarkBuildOrder ();
+void gf_ClearBenchmarkBuildStep (int lp_stepNumber);
 void gf_SaveCurrentStatsasNewBenchmark ();
 void gf_ResetBenchmarkBuildStatistics ();
 void gf_SaveIntAsSupplyBenchmark (int lp_value, string lp_entryKey);
@@ -1129,6 +1130,31 @@ void gf_LoadBenchmarkBuildOrder () {
     }
 }
 
+void gf_ClearBenchmarkBuildOrder () {
+    int autoD5F67844_ae;
+    int autoD5F67844_ai;
+
+    // Variable Declarations
+    int lv_currentStepNum;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((gv_debugBank == true)) {
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/F1506C2B"));
+    }
+    else {
+    }
+    autoD5F67844_ae = (gv_currentBuildOrderStepCursor-1);
+    autoD5F67844_ai = 1;
+    lv_currentStepNum = 0;
+    for ( ; ( (autoD5F67844_ai >= 0 && lv_currentStepNum <= autoD5F67844_ae) || (autoD5F67844_ai <= 0 && lv_currentStepNum >= autoD5F67844_ae) ) ; lv_currentStepNum += autoD5F67844_ai ) {
+        gf_ClearBenchmarkBuildStep(lv_currentStepNum);
+    }
+    BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey);
+    BankSave(gv_benchmarkerBank);
+}
+
 void gf_SaveBenchmarkBuildStep (int lp_stepNumber) {
     // Implementation
     BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_stepTypeBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lp_stepNumber].lv_stepType);
@@ -1149,8 +1175,14 @@ void gf_LoadBenchmarkBuildStep (int lp_stepNumber) {
     gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_elapsedSecondsBuildOrderStepEntryKey));
 }
 
-void gf_ClearBenchmarkBuildOrder () {
+void gf_ClearBenchmarkBuildStep (int lp_stepNumber) {
     // Implementation
+    BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_stepTypeBuildOrderStepEntryKey));
+    BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_unitTypeBuildOrderStepEntryKey));
+    BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_upgradeBuildOrderStepEntryKey));
+    BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_supplyBuildOrderStepEntryKey));
+    BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_amountBuildOrderStepEntryKey));
+    BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_elapsedSecondsBuildOrderStepEntryKey));
 }
 
 void gf_SaveCurrentStatsasNewBenchmark () {
