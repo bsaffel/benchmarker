@@ -1152,6 +1152,8 @@ void gf_ClearBenchmarkBuildOrder () {
         gf_ClearBenchmarkBuildStep(lv_currentStepNum);
     }
     BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey);
+    BankValueSetFromFlag(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_practiceAgainstBenchmarkBuildOrderKey, false);
+    BankValueSetFromFlag(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_displayBuildHintsKey, false);
     BankSave(gv_benchmarkerBank);
 }
 
@@ -3491,7 +3493,7 @@ bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType) {
     else if (((gv_trackSupplyUnitsAsObjectives == true) && (PlayerScoreValueGetAsInt(1, "FoodUsed") <= gv_trackSupplyUnitObjectivesUntil) && ((lp_unitType == "Overlord") || (lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon")))) {
         lv_result = true;
     }
-    else if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (!(((lp_unitType == "CreepTumorQueen")))) && (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery"))))))) {
+    else if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (!(((lp_unitType == "CreepTumorQueen") || (lp_unitType == "CreepTumor") || (lp_unitType == "CreepTumorBurrowed")))) && (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery"))))))) {
         lv_result = true;
     }
     if ((gv_debugBuildOrder == true)) {
