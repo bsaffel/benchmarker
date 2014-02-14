@@ -630,6 +630,8 @@ void gf_CreateStatsBuildOrderListBox ();
 void gf_RefreshStatsDialog ();
 void gf_RefreshStatsDialogRow (int lp_rowOffset, text lp_labelText, text lp_statValueText);
 void gf_CloseStatsDialogandUnpause ();
+void gf_LogStringMessage (bool lp_alertTypeFlag, string lp_message);
+void gf_LogTextMessage (bool lp_alertTypeFlag, text lp_message);
 void gf_InitializeBankDefaults ();
 void gf_InitializeDialogDefaults ();
 void gf_InitializeGameDefaults ();
@@ -674,6 +676,7 @@ bool gf_IsSupplyDepotorPylonUnderConstruction ();
 unitgroup gf_GetAllPlayer1UnitsforType (string lp_unitType);
 int gf_GetDefaultMacroEnergyThreshold ();
 string gf_GetIconForBuildingType (string lp_unitType);
+bool gf_IsProductionIdle ();
 bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType);
 string gf_GetCurrentlySelectedMatchupasBankSectionKey ();
 string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
@@ -704,7 +707,6 @@ fixed gf_GetAverageResourceCollectionRate ();
 fixed gf_GetAverageUnspentResources ();
 int gf_GetAverageUnspentMinerals ();
 int gf_GetAverageUnspentGas ();
-bool gf_IsProductionIdle ();
 int gf_GetTimeSupplyBlocked ();
 int gf_GetIdleProductionTime ();
 int gf_GetAverageBuildAPM ();
@@ -2050,6 +2052,20 @@ void gf_CloseStatsDialogandUnpause () {
     gv_statsDialogOpen = false;
 }
 
+void gf_LogStringMessage (bool lp_alertTypeFlag, string lp_message) {
+    // Implementation
+    gf_LogTextMessage(lp_alertTypeFlag, StringToText(lp_message));
+}
+
+void gf_LogTextMessage (bool lp_alertTypeFlag, text lp_message) {
+    // Implementation
+    if ((lp_alertTypeFlag == true)) {
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, lp_message);
+    }
+    else {
+    }
+}
+
 void gf_InitializeBankDefaults () {
     string auto12733010_val;
 
@@ -3028,6 +3044,34 @@ string gf_GetIconForBuildingType (string lp_unitType) {
     }
 }
 
+bool gf_IsProductionIdle () {
+    int autoBD02A5A8_ae;
+    int autoBD02A5A8_ai;
+
+    // Variable Declarations
+    bool lv_result;
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((gv_alertProductionIdleNumProductionTypes > 0)) {
+        autoBD02A5A8_ae = (gv_alertProductionIdleNumProductionTypes-1);
+        autoBD02A5A8_ai = 1;
+        lv_i = 0;
+        for ( ; ( (autoBD02A5A8_ai >= 0 && lv_i <= autoBD02A5A8_ae) || (autoBD02A5A8_ai <= 0 && lv_i >= autoBD02A5A8_ae) ) ; lv_i += autoBD02A5A8_ai ) {
+            if ((gf_IsUnitTypeTrainingQueueEmpty(gv_alertProductionIdleUnitTypes[lv_i]) == true)) {
+                lv_result = true;
+            }
+            else {
+            }
+        }
+    }
+    else {
+    }
+    return lv_result;
+}
+
 bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
     unitgroup auto9BA590D3_g;
     int auto9BA590D3_u;
@@ -3572,34 +3616,6 @@ int gf_GetAverageUnspentGas () {
     else {
         return 0;
     }
-}
-
-bool gf_IsProductionIdle () {
-    int autoBD02A5A8_ae;
-    int autoBD02A5A8_ai;
-
-    // Variable Declarations
-    bool lv_result;
-    int lv_i;
-
-    // Variable Initialization
-
-    // Implementation
-    if ((gv_alertProductionIdleNumProductionTypes > 0)) {
-        autoBD02A5A8_ae = (gv_alertProductionIdleNumProductionTypes-1);
-        autoBD02A5A8_ai = 1;
-        lv_i = 0;
-        for ( ; ( (autoBD02A5A8_ai >= 0 && lv_i <= autoBD02A5A8_ae) || (autoBD02A5A8_ai <= 0 && lv_i >= autoBD02A5A8_ae) ) ; lv_i += autoBD02A5A8_ai ) {
-            if ((gf_IsUnitTypeTrainingQueueEmpty(gv_alertProductionIdleUnitTypes[lv_i]) == true)) {
-                lv_result = true;
-            }
-            else {
-            }
-        }
-    }
-    else {
-    }
-    return lv_result;
 }
 
 int gf_GetTimeSupplyBlocked () {
