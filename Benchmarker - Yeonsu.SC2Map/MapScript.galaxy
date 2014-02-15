@@ -260,10 +260,6 @@ int gv_benchmarkEndBuildatMinutes;
 int gv_benchmarkEndBuildatSeconds;
 int gv_benchmarkEndBuildTotalSeconds;
 bool gv_practiceAgainstBenchmarkBuildOrder;
-bool gv_displayBuildHints;
-fixed gv_buildHintTimeThreshold;
-timer gv_displayBuildHintCooldownTimer;
-int gv_buildHintCursor;
 bool gv_trackSupplyUnitsAsObjectives;
 int gv_trackSupplyUnitObjectivesUntil;
 int gv_buildOrderMaxGasSupply;
@@ -272,6 +268,10 @@ fixed gv_lastCreatedUnitTimestamp;
 string gv_unitStepType;
 string gv_upgradeStepType;
 int gv_trackQueensUntil;
+bool gv_displayBuildHints;
+fixed gv_buildHintTimeThreshold;
+timer gv_displayBuildHintCooldownTimer;
+int gv_buildHintCursor;
 int gv_maxCurrentBuildOrderStepsTracked;
 int gv_currentBuildOrderStepCursor;
 gs_BuildOrderStep[51] gv_currentBuildOrderSteps;
@@ -282,6 +282,8 @@ int gv_totalNumBenchmarkBuildOrderSteps;
 int[11] gv_benchmarkBuildOrderStepObjectives;
 gs_BuildOrderStep[51] gv_benchmarkBuildOrderSteps;
 int gv_benchmarkBuildOrderStepCursor;
+int gv_benchmarkBuildOrderObjectiveCycleThreshold;
+int gv_maxDisplayedBuildOrderObjectives1;
 color gv_benchmarkSupplyObjectiveTextColor;
 int gv_greenBenchmarkSupplyThreshold;
 int gv_greenBenchmarkSecondsThreshold;
@@ -531,9 +533,9 @@ void InitGlobals () {
     gv_benchmark2Timer = TimerCreate();
     gv_benchmark3Timer = TimerCreate();
     gv_benchmarkMaxTimeTimer = TimerCreate();
-    gv_displayBuildHintCooldownTimer = TimerCreate();
     gv_unitStepType = "unit";
     gv_upgradeStepType = "upgrade";
+    gv_displayBuildHintCooldownTimer = TimerCreate();
     gv_maxCurrentBuildOrderStepsTracked = 50;
     for (init_i = 0; init_i <= 50; init_i += 1) {
         gv_currentBuildOrderSteps[init_i].lv_stepType = "";
@@ -662,6 +664,8 @@ void gf_CreateIndividualBenchmarkBuildOrderStepObjective (int lp_buildStep);
 void gf_CompleteBenchmarkBuildOrderStepObjective (int lp_benchmarkBuildOrderIndex);
 void gf_FailBenchmarkBuildOrderStepObjective (int lp_benchmarkBuildOrderIndex);
 void gf_CorrectFailedBenchmarkBuildOrderStepObjective ();
+void gf_CycleBenchmarkBuildOrderObjectives ();
+void gf_AdjustAllBenchmarkBuildOrderObjectivePositionsUpby1 ();
 void gf_InitializeBenchmarkBuildOrder ();
 void gf_EvaluateBenchmarkBuildOrderStep (string lp_unitType);
 void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType);
@@ -2155,6 +2159,8 @@ void gf_InitializeGameDefaults () {
     gv_trackQueensUntil = 40;
     gv_buildOrderMaxGasSupply = 60;
     gv_buildHintTimeThreshold = 10.0;
+    gv_maxDisplayedBuildOrderObjectives1 = 9;
+    gv_benchmarkBuildOrderObjectiveCycleThreshold = 5;
     gv_benchmarkSupplyDefaults[0] = 30;
     gv_benchmarkSupplyDefaults[1] = 55;
     gv_benchmarkSupplyDefaults[2] = 80;
@@ -2477,12 +2483,8 @@ void gf_CreateBenchmarkBuildOrderObjectives () {
     // Variable Initialization
 
     // Implementation
-    if ((gv_debugBuildOrderEnabled == true)) {
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/8B1A10FA"));
-    }
-    else {
-    }
-    auto98326FC4_ae = 9;
+    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/A1F4609D"));
+    auto98326FC4_ae = gv_maxDisplayedBuildOrderObjectives1;
     auto98326FC4_ai = 1;
     lv_i = 0;
     for ( ; ( (auto98326FC4_ai >= 0 && lv_i <= auto98326FC4_ae) || (auto98326FC4_ai <= 0 && lv_i >= auto98326FC4_ae) ) ; lv_i += auto98326FC4_ai ) {
@@ -2547,6 +2549,32 @@ void gf_CorrectFailedBenchmarkBuildOrderStepObjective () {
     gv_numFailedBenchmarkBuildOrderSteps += 1;
 }
 
+void gf_CycleBenchmarkBuildOrderObjectives () {
+    // Implementation
+    ObjectiveDestroy(gv_benchmarkBuildOrderStepObjectives[0]);
+    gf_AdjustAllBenchmarkBuildOrderObjectivePositionsUpby1();
+    gf_CreateIndividualBenchmarkBuildOrderStepObjective((gv_benchmarkBuildOrderStepCursor+gv_benchmarkBuildOrderObjectiveCycleThreshold));
+    gv_benchmarkBuildOrderStepObjectives[gv_maxDisplayedBuildOrderObjectives1] = ObjectiveLastCreated();
+}
+
+void gf_AdjustAllBenchmarkBuildOrderObjectivePositionsUpby1 () {
+    int autoA714F11A_ae;
+    int autoA714F11A_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    autoA714F11A_ae = (gv_maxDisplayedBuildOrderObjectives1 - 1);
+    autoA714F11A_ai = 1;
+    lv_i = 0;
+    for ( ; ( (autoA714F11A_ai >= 0 && lv_i <= autoA714F11A_ae) || (autoA714F11A_ai <= 0 && lv_i >= autoA714F11A_ae) ) ; lv_i += autoA714F11A_ai ) {
+        gv_benchmarkBuildOrderStepObjectives[lv_i] = gv_benchmarkBuildOrderStepObjectives[(lv_i+1)];
+    }
+}
+
 void gf_InitializeBenchmarkBuildOrder () {
     // Implementation
     if ((gv_practiceAgainstBenchmarkBuildOrder == true)) {
@@ -2564,49 +2592,35 @@ void gf_InitializeBenchmarkBuildOrder () {
 void gf_EvaluateBenchmarkBuildOrderStep (string lp_unitType) {
     // Implementation
     if ((gv_benchmarkBuildOrderStepCursor > 0) && ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[(gv_benchmarkBuildOrderStepCursor-1)]) == c_objectiveStateFailed) && (gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep(lp_unitType, (gv_benchmarkBuildOrderStepCursor-1)) == true))) {
-        if ((gv_debugBuildOrderEnabled == true)) {
-            TextExpressionSetToken("Param/Expression/FB79BAF4", "B", UnitTypeGetName(lp_unitType));
-            TextExpressionSetToken("Param/Expression/FB79BAF4", "A", IntToText((gv_benchmarkBuildOrderStepCursor-1)));
-            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/FB79BAF4"));
-        }
-        else {
-        }
+        TextExpressionSetToken("Param/Expression/BEEDD1E2", "B", UnitTypeGetName(lp_unitType));
+        TextExpressionSetToken("Param/Expression/BEEDD1E2", "A", IntToText((gv_benchmarkBuildOrderStepCursor-1)));
+        gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/BEEDD1E2"));
         gf_CorrectFailedBenchmarkBuildOrderStepObjective();
     }
     else {
         if ((gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep(lp_unitType, gv_benchmarkBuildOrderStepCursor) == true)) {
-            if ((gv_debugBuildOrderEnabled == true)) {
-                TextExpressionSetToken("Param/Expression/6697D031", "A", IntToText(gv_benchmarkBuildOrderStepCursor));
-                UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/6697D031"));
-            }
-            else {
-            }
+            TextExpressionSetToken("Param/Expression/B1051469", "A", IntToText(gv_benchmarkBuildOrderStepCursor));
+            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/B1051469"));
             if (((gf_IsNumberCorrectForBenchmarkBuildOrderStep(gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor)].lv_amount, gv_benchmarkBuildOrderStepCursor) == true) && (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[(gv_benchmarkBuildOrderStepCursor)]) == c_objectiveStateActive))) {
-                if ((gv_debugBuildOrderEnabled == true)) {
-                    UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/36B26B35"));
-                }
-                else {
-                }
+                gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/69B6DB0E"));
                 gf_CompleteBenchmarkBuildOrderStepObjective(gv_benchmarkBuildOrderStepCursor);
             }
             else {
-                if ((gv_debugBuildOrderEnabled == true)) {
-                    TextExpressionSetToken("Param/Expression/0A0B2E84", "A", IntToText(gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor)].lv_amount));
-                    TextExpressionSetToken("Param/Expression/0A0B2E84", "B", IntToText(gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_amount));
-                    UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/0A0B2E84"));
-                }
-                else {
-                }
+                TextExpressionSetToken("Param/Expression/00348550", "A", IntToText(gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_amount));
+                TextExpressionSetToken("Param/Expression/00348550", "B", IntToText(gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_amount));
+                gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/00348550"));
             }
         }
         else {
-            if ((gv_debugBuildOrderEnabled == true)) {
-                TextExpressionSetToken("Param/Expression/53A44017", "A", IntToText((gv_benchmarkBuildOrderStepCursor-1)));
-                UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/53A44017"));
-            }
-            else {
-            }
+            TextExpressionSetToken("Param/Expression/7B379E31", "A", IntToText((gv_benchmarkBuildOrderStepCursor-1)));
+            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/7B379E31"));
             gf_FailBenchmarkBuildOrderStepObjective(gv_benchmarkBuildOrderStepCursor);
+        }
+        if (((gv_benchmarkBuildOrderStepCursor) > gv_benchmarkBuildOrderObjectiveCycleThreshold)) {
+            gf_LogStringMessage(gv_debugBuildOrderEnabled, "Attempting to cycle build order objectives.");
+            gf_CycleBenchmarkBuildOrderObjectives();
+        }
+        else {
         }
     }
 }
