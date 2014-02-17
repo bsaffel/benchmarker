@@ -687,6 +687,7 @@ int gf_GetDefaultMacroEnergyThreshold ();
 string gf_GetIconForBuildingType (string lp_unitType);
 bool gf_IsAnyProductionUnitTypeQueueIdle ();
 bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType);
+bool gf_DoesZergHaveIdleLarvae (string lp_unitType);
 string gf_GetCurrentlySelectedMatchupasBankSectionKey ();
 string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
 unitgroup gf_GetUnitGroupofAllPlayer1WithoutThisUnit ();
@@ -3110,18 +3111,7 @@ bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
 
     // Implementation
     if ((PlayerRace(1) == "Zerg")) {
-        if (((lp_unitType == "Larva") && (TechTreeUnitCount(1, "Egg", c_techCountQueuedOrBetter) == 0) && (TechTreeUnitCount(1, "Larva", c_techCountQueuedOrBetter) > 0) && (PlayerScoreValueGetAsInt(1, "FoodUsed") >= 12))) {
-            lv_queueIsEmpty = true;
-            if ((gv_debugAlertsEnabled == true)) {
-                TextExpressionSetToken("Param/Expression/40B9E7CE", "A", IntToText(TechTreeUnitCount(1, "Larva", c_techCountQueuedOrBetter)));
-                UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/40B9E7CE"));
-            }
-            else {
-            }
-        }
-        else {
-            lv_queueIsEmpty = false;
-        }
+        lv_queueIsEmpty = gf_DoesZergHaveIdleLarvae(lp_unitType);
     }
     else {
         lv_queueIsEmpty = true;
@@ -3146,6 +3136,23 @@ bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
         }
     }
     return lv_queueIsEmpty;
+}
+
+bool gf_DoesZergHaveIdleLarvae (string lp_unitType) {
+    // Variable Declarations
+    int lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((lp_unitType == "Larva") && (TechTreeUnitCount(1, "Egg", c_techCountQueuedOrBetter) == 0) && (TechTreeUnitCount(1, "Larva", c_techCountQueuedOrBetter) > 0) && (PlayerScoreValueGetAsInt(1, "FoodUsed") >= 12))) {
+        TextExpressionSetToken("Param/Expression/7CB9712F", "A", IntToText(TechTreeUnitCount(1, "Larva", c_techCountQueuedOrBetter)));
+        gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/7CB9712F"));
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 string gf_GetCurrentlySelectedMatchupasBankSectionKey () {
