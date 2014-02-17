@@ -31,7 +31,6 @@ struct gs_BuildOrderStep {
 // Global Variables
 //--------------------------------------------------------------------------------------------------
 bool gv_muteAlertsEnabled;
-int gv_numMorphingOverlords;
 fixed gv_warningPingCooldownSeconds;
 int gv_alertCooldownSeconds;
 int gv_alertMineralsThreshold;
@@ -62,9 +61,6 @@ int gv_alertProductionIdleNumProductionTypes;
 timer[11] gv_alertProductionIdleBuildingTimers;
 timer[11] gv_alertProductionIdleCooldownTimers;
 string[11] gv_alertProductionIdleUnitTypes;
-timer gv_overlordInProgressTimer;
-int gv_overlordMorphDuration;
-unitgroup gv_morphingOverlords;
 bank gv_benchmarkerBank;
 string gv_configurationOptionsSectionKey;
 string gv_alertConfigurationSectionKey;
@@ -243,6 +239,10 @@ bool gv_paused;
 unitgroup gv_resources;
 bool gv_currentBuildIsGasTaken;
 timer gv_currentBuildBuildTimer;
+int gv_numMorphingOverlords;
+unitgroup gv_morphingOverlords;
+timer gv_overlordInProgressTimer;
+int gv_overlordMorphDuration;
 int[4] gv_benchmarkSupplyObjectives;
 int gv_benchmarkMaxTimeObjective;
 timer gv_benchmark1Timer;
@@ -330,8 +330,6 @@ void InitGlobals () {
     gv_alertMacroEnergyCooldownTimer = TimerCreate();
     gv_alertUpgradeGapCheckEnabled = true;
     gv_alertProductionIdleCheckEnabled = true;
-    gv_overlordInProgressTimer = TimerCreate();
-    gv_morphingOverlords = UnitGroupEmpty();
     gv_configurationOptionsSectionKey = "options";
     gv_alertConfigurationSectionKey = "alerts";
     gv_alertMineralsCheckEnabledEntryKey = "alertMineralsEnabled";
@@ -525,6 +523,8 @@ void InitGlobals () {
     gv_paused = true;
     gv_resources = UnitGroupEmpty();
     gv_currentBuildBuildTimer = TimerCreate();
+    gv_morphingOverlords = UnitGroupEmpty();
+    gv_overlordInProgressTimer = TimerCreate();
     for (init_i = 0; init_i <= 3; init_i += 1) {
         gv_benchmarkSupplyObjectives[init_i] = c_invalidObjectiveId;
     }
@@ -568,6 +568,10 @@ void InitGlobals () {
 //--------------------------------------------------------------------------------------------------
 // Global Function Declarations
 //--------------------------------------------------------------------------------------------------
+void gf_AddProductionIdleStructureAlertTimer (string lp_unitType);
+void gf_StopProductionIdleStructureAlertTimer (string lp_unitType);
+void gf_RestartProductionIdleStructureAlertTimer (string lp_unitType);
+void gf_RemoveProductionIdleStructureAlertTimer ();
 void gf_PauseAlertTimers ();
 void gf_UnpauseAlertTimers ();
 void gf_ResetAlertTimers ();
@@ -677,17 +681,18 @@ void gf_AddUpgradeBuildOrderStep (string lp_buildStepUpgrade);
 void gf_DestroyBenchmarkBuildOrderObjectives ();
 void gf_ResetStatistics ();
 void gf_CreateScreenButtons ();
-string gf_GetNextUpgrade (string lp_currentUpgrade);
-text gf_GetRaceMacroUnitName ();
-bool gf_IsRaceMacroEnergyAboveThreshold ();
 bool gf_IsOverlordCurrentlyInProgress ();
 bool gf_IsSupplyDepotorPylonUnderConstruction ();
-unitgroup gf_GetAllPlayer1UnitsforType (string lp_unitType);
+text gf_GetRaceMacroUnitName ();
 int gf_GetDefaultMacroEnergyThreshold ();
-string gf_GetIconForBuildingType (string lp_unitType);
+bool gf_IsRaceMacroEnergyAboveThreshold ();
+string gf_GetNextUpgrade (string lp_currentUpgrade);
+bool gf_IsUnitTypeaProductionIdleType (string lp_unitType);
 bool gf_IsAnyProductionUnitTypeQueueIdle ();
 bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType);
 bool gf_DoesZergHaveIdleLarvae (string lp_unitType);
+bool gf_IsUnitResearchinganUpgrade (unit lp_unit);
+bool gf_IsUnitTypeNewProductionStructureType (string lp_unitType);
 string gf_GetCurrentlySelectedMatchupasBankSectionKey ();
 string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
 unitgroup gf_GetUnitGroupofAllPlayer1WithoutThisUnit ();
@@ -732,11 +737,13 @@ text gf_CalculateIntPercentDifferenceasText (int lp_value, int lp_previousBest, 
 text gf_CalculateRealPercentDifferenceasText (fixed lp_value, fixed lp_previousBest, bool lp_higherisBetter);
 color gf_GetColorForPercentage (fixed lp_percentage, bool lp_higherIsBetter);
 int gf_GetWinButtonYPadding ();
+string gf_GetIconForBuildingType (string lp_unitType);
 bool gf_IsUpgradeof1Variety (string lp_upgrade);
 text gf_GetFormattedUpgradeNameasText (string lp_upgrade);
 string gf_FormatCatalogStringwithSpaces (string lp_string);
 string gf_TrimSOffArmorsUpgradeName (string lp_string);
-unitgroup gf_GetPlayer1Units ();
+unitgroup gf_GetAllPlayer1UnitsforType (string lp_unitType);
+unitgroup gf_GetAllPlayer1Units ();
 text gf_ConverttoTextWithSign (int lp_int);
 bool gf_IsCapitalLetterOrDigit (string lp_letter);
 
@@ -750,9 +757,9 @@ trigger gt_RaceMacroEnergyAboveThreshold;
 trigger gt_UpgradeGapAboveThresholdStartTimer;
 trigger gt_UpgradeGapAboveThresholdTimerExpires;
 trigger gt_UpgradeGapAboveThresholdNewUpgradeStarts;
-trigger gt_ProductionIdleAboveThresholdStartTimer;
+trigger gt_ProductionIdleAboveThresholdNewProductionResetTimer;
+trigger gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer;
 trigger gt_ProductionIdleAboveThresholdTimerExpires;
-trigger gt_ProductionIdleAboveThresholdNewProductionStarts;
 trigger gt_StartBuild;
 trigger gt_ResetBuild;
 trigger gt_CloseStatsandResumeBuildfromOkButton;
@@ -798,7 +805,6 @@ trigger gt_OnUpgradeStartUpdateCurrentBuildOrder;
 trigger gt_OnUnitStartUpdateCurrentBuildOrder;
 trigger gt_OnUnitCancelUpdateCurrentBuildOrder;
 trigger gt_UpdateGasTaken;
-trigger gt_UpdateProductionIdleTime;
 trigger gt_UpdateTimeSupplyBlocked;
 trigger gt_UpdateMineralsCollectedThisBuild;
 trigger gt_UpdateGasCollectedThisBuild;
@@ -814,6 +820,31 @@ trigger gt_HatcheryLarvaSpawnFix;
 //--------------------------------------------------------------------------------------------------
 // Global Functions
 //--------------------------------------------------------------------------------------------------
+void gf_AddProductionIdleStructureAlertTimer (string lp_unitType) {
+    // Implementation
+    TextExpressionSetToken("Param/Expression/04F20F4B", "A", UnitTypeGetName(lp_unitType));
+    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/04F20F4B"));
+    gv_alertProductionIdleBuildingTimers[gv_alertProductionIdleNumProductionTypes] = TimerLastStarted();
+    gv_alertProductionIdleCooldownTimers[gv_alertProductionIdleNumProductionTypes] = TimerCreate();
+    gv_alertProductionIdleUnitTypes[gv_alertProductionIdleNumProductionTypes] = UnitGetType(EventUnit());
+    gv_alertProductionIdleNumProductionTypes += 1;
+}
+
+void gf_StopProductionIdleStructureAlertTimer (string lp_unitType) {
+    // Implementation
+    TextExpressionSetToken("Param/Expression/BFF9DA15", "A", UnitTypeGetName(UnitGetType(EventUnit())));
+    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/BFF9DA15"));
+}
+
+void gf_RestartProductionIdleStructureAlertTimer (string lp_unitType) {
+    // Implementation
+    TextExpressionSetToken("Param/Expression/C58FB03D", "A", UnitTypeGetName(lp_unitType));
+    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/C58FB03D"));
+}
+
+void gf_RemoveProductionIdleStructureAlertTimer () {
+}
+
 void gf_PauseAlertTimers () {
     int autoDAB23CA2_ae;
     int autoDAB23CA2_ai;
@@ -2243,7 +2274,7 @@ void gf_ResetGameState () {
 
     // Implementation
     gf_ResetMapResources();
-    lv_player1Units = gf_GetPlayer1Units();
+    lv_player1Units = gf_GetAllPlayer1Units();
     if ((UnitGroupCount(lv_player1Units, c_unitCountAlive) >= 0)) {
         UnitGroupLoopBegin(lv_player1Units);
         for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
@@ -2786,6 +2817,108 @@ void gf_CreateScreenButtons () {
     libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/1CABB5B1"), PlayerGroupAll());
 }
 
+bool gf_IsOverlordCurrentlyInProgress () {
+    // Implementation
+    if ((gv_numMorphingOverlords > 0)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool gf_IsSupplyDepotorPylonUnderConstruction () {
+    unitgroup auto54B9016D_g;
+    int auto54B9016D_u;
+
+    // Variable Declarations
+    unit lv_currentUnit;
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    auto54B9016D_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, (1 << (c_targetFilterUnderConstruction - 32)), 0, 0), 0);
+    auto54B9016D_u = 1;
+    for ( ; auto54B9016D_u <= UnitGroupCount(auto54B9016D_g, c_unitCountAll) ; auto54B9016D_u += BoolToInt(lv_currentUnit == UnitGroupUnit(auto54B9016D_g, auto54B9016D_u)) ) {
+        lv_currentUnit = UnitGroupUnit(auto54B9016D_g, auto54B9016D_u);
+        if (((UnitGetType(lv_currentUnit) == "SupplyDepot") || (UnitGetType(lv_currentUnit) == "Pylon"))) {
+            lv_result = true;
+        }
+        else {
+            lv_result = false;
+        }
+    }
+    return lv_result;
+}
+
+text gf_GetRaceMacroUnitName () {
+    string auto30CFABC8_val;
+
+    // Implementation
+    auto30CFABC8_val = PlayerRace(1);
+    if (auto30CFABC8_val == "Terr") {
+        return UnitTypeGetName("OrbitalCommand");
+    }
+    else if (auto30CFABC8_val == "Prot") {
+        return UnitTypeGetName("Nexus");
+    }
+    else if (auto30CFABC8_val == "Zerg") {
+        return UnitTypeGetName("Queen");
+    }
+    else {
+        return StringExternal("Param/Value/584FC4D9");
+    }
+}
+
+int gf_GetDefaultMacroEnergyThreshold () {
+    string autoBAC892F0_val;
+
+    // Variable Declarations
+    int lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    autoBAC892F0_val = PlayerRace(1);
+    if (autoBAC892F0_val == "Terr") {
+        lv_result = gv_alertTerranDefaultMacroEnergyThreshold;
+    }
+    else if (autoBAC892F0_val == "Zerg") {
+        lv_result = gv_alertZergDefaultMacroEnergyThreshold;
+    }
+    else if (autoBAC892F0_val == "Prot") {
+        lv_result = gv_alertProtossDefaultMacroEnergyThreshold;
+    }
+    else {
+    }
+    return lv_result;
+}
+
+bool gf_IsRaceMacroEnergyAboveThreshold () {
+    unitgroup autoEE6E2050_g;
+    int autoEE6E2050_u;
+
+    // Variable Declarations
+    bool lv_result;
+    unit lv_currentunit;
+
+    // Variable Initialization
+
+    // Implementation
+    autoEE6E2050_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, (1 << (c_targetFilterHasEnergy - 32)), (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0);
+    autoEE6E2050_u = 1;
+    for ( ; autoEE6E2050_u <= UnitGroupCount(autoEE6E2050_g, c_unitCountAll) ; autoEE6E2050_u += BoolToInt(lv_currentunit == UnitGroupUnit(autoEE6E2050_g, autoEE6E2050_u)) ) {
+        lv_currentunit = UnitGroupUnit(autoEE6E2050_g, autoEE6E2050_u);
+        if (((UnitGetPropertyFixed(lv_currentunit, c_unitPropEnergy, c_unitPropCurrent) > gv_alertSelectedMacroEnergyThreshold) && ((UnitGetType(lv_currentunit) == "Queen") || (UnitGetType(lv_currentunit) == "QueenBurrowed") || (UnitGetType(lv_currentunit) == "OrbitalCommand") || (UnitGetType(lv_currentunit) == "OrbitalCommandFlying") || (UnitGetType(lv_currentunit) == "Nexus")))) {
+            lv_result = true;
+        }
+        else {
+        }
+    }
+    return lv_result;
+}
+
 string gf_GetNextUpgrade (string lp_currentUpgrade) {
     string autoB7B7DC32_val;
 
@@ -2892,182 +3025,20 @@ string gf_GetNextUpgrade (string lp_currentUpgrade) {
     }
 }
 
-text gf_GetRaceMacroUnitName () {
-    string auto30CFABC8_val;
-
-    // Implementation
-    auto30CFABC8_val = PlayerRace(1);
-    if (auto30CFABC8_val == "Terr") {
-        return UnitTypeGetName("OrbitalCommand");
-    }
-    else if (auto30CFABC8_val == "Prot") {
-        return UnitTypeGetName("Nexus");
-    }
-    else if (auto30CFABC8_val == "Zerg") {
-        return UnitTypeGetName("Queen");
-    }
-    else {
-        return StringExternal("Param/Value/584FC4D9");
-    }
-}
-
-bool gf_IsRaceMacroEnergyAboveThreshold () {
-    unitgroup autoEE6E2050_g;
-    int autoEE6E2050_u;
-
+bool gf_IsUnitTypeaProductionIdleType (string lp_unitType) {
     // Variable Declarations
     bool lv_result;
-    unit lv_currentunit;
 
     // Variable Initialization
 
     // Implementation
-    autoEE6E2050_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, (1 << (c_targetFilterHasEnergy - 32)), (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0);
-    autoEE6E2050_u = 1;
-    for ( ; autoEE6E2050_u <= UnitGroupCount(autoEE6E2050_g, c_unitCountAll) ; autoEE6E2050_u += BoolToInt(lv_currentunit == UnitGroupUnit(autoEE6E2050_g, autoEE6E2050_u)) ) {
-        lv_currentunit = UnitGroupUnit(autoEE6E2050_g, autoEE6E2050_u);
-        if (((UnitGetPropertyFixed(lv_currentunit, c_unitPropEnergy, c_unitPropCurrent) > gv_alertSelectedMacroEnergyThreshold) && ((UnitGetType(lv_currentunit) == "Queen") || (UnitGetType(lv_currentunit) == "QueenBurrowed") || (UnitGetType(lv_currentunit) == "OrbitalCommand") || (UnitGetType(lv_currentunit) == "OrbitalCommandFlying") || (UnitGetType(lv_currentunit) == "Nexus")))) {
-            lv_result = true;
-        }
-        else {
-        }
-    }
-    return lv_result;
-}
-
-bool gf_IsOverlordCurrentlyInProgress () {
-    // Implementation
-    if ((gv_numMorphingOverlords > 0)) {
-        return true;
+    if (((lp_unitType == "Larva") || (lp_unitType == "CommandCenter") || (lp_unitType == "OrbitalCommand") || (lp_unitType == "PlanetaryFortress") || (lp_unitType == "Barracks") || (lp_unitType == "Factory") || (lp_unitType == "Starport") || (lp_unitType == "Nexus") || (lp_unitType == "Gateway") || (lp_unitType == "RoboticsFacility") || (lp_unitType == "Stargate")) && (true)) {
+        lv_result = true;
     }
     else {
-        return false;
-    }
-}
-
-bool gf_IsSupplyDepotorPylonUnderConstruction () {
-    unitgroup auto54B9016D_g;
-    int auto54B9016D_u;
-
-    // Variable Declarations
-    unit lv_currentUnit;
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    auto54B9016D_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, (1 << (c_targetFilterUnderConstruction - 32)), 0, 0), 0);
-    auto54B9016D_u = 1;
-    for ( ; auto54B9016D_u <= UnitGroupCount(auto54B9016D_g, c_unitCountAll) ; auto54B9016D_u += BoolToInt(lv_currentUnit == UnitGroupUnit(auto54B9016D_g, auto54B9016D_u)) ) {
-        lv_currentUnit = UnitGroupUnit(auto54B9016D_g, auto54B9016D_u);
-        if (((UnitGetType(lv_currentUnit) == "SupplyDepot") || (UnitGetType(lv_currentUnit) == "Pylon"))) {
-            lv_result = true;
-        }
-        else {
-        }
+        lv_result = false;
     }
     return lv_result;
-}
-
-unitgroup gf_GetAllPlayer1UnitsforType (string lp_unitType) {
-    unitgroup auto7054DA5F_g;
-    int auto7054DA5F_u;
-
-    // Variable Declarations
-    unit lv_currentUnit;
-    unitgroup lv_result;
-
-    // Variable Initialization
-    lv_result = UnitGroupEmpty();
-
-    // Implementation
-    auto7054DA5F_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0);
-    auto7054DA5F_u = 1;
-    for ( ; auto7054DA5F_u <= UnitGroupCount(auto7054DA5F_g, c_unitCountAll) ; auto7054DA5F_u += BoolToInt(lv_currentUnit == UnitGroupUnit(auto7054DA5F_g, auto7054DA5F_u)) ) {
-        lv_currentUnit = UnitGroupUnit(auto7054DA5F_g, auto7054DA5F_u);
-        if ((UnitGetType(lv_currentUnit) == lp_unitType)) {
-            UnitGroupAdd(lv_result, lv_currentUnit);
-        }
-        else {
-        }
-    }
-    return lv_result;
-}
-
-int gf_GetDefaultMacroEnergyThreshold () {
-    string autoBAC892F0_val;
-
-    // Variable Declarations
-    int lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    autoBAC892F0_val = PlayerRace(1);
-    if (autoBAC892F0_val == "Terr") {
-        lv_result = gv_alertTerranDefaultMacroEnergyThreshold;
-    }
-    else if (autoBAC892F0_val == "Zerg") {
-        lv_result = gv_alertZergDefaultMacroEnergyThreshold;
-    }
-    else if (autoBAC892F0_val == "Prot") {
-        lv_result = gv_alertProtossDefaultMacroEnergyThreshold;
-    }
-    else {
-    }
-    return lv_result;
-}
-
-string gf_GetIconForBuildingType (string lp_unitType) {
-    string auto77F30C81_val;
-
-    // Implementation
-    auto77F30C81_val = lp_unitType;
-    if (auto77F30C81_val == "Nexus") {
-        return "Assets\\Textures\\btn-building-protoss-nexus.dds";
-    }
-    else if (auto77F30C81_val == "Gateway") {
-        return "Assets\\Textures\\btn-building-protoss-gateway.dds";
-    }
-    else if (auto77F30C81_val == "RoboticsFacility") {
-        return "Assets\\Textures\\btn-building-protoss-roboticsfacility.dds";
-    }
-    else if (auto77F30C81_val == "Stargate") {
-        return "Assets\\Textures\\btn-building-protoss-stargate.dds";
-    }
-    else if (auto77F30C81_val == "CommandCenter") {
-        return "Assets\\Textures\\btn-building-terran-commandcenter.dds";
-    }
-    else if (auto77F30C81_val == "OrbitalCommand") {
-        return "Assets\\Textures\\btn-techupgrade-terran-orbitalcommand.dds";
-    }
-    else if (auto77F30C81_val == "PlanetaryFortress") {
-        return "Assets\\Textures\\btn-building-terran-planetaryfortress.dds";
-    }
-    else if (auto77F30C81_val == "Barracks") {
-        return "Assets\\Textures\\btn-building-terran-barracks.dds";
-    }
-    else if (auto77F30C81_val == "Factory") {
-        return "Assets\\Textures\\btn-building-terran-factory.dds";
-    }
-    else if (auto77F30C81_val == "Starport") {
-        return "Assets\\Textures\\btn-building-terran-starport.dds";
-    }
-    else if (auto77F30C81_val == "Larva") {
-        return "Assets\\Textures\\btn-unit-zerg-larva.dds";
-    }
-    else if (auto77F30C81_val == "Hatchery") {
-        return "Assets\\Textures\\btn-building-zerg-hatchery.dds";
-    }
-    else if (auto77F30C81_val == "Lair") {
-        return "Assets\\Textures\\btn-building-zerg-lair.dds";
-    }
-    else if (auto77F30C81_val == "Hive") {
-        return "Assets\\Textures\\btn-building-zerg-hive.dds";
-    }
-    else {
-        return null;
-    }
 }
 
 bool gf_IsAnyProductionUnitTypeQueueIdle () {
@@ -3106,8 +3077,10 @@ bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
     // Variable Declarations
     unit lv_currenUnit;
     bool lv_queueIsEmpty;
+    unitgroup lv_currentProductionUnits;
 
     // Variable Initialization
+    lv_currentProductionUnits = UnitGroupEmpty();
 
     // Implementation
     if ((PlayerRace(1) == "Zerg")) {
@@ -3115,7 +3088,8 @@ bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
     }
     else {
         lv_queueIsEmpty = true;
-        auto9BA590D3_g = gf_GetAllPlayer1UnitsforType(lp_unitType);
+        lv_currentProductionUnits = gf_GetAllPlayer1UnitsforType(lp_unitType);
+        auto9BA590D3_g = lv_currentProductionUnits;
         auto9BA590D3_u = 1;
         for ( ; auto9BA590D3_u <= UnitGroupCount(auto9BA590D3_g, c_unitCountAll) ; auto9BA590D3_u += BoolToInt(lv_currenUnit == UnitGroupUnit(auto9BA590D3_g, auto9BA590D3_u)) ) {
             lv_currenUnit = UnitGroupUnit(auto9BA590D3_g, auto9BA590D3_u);
@@ -3125,16 +3099,22 @@ bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
                 gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/33B8FAEE"));
             }
             else {
-            }
-            if (((lp_unitType == "CommandCenter") && (libNtve_gf_UnitIsUnderConstruction(lv_currenUnit) == true))) {
-                lv_queueIsEmpty = false;
-                TextExpressionSetToken("Param/Expression/987CB6FA", "A", UnitTypeGetName(lp_unitType));
-                gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/987CB6FA"));
-            }
-            else {
+                if ((gf_IsUnitResearchinganUpgrade(lv_currenUnit) == true)) {
+                    lv_queueIsEmpty = false;
+                    TextExpressionSetToken("Param/Expression/987CB6FA", "A", UnitTypeGetName(UnitGetType(lv_currenUnit)));
+                    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/987CB6FA"));
+                }
+                else {
+                    lv_queueIsEmpty = true;
+                    TextExpressionSetToken("Param/Expression/91F3C79E", "A", UnitTypeGetName(UnitGetType(lv_currenUnit)));
+                    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/91F3C79E"));
+                }
             }
         }
     }
+    TextExpressionSetToken("Param/Expression/204E47CC", "A", UnitTypeGetName(lp_unitType));
+    TextExpressionSetToken("Param/Expression/204E47CC", "B", libNtve_gf_ConvertBooleanToText(lv_queueIsEmpty));
+    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/204E47CC"));
     return lv_queueIsEmpty;
 }
 
@@ -3153,6 +3133,45 @@ bool gf_DoesZergHaveIdleLarvae (string lp_unitType) {
     else {
         return false;
     }
+}
+
+bool gf_IsUnitResearchinganUpgrade (unit lp_unit) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((UnitQueueGetProperty(lp_unit, c_unitQueuePropertyAvailable) == 0)) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    return lv_result;
+}
+
+bool gf_IsUnitTypeNewProductionStructureType (string lp_unitType) {
+    int auto4C73585D_ae;
+    int auto4C73585D_ai;
+
+    // Variable Declarations
+    int lv_i;
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    auto4C73585D_ae = gv_alertProductionIdleNumProductionTypes;
+    auto4C73585D_ai = 1;
+    lv_i = 0;
+    for ( ; ( (auto4C73585D_ai >= 0 && lv_i <= auto4C73585D_ae) || (auto4C73585D_ai <= 0 && lv_i >= auto4C73585D_ae) ) ; lv_i += auto4C73585D_ai ) {
+        if (true) {
+        }
+        else {
+        }
+    }
+    return lv_result;
 }
 
 string gf_GetCurrentlySelectedMatchupasBankSectionKey () {
@@ -3781,6 +3800,58 @@ int gf_GetWinButtonYPadding () {
     }
 }
 
+string gf_GetIconForBuildingType (string lp_unitType) {
+    string auto77F30C81_val;
+
+    // Implementation
+    auto77F30C81_val = lp_unitType;
+    if (auto77F30C81_val == "Nexus") {
+        return "Assets\\Textures\\btn-building-protoss-nexus.dds";
+    }
+    else if (auto77F30C81_val == "Gateway") {
+        return "Assets\\Textures\\btn-building-protoss-gateway.dds";
+    }
+    else if (auto77F30C81_val == "RoboticsFacility") {
+        return "Assets\\Textures\\btn-building-protoss-roboticsfacility.dds";
+    }
+    else if (auto77F30C81_val == "Stargate") {
+        return "Assets\\Textures\\btn-building-protoss-stargate.dds";
+    }
+    else if (auto77F30C81_val == "CommandCenter") {
+        return "Assets\\Textures\\btn-building-terran-commandcenter.dds";
+    }
+    else if (auto77F30C81_val == "OrbitalCommand") {
+        return "Assets\\Textures\\btn-techupgrade-terran-orbitalcommand.dds";
+    }
+    else if (auto77F30C81_val == "PlanetaryFortress") {
+        return "Assets\\Textures\\btn-building-terran-planetaryfortress.dds";
+    }
+    else if (auto77F30C81_val == "Barracks") {
+        return "Assets\\Textures\\btn-building-terran-barracks.dds";
+    }
+    else if (auto77F30C81_val == "Factory") {
+        return "Assets\\Textures\\btn-building-terran-factory.dds";
+    }
+    else if (auto77F30C81_val == "Starport") {
+        return "Assets\\Textures\\btn-building-terran-starport.dds";
+    }
+    else if (auto77F30C81_val == "Larva") {
+        return "Assets\\Textures\\btn-unit-zerg-larva.dds";
+    }
+    else if (auto77F30C81_val == "Hatchery") {
+        return "Assets\\Textures\\btn-building-zerg-hatchery.dds";
+    }
+    else if (auto77F30C81_val == "Lair") {
+        return "Assets\\Textures\\btn-building-zerg-lair.dds";
+    }
+    else if (auto77F30C81_val == "Hive") {
+        return "Assets\\Textures\\btn-building-zerg-hive.dds";
+    }
+    else {
+        return null;
+    }
+}
+
 bool gf_IsUpgradeof1Variety (string lp_upgrade) {
     // Implementation
     if (((lp_upgrade == "ProtossAirArmorsLevel1") || (lp_upgrade == "ProtossAirArmorsLevel2") || (lp_upgrade == "ProtossAirArmorsLevel3") || (lp_upgrade == "ProtossGroundArmorsLevel1") || (lp_upgrade == "ProtossGroundArmorsLevel2") || (lp_upgrade == "ProtossGroundArmorsLevel3") || (lp_upgrade == "ProtossShieldsLevel1") || (lp_upgrade == "ProtossShieldsLevel2") || (lp_upgrade == "ProtossShieldsLevel3") || (lp_upgrade == "ProtossAirWeaponsLevel1") || (lp_upgrade == "ProtossAirWeaponsLevel2") || (lp_upgrade == "ProtossAirWeaponsLevel3") || (lp_upgrade == "ProtossGroundWeaponsLevel1") || (lp_upgrade == "ProtossGroundWeaponsLevel2") || (lp_upgrade == "ProtossGroundWeaponsLevel3") || (lp_upgrade == "TerranInfantryArmorsLevel1") || (lp_upgrade == "TerranInfantryArmorsLevel2") || (lp_upgrade == "TerranInfantryArmorsLevel3") || (lp_upgrade == "TerranShipArmorsLevel1") || (lp_upgrade == "TerranShipArmorsLevel2") || (lp_upgrade == "TerranShipArmorsLevel3") || (lp_upgrade == "TerranVehicleArmorsLevel1") || (lp_upgrade == "TerranVehicleArmorsLevel2") || (lp_upgrade == "TerranVehicleArmorsLevel3") || (lp_upgrade == "TerranInfantryWeaponsLevel1") || (lp_upgrade == "TerranInfantryWeaponsLevel2") || (lp_upgrade == "TerranInfantryWeaponsLevel3") || (lp_upgrade == "TerranShipWeaponsLevel1") || (lp_upgrade == "TerranShipWeaponsLevel2") || (lp_upgrade == "TerranShipWeaponsLevel3") || (lp_upgrade == "TerranVehicleWeaponsLevel1") || (lp_upgrade == "TerranVehicleWeaponsLevel2") || (lp_upgrade == "TerranVehicleWeaponsLevel3") || (lp_upgrade == "ZergFlyerArmorsLevel1") || (lp_upgrade == "ZergFlyerArmorsLevel2") || (lp_upgrade == "ZergFlyerArmorsLevel3") || (lp_upgrade == "ZergGroundArmorsLevel1") || (lp_upgrade == "ZergGroundArmorsLevel2") || (lp_upgrade == "ZergGroundArmorsLevel3") || (lp_upgrade == "ZergFlyerWeaponsLevel1") || (lp_upgrade == "ZergFlyerWeaponsLevel2") || (lp_upgrade == "ZergFlyerWeaponsLevel3") || (lp_upgrade == "ZergMeleeWeaponsLevel1") || (lp_upgrade == "ZergMeleeWeaponsLevel2") || (lp_upgrade == "ZergMeleeWeaponsLevel3") || (lp_upgrade == "ZergMissileWeaponsLevel1") || (lp_upgrade == "ZergMissileWeaponsLevel2") || (lp_upgrade == "ZergMissileWeaponsLevel3"))) {
@@ -3855,7 +3926,32 @@ string gf_TrimSOffArmorsUpgradeName (string lp_string) {
     }
 }
 
-unitgroup gf_GetPlayer1Units () {
+unitgroup gf_GetAllPlayer1UnitsforType (string lp_unitType) {
+    unitgroup auto7054DA5F_g;
+    int auto7054DA5F_u;
+
+    // Variable Declarations
+    unit lv_currentUnit;
+    unitgroup lv_result;
+
+    // Variable Initialization
+    lv_result = UnitGroupEmpty();
+
+    // Implementation
+    auto7054DA5F_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0);
+    auto7054DA5F_u = 1;
+    for ( ; auto7054DA5F_u <= UnitGroupCount(auto7054DA5F_g, c_unitCountAll) ; auto7054DA5F_u += BoolToInt(lv_currentUnit == UnitGroupUnit(auto7054DA5F_g, auto7054DA5F_u)) ) {
+        lv_currentUnit = UnitGroupUnit(auto7054DA5F_g, auto7054DA5F_u);
+        if ((UnitGetType(lv_currentUnit) == lp_unitType)) {
+            UnitGroupAdd(lv_result, lv_currentUnit);
+        }
+        else {
+        }
+    }
+    return lv_result;
+}
+
+unitgroup gf_GetAllPlayer1Units () {
     // Variable Declarations
     unitgroup lv_result;
 
@@ -4219,25 +4315,18 @@ void gt_UpgradeGapAboveThresholdNewUpgradeStarts_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Production Idle Above Threshold - Start Timer
+// Trigger: Production Idle Above Threshold - New Production (Reset Timer)
 //--------------------------------------------------------------------------------------------------
-bool gt_ProductionIdleAboveThresholdStartTimer_Func (bool testConds, bool runActions) {
-    int auto4C73585D_ae;
-    int auto4C73585D_ai;
-    int auto6B257B32_ae;
-    int auto6B257B32_ai;
-
+bool gt_ProductionIdleAboveThresholdNewProductionResetTimer_Func (bool testConds, bool runActions) {
     // Variable Declarations
-    bool lv_productionUnitTypeExists;
-    timer lv_tempTimer;
+    string lv_triggeringUnitType;
     int lv_i;
 
     // Variable Initialization
-    lv_tempTimer = TimerCreate();
 
     // Conditions
     if (testConds) {
-        if (!(((gv_paused == false) && (((UnitGetType(EventUnit()) == "Larva")) || (UnitGetType(EventUnit()) == "CommandCenter") || (UnitGetType(EventUnit()) == "OrbitalCommand") || (UnitGetType(EventUnit()) == "PlanetaryFortress") || (UnitGetType(EventUnit()) == "Barracks") || (UnitGetType(EventUnit()) == "Factory") || (UnitGetType(EventUnit()) == "Starport") || (UnitGetType(EventUnit()) == "Nexus") || (UnitGetType(EventUnit()) == "Gateway") || (UnitGetType(EventUnit()) == "RoboticsFacility") || (UnitGetType(EventUnit()) == "Stargate")) && (gf_IsUnitTypeTrainingQueueEmpty(UnitGetType(EventUnit())) == true)))) {
+        if (!(((gv_paused == false) && (gv_alertProductionIdleCheckEnabled == true) && ((gf_IsUnitTypeaProductionIdleType(UnitGetType(EventUnit())) == true) || (UnitGetType(EventUnit()) == "Egg"))))) {
             return false;
         }
     }
@@ -4247,64 +4336,87 @@ bool gt_ProductionIdleAboveThresholdStartTimer_Func (bool testConds, bool runAct
         return true;
     }
 
-    if ((gv_alertProductionIdleNumProductionTypes > 0)) {
-        auto4C73585D_ae = gv_alertProductionIdleNumProductionTypes;
-        auto4C73585D_ai = 1;
-        lv_i = 0;
-        for ( ; ( (auto4C73585D_ai >= 0 && lv_i <= auto4C73585D_ae) || (auto4C73585D_ai <= 0 && lv_i >= auto4C73585D_ae) ) ; lv_i += auto4C73585D_ai ) {
-            if ((UnitGetType(EventUnit()) == gv_alertProductionIdleUnitTypes[lv_i])) {
-                lv_productionUnitTypeExists = true;
-            }
-            else {
-            }
-        }
+    if ((UnitGetType(EventUnit()) == "Egg")) {
+        lv_triggeringUnitType = "Larva";
     }
     else {
-        lv_productionUnitTypeExists = false;
+        lv_triggeringUnitType = UnitGetType(EventUnit());
     }
-    if ((lv_productionUnitTypeExists == false)) {
-        TimerStart(lv_tempTimer, gv_alertProductionIdleThreshold, false, c_timeGame);
-        gv_alertProductionIdleBuildingTimers[gv_alertProductionIdleNumProductionTypes] = TimerLastStarted();
-        gv_alertProductionIdleCooldownTimers[gv_alertProductionIdleNumProductionTypes] = TimerCreate();
-        gv_alertProductionIdleUnitTypes[gv_alertProductionIdleNumProductionTypes] = UnitGetType(EventUnit());
-        gv_alertProductionIdleNumProductionTypes += 1;
+    if ((gf_IsUnitTypeNewProductionStructureType(lv_triggeringUnitType) == false)) {
+        gf_StopProductionIdleStructureAlertTimer(UnitGetType(EventUnit()));
     }
     else {
-        auto6B257B32_ae = gv_alertProductionIdleNumProductionTypes;
-        auto6B257B32_ai = 1;
-        lv_i = 0;
-        for ( ; ( (auto6B257B32_ai >= 0 && lv_i <= auto6B257B32_ae) || (auto6B257B32_ai <= 0 && lv_i >= auto6B257B32_ae) ) ; lv_i += auto6B257B32_ai ) {
-            if ((UnitGetType(EventUnit()) == gv_alertProductionIdleUnitTypes[lv_i])) {
-                TimerStart(gv_alertProductionIdleBuildingTimers[lv_i], gv_alertProductionIdleThreshold, false, c_timeGame);
-            }
-            else {
-            }
-        }
     }
     return true;
 }
 
 //--------------------------------------------------------------------------------------------------
-void gt_ProductionIdleAboveThresholdStartTimer_Init () {
-    gt_ProductionIdleAboveThresholdStartTimer = TriggerCreate("gt_ProductionIdleAboveThresholdStartTimer_Func");
-    TriggerAddEventUnitTrainProgress(gt_ProductionIdleAboveThresholdStartTimer, null, c_unitProgressStageComplete);
-    TriggerAddEventUnitTrainProgress(gt_ProductionIdleAboveThresholdStartTimer, null, c_unitProgressStageCancel);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdStartTimer, null, AbilityCommand("UpgradeToOrbital", 0), c_unitAbilStageComplete, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdStartTimer, null, AbilityCommand("UpgradeToOrbital", 0), c_unitAbilStageCancel, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdStartTimer, null, AbilityCommand("UpgradeToPlanetaryFortress", 0), c_unitAbilStageComplete, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdStartTimer, null, AbilityCommand("UpgradeToPlanetaryFortress", 0), c_unitAbilStageCancel, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdStartTimer, null, AbilityCommand("BarracksAddOns", 0), c_unitAbilStageComplete, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdStartTimer, null, AbilityCommand("BarracksAddOns", 0), c_unitAbilStageCancel, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdStartTimer, null, AbilityCommand("BarracksAddOns", 1), c_unitAbilStageComplete, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdStartTimer, null, AbilityCommand("BarracksAddOns", 1), c_unitAbilStageCancel, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdStartTimer, null, AbilityCommand("FactoryAddOns", 0), c_unitAbilStageComplete, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdStartTimer, null, AbilityCommand("FactoryAddOns", 0), c_unitAbilStageCancel, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdStartTimer, null, AbilityCommand("FactoryAddOns", 1), c_unitAbilStageComplete, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdStartTimer, null, AbilityCommand("FactoryAddOns", 1), c_unitAbilStageCancel, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdStartTimer, null, AbilityCommand("StarportAddOns", 0), c_unitAbilStageComplete, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdStartTimer, null, AbilityCommand("StarportAddOns", 0), c_unitAbilStageCancel, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdStartTimer, null, AbilityCommand("StarportAddOns", 1), c_unitAbilStageComplete, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdStartTimer, null, AbilityCommand("StarportAddOns", 1), c_unitAbilStageCancel, false);
+void gt_ProductionIdleAboveThresholdNewProductionResetTimer_Init () {
+    gt_ProductionIdleAboveThresholdNewProductionResetTimer = TriggerCreate("gt_ProductionIdleAboveThresholdNewProductionResetTimer_Func");
+    TriggerAddEventUnitTrainProgress(gt_ProductionIdleAboveThresholdNewProductionResetTimer, null, c_unitProgressStageStart);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdNewProductionResetTimer, null, AbilityCommand("UpgradeToOrbital", 0), c_unitAbilStageExecute, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdNewProductionResetTimer, null, AbilityCommand("UpgradeToPlanetaryFortress", 0), c_unitAbilStageExecute, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdNewProductionResetTimer, null, AbilityCommand("BarracksAddOns", 0), c_unitAbilStageExecute, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdNewProductionResetTimer, null, AbilityCommand("BarracksAddOns", 1), c_unitAbilStageExecute, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdNewProductionResetTimer, null, AbilityCommand("FactoryAddOns", 0), c_unitAbilStageExecute, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdNewProductionResetTimer, null, AbilityCommand("FactoryAddOns", 1), c_unitAbilStageExecute, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdNewProductionResetTimer, null, AbilityCommand("StarportAddOns", 0), c_unitAbilStageExecute, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdNewProductionResetTimer, null, AbilityCommand("StarportAddOns", 1), c_unitAbilStageExecute, false);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Production Idle Above Threshold - Production Finishes (Add/Start Timer)
+//--------------------------------------------------------------------------------------------------
+bool gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer_Func (bool testConds, bool runActions) {
+    // Variable Declarations
+    bool lv_productionUnitTypeExists;
+    timer lv_tempTimer;
+
+    // Variable Initialization
+    lv_tempTimer = TimerCreate();
+
+    // Conditions
+    if (testConds) {
+        if (!(((gv_paused == false) && (gv_alertProductionIdleCheckEnabled == true) && (gf_IsUnitTypeaProductionIdleType(UnitGetType(EventUnit())) == true) && (gf_IsUnitTypeTrainingQueueEmpty(UnitGetType(EventUnit())) == true)))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    if ((gf_IsUnitTypeNewProductionStructureType(UnitGetType(EventUnit())) == true)) {
+        gf_AddProductionIdleStructureAlertTimer(UnitGetType(EventUnit()));
+    }
+    else {
+        gf_RestartProductionIdleStructureAlertTimer(UnitGetType(EventUnit()));
+    }
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer_Init () {
+    gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer = TriggerCreate("gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer_Func");
+    TriggerAddEventUnitTrainProgress(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, c_unitProgressStageComplete);
+    TriggerAddEventUnitTrainProgress(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, c_unitProgressStageCancel);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, AbilityCommand("UpgradeToOrbital", 0), c_unitAbilStageComplete, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, AbilityCommand("UpgradeToOrbital", 0), c_unitAbilStageCancel, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, AbilityCommand("UpgradeToPlanetaryFortress", 0), c_unitAbilStageComplete, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, AbilityCommand("UpgradeToPlanetaryFortress", 0), c_unitAbilStageCancel, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, AbilityCommand("BarracksAddOns", 0), c_unitAbilStageComplete, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, AbilityCommand("BarracksAddOns", 0), c_unitAbilStageCancel, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, AbilityCommand("BarracksAddOns", 1), c_unitAbilStageComplete, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, AbilityCommand("BarracksAddOns", 1), c_unitAbilStageCancel, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, AbilityCommand("FactoryAddOns", 0), c_unitAbilStageComplete, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, AbilityCommand("FactoryAddOns", 0), c_unitAbilStageCancel, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, AbilityCommand("FactoryAddOns", 1), c_unitAbilStageComplete, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, AbilityCommand("FactoryAddOns", 1), c_unitAbilStageCancel, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, AbilityCommand("StarportAddOns", 0), c_unitAbilStageComplete, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, AbilityCommand("StarportAddOns", 0), c_unitAbilStageCancel, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, AbilityCommand("StarportAddOns", 1), c_unitAbilStageComplete, false);
+    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer, null, AbilityCommand("StarportAddOns", 1), c_unitAbilStageCancel, false);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -4357,67 +4469,6 @@ bool gt_ProductionIdleAboveThresholdTimerExpires_Func (bool testConds, bool runA
 void gt_ProductionIdleAboveThresholdTimerExpires_Init () {
     gt_ProductionIdleAboveThresholdTimerExpires = TriggerCreate("gt_ProductionIdleAboveThresholdTimerExpires_Func");
     TriggerAddEventTimer(gt_ProductionIdleAboveThresholdTimerExpires, null);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Production Idle Above Threshold - New Production Starts
-//--------------------------------------------------------------------------------------------------
-bool gt_ProductionIdleAboveThresholdNewProductionStarts_Func (bool testConds, bool runActions) {
-    int autoE0E17448_ae;
-    int autoE0E17448_ai;
-
-    // Variable Declarations
-    string lv_triggeringUnitType;
-    int lv_i;
-
-    // Variable Initialization
-
-    // Conditions
-    if (testConds) {
-        if (!(((UnitGetType(EventUnit()) == "Egg") || (UnitGetType(EventUnit()) == "Larva") || (UnitGetType(EventUnit()) == "CommandCenter") || (UnitGetType(EventUnit()) == "OrbitalCommand") || (UnitGetType(EventUnit()) == "PlanetaryFortress") || (UnitGetType(EventUnit()) == "Barracks") || (UnitGetType(EventUnit()) == "Factory") || (UnitGetType(EventUnit()) == "Starport") || (UnitGetType(EventUnit()) == "Nexus") || (UnitGetType(EventUnit()) == "Gateway") || (UnitGetType(EventUnit()) == "RoboticsFacility") || (UnitGetType(EventUnit()) == "Stargate")))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    if ((UnitGetType(EventUnit()) == "Egg")) {
-        lv_triggeringUnitType = "Larva";
-    }
-    else {
-        lv_triggeringUnitType = UnitGetType(EventUnit());
-    }
-    autoE0E17448_ae = gv_alertProductionIdleNumProductionTypes;
-    autoE0E17448_ai = 1;
-    lv_i = 0;
-    for ( ; ( (autoE0E17448_ai >= 0 && lv_i <= autoE0E17448_ae) || (autoE0E17448_ai <= 0 && lv_i >= autoE0E17448_ae) ) ; lv_i += autoE0E17448_ai ) {
-        if ((lv_triggeringUnitType == gv_alertProductionIdleUnitTypes[lv_i])) {
-            TimerRestart(gv_alertProductionIdleBuildingTimers[lv_i]);
-            TimerPause(gv_alertProductionIdleBuildingTimers[lv_i], true);
-            TimerRestart(gv_alertProductionIdleCooldownTimers[lv_i]);
-            TimerPause(gv_alertProductionIdleCooldownTimers[lv_i], true);
-        }
-        else {
-        }
-    }
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_ProductionIdleAboveThresholdNewProductionStarts_Init () {
-    gt_ProductionIdleAboveThresholdNewProductionStarts = TriggerCreate("gt_ProductionIdleAboveThresholdNewProductionStarts_Func");
-    TriggerAddEventUnitTrainProgress(gt_ProductionIdleAboveThresholdNewProductionStarts, null, c_unitProgressStageStart);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdNewProductionStarts, null, AbilityCommand("UpgradeToOrbital", 0), c_unitAbilStageExecute, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdNewProductionStarts, null, AbilityCommand("UpgradeToPlanetaryFortress", 0), c_unitAbilStageExecute, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdNewProductionStarts, null, AbilityCommand("BarracksAddOns", 0), c_unitAbilStageExecute, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdNewProductionStarts, null, AbilityCommand("BarracksAddOns", 1), c_unitAbilStageExecute, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdNewProductionStarts, null, AbilityCommand("FactoryAddOns", 0), c_unitAbilStageExecute, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdNewProductionStarts, null, AbilityCommand("FactoryAddOns", 1), c_unitAbilStageExecute, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdNewProductionStarts, null, AbilityCommand("StarportAddOns", 0), c_unitAbilStageExecute, false);
-    TriggerAddEventUnitAbility(gt_ProductionIdleAboveThresholdNewProductionStarts, null, AbilityCommand("StarportAddOns", 1), c_unitAbilStageExecute, false);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -5799,32 +5850,6 @@ void gt_UpdateGasTaken_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Update Production Idle Time
-//--------------------------------------------------------------------------------------------------
-bool gt_UpdateProductionIdleTime_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!(((gf_IsAnyProductionUnitTypeQueueIdle() == true) && (gv_paused == false)))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gv_timeProductionIdleThisBuild += 1;
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_UpdateProductionIdleTime_Init () {
-    gt_UpdateProductionIdleTime = TriggerCreate("gt_UpdateProductionIdleTime_Func");
-    TriggerAddEventTimePeriodic(gt_UpdateProductionIdleTime, 1.0, c_timeGame);
-}
-
-//--------------------------------------------------------------------------------------------------
 // Trigger: Update Time Supply Blocked
 //--------------------------------------------------------------------------------------------------
 bool gt_UpdateTimeSupplyBlocked_Func (bool testConds, bool runActions) {
@@ -6121,9 +6146,9 @@ void InitTriggers () {
     gt_UpgradeGapAboveThresholdStartTimer_Init();
     gt_UpgradeGapAboveThresholdTimerExpires_Init();
     gt_UpgradeGapAboveThresholdNewUpgradeStarts_Init();
-    gt_ProductionIdleAboveThresholdStartTimer_Init();
+    gt_ProductionIdleAboveThresholdNewProductionResetTimer_Init();
+    gt_ProductionIdleAboveThresholdProductionFinishesAddStartTimer_Init();
     gt_ProductionIdleAboveThresholdTimerExpires_Init();
-    gt_ProductionIdleAboveThresholdNewProductionStarts_Init();
     gt_StartBuild_Init();
     gt_ResetBuild_Init();
     gt_CloseStatsandResumeBuildfromOkButton_Init();
@@ -6169,7 +6194,6 @@ void InitTriggers () {
     gt_OnUnitStartUpdateCurrentBuildOrder_Init();
     gt_OnUnitCancelUpdateCurrentBuildOrder_Init();
     gt_UpdateGasTaken_Init();
-    gt_UpdateProductionIdleTime_Init();
     gt_UpdateTimeSupplyBlocked_Init();
     gt_UpdateMineralsCollectedThisBuild_Init();
     gt_UpdateGasCollectedThisBuild_Init();
