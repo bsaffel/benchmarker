@@ -712,6 +712,7 @@ bool gf_IsSupplyCorrectForBenchmarkBuildOrderStep (int lp_supplyCount, int lp_be
 bool gf_IsAmountCorrectForBenchmarkBuildOrderStep (int lp_numUnits, int lp_benchmarkBuildOrderStepIndex);
 bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType);
 bool gf_IsUpgradeTypeValidForBuildOrder (string lp_upgrade);
+bool gf_IsUnitTypeSameasPreviousUnitType (string lp_unitType);
 fixed gf_GetAverageResourceCollectionRate ();
 fixed gf_GetAverageUnspentResources ();
 int gf_GetAverageUnspentMinerals ();
@@ -3572,6 +3573,21 @@ bool gf_IsUpgradeTypeValidForBuildOrder (string lp_upgrade) {
     return lv_result;
 }
 
+bool gf_IsUnitTypeSameasPreviousUnitType (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((lp_unitType == gv_lastCreatedBuildOrderUnitType)) {
+        lv_result = true;
+    }
+    else {
+    }
+    return lv_result;
+}
+
 fixed gf_GetAverageResourceCollectionRate () {
     // Variable Declarations
     fixed lv_result;
@@ -5685,20 +5701,23 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
         return true;
     }
 
-    TextExpressionSetToken("Param/Expression/DE9D0EE9", "A", UnitTypeGetName(UnitGetType(EventUnit())));
+    TextExpressionSetToken("Param/Expression/DE9D0EE9", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
     TextExpressionSetToken("Param/Expression/DE9D0EE9", "B", IntToText(gv_currentBuildOrderStepCursor));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/DE9D0EE9"));
     TextExpressionSetToken("Param/Expression/43A95713", "A", UnitTypeGetName(gv_lastCreatedBuildOrderUnitType));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/43A95713"));
-    if ((((TimerGetElapsed(gv_currentBuildBuildTimer)-gv_lastCreatedUnitTimestamp) <= gv_incrementAmountifSameUnitBuiltWithinSeconds) && (UnitGetType(EventUnitProgressUnit()) == gv_lastCreatedBuildOrderUnitType))) {
+    if ((((TimerGetElapsed(gv_currentBuildBuildTimer)-gv_lastCreatedUnitTimestamp) <= gv_incrementAmountifSameUnitBuiltWithinSeconds) && (gf_IsUnitTypeSameasPreviousUnitType(libNtve_gf_TriggeringProgressUnitType()) == true))) {
         gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor-1)].lv_amount += 1;
-        TextExpressionSetToken("Param/Expression/5A4EE543", "A", UnitTypeGetName(UnitGetType(EventUnitProgressUnit())));
+        TextExpressionSetToken("Param/Expression/5A4EE543", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
         TextExpressionSetToken("Param/Expression/5A4EE543", "B", UnitTypeGetName(gv_lastCreatedBuildOrderUnitType));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/5A4EE543"));
-        TextExpressionSetToken("Param/Expression/9057FDA6", "A", gf_GetCurrentBuildOrderStepText(gv_currentBuildOrderStepCursor));
+        TextExpressionSetToken("Param/Expression/9057FDA6", "A", gf_GetCurrentBuildOrderStepText((gv_currentBuildOrderStepCursor-1)));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/9057FDA6"));
     }
     else {
+        TextExpressionSetToken("Param/Expression/EF816D38", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
+        TextExpressionSetToken("Param/Expression/EF816D38", "B", UnitTypeGetName(gv_lastCreatedBuildOrderUnitType));
+        gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/EF816D38"));
         if (((gv_currentBuildOrderStepCursor) < gv_maxCurrentBuildOrderStepsTracked)) {
             gf_AddUnitBuildOrderStep(libNtve_gf_TriggeringProgressUnitType());
             if (((gv_totalNumBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && ((gv_currentBuildOrderStepCursor) <= (gv_totalNumBenchmarkBuildOrderSteps+gv_numCorrectedBenchmarkBuildOrderSteps)))) {
