@@ -693,7 +693,7 @@ bool gf_DoesAlertTimerExistForUnitType (string lp_unitType);
 bool gf_IsUnitTypeaProductionIdleType (string lp_unitType);
 bool gf_IsAnyProductionUnitTypeQueueIdle ();
 bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType);
-bool gf_DoesZergHaveIdleLarvae (string lp_unitType);
+bool gf_DoesZergHaveLarvaToSpendAndNoUnitsMorphing ();
 bool gf_IsUnitResearchinganUpgrade (unit lp_unit);
 timer gf_GetProductionIdleAlertTimerforUnitType (string lp_unitType);
 timer gf_GetProductionIdleCooldownTimerforUnitType (string lp_unitType);
@@ -3164,7 +3164,7 @@ bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
 
     // Implementation
     if ((PlayerRace(1) == "Zerg")) {
-        lv_queueIsEmpty = gf_DoesZergHaveIdleLarvae(lp_unitType);
+        lv_queueIsEmpty = gf_DoesZergHaveLarvaToSpendAndNoUnitsMorphing();
     }
     else {
         lv_queueIsEmpty = true;
@@ -3198,21 +3198,23 @@ bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
     return lv_queueIsEmpty;
 }
 
-bool gf_DoesZergHaveIdleLarvae (string lp_unitType) {
+bool gf_DoesZergHaveLarvaToSpendAndNoUnitsMorphing () {
     // Variable Declarations
-    int lv_result;
+    bool lv_result;
 
     // Variable Initialization
 
     // Implementation
-    if (((lp_unitType == "Larva") && (TechTreeUnitCount(1, "Egg", c_techCountQueuedOrBetter) == 0) && (TechTreeUnitCount(1, "Larva", c_techCountQueuedOrBetter) > 0) && ((PlayerScoreValueGetAsInt(1, "FoodUsed") >= 12) || (TimerGetElapsed(gv_currentBuildBuildTimer) > 90.0)))) {
-        TextExpressionSetToken("Param/Expression/7CB9712F", "A", IntToText(TechTreeUnitCount(1, "Larva", c_techCountQueuedOrBetter)));
-        gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/7CB9712F"));
-        return true;
+    if (((TechTreeUnitCount(1, "Egg", c_techCountQueuedOrBetter) == 0) && (TechTreeUnitCount(1, "Larva", c_techCountQueuedOrBetter) > 0) && ((PlayerScoreValueGetAsInt(1, "FoodUsed") >= 12) || (TimerGetElapsed(gv_currentBuildBuildTimer) > 90.0)))) {
+        lv_result = true;
     }
     else {
-        return false;
+        lv_result = false;
     }
+    TextExpressionSetToken("Param/Expression/A73946C0", "A", IntToText(TechTreeUnitCount(1, "Larva", c_techCountQueuedOrBetter)));
+    TextExpressionSetToken("Param/Expression/A73946C0", "B", IntToText(TechTreeUnitCount(1, "Egg", c_techCountQueuedOrBetter)));
+    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/A73946C0"));
+    return lv_result;
 }
 
 bool gf_IsUnitResearchinganUpgrade (unit lp_unit) {
@@ -4568,6 +4570,8 @@ bool gt_ProductionIdleAboveThresholdTimerExpiresFireAlert_Func (bool testConds, 
     }
 
     lv_unitTypeForTimer = gf_GetUnitTypeforProductionIdleTimer(EventTimer());
+    TextExpressionSetToken("Param/Expression/494EACFA", "A", UnitTypeGetName(lv_unitTypeForTimer));
+    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/494EACFA"));
     TextExpressionSetToken("Param/Expression/FFDFB39E", "A", UnitTypeGetName(lv_unitTypeForTimer));
     UIAlert("ProductionIdleTooLong", 1, TextExpressionAssemble("Param/Expression/FFDFB39E"), gf_GetIconForBuildingType(lv_unitTypeForTimer));
     if ((gv_muteAlertsEnabled == false)) {
