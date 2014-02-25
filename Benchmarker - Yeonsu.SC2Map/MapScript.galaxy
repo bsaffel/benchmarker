@@ -718,7 +718,6 @@ color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber);
 text gf_GetSupplyforLatestCompletedBuildOrderStepasText ();
 int gf_GetSupplyforLatestCompletedBuildOrderStep ();
 text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber);
-int gf_GetCurrentBuildOrderSupplyAfterUnitTypeIsBuilt (string lp_unitType);
 int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor);
 bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex);
 bool gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep (string lp_upgrade, int lp_benchmarkBuildOrderStepIndex);
@@ -2753,6 +2752,7 @@ void gf_EvaluateUnitTypeandAmountForBenchmarkBuildOrderStep (string lp_unitType,
                 gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/69B6DB0E"));
                 gf_CompleteBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
                 gv_benchmarkBuildOrderStepCursor += 1;
+                gf_CycleBenchmarkBuildOrderObjectives();
             }
             else {
                 TextExpressionSetToken("Param/Expression/00348550", "A", IntToText(lp_amount));
@@ -2763,8 +2763,8 @@ void gf_EvaluateUnitTypeandAmountForBenchmarkBuildOrderStep (string lp_unitType,
         else {
             gf_FailBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
             gv_benchmarkBuildOrderStepCursor += 1;
+            gf_CycleBenchmarkBuildOrderObjectives();
         }
-        gf_CycleBenchmarkBuildOrderObjectives();
     }
 }
 
@@ -3624,16 +3624,6 @@ text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber) {
     return lv_result;
 }
 
-int gf_GetCurrentBuildOrderSupplyAfterUnitTypeIsBuilt (string lp_unitType) {
-    // Variable Declarations
-    int lv_supply;
-
-    // Variable Initialization
-
-    // Implementation
-    return lv_supply;
-}
-
 int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor) {
     // Variable Declarations
     int lv_result;
@@ -3641,12 +3631,7 @@ int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor) {
     // Variable Initialization
 
     // Implementation
-    if ((gv_benchmarkBuildOrderStepCursor > gv_benchmarkBuildOrderObjectiveCycleThreshold)) {
-        lv_result = lp_cursor;
-    }
-    else {
-        lv_result = (lp_cursor - gv_buildOrderCycleOffset);
-    }
+    lv_result = (lp_cursor - gv_buildOrderCycleOffset);
     TextExpressionSetToken("Param/Expression/FE96BC14", "A", IntToText(lp_cursor));
     TextExpressionSetToken("Param/Expression/FE96BC14", "B", IntToText(lv_result));
     TextExpressionSetToken("Param/Expression/FE96BC14", "C", IntToText(gv_buildOrderCycleOffset));
