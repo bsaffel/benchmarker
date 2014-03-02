@@ -268,6 +268,7 @@ fixed gv_lastCreatedUnitTimestamp;
 string gv_unitStepType;
 string gv_upgradeStepType;
 int gv_trackQueensUntil;
+timer gv_multipleUnitFailureTimer;
 bool gv_displayBuildHints;
 fixed gv_buildHintTimeThreshold;
 timer gv_displayBuildHintCooldownTimer;
@@ -275,7 +276,7 @@ int gv_buildHintCursor;
 int gv_maxCurrentBuildOrderStepsTracked;
 int gv_currentBuildOrderStepCursor;
 gs_BuildOrderStep[51] gv_currentBuildOrderSteps;
-int gv_incrementAmountifSameUnitBuiltWithinSeconds;
+int gv_multipleUnitTimeCutoffThreshold;
 int gv_numFailedBenchmarkBuildOrderSteps;
 int gv_numCorrectedBenchmarkBuildOrderSteps;
 int gv_totalNumBenchmarkBuildOrderSteps;
@@ -662,10 +663,12 @@ void gf_ResetBenchmarkBuildOrderObjectives ();
 void gf_ResetBenchmarkSupplyObjectives ();
 void gf_PauseGame ();
 void gf_UnpauseGame ();
+void gf_PauseAllTimers ();
+void gf_UnpauseAllTimers ();
 void gf_StartBenchmarkTimers ();
-void gf_UnpauseBenchmarkTimers ();
-void gf_PauseBenchmarkTimers ();
 void gf_ResetBenchmarkTimers ();
+void gf_PauseBenchmarkTimers ();
+void gf_UnpauseBenchmarkTimers ();
 void gf_CreateHiddenBenchmarkSupplyObjectives ();
 void gf_HideBenchmarkSupplyObjectives ();
 void gf_InitializeBenchmarkSupplyObjectives ();
@@ -682,6 +685,8 @@ void gf_EvaluateUpgradeForBenchmarkBuildOrderStep (string lp_upgrade);
 void gf_AddUnitBuildOrderStep (string lp_buildStepUnitType);
 void gf_AddUpgradeBuildOrderStep (string lp_buildStepUpgrade);
 void gf_DestroyBenchmarkBuildOrderObjectives ();
+void gf_FailCurrentBuildStepAndCycle ();
+void gf_CompleteCurrentBuildStepAndCycle ();
 void gf_ResetStatistics ();
 void gf_CreateScreenButtons ();
 bool gf_IsOverlordCurrentlyInProgress ();
@@ -812,6 +817,7 @@ trigger gt_EverySecondCheckforBuildHints;
 trigger gt_OnUpgradeStartUpdateCurrentBuildOrder;
 trigger gt_OnUnitStartUpdateCurrentBuildOrder;
 trigger gt_OnUnitCancelUpdateCurrentBuildOrder;
+trigger gt_OnMultipleUnitFailureTimerExpires;
 trigger gt_UpdateGasTaken;
 trigger gt_UpdateTimeSupplyBlocked;
 trigger gt_UpdateMineralsCollectedThisBuild;
@@ -2209,7 +2215,7 @@ void gf_InitializeGameDefaults () {
     gv_benchmarkTimerDurations[1] = 480;
     gv_benchmarkTimerDurations[2] = 600;
     gv_trackSupplyUnitsAsObjectives = true;
-    gv_incrementAmountifSameUnitBuiltWithinSeconds = 15;
+    gv_multipleUnitTimeCutoffThreshold = 15;
     gv_trackSupplyUnitObjectivesUntil = 40;
     gv_trackQueensUntil = 40;
     gv_buildOrderMaxGasSupply = 60;
@@ -2363,6 +2369,30 @@ void gf_ResetTechTree () {
     libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergFlyerArmorsLevel1", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergFlyerArmorsLevel2", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergFlyerArmorsLevel3", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergFlyerWeaponsLevel1", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergFlyerWeaponsLevel2", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergFlyerWeaponsLevel3", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergMeleeWeaponsLevel1", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergMeleeWeaponsLevel2", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergMeleeWeaponsLevel3", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergMissileWeaponsLevel1", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergMissileWeaponsLevel2", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "ZergMissileWeaponsLevel3", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "Burrow", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "NeuralParasite", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "InfestorEnergyUpgrade", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "CentrificalHooks", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "LocustLifetimeIncrease", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "hydraliskspeed", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "HydraliskSpeedUpgrade", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "GlialReconstitution", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "OrganicCarapace", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TunnelingClaws", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "overlordspeed", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "overlordtransport", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "zerglingmovementspeed", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "zerglingattackspeed", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "ChitinousPlating", 0);
 }
 
 void gf_ResetCamera () {
@@ -2487,9 +2517,7 @@ void gf_PauseGame () {
 
     // Implementation
     gv_paused = true;
-    TimerPause(gv_currentBuildBuildTimer, true);
-    gf_PauseBenchmarkTimers();
-    gf_PauseAlertTimers();
+    gf_PauseAllTimers();
     UnitPauseAll(true);
 }
 
@@ -2500,10 +2528,24 @@ void gf_UnpauseGame () {
     // Variable Initialization
 
     // Implementation
-    gv_paused = false;
+    gf_UnpauseAllTimers();
     UnitPauseAll(false);
+    gv_paused = false;
+}
+
+void gf_PauseAllTimers () {
+    // Implementation
+    TimerPause(gv_currentBuildBuildTimer, true);
+    TimerPause(gv_multipleUnitFailureTimer, true);
+    gf_PauseBenchmarkTimers();
+    gf_PauseAlertTimers();
+}
+
+void gf_UnpauseAllTimers () {
+    // Implementation
     gf_UnpauseBenchmarkTimers();
     gf_UnpauseAlertTimers();
+    TimerPause(gv_multipleUnitFailureTimer, false);
     TimerPause(gv_currentBuildBuildTimer, false);
 }
 
@@ -2520,12 +2562,12 @@ void gf_StartBenchmarkTimers () {
     TimerStart(gv_benchmarkMaxTimeTimer, gv_benchmarkMaxTimeTotalSeconds, false, c_timeGame);
 }
 
-void gf_UnpauseBenchmarkTimers () {
+void gf_ResetBenchmarkTimers () {
     // Implementation
-    TimerPause(gv_benchmark1Timer, false);
-    TimerPause(gv_benchmark2Timer, false);
-    TimerPause(gv_benchmark3Timer, false);
-    TimerPause(gv_benchmarkMaxTimeTimer, false);
+    TimerRestart(gv_benchmark1Timer);
+    TimerRestart(gv_benchmark2Timer);
+    TimerRestart(gv_benchmark3Timer);
+    TimerRestart(gv_benchmarkMaxTimeTimer);
 }
 
 void gf_PauseBenchmarkTimers () {
@@ -2536,12 +2578,12 @@ void gf_PauseBenchmarkTimers () {
     TimerPause(gv_benchmarkMaxTimeTimer, true);
 }
 
-void gf_ResetBenchmarkTimers () {
+void gf_UnpauseBenchmarkTimers () {
     // Implementation
-    TimerRestart(gv_benchmark1Timer);
-    TimerRestart(gv_benchmark2Timer);
-    TimerRestart(gv_benchmark3Timer);
-    TimerRestart(gv_benchmarkMaxTimeTimer);
+    TimerPause(gv_benchmark1Timer, false);
+    TimerPause(gv_benchmark2Timer, false);
+    TimerPause(gv_benchmark3Timer, false);
+    TimerPause(gv_benchmarkMaxTimeTimer, false);
 }
 
 void gf_CreateHiddenBenchmarkSupplyObjectives () {
@@ -2750,20 +2792,28 @@ void gf_EvaluateUnitTypeandAmountForBenchmarkBuildOrderStep (string lp_unitType,
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/B1051469"));
             if (((gf_IsAmountCorrectForBenchmarkBuildOrderStep(lp_amount, gv_benchmarkBuildOrderStepCursor) == true) && (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[(gv_benchmarkBuildOrderStepCursor)]) == c_objectiveStateActive))) {
                 gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/69B6DB0E"));
-                gf_CompleteBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
-                gv_benchmarkBuildOrderStepCursor += 1;
-                gf_CycleBenchmarkBuildOrderObjectives();
+                if ((TimerGetRemaining(gv_multipleUnitFailureTimer) > 0.0)) {
+                    TimerStart(gv_multipleUnitFailureTimer, 0.0, false, c_timeGame);
+                    TimerPause(gv_multipleUnitFailureTimer, true);
+                }
+                else {
+                }
+                gf_CompleteCurrentBuildStepAndCycle();
             }
             else {
                 TextExpressionSetToken("Param/Expression/00348550", "A", IntToText(lp_amount));
                 TextExpressionSetToken("Param/Expression/00348550", "B", IntToText(gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_amount));
                 gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/00348550"));
+                if (((TimerGetRemaining(gv_multipleUnitFailureTimer) == 0.0) && (gv_currentBuildOrderStepCursor > 0))) {
+                    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/8A069115"));
+                    TimerStart(gv_multipleUnitFailureTimer, gv_multipleUnitTimeCutoffThreshold, false, c_timeGame);
+                }
+                else {
+                }
             }
         }
         else {
-            gf_FailBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
-            gv_benchmarkBuildOrderStepCursor += 1;
-            gf_CycleBenchmarkBuildOrderObjectives();
+            gf_FailCurrentBuildStepAndCycle();
         }
     }
 }
@@ -2841,6 +2891,20 @@ void gf_DestroyBenchmarkBuildOrderObjectives () {
     for ( ; ( (auto8EFD539D_ai >= 0 && lv_i <= auto8EFD539D_ae) || (auto8EFD539D_ai <= 0 && lv_i >= auto8EFD539D_ae) ) ; lv_i += auto8EFD539D_ai ) {
         ObjectiveDestroy(gv_benchmarkBuildOrderStepObjectives[lv_i]);
     }
+}
+
+void gf_FailCurrentBuildStepAndCycle () {
+    // Implementation
+    gf_FailBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
+    gv_benchmarkBuildOrderStepCursor += 1;
+    gf_CycleBenchmarkBuildOrderObjectives();
+}
+
+void gf_CompleteCurrentBuildStepAndCycle () {
+    // Implementation
+    gf_CompleteBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
+    gv_benchmarkBuildOrderStepCursor += 1;
+    gf_CycleBenchmarkBuildOrderObjectives();
 }
 
 void gf_ResetStatistics () {
@@ -5922,14 +5986,18 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
     TextExpressionSetToken("Param/Expression/DE9D0EE9", "B", IntToText(gv_currentBuildOrderStepCursor));
     TextExpressionSetToken("Param/Expression/DE9D0EE9", "C", IntToText(gv_benchmarkBuildOrderStepCursor));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/DE9D0EE9"));
-    if ((((TimerGetElapsed(gv_currentBuildBuildTimer)-gv_lastCreatedUnitTimestamp) <= gv_incrementAmountifSameUnitBuiltWithinSeconds) && (gf_IsUnitTypeSameasPreviousUnitType(libNtve_gf_TriggeringProgressUnitType()) == true))) {
-        gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor-1)].lv_amount += 1;
+    if ((((TimerGetElapsed(gv_currentBuildBuildTimer)-gv_lastCreatedUnitTimestamp) <= gv_multipleUnitTimeCutoffThreshold) && (gf_IsUnitTypeSameasPreviousUnitType(libNtve_gf_TriggeringProgressUnitType()) == true))) {
         TextExpressionSetToken("Param/Expression/5A4EE543", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
         TextExpressionSetToken("Param/Expression/5A4EE543", "B", UnitTypeGetName(gv_lastCreatedBuildOrderUnitType));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/5A4EE543"));
+        gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor-1)].lv_amount += 1;
         TextExpressionSetToken("Param/Expression/9057FDA6", "A", gf_GetCurrentBuildOrderStepText((gv_currentBuildOrderStepCursor-1)));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/9057FDA6"));
-        gf_EvaluateUnitTypeandAmountForBenchmarkBuildOrderStep(libNtve_gf_TriggeringProgressUnitType(), gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor - 1)].lv_amount);
+        if ((gv_practiceAgainstBenchmarkBuildOrder == true)) {
+            gf_EvaluateUnitTypeandAmountForBenchmarkBuildOrderStep(libNtve_gf_TriggeringProgressUnitType(), gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor - 1)].lv_amount);
+        }
+        else {
+        }
     }
     else {
         TextExpressionSetToken("Param/Expression/EF816D38", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
@@ -5980,6 +6048,35 @@ void gt_OnUnitCancelUpdateCurrentBuildOrder_Init () {
     gt_OnUnitCancelUpdateCurrentBuildOrder = TriggerCreate("gt_OnUnitCancelUpdateCurrentBuildOrder_Func");
     TriggerAddEventUnitTrainProgress(gt_OnUnitCancelUpdateCurrentBuildOrder, null, c_unitProgressStageCancel);
     TriggerAddEventUnitConstructProgress(gt_OnUnitCancelUpdateCurrentBuildOrder, null, c_unitProgressStageCancel);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: On Multiple Unit Failure Timer Expires
+//--------------------------------------------------------------------------------------------------
+bool gt_OnMultipleUnitFailureTimerExpires_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_practiceAgainstBenchmarkBuildOrder == true))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    TextExpressionSetToken("Param/Expression/721980B5", "A", UnitTypeGetName(gv_lastCreatedBuildOrderUnitType));
+    TextExpressionSetToken("Param/Expression/721980B5", "B", IntToText(gv_benchmarkBuildOrderStepCursor));
+    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/721980B5"));
+    gf_FailCurrentBuildStepAndCycle();
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_OnMultipleUnitFailureTimerExpires_Init () {
+    gt_OnMultipleUnitFailureTimerExpires = TriggerCreate("gt_OnMultipleUnitFailureTimerExpires_Func");
+    TriggerAddEventTimer(gt_OnMultipleUnitFailureTimerExpires, gv_multipleUnitFailureTimer);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -6352,6 +6449,7 @@ void InitTriggers () {
     gt_OnUpgradeStartUpdateCurrentBuildOrder_Init();
     gt_OnUnitStartUpdateCurrentBuildOrder_Init();
     gt_OnUnitCancelUpdateCurrentBuildOrder_Init();
+    gt_OnMultipleUnitFailureTimerExpires_Init();
     gt_UpdateGasTaken_Init();
     gt_UpdateTimeSupplyBlocked_Init();
     gt_UpdateMineralsCollectedThisBuild_Init();
