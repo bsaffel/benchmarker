@@ -537,6 +537,7 @@ void InitGlobals () {
     gv_benchmarkMaxTimeTimer = TimerCreate();
     gv_unitStepType = "unit";
     gv_upgradeStepType = "upgrade";
+    gv_multipleUnitFailureTimer = TimerCreate();
     gv_displayBuildHintCooldownTimer = TimerCreate();
     gv_maxCurrentBuildOrderStepsTracked = 50;
     for (init_i = 0; init_i <= 50; init_i += 1) {
@@ -678,6 +679,7 @@ void gf_FailBenchmarkBuildOrderObjective (int lp_benchmarkBuildOrderStep);
 void gf_CorrectFailedBenchmarkBuildOrderObjective (int lp_benchmarkBuildOrderStep);
 void gf_CycleBenchmarkBuildOrderObjectives ();
 void gf_AdjustAllBenchmarkBuildOrderObjectivePositionsUpby1 ();
+void gf_ResetBuildOrderTimers ();
 void gf_InitializeBenchmarkBuildOrder ();
 void gf_CreateBenchmarkBuildOrderObjectives ();
 void gf_EvaluateUnitTypeandAmountForBenchmarkBuildOrderStep (string lp_unitType, int lp_amount);
@@ -819,6 +821,7 @@ trigger gt_OnUnitStartUpdateCurrentBuildOrder;
 trigger gt_OnUnitCancelUpdateCurrentBuildOrder;
 trigger gt_OnMultipleUnitFailureTimerExpires;
 trigger gt_UpdateGasTaken;
+trigger gt_UpdateProductionIdleTime;
 trigger gt_UpdateTimeSupplyBlocked;
 trigger gt_UpdateMineralsCollectedThisBuild;
 trigger gt_UpdateGasCollectedThisBuild;
@@ -2300,6 +2303,7 @@ void gf_ResetGameState () {
 
     // Implementation
     gf_ResetMapResources();
+    gf_ResetTechTree();
     lv_player1Units = gf_GetAllPlayer1Units();
     if ((UnitGroupCount(lv_player1Units, c_unitCountAlive) >= 0)) {
         UnitGroupLoopBegin(lv_player1Units);
@@ -2320,6 +2324,7 @@ void gf_ResetGameState () {
     gf_ResetBenchmarkBuildOrderStepsVariables();
     gf_ResetAlertTimers();
     gf_ResetBenchmarkTimers();
+    gf_ResetBuildOrderTimers();
     TimerRestart(gv_currentBuildBuildTimer);
     gf_ResetCamera();
 }
@@ -2740,6 +2745,12 @@ void gf_AdjustAllBenchmarkBuildOrderObjectivePositionsUpby1 () {
     }
 }
 
+void gf_ResetBuildOrderTimers () {
+    // Implementation
+    gv_multipleUnitFailureTimer = TimerCreate();
+    TimerPause(gv_multipleUnitFailureTimer, true);
+}
+
 void gf_InitializeBenchmarkBuildOrder () {
     // Implementation
     if ((gv_practiceAgainstBenchmarkBuildOrder == true)) {
@@ -2793,7 +2804,8 @@ void gf_EvaluateUnitTypeandAmountForBenchmarkBuildOrderStep (string lp_unitType,
             if (((gf_IsAmountCorrectForBenchmarkBuildOrderStep(lp_amount, gv_benchmarkBuildOrderStepCursor) == true) && (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[(gv_benchmarkBuildOrderStepCursor)]) == c_objectiveStateActive))) {
                 gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/69B6DB0E"));
                 if ((TimerGetRemaining(gv_multipleUnitFailureTimer) > 0.0)) {
-                    TimerStart(gv_multipleUnitFailureTimer, 0.0, false, c_timeGame);
+                    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/F6401EA7"));
+                    TimerRestart(gv_multipleUnitFailureTimer);
                     TimerPause(gv_multipleUnitFailureTimer, true);
                 }
                 else {
@@ -2804,7 +2816,8 @@ void gf_EvaluateUnitTypeandAmountForBenchmarkBuildOrderStep (string lp_unitType,
                 TextExpressionSetToken("Param/Expression/00348550", "A", IntToText(lp_amount));
                 TextExpressionSetToken("Param/Expression/00348550", "B", IntToText(gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_amount));
                 gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/00348550"));
-                if (((TimerGetRemaining(gv_multipleUnitFailureTimer) == 0.0) && (gv_currentBuildOrderStepCursor > 0))) {
+                if ((gv_currentBuildOrderStepCursor > 0)) {
+                    TextExpressionSetToken("Param/Expression/8A069115", "A", IntToText(gv_multipleUnitTimeCutoffThreshold));
                     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/8A069115"));
                     TimerStart(gv_multipleUnitFailureTimer, gv_multipleUnitTimeCutoffThreshold, false, c_timeGame);
                 }
@@ -6106,6 +6119,32 @@ void gt_UpdateGasTaken_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Update Production Idle Time
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateProductionIdleTime_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((gf_IsAnyProductionUnitTypeQueueIdle() == true) && (gv_paused == false)))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_timeProductionIdleThisBuild += 1;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateProductionIdleTime_Init () {
+    gt_UpdateProductionIdleTime = TriggerCreate("gt_UpdateProductionIdleTime_Func");
+    TriggerAddEventTimePeriodic(gt_UpdateProductionIdleTime, 1.0, c_timeGame);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Update Time Supply Blocked
 //--------------------------------------------------------------------------------------------------
 bool gt_UpdateTimeSupplyBlocked_Func (bool testConds, bool runActions) {
@@ -6451,6 +6490,7 @@ void InitTriggers () {
     gt_OnUnitCancelUpdateCurrentBuildOrder_Init();
     gt_OnMultipleUnitFailureTimerExpires_Init();
     gt_UpdateGasTaken_Init();
+    gt_UpdateProductionIdleTime_Init();
     gt_UpdateTimeSupplyBlocked_Init();
     gt_UpdateMineralsCollectedThisBuild_Init();
     gt_UpdateGasCollectedThisBuild_Init();
