@@ -297,15 +297,15 @@ int gv_orangeBenchmarkSupplyThreshold;
 int gv_orangeBenchmarkSecondsThreshold;
 int gv_totalAPMSamplesThisBuild;
 int gv_cumulativeAPM;
-fixed gv_cumulativeAverageMineralResourceCollectionRateCurrentBuild;
-fixed gv_cumulativeAverageGasResourceCollectionRateCurrentBuild;
-int gv_resourceCollectionRateSamplesCurrentBuild;
-int gv_totalMineralsCollectedCurrentBuild;
-int gv_totalGasCollectedCurrentBuild;
-int gv_cumulativeAverageUnspentMineralsCurrentBuild;
-int gv_cumulativeAverageUnspentGasCurrentBuild;
-int gv_averageUnspentResourceSamples;
-int gv_workersCreatedCurrentBuild;
+fixed gv_cumulativeTotalMineralCollectionRate;
+fixed gv_cumulativeTotalGasCollectionRate;
+int gv_numResourceCollectionRateSamples;
+int gv_totalMineralsCollected;
+int gv_totalGasCollected;
+int gv_cumulativeTotalUnspentMinerals;
+int gv_cumulativeTotalUnspentGas;
+int gv_numUnspentResourceSamples;
+int gv_workersCreated;
 int gv_timeProductionIdleThisBuild;
 int gv_timeSupplyBlockedThisBuild;
 int gv_totalNumberofUpgradesResearchedCurrentBuild;
@@ -1267,7 +1267,7 @@ void gf_ClearBenchmarkBuildStep (int lp_stepNumber) {
 void gf_SaveCurrentStatsasNewBenchmark () {
     // Implementation
     gf_SaveRealAsBuildBenchmark(gf_CalculateSpendingQuotient(), gv_bestSpendingQuotientEntryKey);
-    gf_SaveIntAsSupplyBenchmark(gv_workersCreatedCurrentBuild, gv_bestTotalWorkersCreatedEntryKey);
+    gf_SaveIntAsSupplyBenchmark(gv_workersCreated, gv_bestTotalWorkersCreatedEntryKey);
     gf_SaveIntAsSupplyBenchmark(gf_GetTotalArmySupply(), gv_bestTotalArmySupplyEntryKey);
     gf_SaveIntAsSupplyBenchmark(gf_GetTotalArmyValueMinerals(), gv_bestTotalArmyValueMineralsEntryKey);
     gf_SaveIntAsSupplyBenchmark(gf_GetTotalArmyValueGas(), gv_bestTotalArmyValueGasEntryKey);
@@ -1957,7 +1957,7 @@ void gf_UpdatePostBuildMatchupText () {
 void gf_UpdatePostBuildReportDialogValues (bool lp_updateBuildOrderListBox) {
     // Implementation
     gf_UpdatePostBuildStatRowValueasReal(gf_CalculateSpendingQuotient(), gv_bestSpendingQuotientEntryKey, 0, true);
-    gf_UpdatePostBuildStatRowValueasInt(gv_workersCreatedCurrentBuild, gv_bestTotalWorkersCreatedEntryKey, 1, true);
+    gf_UpdatePostBuildStatRowValueasInt(gv_workersCreated, gv_bestTotalWorkersCreatedEntryKey, 1, true);
     gf_UpdatePostBuildStatRowValueasInt(gf_GetTotalArmySupply(), gv_bestTotalArmySupplyEntryKey, 2, true);
     gf_UpdatePostBuildStatRowValueasInt(gf_GetTotalArmyValueMinerals(), gv_bestTotalArmyValueMineralsEntryKey, 3, true);
     gf_UpdatePostBuildStatRowValueasInt(gf_GetTotalArmyValueGas(), gv_bestTotalArmyValueGasEntryKey, 4, true);
@@ -2093,7 +2093,7 @@ void gf_RefreshStatsDialog () {
     // Variable Initialization
 
     // Implementation
-    gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/79A57BD9"), IntToText(gv_workersCreatedCurrentBuild));
+    gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/79A57BD9"), IntToText(gv_workersCreated));
     lv_rowNum += 1;
     gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/67D50843"), TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gf_GetIdleProductionTime()));
     lv_rowNum += 1;
@@ -2409,19 +2409,19 @@ void gf_ResetCamera () {
 
 void gf_ResetGameVariables () {
     // Implementation
-    gv_workersCreatedCurrentBuild = 6;
+    gv_workersCreated = 6;
     gv_timeProductionIdleThisBuild = 0;
     gv_timeSupplyBlockedThisBuild = 0;
-    gv_cumulativeAverageUnspentMineralsCurrentBuild = 0;
-    gv_cumulativeAverageUnspentGasCurrentBuild = 0;
-    gv_averageUnspentResourceSamples = 0;
-    gv_cumulativeAverageMineralResourceCollectionRateCurrentBuild = 0;
-    gv_cumulativeAverageGasResourceCollectionRateCurrentBuild = 0;
-    gv_resourceCollectionRateSamplesCurrentBuild = 0;
+    gv_cumulativeTotalUnspentMinerals = 0;
+    gv_cumulativeTotalUnspentGas = 0;
+    gv_numUnspentResourceSamples = 0;
+    gv_cumulativeTotalMineralCollectionRate = 0;
+    gv_cumulativeTotalGasCollectionRate = 0;
+    gv_numResourceCollectionRateSamples = 0;
     gv_cumulativeAPM = 0;
     gv_totalAPMSamplesThisBuild = 0;
-    gv_totalMineralsCollectedCurrentBuild = 0;
-    gv_totalGasCollectedCurrentBuild = 0;
+    gv_totalMineralsCollected = 0;
+    gv_totalGasCollected = 0;
 }
 
 void gf_ResetCurrentBuildOrderStepsVariables () {
@@ -2925,19 +2925,19 @@ void gf_ResetBuildOrderTimers () {
 
 void gf_ResetStatistics () {
     // Implementation
-    gv_workersCreatedCurrentBuild = 0;
+    gv_workersCreated = 0;
     gv_timeProductionIdleThisBuild = 0;
     gv_timeSupplyBlockedThisBuild = 0;
     gv_cumulativeAPM = 0;
     gv_totalAPMSamplesThisBuild = 0;
-    gv_cumulativeAverageMineralResourceCollectionRateCurrentBuild = 0;
-    gv_cumulativeAverageGasResourceCollectionRateCurrentBuild = 0;
-    gv_resourceCollectionRateSamplesCurrentBuild = 0;
-    gv_cumulativeAverageUnspentMineralsCurrentBuild = 0;
-    gv_cumulativeAverageUnspentGasCurrentBuild = 0;
-    gv_averageUnspentResourceSamples = 0;
-    gv_totalMineralsCollectedCurrentBuild = 50;
-    gv_totalGasCollectedCurrentBuild = 0;
+    gv_cumulativeTotalMineralCollectionRate = 0;
+    gv_cumulativeTotalGasCollectionRate = 0;
+    gv_numResourceCollectionRateSamples = 0;
+    gv_cumulativeTotalUnspentMinerals = 0;
+    gv_cumulativeTotalUnspentGas = 0;
+    gv_numUnspentResourceSamples = 0;
+    gv_totalMineralsCollected = 50;
+    gv_totalGasCollected = 0;
 }
 
 void gf_CreateScreenButtons () {
@@ -3867,8 +3867,8 @@ fixed gf_GetAverageResourceCollectionRate () {
     // Variable Initialization
 
     // Implementation
-    if ((gv_resourceCollectionRateSamplesCurrentBuild >= 1)) {
-        lv_result = ((gv_cumulativeAverageMineralResourceCollectionRateCurrentBuild+gv_cumulativeAverageGasResourceCollectionRateCurrentBuild)/gv_resourceCollectionRateSamplesCurrentBuild);
+    if ((gv_numResourceCollectionRateSamples >= 1)) {
+        lv_result = ((gv_cumulativeTotalMineralCollectionRate+gv_cumulativeTotalGasCollectionRate)/gv_numResourceCollectionRateSamples);
     }
     else {
         lv_result = 0.0;
@@ -3878,8 +3878,8 @@ fixed gf_GetAverageResourceCollectionRate () {
 
 fixed gf_GetAverageUnspentResources () {
     // Implementation
-    if ((gv_averageUnspentResourceSamples >= 1)) {
-        return ((gv_cumulativeAverageUnspentMineralsCurrentBuild+gv_cumulativeAverageUnspentGasCurrentBuild)/gv_averageUnspentResourceSamples);
+    if ((gv_numUnspentResourceSamples >= 1)) {
+        return ((gv_cumulativeTotalUnspentMinerals+gv_cumulativeTotalUnspentGas)/gv_numUnspentResourceSamples);
     }
     else {
         return 0;
@@ -3888,8 +3888,8 @@ fixed gf_GetAverageUnspentResources () {
 
 int gf_GetAverageUnspentMinerals () {
     // Implementation
-    if ((gv_averageUnspentResourceSamples >= 1)) {
-        return FixedToInt((gv_cumulativeAverageUnspentMineralsCurrentBuild/gv_averageUnspentResourceSamples));
+    if ((gv_numUnspentResourceSamples >= 1)) {
+        return FixedToInt((gv_cumulativeTotalUnspentMinerals/gv_numUnspentResourceSamples));
     }
     else {
         return 0;
@@ -3898,8 +3898,8 @@ int gf_GetAverageUnspentMinerals () {
 
 int gf_GetAverageUnspentGas () {
     // Implementation
-    if ((gv_averageUnspentResourceSamples >= 1)) {
-        return FixedToInt((gv_cumulativeAverageUnspentGasCurrentBuild/gv_averageUnspentResourceSamples));
+    if ((gv_numUnspentResourceSamples >= 1)) {
+        return FixedToInt((gv_cumulativeTotalUnspentGas/gv_numUnspentResourceSamples));
     }
     else {
         return 0;
@@ -3953,12 +3953,12 @@ int gf_GetNumUpgradesResearched () {
 
 int gf_GetTotalMineralsCollected () {
     // Implementation
-    return gv_totalMineralsCollectedCurrentBuild;
+    return gv_totalMineralsCollected;
 }
 
 int gf_GetTotalGasCollected () {
     // Implementation
-    return gv_totalGasCollectedCurrentBuild;
+    return gv_totalGasCollected;
 }
 
 fixed gf_CalculateSpendingQuotient () {
@@ -6190,7 +6190,7 @@ bool gt_UpdateMineralsCollectedThisBuild_Func (bool testConds, bool runActions) 
         return true;
     }
 
-    gv_totalMineralsCollectedCurrentBuild += EventPlayerPropertyChangeInt();
+    gv_totalMineralsCollected += EventPlayerPropertyChangeInt();
     return true;
 }
 
@@ -6216,7 +6216,7 @@ bool gt_UpdateGasCollectedThisBuild_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    gv_totalGasCollectedCurrentBuild += EventPlayerPropertyChangeInt();
+    gv_totalGasCollected += EventPlayerPropertyChangeInt();
     return true;
 }
 
@@ -6269,7 +6269,7 @@ bool gt_UpdateTotalWorkers_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    gv_workersCreatedCurrentBuild += 1;
+    gv_workersCreated += 1;
     return true;
 }
 
@@ -6314,9 +6314,9 @@ bool gt_UpdateResourceCollectionRate_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    gv_cumulativeAverageMineralResourceCollectionRateCurrentBuild += PlayerScoreValueGetAsFixed(1, "MineralsCollectionRate");
-    gv_cumulativeAverageGasResourceCollectionRateCurrentBuild += PlayerScoreValueGetAsFixed(1, "VespeneCollectionRate");
-    gv_resourceCollectionRateSamplesCurrentBuild += 1;
+    gv_cumulativeTotalMineralCollectionRate += PlayerScoreValueGetAsFixed(1, "MineralsCollectionRate");
+    gv_cumulativeTotalGasCollectionRate += PlayerScoreValueGetAsFixed(1, "VespeneCollectionRate");
+    gv_numResourceCollectionRateSamples += 1;
     return true;
 }
 
@@ -6342,9 +6342,9 @@ bool gt_UpdateAverageUnspentResources_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    gv_cumulativeAverageUnspentMineralsCurrentBuild += PlayerScoreValueGetAsInt(1, "MineralsFloatAverage");
-    gv_cumulativeAverageUnspentGasCurrentBuild += PlayerScoreValueGetAsInt(1, "VespeneFloatAverage");
-    gv_averageUnspentResourceSamples += 1;
+    gv_cumulativeTotalUnspentMinerals += PlayerScoreValueGetAsInt(1, "MineralsCurrent");
+    gv_cumulativeTotalUnspentGas += PlayerScoreValueGetAsInt(1, "VespeneCurrent");
+    gv_numUnspentResourceSamples += 1;
     return true;
 }
 
