@@ -759,6 +759,7 @@ bool gf_IsUpgradeof1Variety (string lp_upgrade);
 text gf_GetFormattedUpgradeNameasText (string lp_upgrade);
 string gf_FormatCatalogStringwithSpaces (string lp_string);
 string gf_TrimSOffArmorsUpgradeName (string lp_string);
+unitgroup gf_GetAllGasStructureUnits ();
 unitgroup gf_GetAllPlayer1UnitsforType (string lp_unitType);
 unitgroup gf_GetAllPlayer1Units ();
 text gf_ConverttoTextWithSign (int lp_int);
@@ -2209,8 +2210,8 @@ void gf_InitializeGameDefaults () {
     gv_alertUpgradeGapThreshold = 20;
     gv_productionIdleThreshold = 20;
     gv_alertSupplyBlockWithinCapThreshold = 6;
-    gv_alertZergDefaultMacroEnergyThreshold = 40;
-    gv_alertTerranDefaultMacroEnergyThreshold = 65;
+    gv_alertZergDefaultMacroEnergyThreshold = 55;
+    gv_alertTerranDefaultMacroEnergyThreshold = 80;
     gv_alertProtossDefaultMacroEnergyThreshold = 55;
     gv_benchmarkMaxTimeMinutes = 15;
     gv_benchmarkMaxTimeSeconds = 0;
@@ -2307,6 +2308,12 @@ void gf_ResetGameState () {
     gf_ResetTechTree();
     lv_player1Units = gf_GetAllPlayer1Units();
     if ((UnitGroupCount(lv_player1Units, c_unitCountAlive) >= 0)) {
+        UnitGroupLoopBegin(UnitGroupFilterPlayer(gf_GetAllGasStructureUnits(), 1, 0));
+        for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
+            UnitRemove(UnitGroupLoopCurrent());
+        }
+        UnitGroupLoopEnd();
+        Wait(0.01, c_timeGame);
         UnitGroupLoopBegin(lv_player1Units);
         for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
             UnitRemove(UnitGroupLoopCurrent());
@@ -3962,8 +3969,18 @@ int gf_GetTotalGasCollected () {
 }
 
 fixed gf_CalculateSpendingQuotient () {
+    // Variable Declarations
+    fixed lv_result;
+
+    // Variable Initialization
+
     // Implementation
-    return (35*(0.00137*gf_GetAverageResourceCollectionRate()-gf_ln(gf_GetAverageUnspentResources()))+240);
+    lv_result = (35*((0.00137*gf_GetAverageResourceCollectionRate())-gf_ln(gf_GetAverageUnspentResources()))+240);
+    TextExpressionSetToken("Param/Expression/72561A85", "A", FixedToText(gf_GetAverageResourceCollectionRate(), 0));
+    TextExpressionSetToken("Param/Expression/72561A85", "B", FixedToText(gf_GetAverageUnspentResources(), 0));
+    TextExpressionSetToken("Param/Expression/72561A85", "C", FixedToText(lv_result, 0));
+    gf_LogTextMessage(gv_debugStatsEnabled, TextExpressionAssemble("Param/Expression/72561A85"));
+    return lv_result;
 }
 
 text gf_CalculateIntPercentDifferenceasText (int lp_value, int lp_previousBest, bool lp_higherisBetter) {
@@ -4170,6 +4187,31 @@ string gf_TrimSOffArmorsUpgradeName (string lp_string) {
     else {
         return lp_string;
     }
+}
+
+unitgroup gf_GetAllGasStructureUnits () {
+    unitgroup auto1E77A246_g;
+    int auto1E77A246_u;
+
+    // Variable Declarations
+    unit lv_currentUnit;
+    unitgroup lv_result;
+
+    // Variable Initialization
+    lv_result = UnitGroupEmpty();
+
+    // Implementation
+    auto1E77A246_g = UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0);
+    auto1E77A246_u = 1;
+    for ( ; auto1E77A246_u <= UnitGroupCount(auto1E77A246_g, c_unitCountAll) ; auto1E77A246_u += BoolToInt(lv_currentUnit == UnitGroupUnit(auto1E77A246_g, auto1E77A246_u)) ) {
+        lv_currentUnit = UnitGroupUnit(auto1E77A246_g, auto1E77A246_u);
+        if (((UnitGetType(lv_currentUnit) == "Extractor") || (UnitGetType(lv_currentUnit) == "Refinery") || (UnitGetType(lv_currentUnit) == "Assimilator"))) {
+            UnitGroupAdd(lv_result, lv_currentUnit);
+        }
+        else {
+        }
+    }
+    return lv_result;
 }
 
 unitgroup gf_GetAllPlayer1UnitsforType (string lp_unitType) {
@@ -5798,7 +5840,7 @@ bool gt_Benchmark1TimerExpires_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) > gv_benchmarkSupplyValues[0])) {
+    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) >= gv_benchmarkSupplyValues[0])) {
         ObjectiveSetState(gv_benchmarkSupplyObjectives[0], c_objectiveStateCompleted);
     }
     else {
@@ -5825,7 +5867,7 @@ bool gt_Benchmark2TimerExpires_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) > gv_benchmarkSupplyValues[1])) {
+    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) >= gv_benchmarkSupplyValues[1])) {
         ObjectiveSetState(gv_benchmarkSupplyObjectives[1], c_objectiveStateCompleted);
     }
     else {
@@ -5852,7 +5894,7 @@ bool gt_Benchmark3TimerExpires_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) > gv_benchmarkSupplyValues[2])) {
+    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) >= gv_benchmarkSupplyValues[2])) {
         ObjectiveSetState(gv_benchmarkSupplyObjectives[2], c_objectiveStateCompleted);
     }
     else {
