@@ -239,6 +239,7 @@ bool gv_paused;
 unitgroup gv_resources;
 bool gv_currentBuildIsGasTaken;
 timer gv_currentBuildBuildTimer;
+unitgroup gv_workers;
 int gv_numMorphingOverlords;
 unitgroup gv_morphingOverlords;
 timer gv_overlordInProgressTimer;
@@ -527,6 +528,7 @@ void InitGlobals () {
     gv_paused = true;
     gv_resources = UnitGroupEmpty();
     gv_currentBuildBuildTimer = TimerCreate();
+    gv_workers = UnitGroupEmpty();
     gv_morphingOverlords = UnitGroupEmpty();
     gv_overlordInProgressTimer = TimerCreate();
     for (init_i = 0; init_i <= 3; init_i += 1) {
@@ -656,6 +658,7 @@ void gf_InitializeBank ();
 void gf_InitializeBuildConfiguration ();
 void gf_CreateMatchupBankSections ();
 void gf_ResetGameState ();
+void gf_ResetUnits ();
 void gf_ResetMapResources ();
 void gf_ResetTechTree ();
 void gf_ResetCamera ();
@@ -833,6 +836,7 @@ trigger gt_UpdateTotalWorkers;
 trigger gt_UpdateNumUpgradesResearched;
 trigger gt_UpdateResourceCollectionRate;
 trigger gt_UpdateAverageUnspentResources;
+trigger gt_WorkerInGasDuringResetFix;
 trigger gt_OverlordInProgressFix;
 trigger gt_OverlordCompletedorCancelledFix;
 trigger gt_HatcheryLarvaSpawnFix;
@@ -2306,24 +2310,7 @@ void gf_ResetGameState () {
 
     // Implementation
     gf_ResetTechTree();
-    lv_player1Units = gf_GetAllPlayer1Units();
-    if ((UnitGroupCount(lv_player1Units, c_unitCountAlive) >= 0)) {
-        UnitGroupLoopBegin(UnitGroupFilterPlayer(gf_GetAllGasStructureUnits(), 1, 0));
-        for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
-            UnitRemove(UnitGroupLoopCurrent());
-        }
-        UnitGroupLoopEnd();
-        Wait(0.1, c_timeGame);
-        UnitGroupLoopBegin(lv_player1Units);
-        for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
-            UnitRemove(UnitGroupLoopCurrent());
-        }
-        UnitGroupLoopEnd();
-        MeleeInitUnits();
-    }
-    else {
-    }
-    MeleeInitResources();
+    gf_ResetUnits();
     gf_ResetMapResources();
     gf_ResetGameVariables();
     gf_ResetStatistics();
@@ -2336,6 +2323,43 @@ void gf_ResetGameState () {
     gf_ResetBuildOrderTimers();
     TimerRestart(gv_currentBuildBuildTimer);
     gf_ResetCamera();
+}
+
+void gf_ResetUnits () {
+    // Variable Declarations
+    unitgroup lv_player1Units;
+    int lv_debugGasCounter;
+
+    // Variable Initialization
+    lv_player1Units = UnitGroupEmpty();
+
+    // Implementation
+    lv_player1Units = gf_GetAllPlayer1Units();
+    if ((UnitGroupCount(lv_player1Units, c_unitCountAlive) >= 0)) {
+        UnitGroupLoopBegin(UnitGroupFilterPlayer(gv_workers, 1, 0));
+        for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
+            UnitRemove(UnitGroupLoopCurrent());
+            UnitGroupRemove(gv_workers, UnitGroupLoopCurrent());
+        }
+        UnitGroupLoopEnd();
+        UnitGroupLoopBegin(UnitGroupFilterPlayer(gf_GetAllGasStructureUnits(), 1, 0));
+        for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
+            UnitRemove(UnitGroupLoopCurrent());
+            lv_debugGasCounter += 1;
+        }
+        UnitGroupLoopEnd();
+        TextExpressionSetToken("Param/Expression/96692ECC", "A", IntToText(lv_debugGasCounter));
+        gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/96692ECC"));
+        UnitGroupLoopBegin(lv_player1Units);
+        for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
+            UnitRemove(UnitGroupLoopCurrent());
+        }
+        UnitGroupLoopEnd();
+        MeleeInitUnits();
+    }
+    else {
+    }
+    MeleeInitResources();
 }
 
 void gf_ResetMapResources () {
@@ -4024,15 +4048,22 @@ int gf_GetTotalGasCollected () {
 fixed gf_CalculateSpendingQuotient () {
     // Variable Declarations
     fixed lv_result;
+    fixed lv_blizzardResult;
 
     // Variable Initialization
 
     // Implementation
     lv_result = (35*((0.00137*gf_GetAverageResourceCollectionRate())-gf_ln(gf_GetAverageUnspentResources()))+240);
+    lv_result = ((35.0 * (((0.0137 * gf_GetAverageResourceCollectionRate()) / 10.0) - gf_ln(gf_GetAverageUnspentResources()))) + 240.0);
     TextExpressionSetToken("Param/Expression/72561A85", "A", FixedToText(gf_GetAverageResourceCollectionRate(), 0));
     TextExpressionSetToken("Param/Expression/72561A85", "B", FixedToText(gf_GetAverageUnspentResources(), 0));
     TextExpressionSetToken("Param/Expression/72561A85", "C", FixedToText(lv_result, 0));
     gf_LogTextMessage(gv_debugStatsEnabled, TextExpressionAssemble("Param/Expression/72561A85"));
+    lv_blizzardResult = ((35.0 * (((0.0137 * PlayerScoreValueGetAsFixed(1, "ResourceCollectionRate")) / 10.0) - gf_ln(PlayerScoreValueGetAsFixed(1, "ResourceFloatAverage")))) + 240.0);
+    TextExpressionSetToken("Param/Expression/CD90F5E5", "A", FixedToText(PlayerScoreValueGetAsFixed(1, "ResourceCollectionRate"), c_fixedPrecisionAny));
+    TextExpressionSetToken("Param/Expression/CD90F5E5", "B", FixedToText(PlayerScoreValueGetAsFixed(1, "ResourceFloatAverage"), c_fixedPrecisionAny));
+    TextExpressionSetToken("Param/Expression/CD90F5E5", "C", null);
+    gf_LogTextMessage(gv_debugStatsEnabled, TextExpressionAssemble("Param/Expression/CD90F5E5"));
     return lv_result;
 }
 
@@ -6450,6 +6481,32 @@ void gt_UpdateAverageUnspentResources_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Worker In Gas During Reset Fix
+//--------------------------------------------------------------------------------------------------
+bool gt_WorkerInGasDuringResetFix_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((UnitGetType(EventUnitCreatedUnit()) == "Drone") || (UnitGetType(EventUnitCreatedUnit()) == "SCV") || (UnitGetType(EventUnitCreatedUnit()) == "Probe")))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    UnitGroupAdd(gv_workers, EventUnitCreatedUnit());
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_WorkerInGasDuringResetFix_Init () {
+    gt_WorkerInGasDuringResetFix = TriggerCreate("gt_WorkerInGasDuringResetFix_Func");
+    TriggerAddEventUnitCreated(gt_WorkerInGasDuringResetFix, null, null, null);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Overlord InProgress Fix
 //--------------------------------------------------------------------------------------------------
 bool gt_OverlordInProgressFix_Func (bool testConds, bool runActions) {
@@ -6598,6 +6655,7 @@ void InitTriggers () {
     gt_UpdateNumUpgradesResearched_Init();
     gt_UpdateResourceCollectionRate_Init();
     gt_UpdateAverageUnspentResources_Init();
+    gt_WorkerInGasDuringResetFix_Init();
     gt_OverlordInProgressFix_Init();
     gt_OverlordCompletedorCancelledFix_Init();
     gt_HatcheryLarvaSpawnFix_Init();
