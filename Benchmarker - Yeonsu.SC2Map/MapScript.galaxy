@@ -826,12 +826,13 @@ trigger gt_OnUpgradeStartUpdateCurrentBuildOrder;
 trigger gt_OnUnitStartUpdateCurrentBuildOrder;
 trigger gt_OnUnitCancelUpdateCurrentBuildOrder;
 trigger gt_OnMultipleUnitFailureTimerExpires;
+trigger gt_DebugSpendingQuotient;
 trigger gt_UpdateGasTaken;
 trigger gt_UpdateProductionIdleTime;
 trigger gt_UpdateTimeSupplyBlocked;
 trigger gt_UpdateMineralsCollectedThisBuild;
 trigger gt_UpdateGasCollectedThisBuild;
-trigger gt_UpdateCumulativeAPM;
+trigger gt_UpdateAPM;
 trigger gt_UpdateTotalWorkers;
 trigger gt_UpdateNumUpgradesResearched;
 trigger gt_UpdateResourceCollectionRate;
@@ -3963,7 +3964,7 @@ fixed gf_GetAverageResourceCollectionRate () {
 fixed gf_GetAverageUnspentResources () {
     // Implementation
     if ((gv_numUnspentResourceSamples >= 1)) {
-        return ((gv_cumulativeTotalUnspentMinerals+gv_cumulativeTotalUnspentGas)/gv_numUnspentResourceSamples);
+        return ((gv_cumulativeTotalUnspentMinerals + gv_cumulativeTotalUnspentGas) / gv_numUnspentResourceSamples);
     }
     else {
         return 0;
@@ -4059,10 +4060,10 @@ fixed gf_CalculateSpendingQuotient () {
     TextExpressionSetToken("Param/Expression/72561A85", "B", FixedToText(gf_GetAverageUnspentResources(), 0));
     TextExpressionSetToken("Param/Expression/72561A85", "C", FixedToText(lv_result, 0));
     gf_LogTextMessage(gv_debugStatsEnabled, TextExpressionAssemble("Param/Expression/72561A85"));
-    lv_blizzardResult = ((35.0 * (((0.0137 * PlayerScoreValueGetAsFixed(1, "ResourceCollectionRate")) / 10.0) - gf_ln(PlayerScoreValueGetAsFixed(1, "ResourceFloatAverage")))) + 240.0);
-    TextExpressionSetToken("Param/Expression/CD90F5E5", "A", FixedToText(PlayerScoreValueGetAsFixed(1, "ResourceCollectionRate"), c_fixedPrecisionAny));
+    lv_blizzardResult = ((35.0 * (((0.0137 * PlayerScoreValueGetAsFixed(1, "ResourceCollectionRateSampled")) / 10.0) - gf_ln(PlayerScoreValueGetAsFixed(1, "ResourceFloatAverage")))) + 240.0);
+    TextExpressionSetToken("Param/Expression/CD90F5E5", "A", FixedToText(PlayerScoreValueGetAsFixed(1, "ResourceCollectionRateSampled"), c_fixedPrecisionAny));
     TextExpressionSetToken("Param/Expression/CD90F5E5", "B", FixedToText(PlayerScoreValueGetAsFixed(1, "ResourceFloatAverage"), c_fixedPrecisionAny));
-    TextExpressionSetToken("Param/Expression/CD90F5E5", "C", null);
+    TextExpressionSetToken("Param/Expression/CD90F5E5", "C", FixedToText(lv_blizzardResult, c_fixedPrecisionAny));
     gf_LogTextMessage(gv_debugStatsEnabled, TextExpressionAssemble("Param/Expression/CD90F5E5"));
     return lv_result;
 }
@@ -6223,6 +6224,37 @@ void gt_OnMultipleUnitFailureTimerExpires_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Debug Spending Quotient
+//--------------------------------------------------------------------------------------------------
+bool gt_DebugSpendingQuotient_Func (bool testConds, bool runActions) {
+    // Variable Declarations
+    fixed lv_result;
+
+    // Variable Initialization
+
+    // Conditions
+    if (testConds) {
+        if (!((gv_debugStatsEnabled == true))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    lv_result = gf_CalculateSpendingQuotient();
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_DebugSpendingQuotient_Init () {
+    gt_DebugSpendingQuotient = TriggerCreate("gt_DebugSpendingQuotient_Func");
+    TriggerAddEventTimePeriodic(gt_DebugSpendingQuotient, 15.0, c_timeGame);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Update Gas Taken
 //--------------------------------------------------------------------------------------------------
 bool gt_UpdateGasTaken_Func (bool testConds, bool runActions) {
@@ -6353,9 +6385,9 @@ void gt_UpdateGasCollectedThisBuild_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Update Cumulative APM
+// Trigger: Update APM
 //--------------------------------------------------------------------------------------------------
-bool gt_UpdateCumulativeAPM_Func (bool testConds, bool runActions) {
+bool gt_UpdateAPM_Func (bool testConds, bool runActions) {
     // Conditions
     if (testConds) {
         if (!((gv_paused == false))) {
@@ -6374,9 +6406,9 @@ bool gt_UpdateCumulativeAPM_Func (bool testConds, bool runActions) {
 }
 
 //--------------------------------------------------------------------------------------------------
-void gt_UpdateCumulativeAPM_Init () {
-    gt_UpdateCumulativeAPM = TriggerCreate("gt_UpdateCumulativeAPM_Func");
-    TriggerAddEventTimePeriodic(gt_UpdateCumulativeAPM, 0.5, c_timeGame);
+void gt_UpdateAPM_Init () {
+    gt_UpdateAPM = TriggerCreate("gt_UpdateAPM_Func");
+    TriggerAddEventTimePeriodic(gt_UpdateAPM, 0.5, c_timeGame);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -6645,12 +6677,13 @@ void InitTriggers () {
     gt_OnUnitStartUpdateCurrentBuildOrder_Init();
     gt_OnUnitCancelUpdateCurrentBuildOrder_Init();
     gt_OnMultipleUnitFailureTimerExpires_Init();
+    gt_DebugSpendingQuotient_Init();
     gt_UpdateGasTaken_Init();
     gt_UpdateProductionIdleTime_Init();
     gt_UpdateTimeSupplyBlocked_Init();
     gt_UpdateMineralsCollectedThisBuild_Init();
     gt_UpdateGasCollectedThisBuild_Init();
-    gt_UpdateCumulativeAPM_Init();
+    gt_UpdateAPM_Init();
     gt_UpdateTotalWorkers_Init();
     gt_UpdateNumUpgradesResearched_Init();
     gt_UpdateResourceCollectionRate_Init();
