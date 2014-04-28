@@ -30,6 +30,11 @@ struct gs_BuildOrderStep {
 //--------------------------------------------------------------------------------------------------
 // Global Variables
 //--------------------------------------------------------------------------------------------------
+int gv_aPMThreshold;
+int gv_aPMThresholdDuration;
+int gv_aPMBelowThresholdAlertCounter;
+int gv_aPMBelowThresholdAlertCheckbox;
+bool gv_aPMBelowThresholdCheckEnabled;
 bool gv_muteAlertsEnabled;
 fixed gv_warningPingCooldownSeconds;
 int gv_alertCooldownSeconds;
@@ -77,6 +82,9 @@ string gv_alertUpgradeGapCheckEnabledEntryKey;
 string gv_alertUpgradeGapThresholdKey;
 string gv_alertProductionIdleCheckEnabledEntryKey;
 string gv_alertProductionIdleThresholdKey;
+string gv_alertAPMBelowThresholdCheckEnabledEntryKey;
+string gv_alertAPMThresholdKey;
+string gv_alertAPMThresholdDurationKey;
 string gv_benchmarkMaxTimeMinutesKey;
 string gv_benchmarkMaxTimeSecondsKey;
 string[4] gv_benchmarkSupplyEntryKeys;
@@ -144,7 +152,7 @@ int[3] gv_startButton;
 int gv_startButtonWidth;
 int gv_startButtonHeight;
 int gv_alertMenuDialog;
-int[9][5] gv_alertMenuDialogItemGrid;
+int[11][7] gv_alertMenuDialogItemGrid;
 int[9][3] gv_alertRowLabelWidths;
 int gv_alertMenuSupplyBlockBaseWidth;
 int gv_alertMenuQueenNameWidth;
@@ -325,6 +333,7 @@ void InitGlobals () {
     int init_i;
     int init_j;
 
+    gv_aPMBelowThresholdAlertCheckbox = c_invalidDialogControlId;
     gv_alertMineralsCooldownTimer = TimerCreate();
     gv_alertMineralsCheckEnabled = true;
     gv_alertGasCooldownTimer = TimerCreate();
@@ -350,6 +359,9 @@ void InitGlobals () {
     gv_alertUpgradeGapThresholdKey = "alertUpgradeGapThreshold";
     gv_alertProductionIdleCheckEnabledEntryKey = "alertProductionIdleEnabled";
     gv_alertProductionIdleThresholdKey = "alertProductionIdleThreshold";
+    gv_alertAPMBelowThresholdCheckEnabledEntryKey = "alertAPMBelowThresholdEnabled";
+    gv_alertAPMThresholdKey = "alertAPMThreshold";
+    gv_alertAPMThresholdDurationKey = "alertAPMThresholdDuration";
     gv_benchmarkMaxTimeMinutesKey = "maxTimeMin";
     gv_benchmarkMaxTimeSecondsKey = "maxTimeSec";
     for (init_i = 0; init_i <= 3; init_i += 1) {
@@ -422,8 +434,8 @@ void InitGlobals () {
     gv_startButtonWidth = 200;
     gv_startButtonHeight = 60;
     gv_alertMenuDialog = c_invalidDialogId;
-    for (init_i = 0; init_i <= 8; init_i += 1) {
-        for (init_j = 0; init_j <= 4; init_j += 1) {
+    for (init_i = 0; init_i <= 10; init_i += 1) {
+        for (init_j = 0; init_j <= 6; init_j += 1) {
             gv_alertMenuDialogItemGrid[init_i][init_j] = c_invalidDialogControlId;
         }
     }
@@ -781,6 +793,7 @@ trigger gt_UpgradeGapAboveThresholdTimerExpiresFireAlert;
 trigger gt_ProductionIdleAboveThresholdProductionFinishesAddRestartTimer;
 trigger gt_ProductionIdleAboveThresholdNewProductionBeginsStopActiveTimers;
 trigger gt_ProductionIdleAboveThresholdTimerExpiresFireAlert;
+trigger gt_APMBelowThreshold;
 trigger gt_StartBuild;
 trigger gt_ResetBuild;
 trigger gt_CloseStatsandResumeBuildfromOkButton;
@@ -1013,6 +1026,11 @@ void gf_SaveAlertMenuConfiguration () {
     BankValueSetFromFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertProductionIdleCheckEnabledEntryKey, gv_productionIdleCheckEnabled);
     gv_productionIdleThreshold = gf_GetEditBoxValueasInt(gv_alertMenuDialogItemGrid[5][2]);
     BankValueSetFromInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertProductionIdleThresholdKey, gv_productionIdleThreshold);
+    BankValueSetFromFlag(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertAPMBelowThresholdCheckEnabledEntryKey, gv_aPMBelowThresholdCheckEnabled);
+    gv_aPMThreshold = gf_GetEditBoxValueasInt(gv_alertMenuDialogItemGrid[6][2]);
+    BankValueSetFromInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertAPMThresholdKey, gv_aPMThreshold);
+    gv_aPMThresholdDuration = gf_GetEditBoxValueasInt(gv_alertMenuDialogItemGrid[6][4]);
+    BankValueSetFromInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertAPMThresholdDurationKey, gv_aPMThresholdDuration);
     BankSave(gv_benchmarkerBank);
 }
 
@@ -1049,6 +1067,15 @@ void gf_LoadAlertMenuConfiguration () {
     gf_LoadAlertRowConfiguration(gv_alertProductionIdleCheckEnabledEntryKey, gv_alertProductionIdleThresholdKey, gv_productionIdleAboveThresholdAlertCheckbox, gv_alertMenuDialogItemGrid[5][2], gv_productionIdleThreshold, 5);
     gv_productionIdleCheckEnabled = libNtve_gf_DialogItemIsChecked(gv_productionIdleAboveThresholdAlertCheckbox, 1);
     gv_productionIdleThreshold = gf_GetEditBoxValueasInt(gv_alertMenuDialogItemGrid[5][2]);
+    gf_LoadAlertRowConfiguration(gv_alertAPMBelowThresholdCheckEnabledEntryKey, gv_alertAPMThresholdKey, gv_aPMBelowThresholdAlertCheckbox, gv_alertMenuDialogItemGrid[6][2], gv_aPMThreshold, 6);
+    gv_aPMBelowThresholdCheckEnabled = libNtve_gf_DialogItemIsChecked(gv_aPMBelowThresholdAlertCheckbox, 1);
+    gv_aPMThreshold = gf_GetEditBoxValueasInt(gv_alertMenuDialogItemGrid[6][2]);
+    if (((BankKeyExists(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertAPMBelowThresholdCheckEnabledEntryKey) == true) && (BankKeyExists(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertAPMThresholdDurationKey) == true))) {
+        gv_aPMThresholdDuration = BankValueGetAsInt(gv_benchmarkerBank, gv_alertConfigurationSectionKey, gv_alertAPMThresholdDurationKey);
+    }
+    else {
+    }
+    libNtve_gf_SetDialogItemEditorValue(gv_alertMenuDialogItemGrid[6][4], IntToString(gv_aPMThresholdDuration), PlayerGroupAll());
 }
 
 void gf_LoadAlertRowConfiguration (string lp_alertEnabledKey, string lp_alertThresholdKey, int lp_alertCheckbox, int lp_alertEditBox, int lp_defaultThresholdValue, int lp_rowNumber) {
@@ -1359,6 +1386,11 @@ void gf_SaveRealAsBuildBenchmark (fixed lp_value, string lp_entryKey) {
 }
 
 void gf_CreateAlertMenuDialog () {
+    // Variable Declarations
+    int lv_rowNum;
+
+    // Variable Initialization
+
     // Implementation
     DialogCreate(gv_benchmarkDialogWidth, gv_benchmarkDialogHeight, c_anchorCenter, 0, -150, true);
     gv_alertMenuDialog = DialogLastCreated();
@@ -1366,41 +1398,60 @@ void gf_CreateAlertMenuDialog () {
     DialogSetTransparency(DialogLastCreated(), 0.0);
     gf_CreateMenuSelectButtons(1);
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_sectionLabelWidth, gv_sectionLabelHeight, c_anchorTopLeft, gv_menuPadding, (gv_menuPadding+gv_benchmarkDialogTitleSpacer), StringExternal("Param/Value/563148FB"), ColorWithAlpha(0,0,0,0), false, 2.0);
-    gf_CreateAlertMenuCheckbox(0);
+    gf_CreateAlertMenuCheckbox(lv_rowNum);
     gv_mineralAboveThresholdAlertCheckbox = DialogControlLastCreated();
-    gf_CreateAlertMenuLabel(StringExternal("Param/Value/99232652"), 0);
-    gf_CreateAlertMenuThresholdEditBox(gv__4DigitEditBoxWidth, 0);
-    gf_CreateAlertMenuCheckbox(1);
+    gf_CreateAlertMenuLabel(StringExternal("Param/Value/99232652"), lv_rowNum);
+    gf_CreateAlertMenuThresholdEditBox(gv__4DigitEditBoxWidth, lv_rowNum);
+    lv_rowNum += 1;
+    gf_CreateAlertMenuCheckbox(lv_rowNum);
     gv_gasAboveThresholdAlertCheckbox = DialogControlLastCreated();
-    gf_CreateAlertMenuLabel(StringExternal("Param/Value/A472485E"), 1);
-    gf_CreateAlertMenuThresholdEditBox(gv__4DigitEditBoxWidth, 1);
-    gf_CreateAlertMenuCheckbox(2);
+    gf_CreateAlertMenuLabel(StringExternal("Param/Value/A472485E"), lv_rowNum);
+    gf_CreateAlertMenuThresholdEditBox(gv__4DigitEditBoxWidth, lv_rowNum);
+    lv_rowNum += 1;
+    gf_CreateAlertMenuCheckbox(lv_rowNum);
     gv_supplyBlockImminentAlertCheckbox = DialogControlLastCreated();
-    gf_CreateAlertMenuLabel(StringExternal("Param/Value/31BD0349"), 2);
-    gf_CreateAlertMenuThresholdEditBox(gv__2DigitEditBoxWidth, 2);
+    gf_CreateAlertMenuLabel(StringExternal("Param/Value/31BD0349"), lv_rowNum);
+    gf_CreateAlertMenuThresholdEditBox(gv__2DigitEditBoxWidth, lv_rowNum);
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_alertRowLabelWidths[2][1], gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_checkboxWidth+gv_alertRowLabelWidths[2][0]+gv__2DigitEditBoxWidth), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_labelAlignmentSpacer+gv_sectionLabelHeight+2*gv_menuItemHeight), StringExternal("Param/Value/22895B11"), ColorWithAlpha(0,0,0,0), false, 2.0);
-    gv_alertMenuDialogItemGrid[2][3] = DialogControlLastCreated();
+    gv_alertMenuDialogItemGrid[lv_rowNum][3] = DialogControlLastCreated();
     DialogControlCreate(DialogLastCreated(), c_triggerControlTypeEditBox);
     DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv__2DigitEditBoxWidth, gv_benchmarkEditBoxHeight);
-    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_checkboxWidth+gv_alertRowLabelWidths[2][0]+gv__2DigitEditBoxWidth+gv_alertRowLabelWidths[2][1]), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_sectionLabelHeight+2*gv_menuItemHeight));
-    gv_alertMenuDialogItemGrid[2][4] = DialogControlLastCreated();
-    gf_CreateAlertMenuCheckbox(3);
+    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_checkboxWidth+gv_alertRowLabelWidths[lv_rowNum][0]+gv__2DigitEditBoxWidth+gv_alertRowLabelWidths[lv_rowNum][1]), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_sectionLabelHeight+lv_rowNum*gv_menuItemHeight));
+    gv_alertMenuDialogItemGrid[lv_rowNum][4] = DialogControlLastCreated();
+    lv_rowNum += 1;
+    gf_CreateAlertMenuCheckbox(lv_rowNum);
     gv_macroEnergyAboveThresholdAlertCheckbox = DialogControlLastCreated();
     TextExpressionSetToken("Param/Expression/F5D99818", "A", gf_GetRaceMacroUnitName());
-    gf_CreateAlertMenuLabel(TextExpressionAssemble("Param/Expression/F5D99818"), 3);
-    gf_CreateAlertMenuThresholdEditBox(gv__2DigitEditBoxWidth, 3);
-    gf_CreateAlertMenuCheckbox(4);
+    gf_CreateAlertMenuLabel(TextExpressionAssemble("Param/Expression/F5D99818"), lv_rowNum);
+    gf_CreateAlertMenuThresholdEditBox(gv__2DigitEditBoxWidth, lv_rowNum);
+    lv_rowNum += 1;
+    gf_CreateAlertMenuCheckbox(lv_rowNum);
     gv_upgradeGapAboveThresholdAlertCheckbox = DialogControlLastCreated();
-    gf_CreateAlertMenuLabel(StringExternal("Param/Value/CAFE4A70"), 4);
-    gf_CreateAlertMenuThresholdEditBox(gv__2DigitEditBoxWidth, 4);
-    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_alertRowLabelWidths[4][1], gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_checkboxWidth+gv_alertRowLabelWidths[4][0]+gv__2DigitEditBoxWidth), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_labelAlignmentSpacer+gv_sectionLabelHeight+4*gv_menuItemHeight), StringExternal("Param/Value/0F44E262"), ColorWithAlpha(0,0,0,0), false, 2.0);
-    gv_alertMenuDialogItemGrid[4][3] = DialogControlLastCreated();
-    gf_CreateAlertMenuCheckbox(5);
+    gf_CreateAlertMenuLabel(StringExternal("Param/Value/CAFE4A70"), lv_rowNum);
+    gf_CreateAlertMenuThresholdEditBox(gv__2DigitEditBoxWidth, lv_rowNum);
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_alertRowLabelWidths[lv_rowNum][1], gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_checkboxWidth+gv_alertRowLabelWidths[lv_rowNum][0]+gv__2DigitEditBoxWidth), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_labelAlignmentSpacer+gv_sectionLabelHeight+lv_rowNum*gv_menuItemHeight), StringExternal("Param/Value/0F44E262"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_alertMenuDialogItemGrid[lv_rowNum][3] = DialogControlLastCreated();
+    lv_rowNum += 1;
+    gf_CreateAlertMenuCheckbox(lv_rowNum);
     gv_productionIdleAboveThresholdAlertCheckbox = DialogControlLastCreated();
-    gf_CreateAlertMenuLabel(StringExternal("Param/Value/683144D7"), 5);
-    gf_CreateAlertMenuThresholdEditBox(gv__2DigitEditBoxWidth, 5);
-    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_alertRowLabelWidths[5][1], gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_checkboxWidth+gv_alertRowLabelWidths[5][0]+gv__2DigitEditBoxWidth), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_labelAlignmentSpacer+gv_sectionLabelHeight+5*gv_menuItemHeight), StringExternal("Param/Value/C235BC69"), ColorWithAlpha(0,0,0,0), false, 2.0);
-    gv_alertMenuDialogItemGrid[5][3] = DialogControlLastCreated();
+    gf_CreateAlertMenuLabel(StringExternal("Param/Value/683144D7"), lv_rowNum);
+    gf_CreateAlertMenuThresholdEditBox(gv__2DigitEditBoxWidth, lv_rowNum);
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_alertRowLabelWidths[lv_rowNum][1], gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_checkboxWidth+gv_alertRowLabelWidths[lv_rowNum][0]+gv__2DigitEditBoxWidth), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_labelAlignmentSpacer+gv_sectionLabelHeight+lv_rowNum*gv_menuItemHeight), StringExternal("Param/Value/C235BC69"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_alertMenuDialogItemGrid[lv_rowNum][3] = DialogControlLastCreated();
+    lv_rowNum += 1;
+    gf_CreateAlertMenuCheckbox(lv_rowNum);
+    gv_aPMBelowThresholdAlertCheckbox = DialogControlLastCreated();
+    gf_CreateAlertMenuLabel(StringExternal("Param/Value/7979A668"), lv_rowNum);
+    gf_CreateAlertMenuThresholdEditBox(gv__3DigitEditBoxWidth, lv_rowNum);
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_alertRowLabelWidths[lv_rowNum][2], gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_checkboxWidth+gv_alertRowLabelWidths[lv_rowNum][0]+gv__3DigitEditBoxWidth), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_labelAlignmentSpacer+gv_sectionLabelHeight+lv_rowNum*gv_menuItemHeight), StringExternal("Param/Value/F05BB8B3"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_alertMenuDialogItemGrid[lv_rowNum][3] = DialogControlLastCreated();
+    DialogControlCreate(DialogLastCreated(), c_triggerControlTypeEditBox);
+    DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv__2DigitEditBoxWidth, gv_benchmarkEditBoxHeight);
+    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_checkboxWidth+gv_alertRowLabelWidths[lv_rowNum][0]+gv__3DigitEditBoxWidth+gv_alertRowLabelWidths[lv_rowNum][1]), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_sectionLabelHeight+lv_rowNum*gv_menuItemHeight));
+    gv_alertMenuDialogItemGrid[lv_rowNum][4] = DialogControlLastCreated();
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_alertRowLabelWidths[lv_rowNum][2], gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_checkboxWidth+gv_alertRowLabelWidths[lv_rowNum][0]+gv__3DigitEditBoxWidth+gv_alertRowLabelWidths[lv_rowNum][1]+gv__2DigitEditBoxWidth), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_labelAlignmentSpacer+gv_sectionLabelHeight+lv_rowNum*gv_menuItemHeight), StringExternal("Param/Value/92B1D26F"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_alertMenuDialogItemGrid[lv_rowNum][5] = DialogControlLastCreated();
+    lv_rowNum += 1;
     libNtve_gf_CreateDialogItemButton(gv_alertMenuDialog, gv_startButtonWidth, gv_startButtonHeight, c_anchorBottom, 0, gv_menuPadding, StringExternal("Param/Value/CD009FD2"), StringExternal("Param/Value/699F29D6"), "");
     gv_startButton[1] = DialogControlLastCreated();
 }
@@ -2200,8 +2251,9 @@ void gf_InitializeDialogDefaults () {
     gv_alertRowLabelWidths[4][1] = gv_secondsLabelWidth;
     gv_alertRowLabelWidths[5][0] = 483;
     gv_alertRowLabelWidths[5][1] = gv_secondsLabelWidth;
-    gv_alertRowLabelWidths[6][0] = 357;
-    gv_alertRowLabelWidths[7][0] = 335;
+    gv_alertRowLabelWidths[6][0] = 300;
+    gv_alertRowLabelWidths[6][1] = 40;
+    gv_alertRowLabelWidths[6][2] = gv_secondsLabelWidth;
 }
 
 void gf_InitializeGameDefaults () {
@@ -2218,6 +2270,8 @@ void gf_InitializeGameDefaults () {
     gv_alertZergDefaultMacroEnergyThreshold = 55;
     gv_alertTerranDefaultMacroEnergyThreshold = 80;
     gv_alertProtossDefaultMacroEnergyThreshold = 55;
+    gv_aPMThreshold = 100;
+    gv_aPMThresholdDuration = 10;
     gv_benchmarkMaxTimeMinutes = 15;
     gv_benchmarkMaxTimeSeconds = 0;
     gv_benchmarkEndBuildatMinutes = 15;
@@ -4837,6 +4891,26 @@ void gt_ProductionIdleAboveThresholdTimerExpiresFireAlert_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: APM Below Threshold
+//--------------------------------------------------------------------------------------------------
+bool gt_APMBelowThreshold_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((gv_paused == false) && (gv_aPMBelowThresholdCheckEnabled == true)))) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_APMBelowThreshold_Init () {
+    gt_APMBelowThreshold = TriggerCreate("gt_APMBelowThreshold_Func");
+    TriggerAddEventTimePeriodic(gt_APMBelowThreshold, 1.0, c_timeGame);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Start Build
 //--------------------------------------------------------------------------------------------------
 bool gt_StartBuild_Func (bool testConds, bool runActions) {
@@ -6632,6 +6706,7 @@ void InitTriggers () {
     gt_ProductionIdleAboveThresholdProductionFinishesAddRestartTimer_Init();
     gt_ProductionIdleAboveThresholdNewProductionBeginsStopActiveTimers_Init();
     gt_ProductionIdleAboveThresholdTimerExpiresFireAlert_Init();
+    gt_APMBelowThreshold_Init();
     gt_StartBuild_Init();
     gt_ResetBuild_Init();
     gt_CloseStatsandResumeBuildfromOkButton_Init();
