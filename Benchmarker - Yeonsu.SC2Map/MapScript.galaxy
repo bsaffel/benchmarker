@@ -35,6 +35,7 @@ int gv_aPMThresholdDuration;
 int gv_aPMBelowThresholdAlertCounter;
 int gv_aPMBelowThresholdAlertCheckbox;
 bool gv_aPMBelowThresholdCheckEnabled;
+timer gv_aPMBelowThresholdCooldownTimer;
 bool gv_muteAlertsEnabled;
 fixed gv_warningPingCooldownSeconds;
 int gv_alertCooldownSeconds;
@@ -334,6 +335,7 @@ void InitGlobals () {
     int init_j;
 
     gv_aPMBelowThresholdAlertCheckbox = c_invalidDialogControlId;
+    gv_aPMBelowThresholdCooldownTimer = TimerCreate();
     gv_alertMineralsCooldownTimer = TimerCreate();
     gv_alertMineralsCheckEnabled = true;
     gv_alertGasCooldownTimer = TimerCreate();
@@ -2259,7 +2261,7 @@ void gf_InitializeDialogDefaults () {
 void gf_InitializeGameDefaults () {
     // Implementation
     gv_overlordMorphDuration = 25;
-    gv_warningPingCooldownSeconds = 1.5;
+    gv_warningPingCooldownSeconds = 2.0;
     gv_alertCooldownSeconds = 15;
     gv_alertMineralsThreshold = 800;
     gv_alertGasThreshold = 400;
@@ -4894,13 +4896,44 @@ void gt_ProductionIdleAboveThresholdTimerExpiresFireAlert_Init () {
 // Trigger: APM Below Threshold
 //--------------------------------------------------------------------------------------------------
 bool gt_APMBelowThreshold_Func (bool testConds, bool runActions) {
+    // Variable Declarations
+    int lv_currentAPM;
+
+    // Variable Initialization
+
     // Conditions
     if (testConds) {
-        if (!(((gv_paused == false) && (gv_aPMBelowThresholdCheckEnabled == true)))) {
+        if (!(((gv_paused == false) && (gv_aPMBelowThresholdCheckEnabled == true) && (TimerGetRemaining(gv_aPMBelowThresholdCooldownTimer) == 0.0)))) {
             return false;
         }
     }
 
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    lv_currentAPM = PlayerScoreValueGetAsInt(1, "APM");
+    TextExpressionSetToken("Param/Expression/282BE002", "A", IntToText(lv_currentAPM));
+    TextExpressionSetToken("Param/Expression/282BE002", "B", IntToText(gv_aPMBelowThresholdAlertCounter));
+    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/282BE002"));
+    if ((lv_currentAPM < gv_aPMThreshold)) {
+        if ((gv_aPMBelowThresholdAlertCounter > gv_aPMThresholdDuration)) {
+            UIAlert("SupplyBlockImminentZerg2", 1, TextExpressionAssemble("Param/Expression/98B1F6BB"), "Assets\\Textures\\tutorialmouseleftbuttondown_new.dds");
+            if ((gv_muteAlertsEnabled == false)) {
+                SoundPlay(SoundLink("UI_BnetDockMessage", -1), PlayerGroupAll(), 50.0, 0.0);
+            }
+            else {
+            }
+            TimerStart(gv_aPMBelowThresholdCooldownTimer, gv_warningPingCooldownSeconds, false, c_timeGame);
+        }
+        else {
+        }
+        gv_aPMBelowThresholdAlertCounter += 1;
+    }
+    else {
+        gv_aPMBelowThresholdAlertCounter = 0;
+    }
     return true;
 }
 
