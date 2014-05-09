@@ -1848,6 +1848,11 @@ void gf_UpdateBuildOrderListBoxwithCurrentBuild (int lp_listBox) {
 }
 
 void gf_CreateHelpDialog () {
+    // Variable Declarations
+    int lv_rowNum;
+
+    // Variable Initialization
+
     // Implementation
     DialogCreate(gv_benchmarkDialogWidth, gv_benchmarkDialogHeight, c_anchorCenter, 0, -150, true);
     gv_helpDialog = DialogLastCreated();
@@ -1856,12 +1861,20 @@ void gf_CreateHelpDialog () {
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_sectionLabelWidth, gv_sectionLabelHeight, c_anchorTopLeft, (gv_menuPadding), (gv_menuPadding+gv_benchmarkDialogTitleSpacer), StringExternal("Param/Value/CBB81B85"), ColorWithAlpha(0,0,0,0), false, 2.0);
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_sectionLabelWidth, gv_sectionLabelHeight, c_anchorTopLeft, (gv_menuPadding+gv_helpCommandLabelWidth+gv_menuOptionIndent), (gv_menuPadding+gv_benchmarkDialogTitleSpacer), StringExternal("Param/Value/7A79B9B9"), ColorWithAlpha(0,0,0,0), false, 2.0);
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_sectionLabelWidth, gv_sectionLabelHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent+gv_helpCommandLabelWidth+gv_helpHotkeyLabelWidth), (gv_menuPadding+gv_benchmarkDialogTitleSpacer), StringExternal("Param/Value/99445BE1"), ColorWithAlpha(0,0,0,0), false, 2.0);
-    gf_CreateHelpInfoRow(StringExternal("Param/Value/0D7071BE"), StringExternal("Param/Value/B36B4059"), StringExternal("Param/Value/EFA43440"), 0);
-    gf_CreateHelpInfoRow(StringExternal("Param/Value/5C5B6190"), StringExternal("Param/Value/3E7A53DD"), StringExternal("Param/Value/9CD7E854"), 1);
-    gf_CreateHelpInfoRow(StringExternal("Param/Value/D498D14D"), StringExternal("Param/Value/D75B7086"), StringExternal("Param/Value/A963FAF3"), 2);
-    gf_CreateHelpInfoRow(StringExternal("Param/Value/6639460A"), StringExternal("Param/Value/5AC1BD33"), StringExternal("Param/Value/945362B1"), 3);
-    gf_CreateHelpInfoRow(StringExternal("Param/Value/732FD0CC"), StringExternal("Param/Value/E709BC6E"), StringExternal("Param/Value/7A5AB46F"), 4);
-    gf_CreateHelpInfoRow(StringExternal("Param/Value/2EFCFDB5"), StringExternal("Param/Value/1234E292"), StringExternal("Param/Value/62BC3490"), 5);
+    gf_CreateHelpInfoRow(StringExternal("Param/Value/0D7071BE"), StringExternal("Param/Value/B36B4059"), StringExternal("Param/Value/EFA43440"), lv_rowNum);
+    lv_rowNum += 1;
+    gf_CreateHelpInfoRow(StringExternal("Param/Value/5C5B6190"), StringExternal("Param/Value/3E7A53DD"), StringExternal("Param/Value/9CD7E854"), lv_rowNum);
+    lv_rowNum += 1;
+    gf_CreateHelpInfoRow(StringExternal("Param/Value/D498D14D"), StringExternal("Param/Value/D75B7086"), StringExternal("Param/Value/A963FAF3"), lv_rowNum);
+    lv_rowNum += 1;
+    gf_CreateHelpInfoRow(StringExternal("Param/Value/6639460A"), StringExternal("Param/Value/5AC1BD33"), StringExternal("Param/Value/945362B1"), lv_rowNum);
+    lv_rowNum += 1;
+    gf_CreateHelpInfoRow(StringExternal("Param/Value/732FD0CC"), StringExternal("Param/Value/E709BC6E"), StringExternal("Param/Value/7A5AB46F"), lv_rowNum);
+    lv_rowNum += 1;
+    gf_CreateHelpInfoRow(StringExternal("Param/Value/1AD5555E"), StringExternal("Param/Value/F9EACEB5"), StringExternal("Param/Value/93AFCE51"), lv_rowNum);
+    lv_rowNum += 1;
+    gf_CreateHelpInfoRow(StringExternal("Param/Value/2EFCFDB5"), StringExternal("Param/Value/1234E292"), StringExternal("Param/Value/62BC3490"), lv_rowNum);
+    lv_rowNum += 1;
     libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_startButtonWidth, gv_startButtonHeight, c_anchorBottom, 0, gv_menuPadding, StringExternal("Param/Value/87960E2D"), StringExternal("Param/Value/208CDB48"), "");
     gv_helpOkButton = DialogControlLastCreated();
 }
@@ -6352,11 +6365,19 @@ bool gt_ForkBuildOrder_Func (bool testConds, bool runActions) {
 
     // Variable Initialization
 
+    // Conditions
+    if (testConds) {
+        if (!((gv_practiceAgainstBenchmarkBuildOrder == true))) {
+            return false;
+        }
+    }
+
     // Actions
     if (!runActions) {
         return true;
     }
 
+    UIDisplayMessage(PlayerGroupAll(), c_messageAreaDirective, StringExternal("Param/Value/52625F29"));
     gv_practiceAgainstBenchmarkBuildOrder = false;
     auto991C8C82_ae = gv_maxDisplayedBuildOrderObjectives1;
     auto991C8C82_ai = 1;
@@ -6365,12 +6386,17 @@ bool gt_ForkBuildOrder_Func (bool testConds, bool runActions) {
         ObjectiveDestroy(gv_benchmarkBuildOrderStepObjectives[lv_i]);
         Wait(0.2, c_timeGame);
     }
+    libNtve_gf_HideScreenButton(false, gv_forkScreenButtonID);
+    UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
     return true;
 }
 
 //--------------------------------------------------------------------------------------------------
 void gt_ForkBuildOrder_Init () {
     gt_ForkBuildOrder = TriggerCreate("gt_ForkBuildOrder_Func");
+    TriggerAddEventChatMessage(gt_ForkBuildOrder, c_playerAny, "-f", true);
+    TriggerAddEventChatMessage(gt_ForkBuildOrder, c_playerAny, "-fork", true);
+    TriggerAddEventKeyPressed(gt_ForkBuildOrder, 1, c_keyF, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
 }
 
 //--------------------------------------------------------------------------------------------------
