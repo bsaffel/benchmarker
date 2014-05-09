@@ -329,6 +329,7 @@ int gv_screenButtonWidth;
 int gv_screenButtonHeight;
 int gv_screenButtonXPadding;
 int gv_screenButtonYPadding;
+int gv_forkScreenButtonID;
 
 void InitGlobals () {
     int init_i;
@@ -584,6 +585,7 @@ void InitGlobals () {
     gv_screenButtonHeight = 50;
     gv_screenButtonXPadding = 10;
     gv_screenButtonYPadding = 125;
+    gv_forkScreenButtonID = 6;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -841,6 +843,7 @@ trigger gt_OnUpgradeStartUpdateCurrentBuildOrder;
 trigger gt_OnUnitStartUpdateCurrentBuildOrder;
 trigger gt_OnUnitCancelUpdateCurrentBuildOrder;
 trigger gt_OnMultipleUnitFailureTimerExpires;
+trigger gt_ForkBuildOrder;
 trigger gt_DebugSpendingQuotient;
 trigger gt_UpdateGasTaken;
 trigger gt_UpdateProductionIdleTime;
@@ -2923,6 +2926,8 @@ void gf_CreateBenchmarkBuildOrderObjectives () {
         else {
         }
     }
+    libNtve_gf_DisplayScreenButton(gv_forkScreenButtonID, StringExternal("Param/Value/4265F0EA"), 105, 35, c_anchorTopLeft, 160, 198, gt_ForkBuildOrder);
+    libNtve_gf_SetDialogItemTooltip(libNtve_gf_ScreenButton(gv_forkScreenButtonID), StringExternal("Param/Value/D99E1BC8"), PlayerGroupAll());
 }
 
 void gf_EvaluateUnitTypeandAmountForBenchmarkBuildOrderStep (string lp_unitType, int lp_amount) {
@@ -3042,6 +3047,7 @@ void gf_DestroyBenchmarkBuildOrderObjectives () {
     for ( ; ( (auto8EFD539D_ai >= 0 && lv_i <= auto8EFD539D_ae) || (auto8EFD539D_ai <= 0 && lv_i >= auto8EFD539D_ae) ) ; lv_i += auto8EFD539D_ai ) {
         ObjectiveDestroy(gv_benchmarkBuildOrderStepObjectives[lv_i]);
     }
+    libNtve_gf_HideScreenButton(false, gv_forkScreenButtonID);
 }
 
 void gf_FailCurrentBuildStepAndCycle () {
@@ -4862,7 +4868,7 @@ bool gt_ProductionIdleAboveThresholdTimerExpiresFireAlert_Func (bool testConds, 
 
     // Conditions
     if (testConds) {
-        if (!(((gv_paused == false) && (gv_productionIdleCheckEnabled == true) && (PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) < 200) && (gf_IsTimeraProductionIdleTimer(EventTimer()) == true) && (gf_IsUnitTypeTrainingQueueEmpty(lv_unitTypeForTimer) == true)))) {
+        if (!(((gv_paused == false) && (gv_productionIdleCheckEnabled == true) && (PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) < 200) && (gf_IsTimeraProductionIdleTimer(EventTimer()) == true) && (gf_IsUnitTypeTrainingQueueEmpty(lv_unitTypeForTimer) == true) && (TimerGetElapsed(gv_currentBuildBuildTimer) > gv_alertCooldownSeconds)))) {
             return false;
         }
     }
@@ -4903,7 +4909,7 @@ bool gt_APMBelowThreshold_Func (bool testConds, bool runActions) {
 
     // Conditions
     if (testConds) {
-        if (!(((gv_paused == false) && (gv_aPMBelowThresholdCheckEnabled == true) && (TimerGetRemaining(gv_aPMBelowThresholdCooldownTimer) == 0.0)))) {
+        if (!(((gv_paused == false) && (gv_aPMBelowThresholdCheckEnabled == true) && (TimerGetRemaining(gv_aPMBelowThresholdCooldownTimer) == 0.0) && (TimerGetElapsed(gv_currentBuildBuildTimer) > gv_aPMThresholdDuration)))) {
             return false;
         }
     }
@@ -6335,6 +6341,39 @@ void gt_OnMultipleUnitFailureTimerExpires_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Fork Build Order
+//--------------------------------------------------------------------------------------------------
+bool gt_ForkBuildOrder_Func (bool testConds, bool runActions) {
+    int auto991C8C82_ae;
+    int auto991C8C82_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_practiceAgainstBenchmarkBuildOrder = false;
+    auto991C8C82_ae = gv_maxDisplayedBuildOrderObjectives1;
+    auto991C8C82_ai = 1;
+    lv_i = gf_GetObjectiveIndexforBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor);
+    for ( ; ( (auto991C8C82_ai >= 0 && lv_i <= auto991C8C82_ae) || (auto991C8C82_ai <= 0 && lv_i >= auto991C8C82_ae) ) ; lv_i += auto991C8C82_ai ) {
+        ObjectiveDestroy(gv_benchmarkBuildOrderStepObjectives[lv_i]);
+        Wait(0.2, c_timeGame);
+    }
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_ForkBuildOrder_Init () {
+    gt_ForkBuildOrder = TriggerCreate("gt_ForkBuildOrder_Func");
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Debug Spending Quotient
 //--------------------------------------------------------------------------------------------------
 bool gt_DebugSpendingQuotient_Func (bool testConds, bool runActions) {
@@ -6789,6 +6828,7 @@ void InitTriggers () {
     gt_OnUnitStartUpdateCurrentBuildOrder_Init();
     gt_OnUnitCancelUpdateCurrentBuildOrder_Init();
     gt_OnMultipleUnitFailureTimerExpires_Init();
+    gt_ForkBuildOrder_Init();
     gt_DebugSpendingQuotient_Init();
     gt_UpdateGasTaken_Init();
     gt_UpdateProductionIdleTime_Init();
