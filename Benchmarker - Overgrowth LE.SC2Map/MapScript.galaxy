@@ -93,6 +93,7 @@ string[4] gv_benchmarkSupplyEntryKeys;
 string gv_benchmarkEndBuildSelectionKey;
 string gv_benchmarkEndBuildMinutesKey;
 string gv_benchmarkEndBuildSecondsKey;
+string gv_benchmarkFinalSupplyatGameTimeKey;
 string gv_practiceAgainstBenchmarkBuildOrderKey;
 string gv_displayBuildHintsKey;
 string gv_benchmarkBuildStepEntryKeyPrefix;
@@ -277,6 +278,7 @@ int gv_selectedMaxSupplyBenchmark;
 int gv_benchmarkEndBuildatMinutes;
 int gv_benchmarkEndBuildatSeconds;
 int gv_benchmarkEndBuildTotalSeconds;
+int gv_benchmarkFinalSupplyatGameTimeValue;
 bool gv_practiceAgainstBenchmarkBuildOrder;
 bool gv_trackSupplyUnitsAsObjectives;
 int gv_trackSupplyUnitObjectivesUntil;
@@ -385,6 +387,7 @@ void InitGlobals () {
     gv_benchmarkEndBuildSelectionKey = "endBuildSelection";
     gv_benchmarkEndBuildMinutesKey = "endBuildMin";
     gv_benchmarkEndBuildSecondsKey = "endBuildSec";
+    gv_benchmarkFinalSupplyatGameTimeKey = "finalSupply";
     gv_practiceAgainstBenchmarkBuildOrderKey = "practiceAgainstBenchmarkBuildOrder";
     gv_displayBuildHintsKey = "displayBuildHints";
     gv_benchmarkBuildStepEntryKeyPrefix = "benchmarkBuildStep";
@@ -1166,15 +1169,17 @@ void gf_SaveBenchmarkMenuConfiguration (string lp_sectionKey) {
     BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkMaxTimeMinutesKey, gf_GetEditBoxValueasInt(gv_maxTimeMinutesEditBox));
     BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkMaxTimeSecondsKey, gf_GetEditBoxValueasInt(gv_maxTimeSecondsEditBox));
     gv_endBuildPulldownSelection = DialogControlGetSelectedItem(gv_endBuildPulldown, 1);
-    BankValueSetFromInt(gv_benchmarkerBank, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildSelectionKey, DialogControlGetSelectedItem(gv_endBuildPulldown, 1));
+    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSelectionKey, DialogControlGetSelectedItem(gv_endBuildPulldown, 1));
     gv_benchmarkEndBuildatMinutes = gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox);
-    BankValueSetFromInt(gv_benchmarkerBank, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildMinutesKey, gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox));
+    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildMinutesKey, gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox));
     gv_benchmarkEndBuildatSeconds = gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox);
-    BankValueSetFromInt(gv_benchmarkerBank, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildSecondsKey, gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox));
+    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSecondsKey, gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox));
+    gv_benchmarkFinalSupplyatGameTimeValue = gf_GetEditBoxValueasInt(gv_supplyAtGameTimeEditBox);
+    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkFinalSupplyatGameTimeKey, gf_GetEditBoxValueasInt(gv_supplyAtGameTimeEditBox));
     gv_practiceAgainstBenchmarkBuildOrder = libNtve_gf_DialogItemIsChecked(gv_practiceAgainstSavedBuildOrderCheckbox, 1);
-    BankValueSetFromFlag(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_practiceAgainstBenchmarkBuildOrderKey, gv_practiceAgainstBenchmarkBuildOrder);
+    BankValueSetFromFlag(gv_benchmarkerBank, lp_sectionKey, gv_practiceAgainstBenchmarkBuildOrderKey, gv_practiceAgainstBenchmarkBuildOrder);
     gv_displayBuildHints = libNtve_gf_DialogItemIsChecked(gv_displayBuildOrderHintsCheckbox, 1);
-    BankValueSetFromFlag(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_displayBuildHintsKey, gv_displayBuildHints);
+    BankValueSetFromFlag(gv_benchmarkerBank, lp_sectionKey, gv_displayBuildHintsKey, gv_displayBuildHints);
     BankSave(gv_benchmarkerBank);
 }
 
@@ -1196,14 +1201,15 @@ void gf_LoadBenchmarkMenuConfiguration (string lp_sectionKey) {
     }
     gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeMinutesEditBox, gv_benchmarkMaxTimeMinutesKey, lp_sectionKey, gv_benchmarkMaxTimeMinutes);
     gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeSecondsEditBox, gv_benchmarkMaxTimeSecondsKey, lp_sectionKey, gv_benchmarkMaxTimeSeconds);
-    if ((BankValueGetAsInt(gv_benchmarkerBank, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildSelectionKey) > 0)) {
-        DialogControlSelectItem(gv_endBuildPulldown, PlayerGroupAll(), BankValueGetAsInt(gv_benchmarkerBank, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildSelectionKey));
+    if ((BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSelectionKey) > 0)) {
+        DialogControlSelectItem(gv_endBuildPulldown, PlayerGroupAll(), BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSelectionKey));
     }
     else {
         DialogControlSelectItem(gv_endBuildPulldown, PlayerGroupAll(), gv_endBuildPulldownSelection);
     }
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildMinutesEditBox, gv_benchmarkEndBuildMinutesKey, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildatMinutes);
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildSecondsEditBox, gv_benchmarkEndBuildSecondsKey, gv_configurationOptionsSectionKey, gv_benchmarkEndBuildatSeconds);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildMinutesEditBox, gv_benchmarkEndBuildMinutesKey, lp_sectionKey, gv_benchmarkEndBuildatMinutes);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildSecondsEditBox, gv_benchmarkEndBuildSecondsKey, lp_sectionKey, gv_benchmarkEndBuildatSeconds);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_supplyAtGameTimeEditBox, gv_benchmarkFinalSupplyatGameTimeKey, lp_sectionKey, gv_benchmarkFinalSupplyatGameTimeValue);
     if ((gf_DoesSavedBuildOrderExistForCurrentMatchup() == true)) {
         gf_EnablePracticeAgainstBenchmarkBuildOrderOptions();
     }
@@ -2412,8 +2418,9 @@ void gf_InitializeGameDefaults () {
     gv_aPMThresholdDuration = 10;
     gv_benchmarkMaxTimeMinutes = 15;
     gv_benchmarkMaxTimeSeconds = 0;
-    gv_benchmarkEndBuildatMinutes = 15;
-    gv_benchmarkEndBuildatSeconds = 0;
+    gv_benchmarkEndBuildatMinutes = 12;
+    gv_benchmarkEndBuildatSeconds = 30;
+    gv_benchmarkFinalSupplyatGameTimeValue = 130;
     gv_benchmarkTimerDurations[0] = 360;
     gv_benchmarkTimerDurations[1] = 480;
     gv_benchmarkTimerDurations[2] = 600;
