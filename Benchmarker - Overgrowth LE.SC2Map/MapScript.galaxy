@@ -263,7 +263,7 @@ unitgroup gv_morphingOverlords;
 timer gv_overlordInProgressTimer;
 int gv_overlordMorphDuration;
 int[4] gv_benchmarkSupplyObjectives;
-int gv_benchmarkMaxTimeObjective;
+int gv_benchmarkFinalBenchmarkObjective;
 timer gv_benchmark1Timer;
 timer gv_benchmark2Timer;
 timer gv_benchmark3Timer;
@@ -571,7 +571,7 @@ void InitGlobals () {
     for (init_i = 0; init_i <= 3; init_i += 1) {
         gv_benchmarkSupplyObjectives[init_i] = c_invalidObjectiveId;
     }
-    gv_benchmarkMaxTimeObjective = c_invalidObjectiveId;
+    gv_benchmarkFinalBenchmarkObjective = c_invalidObjectiveId;
     gv_benchmark1Timer = TimerCreate();
     gv_benchmark2Timer = TimerCreate();
     gv_benchmark3Timer = TimerCreate();
@@ -767,6 +767,8 @@ int gf_GetEditBoxValueasInt (int lp_editBox);
 bool gf_DoesSavedBuildOrderExistForCurrentMatchup ();
 fixed gf_ln (fixed lp_x);
 fixed gf_log10 (fixed lp_x);
+bool gf_IsEndBuildatMaxSupplySelected ();
+bool gf_IsEndBuildatGameTimeSelected ();
 text gf_GetTypeTextForCurrentBuildOrderStep (int lp_stepNumber);
 text gf_GetTypeTextForBenchmarkBuildOrderStep (int lp_stepNumber);
 text gf_GetCurrentBuildOrderStepText (int lp_stepNumber);
@@ -857,8 +859,8 @@ trigger gt_SelectBenchmarkMenu;
 trigger gt_OpenMainMenu;
 trigger gt_SelectAlertMenu;
 trigger gt_SelectMatchup;
-trigger gt_SelectEndBuildAtGameTime;
 trigger gt_SelectEndBuildAtMaxSupply;
+trigger gt_SelectEndBuildAtGameTime;
 trigger gt_TogglePracticeAgainstSavedBuild;
 trigger gt_UpdateFinalSupplyAtGameTimeText;
 trigger gt_OpenHelpDialog;
@@ -1170,6 +1172,7 @@ void gf_SaveBenchmarkMenuConfiguration (string lp_sectionKey) {
     BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkMaxTimeSecondsKey, gf_GetEditBoxValueasInt(gv_maxTimeSecondsEditBox));
     gv_endBuildPulldownSelection = DialogControlGetSelectedItem(gv_endBuildPulldown, 1);
     BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSelectionKey, DialogControlGetSelectedItem(gv_endBuildPulldown, 1));
+    gv_benchmarkEndBuildTotalSeconds = ((gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox)*60)+gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox));
     gv_benchmarkEndBuildatMinutes = gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox);
     BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildMinutesKey, gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox));
     gv_benchmarkEndBuildatSeconds = gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox);
@@ -2795,9 +2798,17 @@ void gf_ResetBenchmarkSupplyObjectives () {
         ObjectiveSetName(gv_benchmarkSupplyObjectives[lv_i], TextExpressionAssemble("Param/Expression/0ED07185"));
         Wait(0.25, c_timeGame);
     }
-    ObjectiveSetState(gv_benchmarkMaxTimeObjective, c_objectiveStateActive);
-    TextExpressionSetToken("Param/Expression/B6B33C58", "B", TextWithColor(TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkMaxTimeTotalSeconds), gv_benchmarkSupplyObjectiveTextColor));
-    ObjectiveSetName(gv_benchmarkMaxTimeObjective, TextExpressionAssemble("Param/Expression/B6B33C58"));
+    if ((gf_IsEndBuildatMaxSupplySelected() == true)) {
+        ObjectiveSetState(gv_benchmarkFinalBenchmarkObjective, c_objectiveStateActive);
+        TextExpressionSetToken("Param/Expression/B6B33C58", "B", TextWithColor(TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkMaxTimeTotalSeconds), gv_benchmarkSupplyObjectiveTextColor));
+        ObjectiveSetName(gv_benchmarkFinalBenchmarkObjective, TextExpressionAssemble("Param/Expression/B6B33C58"));
+    }
+    else {
+        ObjectiveSetState(gv_benchmarkFinalBenchmarkObjective, c_objectiveStateActive);
+        TextExpressionSetToken("Param/Expression/9AFFA0B9", "A", TextWithColor(IntToText(gv_benchmarkFinalSupplyatGameTimeValue), gv_benchmarkSupplyObjectiveTextColor));
+        TextExpressionSetToken("Param/Expression/9AFFA0B9", "B", TextWithColor(TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkEndBuildTotalSeconds), gv_benchmarkSupplyObjectiveTextColor));
+        ObjectiveSetName(gv_benchmarkFinalBenchmarkObjective, TextExpressionAssemble("Param/Expression/9AFFA0B9"));
+    }
 }
 
 void gf_PauseGame () {
@@ -2894,7 +2905,7 @@ void gf_CreateHiddenBenchmarkSupplyObjectives () {
         gv_benchmarkSupplyObjectives[lv_i] = ObjectiveLastCreated();
     }
     ObjectiveCreate(StringExternal("Param/Value/A11C3A0B"), StringExternal("Param/Value/BC9BE74F"), c_objectiveStateHidden, true);
-    gv_benchmarkMaxTimeObjective = ObjectiveLastCreated();
+    gv_benchmarkFinalBenchmarkObjective = ObjectiveLastCreated();
 }
 
 void gf_HideBenchmarkSupplyObjectives () {
@@ -2913,7 +2924,7 @@ void gf_HideBenchmarkSupplyObjectives () {
     for ( ; ( (autoA3763877_ai >= 0 && lv_i <= autoA3763877_ae) || (autoA3763877_ai <= 0 && lv_i >= autoA3763877_ae) ) ; lv_i += autoA3763877_ai ) {
         ObjectiveShow(gv_benchmarkSupplyObjectives[lv_i], PlayerGroupAll(), false);
     }
-    ObjectiveShow(gv_benchmarkMaxTimeObjective, PlayerGroupAll(), false);
+    ObjectiveShow(gv_benchmarkFinalBenchmarkObjective, PlayerGroupAll(), false);
 }
 
 void gf_InitializeBenchmarkSupplyObjectives () {
@@ -2932,7 +2943,7 @@ void gf_InitializeBenchmarkSupplyObjectives () {
     for ( ; ( (auto0FC1EE86_ai >= 0 && lv_i <= auto0FC1EE86_ae) || (auto0FC1EE86_ai <= 0 && lv_i >= auto0FC1EE86_ae) ) ; lv_i += auto0FC1EE86_ai ) {
         ObjectiveShow(gv_benchmarkSupplyObjectives[lv_i], PlayerGroupAll(), true);
     }
-    ObjectiveShow(gv_benchmarkMaxTimeObjective, PlayerGroupAll(), true);
+    ObjectiveShow(gv_benchmarkFinalBenchmarkObjective, PlayerGroupAll(), true);
 }
 
 void gf_CreateBenchmarkBuildOrderObjectives () {
@@ -3855,6 +3866,26 @@ fixed gf_log10 (fixed lp_x) {
     // Implementation
     lv_result = (Log2(lp_x)/Log2(10.0));
     return lv_result;
+}
+
+bool gf_IsEndBuildatMaxSupplySelected () {
+    // Implementation
+    if ((DialogControlGetSelectedItem(gv_endBuildPulldown, 1) == 1)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool gf_IsEndBuildatGameTimeSelected () {
+    // Implementation
+    if ((DialogControlGetSelectedItem(gv_endBuildPulldown, 1) == 2)) {
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 text gf_GetTypeTextForCurrentBuildOrderStep (int lp_stepNumber) {
@@ -5517,11 +5548,11 @@ bool gt_EndBuildatMaxSupply_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    if ((ObjectiveGetState(gv_benchmarkMaxTimeObjective) == c_objectiveStateActive)) {
-        ObjectiveSetState(gv_benchmarkMaxTimeObjective, c_objectiveStateCompleted);
-        TextExpressionSetToken("Param/Expression/739A89F7", "A", ObjectiveGetName(gv_benchmarkMaxTimeObjective));
+    if ((ObjectiveGetState(gv_benchmarkFinalBenchmarkObjective) == c_objectiveStateActive)) {
+        ObjectiveSetState(gv_benchmarkFinalBenchmarkObjective, c_objectiveStateCompleted);
+        TextExpressionSetToken("Param/Expression/739A89F7", "A", ObjectiveGetName(gv_benchmarkFinalBenchmarkObjective));
         TextExpressionSetToken("Param/Expression/739A89F7", "B", TextTimeFormat(StringToText("<min2/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))));
-        ObjectiveSetName(gv_benchmarkMaxTimeObjective, TextExpressionAssemble("Param/Expression/739A89F7"));
+        ObjectiveSetName(gv_benchmarkFinalBenchmarkObjective, TextExpressionAssemble("Param/Expression/739A89F7"));
     }
     else {
     }
@@ -6054,6 +6085,36 @@ void gt_SelectMatchup_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Select End Build At Max Supply
+//--------------------------------------------------------------------------------------------------
+bool gt_SelectEndBuildAtMaxSupply_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((EventDialogControl() == gv_endBuildPulldown) && (DialogControlGetSelectedItem(EventDialogControl(), 1) == 1)))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    DialogControlSetVisible(gv_endBuildMinutesEditBox, PlayerGroupAll(), false);
+    DialogControlSetVisible(gv_endBuildMinutesLabel, PlayerGroupAll(), false);
+    DialogControlSetVisible(gv_endBuildSecondsEditBox, PlayerGroupAll(), false);
+    DialogControlSetVisible(gv_endBuildSecondsLabel, PlayerGroupAll(), false);
+    gf_BenchmarkDialogToggleMaxSupplyatTimeRowVisible();
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_SelectEndBuildAtMaxSupply_Init () {
+    gt_SelectEndBuildAtMaxSupply = TriggerCreate("gt_SelectEndBuildAtMaxSupply_Func");
+    TriggerAddEventDialogControl(gt_SelectEndBuildAtMaxSupply, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeSelectionChanged);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Select End Build At Game Time
 //--------------------------------------------------------------------------------------------------
 bool gt_SelectEndBuildAtGameTime_Func (bool testConds, bool runActions) {
@@ -6084,36 +6145,6 @@ bool gt_SelectEndBuildAtGameTime_Func (bool testConds, bool runActions) {
 void gt_SelectEndBuildAtGameTime_Init () {
     gt_SelectEndBuildAtGameTime = TriggerCreate("gt_SelectEndBuildAtGameTime_Func");
     TriggerAddEventDialogControl(gt_SelectEndBuildAtGameTime, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeSelectionChanged);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Select End Build At Max Supply
-//--------------------------------------------------------------------------------------------------
-bool gt_SelectEndBuildAtMaxSupply_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!(((EventDialogControl() == gv_endBuildPulldown) && (DialogControlGetSelectedItem(EventDialogControl(), 1) == 1)))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    DialogControlSetVisible(gv_endBuildMinutesEditBox, PlayerGroupAll(), false);
-    DialogControlSetVisible(gv_endBuildMinutesLabel, PlayerGroupAll(), false);
-    DialogControlSetVisible(gv_endBuildSecondsEditBox, PlayerGroupAll(), false);
-    DialogControlSetVisible(gv_endBuildSecondsLabel, PlayerGroupAll(), false);
-    gf_BenchmarkDialogToggleMaxSupplyatTimeRowVisible();
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_SelectEndBuildAtMaxSupply_Init () {
-    gt_SelectEndBuildAtMaxSupply = TriggerCreate("gt_SelectEndBuildAtMaxSupply_Func");
-    TriggerAddEventDialogControl(gt_SelectEndBuildAtMaxSupply, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeSelectionChanged);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -6527,14 +6558,14 @@ bool gt_MaxTimeTimerElapsed_Func (bool testConds, bool runActions) {
     }
 
     if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) == 200)) {
-        ObjectiveSetState(gv_benchmarkMaxTimeObjective, c_objectiveStateCompleted);
+        ObjectiveSetState(gv_benchmarkFinalBenchmarkObjective, c_objectiveStateCompleted);
     }
     else {
-        ObjectiveSetState(gv_benchmarkMaxTimeObjective, c_objectiveStateFailed);
+        ObjectiveSetState(gv_benchmarkFinalBenchmarkObjective, c_objectiveStateFailed);
     }
-    TextExpressionSetToken("Param/Expression/A9D9AADE", "A", ObjectiveGetName(gv_benchmarkMaxTimeObjective));
+    TextExpressionSetToken("Param/Expression/A9D9AADE", "A", ObjectiveGetName(gv_benchmarkFinalBenchmarkObjective));
     TextExpressionSetToken("Param/Expression/A9D9AADE", "B", IntToText(PlayerGetPropertyInt(1, c_playerPropSuppliesUsed)));
-    ObjectiveSetName(gv_benchmarkMaxTimeObjective, TextExpressionAssemble("Param/Expression/A9D9AADE"));
+    ObjectiveSetName(gv_benchmarkFinalBenchmarkObjective, TextExpressionAssemble("Param/Expression/A9D9AADE"));
     return true;
 }
 
@@ -7350,8 +7381,8 @@ void InitTriggers () {
     gt_OpenMainMenu_Init();
     gt_SelectAlertMenu_Init();
     gt_SelectMatchup_Init();
-    gt_SelectEndBuildAtGameTime_Init();
     gt_SelectEndBuildAtMaxSupply_Init();
+    gt_SelectEndBuildAtGameTime_Init();
     gt_TogglePracticeAgainstSavedBuild_Init();
     gt_UpdateFinalSupplyAtGameTimeText_Init();
     gt_OpenHelpDialog_Init();
