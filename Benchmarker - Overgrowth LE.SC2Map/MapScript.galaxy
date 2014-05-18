@@ -715,6 +715,8 @@ void gf_PauseGame ();
 void gf_UnpauseGame ();
 void gf_PauseAllTimers ();
 void gf_UnpauseAllTimers ();
+void gf_CompleteFinalBenchmarkObjective ();
+void gf_FailFinalBenchmarkObjective ();
 void gf_StartBenchmarkTimers ();
 void gf_ResetBenchmarkTimers ();
 void gf_PauseBenchmarkTimers ();
@@ -863,12 +865,12 @@ trigger gt_SelectEndBuildAtMaxSupply;
 trigger gt_SelectEndBuildAtGameTime;
 trigger gt_TogglePracticeAgainstSavedBuild;
 trigger gt_UpdateFinalSupplyAtGameTimeText;
-trigger gt_OpenHelpDialog;
 trigger gt_OpenPostBuildReportDialog;
 trigger gt_SaveBenchmarkBuildStats;
 trigger gt_ResetBenchmarkBuildStats;
 trigger gt_ReturntoMainMenufromReport;
 trigger gt_OpenStatsDialog;
+trigger gt_OpenHelpDialog;
 trigger gt_MapInitialization;
 trigger gt_EndGame;
 trigger gt_Benchmark1TimerExpires;
@@ -2850,6 +2852,30 @@ void gf_UnpauseAllTimers () {
     TimerPause(gv_currentBuildBuildTimer, false);
 }
 
+void gf_CompleteFinalBenchmarkObjective () {
+    // Implementation
+    if ((ObjectiveGetState(gv_benchmarkFinalBenchmarkObjective) == c_objectiveStateActive)) {
+        ObjectiveSetState(gv_benchmarkFinalBenchmarkObjective, c_objectiveStateCompleted);
+        TextExpressionSetToken("Param/Expression/739A89F7", "A", ObjectiveGetName(gv_benchmarkFinalBenchmarkObjective));
+        TextExpressionSetToken("Param/Expression/739A89F7", "B", TextTimeFormat(StringToText("<min2/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))));
+        ObjectiveSetName(gv_benchmarkFinalBenchmarkObjective, TextExpressionAssemble("Param/Expression/739A89F7"));
+    }
+    else {
+    }
+}
+
+void gf_FailFinalBenchmarkObjective () {
+    // Implementation
+    if ((ObjectiveGetState(gv_benchmarkFinalBenchmarkObjective) == c_objectiveStateActive)) {
+        ObjectiveSetState(gv_benchmarkFinalBenchmarkObjective, c_objectiveStateFailed);
+        TextExpressionSetToken("Param/Expression/186AFB36", "A", ObjectiveGetName(gv_benchmarkFinalBenchmarkObjective));
+        TextExpressionSetToken("Param/Expression/186AFB36", "B", TextTimeFormat(StringToText("<min2/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))));
+        ObjectiveSetName(gv_benchmarkFinalBenchmarkObjective, TextExpressionAssemble("Param/Expression/186AFB36"));
+    }
+    else {
+    }
+}
+
 void gf_StartBenchmarkTimers () {
     // Variable Declarations
     int lv_i;
@@ -2860,7 +2886,12 @@ void gf_StartBenchmarkTimers () {
     TimerStart(gv_benchmark1Timer, gv_benchmarkTimerDurations[0], false, c_timeGame);
     TimerStart(gv_benchmark2Timer, gv_benchmarkTimerDurations[1], false, c_timeGame);
     TimerStart(gv_benchmark3Timer, gv_benchmarkTimerDurations[2], false, c_timeGame);
-    TimerStart(gv_benchmarkMaxTimeTimer, gv_benchmarkMaxTimeTotalSeconds, false, c_timeGame);
+    if ((gf_IsEndBuildatMaxSupplySelected() == true)) {
+        TimerStart(gv_benchmarkMaxTimeTimer, gv_benchmarkMaxTimeTotalSeconds, false, c_timeGame);
+    }
+    else {
+        TimerStart(gv_benchmarkMaxTimeTimer, gv_benchmarkEndBuildTotalSeconds, false, c_timeGame);
+    }
 }
 
 void gf_ResetBenchmarkTimers () {
@@ -5548,14 +5579,7 @@ bool gt_EndBuildatMaxSupply_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    if ((ObjectiveGetState(gv_benchmarkFinalBenchmarkObjective) == c_objectiveStateActive)) {
-        ObjectiveSetState(gv_benchmarkFinalBenchmarkObjective, c_objectiveStateCompleted);
-        TextExpressionSetToken("Param/Expression/739A89F7", "A", ObjectiveGetName(gv_benchmarkFinalBenchmarkObjective));
-        TextExpressionSetToken("Param/Expression/739A89F7", "B", TextTimeFormat(StringToText("<min2/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))));
-        ObjectiveSetName(gv_benchmarkFinalBenchmarkObjective, TextExpressionAssemble("Param/Expression/739A89F7"));
-    }
-    else {
-    }
+    gf_CompleteFinalBenchmarkObjective();
     TriggerExecute(gt_OpenPostBuildReportDialog, false, false);
     return true;
 }
@@ -5572,7 +5596,7 @@ void gt_EndBuildatMaxSupply_Init () {
 bool gt_EndBuildatSpecifiedGameTime_Func (bool testConds, bool runActions) {
     // Conditions
     if (testConds) {
-        if (!(((DialogControlGetSelectedItem(gv_endBuildPulldown, 1) == 2) && (TimerGetElapsed(gv_currentBuildBuildTimer) >= (60*gv_benchmarkEndBuildatMinutes+gv_benchmarkEndBuildatSeconds)) && (gv_paused == false)))) {
+        if (!(((gf_IsEndBuildatGameTimeSelected() == true) && (TimerGetElapsed(gv_currentBuildBuildTimer) >= gv_benchmarkEndBuildTotalSeconds) && (gv_paused == false)))) {
             return false;
         }
     }
@@ -5582,6 +5606,15 @@ bool gt_EndBuildatSpecifiedGameTime_Func (bool testConds, bool runActions) {
         return true;
     }
 
+    TextExpressionSetToken("Param/Expression/7BCEB932", "A", IntToText(PlayerGetPropertyInt(1, c_playerPropSuppliesUsed)));
+    TextExpressionSetToken("Param/Expression/7BCEB932", "B", IntToText(gv_benchmarkFinalSupplyatGameTimeValue));
+    gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/7BCEB932"));
+    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) >= gv_benchmarkFinalSupplyatGameTimeValue)) {
+        gf_CompleteFinalBenchmarkObjective();
+    }
+    else {
+        gf_FailFinalBenchmarkObjective();
+    }
     TriggerExecute(gt_OpenPostBuildReportDialog, false, false);
     return true;
 }
@@ -6202,38 +6235,6 @@ void gt_UpdateFinalSupplyAtGameTimeText_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Open Help Dialog
-//--------------------------------------------------------------------------------------------------
-bool gt_OpenHelpDialog_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!(((gv_helpDialogOpen == false) && (gv_paused == false)))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gf_PauseGame();
-    DialogSetVisible(gv_statsDialog, PlayerGroupAll(), false);
-    gv_statsDialogOpen = false;
-    DialogSetVisible(gv_benchmarkDialog, PlayerGroupAll(), false);
-    DialogSetVisible(gv_helpDialog, PlayerGroupAll(), true);
-    gv_helpDialogOpen = true;
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_OpenHelpDialog_Init () {
-    gt_OpenHelpDialog = TriggerCreate("gt_OpenHelpDialog_Func");
-    TriggerAddEventChatMessage(gt_OpenHelpDialog, c_playerAny, "-help", true);
-    TriggerAddEventKeyPressed(gt_OpenHelpDialog, 1, c_keyX, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
-}
-
-//--------------------------------------------------------------------------------------------------
 // Trigger: Open Post-Build Report Dialog
 //--------------------------------------------------------------------------------------------------
 bool gt_OpenPostBuildReportDialog_Func (bool testConds, bool runActions) {
@@ -6390,6 +6391,38 @@ void gt_OpenStatsDialog_Init () {
     TriggerAddEventChatMessage(gt_OpenStatsDialog, c_playerAny, "-s", true);
     TriggerAddEventChatMessage(gt_OpenStatsDialog, c_playerAny, "-stats", true);
     TriggerAddEventKeyPressed(gt_OpenStatsDialog, 1, c_keyZ, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Open Help Dialog
+//--------------------------------------------------------------------------------------------------
+bool gt_OpenHelpDialog_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((gv_helpDialogOpen == false) && (gv_paused == false)))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gf_PauseGame();
+    DialogSetVisible(gv_statsDialog, PlayerGroupAll(), false);
+    gv_statsDialogOpen = false;
+    DialogSetVisible(gv_benchmarkDialog, PlayerGroupAll(), false);
+    DialogSetVisible(gv_helpDialog, PlayerGroupAll(), true);
+    gv_helpDialogOpen = true;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_OpenHelpDialog_Init () {
+    gt_OpenHelpDialog = TriggerCreate("gt_OpenHelpDialog_Func");
+    TriggerAddEventChatMessage(gt_OpenHelpDialog, c_playerAny, "-help", true);
+    TriggerAddEventKeyPressed(gt_OpenHelpDialog, 1, c_keyX, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -6552,6 +6585,13 @@ void gt_Benchmark3TimerExpires_Init () {
 // Trigger: MaxTime Timer Elapsed
 //--------------------------------------------------------------------------------------------------
 bool gt_MaxTimeTimerElapsed_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gf_IsEndBuildatMaxSupplySelected() == true))) {
+            return false;
+        }
+    }
+
     // Actions
     if (!runActions) {
         return true;
@@ -7385,12 +7425,12 @@ void InitTriggers () {
     gt_SelectEndBuildAtGameTime_Init();
     gt_TogglePracticeAgainstSavedBuild_Init();
     gt_UpdateFinalSupplyAtGameTimeText_Init();
-    gt_OpenHelpDialog_Init();
     gt_OpenPostBuildReportDialog_Init();
     gt_SaveBenchmarkBuildStats_Init();
     gt_ResetBenchmarkBuildStats_Init();
     gt_ReturntoMainMenufromReport_Init();
     gt_OpenStatsDialog_Init();
+    gt_OpenHelpDialog_Init();
     gt_MapInitialization_Init();
     gt_EndGame_Init();
     gt_Benchmark1TimerExpires_Init();
