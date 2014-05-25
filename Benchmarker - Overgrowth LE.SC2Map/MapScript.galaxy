@@ -23,7 +23,7 @@ struct gs_SupplyBenchmark {
     int lv_benchmarkSupply;
     int lv_benchmarkTimeMin;
     int lv_benchmarkTimeSeconds;
-    int lv_supplyWhenTimerExpired;
+    int lv_actualSupplyatBenchmarkTime;
 };
 
 struct gs_BuildOrderStep {
@@ -581,7 +581,7 @@ void InitGlobals () {
     gv_postBuildReportBuildOverviewLabelValueWidth = 150;
     gv_postBuildReportBuildOverviewLabelHeight = 45;
     gv_postBuildReportBenchmarkHeadingWidth = 260;
-    gv_postBuildReportBenchmarksSupplyHeadingWidth = 125;
+    gv_postBuildReportBenchmarksSupplyHeadingWidth = 200;
     gv_postBuildReportBenchmarkAnalysisRowLabelWidth = 205;
     gv_postBuildReportBenchmarkAnalysisRowHeight = 35;
     gv_postBuildReportBenchmarkUpdateButton = c_invalidDialogControlId;
@@ -872,6 +872,7 @@ text gf_CalculateIntPercentDifferenceasText (int lp_value, int lp_previousBest, 
 text gf_CalculateRealPercentDifferenceasText (fixed lp_value, fixed lp_previousBest, bool lp_higherisBetter);
 color gf_GetColorForPercentage (fixed lp_percentage, bool lp_higherIsBetter);
 int gf_GetWinButtonYPadding ();
+text gf_GetSupplyDifferenceasFormattedText (int lp_actualSupply, int lp_benchmarkSupply);
 bool gf_IsNumeric (string lp_input);
 string gf_GetIconForBuildingType (string lp_unitType);
 bool gf_IsUpgradeof1Variety (string lp_upgrade);
@@ -882,7 +883,7 @@ string gf_TrimSOffArmorsUpgradeName (string lp_string);
 unitgroup gf_GetAllGasStructureUnits ();
 unitgroup gf_GetAllPlayer1UnitsforType (string lp_unitType);
 unitgroup gf_GetAllPlayer1Units ();
-text gf_ConverttoTextWithSign (int lp_int);
+text gf_ConverttoTextWithPlusSignifPositive (int lp_int);
 bool gf_IsCapitalLetterOrDigit (string lp_letter);
 int gf_GetTotalSecondsforMinSeconds (int lp_minutes, int lp_seconds);
 
@@ -2405,8 +2406,9 @@ void gf_UpdatePostBuildReportBenchmarkSection () {
 
 void gf_UpdatePostBuildReportBenchmarkAnalysisRow (int lp_rowNumber) {
     // Implementation
-    TextExpressionSetToken("Param/Expression/F2C7E9FD", "A", IntToText(gv_supplyBenchmarks[lp_rowNumber].lv_supplyWhenTimerExpired));
+    TextExpressionSetToken("Param/Expression/F2C7E9FD", "A", IntToText(gv_supplyBenchmarks[lp_rowNumber].lv_actualSupplyatBenchmarkTime));
     TextExpressionSetToken("Param/Expression/F2C7E9FD", "B", IntToText(gv_supplyBenchmarks[lp_rowNumber].lv_benchmarkSupply));
+    TextExpressionSetToken("Param/Expression/F2C7E9FD", "C", gf_GetSupplyDifferenceasFormattedText(gv_supplyBenchmarks[lp_rowNumber].lv_actualSupplyatBenchmarkTime, gv_supplyBenchmarks[lp_rowNumber].lv_benchmarkSupply));
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportBenchmarksIndex][lp_rowNumber][1], TextExpressionAssemble("Param/Expression/F2C7E9FD"), PlayerGroupAll());
 }
 
@@ -3075,10 +3077,10 @@ void gf_ResetBenchmarkSupplyObjectives () {
         ObjectiveSetName(gv_benchmarkFinalBenchmarkObjective, TextExpressionAssemble("Param/Expression/9AFFA0B9"));
     }
     gv_numBenchmarksMetThisBuild = 0;
-    gv_supplyBenchmarks[0].lv_supplyWhenTimerExpired = 0;
-    gv_supplyBenchmarks[1].lv_supplyWhenTimerExpired = 0;
-    gv_supplyBenchmarks[2].lv_supplyWhenTimerExpired = 0;
-    gv_supplyBenchmarks[3].lv_supplyWhenTimerExpired = 0;
+    gv_supplyBenchmarks[0].lv_actualSupplyatBenchmarkTime = 0;
+    gv_supplyBenchmarks[1].lv_actualSupplyatBenchmarkTime = 0;
+    gv_supplyBenchmarks[2].lv_actualSupplyatBenchmarkTime = 0;
+    gv_supplyBenchmarks[3].lv_actualSupplyatBenchmarkTime = 0;
 }
 
 void gf_PauseGame () {
@@ -4784,6 +4786,27 @@ int gf_GetWinButtonYPadding () {
     }
 }
 
+text gf_GetSupplyDifferenceasFormattedText (int lp_actualSupply, int lp_benchmarkSupply) {
+    // Variable Declarations
+    int lv_difference;
+    text lv_diffAsText;
+    text lv_formattedDiffText;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_difference = (lp_actualSupply-lp_benchmarkSupply);
+    lv_diffAsText = gf_ConverttoTextWithPlusSignifPositive(lv_difference);
+    if ((lv_difference < 0)) {
+        lv_formattedDiffText = TextWithColor(lv_diffAsText, (Color(100.00, 0.00, 0.00)));
+    }
+    else {
+        lv_formattedDiffText = TextWithColor(lv_diffAsText, (Color(22*100/255,128*100/255,0)));
+    }
+    gf_LogTextMessage(gv_debugMenusEnabled, lv_formattedDiffText);
+    return lv_formattedDiffText;
+}
+
 bool gf_IsNumeric (string lp_input) {
     int auto88F4C020_ae;
     int auto88F4C020_ai;
@@ -5102,7 +5125,7 @@ unitgroup gf_GetAllPlayer1Units () {
     return lv_result;
 }
 
-text gf_ConverttoTextWithSign (int lp_int) {
+text gf_ConverttoTextWithPlusSignifPositive (int lp_int) {
     // Variable Declarations
     text lv_result;
 
@@ -6722,7 +6745,7 @@ bool gt_UpdateSupplyBenchmarksonButtonClick_Func (bool testConds, bool runAction
     auto053D7F19_ai = 1;
     lv_i = 0;
     for ( ; ( (auto053D7F19_ai >= 0 && lv_i <= auto053D7F19_ae) || (auto053D7F19_ai <= 0 && lv_i >= auto053D7F19_ae) ) ; lv_i += auto053D7F19_ai ) {
-        gv_supplyBenchmarks[lv_i].lv_benchmarkSupply = gv_supplyBenchmarks[lv_i].lv_supplyWhenTimerExpired;
+        gv_supplyBenchmarks[lv_i].lv_benchmarkSupply = gv_supplyBenchmarks[lv_i].lv_actualSupplyatBenchmarkTime;
     }
     gf_SaveMatchupBenchmarksConfiguration(gf_GetCurrentlySelectedMatchupasBankSectionKey());
     gf_UpdatePostBuildReportBenchmarkSection();
