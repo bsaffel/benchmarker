@@ -257,6 +257,7 @@ int gv_postBuildReportBenchmarkHeadingWidth;
 int gv_postBuildReportBenchmarksSupplyHeadingWidth;
 int gv_postBuildReportBenchmarkAnalysisRowLabelWidth;
 int gv_postBuildReportBenchmarkAnalysisRowHeight;
+int gv_postBuildReportBenchmarkUpdateButton;
 int gv_postBuildReportStatLabelHeight;
 int gv_postBuildReportStatLabelWidth;
 int gv_postBuildReportStatValueWidth;
@@ -583,6 +584,7 @@ void InitGlobals () {
     gv_postBuildReportBenchmarksSupplyHeadingWidth = 125;
     gv_postBuildReportBenchmarkAnalysisRowLabelWidth = 205;
     gv_postBuildReportBenchmarkAnalysisRowHeight = 35;
+    gv_postBuildReportBenchmarkUpdateButton = c_invalidDialogControlId;
     gv_postBuildReportStatLabelHeight = 35;
     gv_postBuildReportStatLabelWidth = 305;
     gv_postBuildReportStatValueWidth = 150;
@@ -670,11 +672,15 @@ void gf_SwapOutMorphedCommandCenter (string lp_unitType);
 void gf_PauseAlertTimers ();
 void gf_UnpauseAlertTimers ();
 void gf_ResetAlertTimers ();
+void gf_InitializeSupplyBenchmarksFromMenuConfiguration ();
+void gf_SaveBenchmarkMenuConfiguration (string lp_sectionKey);
+void gf_SaveMatchupBenchmarksConfiguration (string lp_sectionKey);
+void gf_InitializeandSaveEndBuildConfiguration (string lp_sectionKey);
+void gf_SaveBenchmarkBuildConfiguration (string lp_sectionKey);
+void gf_LoadBenchmarkMenuConfiguration (string lp_sectionKey);
 void gf_SaveAlertMenuConfiguration ();
 void gf_LoadAlertMenuConfiguration ();
 void gf_LoadAlertRowConfiguration (string lp_alertEnabledKey, string lp_alertThresholdKey, int lp_alertCheckbox, int lp_alertEditBox, int lp_defaultThresholdValue, int lp_rowNumber);
-void gf_SaveBenchmarkMenuConfiguration (string lp_sectionKey);
-void gf_LoadBenchmarkMenuConfiguration (string lp_sectionKey);
 void gf_SaveBenchmarkBuildOrder ();
 void gf_LoadBenchmarkBuildOrder ();
 void gf_ClearBenchmarkBuildOrder ();
@@ -735,7 +741,10 @@ void gf_CreatePostBuildReportBuildOrderListBox ();
 void gf_CreatePostBuildReportBuildOrderSaveClearButtons ();
 void gf_UpdatePostBuildMatchupText ();
 void gf_UpdatePostBuildReportDialogValues (bool lp_updateBuildOrderListBox);
+void gf_UpdatePostBuildReportOverviewSection ();
+void gf_UpdatePostBuildReportBenchmarkSection ();
 void gf_UpdatePostBuildReportBenchmarkAnalysisRow (int lp_rowNumber);
+void gf_UpdatePostBuildReportStatsSection ();
 void gf_UpdatePostBuildStatRowValueasInt (text lp_label, int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter);
 void gf_UpdatePostBuildStatRowValueasReal (text lp_label, fixed lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter);
 void gf_UpdatePostBuildStatRowValueasTime (text lp_label, int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter);
@@ -926,6 +935,7 @@ trigger gt_OpenPostBuildReportDialog;
 trigger gt_SaveBenchmarkBuildStats;
 trigger gt_ResetBenchmarkBuildStats;
 trigger gt_ReturntoMainMenufromReport;
+trigger gt_UpdateSupplyBenchmarksonButtonClick;
 trigger gt_OpenStatsDialog;
 trigger gt_MapInitialization;
 trigger gt_EndGame;
@@ -1103,6 +1113,130 @@ void gf_ResetAlertTimers () {
     }
 }
 
+void gf_InitializeSupplyBenchmarksFromMenuConfiguration () {
+    int autoE860F6C8_ae;
+    int autoE860F6C8_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    autoE860F6C8_ae = 2;
+    autoE860F6C8_ai = 1;
+    lv_i = 0;
+    for ( ; ( (autoE860F6C8_ai >= 0 && lv_i <= autoE860F6C8_ae) || (autoE860F6C8_ai <= 0 && lv_i >= autoE860F6C8_ae) ) ; lv_i += autoE860F6C8_ai ) {
+        gv_supplyBenchmarks[lv_i].lv_benchmarkSupply = gf_GetEditBoxValueasInt(gv_benchmarkSupplyEditBoxes[lv_i]);
+    }
+}
+
+void gf_SaveBenchmarkMenuConfiguration (string lp_sectionKey) {
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    gf_InitializeSupplyBenchmarksFromMenuConfiguration();
+    gf_SaveMatchupBenchmarksConfiguration(lp_sectionKey);
+    gf_InitializeandSaveEndBuildConfiguration(lp_sectionKey);
+    gf_SaveBenchmarkBuildConfiguration(lp_sectionKey);
+    BankSave(gv_benchmarkerBank);
+}
+
+void gf_SaveMatchupBenchmarksConfiguration (string lp_sectionKey) {
+    int autoA7CD85DF_ae;
+    int autoA7CD85DF_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    autoA7CD85DF_ae = 2;
+    autoA7CD85DF_ai = 1;
+    lv_i = 0;
+    for ( ; ( (autoA7CD85DF_ai >= 0 && lv_i <= autoA7CD85DF_ae) || (autoA7CD85DF_ai <= 0 && lv_i >= autoA7CD85DF_ae) ) ; lv_i += autoA7CD85DF_ai ) {
+        BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkSupplyEntryKeys[lv_i], gv_supplyBenchmarks[lv_i].lv_benchmarkSupply);
+    }
+}
+
+void gf_InitializeandSaveEndBuildConfiguration (string lp_sectionKey) {
+    // Implementation
+    gv_endBuildPulldownSelection = DialogControlGetSelectedItem(gv_endBuildPulldown, 1);
+    gv_benchmarkMaxSupplyTotalSeconds = ((gf_GetEditBoxValueasInt(gv_maxTimeMinutesEditBox)*60)+gf_GetEditBoxValueasInt(gv_maxTimeSecondsEditBox));
+    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkMaxTimeMinutesKey, gf_GetEditBoxValueasInt(gv_maxTimeMinutesEditBox));
+    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkMaxTimeSecondsKey, gf_GetEditBoxValueasInt(gv_maxTimeSecondsEditBox));
+    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSelectionKey, DialogControlGetSelectedItem(gv_endBuildPulldown, 1));
+    gv_benchmarkEndBuildatGameTimeTotalSeconds = ((gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox)*60)+gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox));
+    gv_benchmarkEndBuildatGameTimeMinutes = gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox);
+    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildMinutesKey, gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox));
+    gv_benchmarkEndBuildatGameTimeSeconds = gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox);
+    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSecondsKey, gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox));
+    if ((gf_IsEndBuildatMaxSupplySelected() == true)) {
+        gv_supplyBenchmarks[3].lv_benchmarkTimeMin = gf_GetEditBoxValueasInt(gv_maxTimeMinutesEditBox);
+        gv_supplyBenchmarks[3].lv_benchmarkTimeSeconds = gf_GetEditBoxValueasInt(gv_maxTimeSecondsEditBox);
+        gv_supplyBenchmarks[3].lv_benchmarkSupply = 200;
+    }
+    else {
+        gv_supplyBenchmarks[3].lv_benchmarkTimeMin = gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox);
+        gv_supplyBenchmarks[3].lv_benchmarkTimeSeconds = gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox);
+        gv_supplyBenchmarks[3].lv_benchmarkSupply = gf_GetEditBoxValueasInt(gv_finalSupplyAtGameTimeEditBox);
+    }
+    TextExpressionSetToken("Param/Expression/5A5E9F5F", "A", IntToText(gv_supplyBenchmarks[3].lv_benchmarkTimeMin));
+    TextExpressionSetToken("Param/Expression/5A5E9F5F", "B", IntToText(gv_supplyBenchmarks[3].lv_benchmarkTimeSeconds));
+    gf_LogTextMessage(gv_debugMenusEnabled, TextExpressionAssemble("Param/Expression/5A5E9F5F"));
+    gv_benchmarkFinalSupplyatGameTimeValue = gf_GetEditBoxValueasInt(gv_finalSupplyAtGameTimeEditBox);
+    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkFinalSupplyatGameTimeKey, gf_GetEditBoxValueasInt(gv_finalSupplyAtGameTimeEditBox));
+}
+
+void gf_SaveBenchmarkBuildConfiguration (string lp_sectionKey) {
+    // Implementation
+    gv_practiceAgainstBenchmarkBuildOrder = libNtve_gf_DialogItemIsChecked(gv_practiceAgainstSavedBuildOrderCheckbox, 1);
+    BankValueSetFromFlag(gv_benchmarkerBank, lp_sectionKey, gv_practiceAgainstBenchmarkBuildOrderKey, gv_practiceAgainstBenchmarkBuildOrder);
+    gv_displayBuildHints = libNtve_gf_DialogItemIsChecked(gv_displayBuildOrderHintsCheckbox, 1);
+    BankValueSetFromFlag(gv_benchmarkerBank, lp_sectionKey, gv_displayBuildHintsKey, gv_displayBuildHints);
+}
+
+void gf_LoadBenchmarkMenuConfiguration (string lp_sectionKey) {
+    int autoB80F7580_ae;
+    int autoB80F7580_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    autoB80F7580_ae = 2;
+    autoB80F7580_ai = 1;
+    lv_i = 0;
+    for ( ; ( (autoB80F7580_ai >= 0 && lv_i <= autoB80F7580_ae) || (autoB80F7580_ai <= 0 && lv_i >= autoB80F7580_ae) ) ; lv_i += autoB80F7580_ai ) {
+        gf_LoadIntFromBankIfKeyisSetElseDefault(gv_benchmarkSupplyEditBoxes[lv_i], gv_benchmarkSupplyEntryKeys[lv_i], lp_sectionKey, gv_benchmarkSupplyDefaults[lv_i]);
+    }
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeMinutesEditBox, gv_benchmarkMaxTimeMinutesKey, lp_sectionKey, gv_benchmarkMaxSupplyMinutes);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeSecondsEditBox, gv_benchmarkMaxTimeSecondsKey, lp_sectionKey, gv_benchmarkMaxSupplySeconds);
+    if ((BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSelectionKey) > 0)) {
+        DialogControlSelectItem(gv_endBuildPulldown, PlayerGroupAll(), BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSelectionKey));
+    }
+    else {
+        DialogControlSelectItem(gv_endBuildPulldown, PlayerGroupAll(), gv_endBuildPulldownSelection);
+    }
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildMinutesEditBox, gv_benchmarkEndBuildMinutesKey, lp_sectionKey, gv_benchmarkEndBuildatGameTimeMinutes);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildSecondsEditBox, gv_benchmarkEndBuildSecondsKey, lp_sectionKey, gv_benchmarkEndBuildatGameTimeSeconds);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_finalSupplyAtGameTimeEditBox, gv_benchmarkFinalSupplyatGameTimeKey, lp_sectionKey, gv_benchmarkFinalSupplyatGameTimeValue);
+    if ((gf_DoesSavedBuildOrderExistForCurrentMatchup() == true)) {
+        gf_EnablePracticeAgainstBenchmarkBuildOrderOptions();
+    }
+    else {
+        gf_DisablePracticeAgainstBenchmarkBuildOrderOptions();
+    }
+    gf_LoadBooleanFromBankIfKeyisSetElseDefault(gv_practiceAgainstSavedBuildOrderCheckbox, gv_practiceAgainstBenchmarkBuildOrderKey, lp_sectionKey, false);
+    gf_LoadBooleanFromBankIfKeyisSetElseDefault(gv_displayBuildOrderHintsCheckbox, gv_displayBuildHintsKey, lp_sectionKey, false);
+}
+
 void gf_SaveAlertMenuConfiguration () {
     // Variable Declarations
     int lv_i;
@@ -1206,92 +1340,6 @@ void gf_LoadAlertRowConfiguration (string lp_alertEnabledKey, string lp_alertThr
     gf_SetAlertCheckboxState(lv_checkEnabled, lp_alertCheckbox);
     gf_EnableDisableAlertRow(lv_checkEnabled, lp_rowNumber, 0);
     libNtve_gf_SetDialogItemEditorValue(lp_alertEditBox, IntToString(lv_threshold), PlayerGroupAll());
-}
-
-void gf_SaveBenchmarkMenuConfiguration (string lp_sectionKey) {
-    int autoA7CD85DF_ae;
-    int autoA7CD85DF_ai;
-
-    // Variable Declarations
-    int lv_i;
-
-    // Variable Initialization
-
-    // Implementation
-    autoA7CD85DF_ae = 2;
-    autoA7CD85DF_ai = 1;
-    lv_i = 0;
-    for ( ; ( (autoA7CD85DF_ai >= 0 && lv_i <= autoA7CD85DF_ae) || (autoA7CD85DF_ai <= 0 && lv_i >= autoA7CD85DF_ae) ) ; lv_i += autoA7CD85DF_ai ) {
-        gv_supplyBenchmarks[lv_i].lv_benchmarkSupply = gf_GetEditBoxValueasInt(gv_benchmarkSupplyEditBoxes[lv_i]);
-        BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkSupplyEntryKeys[lv_i], gv_supplyBenchmarks[lv_i].lv_benchmarkSupply);
-    }
-    gv_endBuildPulldownSelection = DialogControlGetSelectedItem(gv_endBuildPulldown, 1);
-    gv_benchmarkMaxSupplyTotalSeconds = ((gf_GetEditBoxValueasInt(gv_maxTimeMinutesEditBox)*60)+gf_GetEditBoxValueasInt(gv_maxTimeSecondsEditBox));
-    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkMaxTimeMinutesKey, gf_GetEditBoxValueasInt(gv_maxTimeMinutesEditBox));
-    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkMaxTimeSecondsKey, gf_GetEditBoxValueasInt(gv_maxTimeSecondsEditBox));
-    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSelectionKey, DialogControlGetSelectedItem(gv_endBuildPulldown, 1));
-    gv_benchmarkEndBuildatGameTimeTotalSeconds = ((gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox)*60)+gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox));
-    gv_benchmarkEndBuildatGameTimeMinutes = gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox);
-    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildMinutesKey, gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox));
-    gv_benchmarkEndBuildatGameTimeSeconds = gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox);
-    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSecondsKey, gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox));
-    if ((gf_IsEndBuildatMaxSupplySelected() == true)) {
-        gv_supplyBenchmarks[3].lv_benchmarkTimeMin = gf_GetEditBoxValueasInt(gv_maxTimeMinutesEditBox);
-        gv_supplyBenchmarks[3].lv_benchmarkTimeSeconds = gf_GetEditBoxValueasInt(gv_maxTimeSecondsEditBox);
-        gv_supplyBenchmarks[3].lv_benchmarkSupply = 200;
-    }
-    else {
-        gv_supplyBenchmarks[3].lv_benchmarkTimeMin = gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox);
-        gv_supplyBenchmarks[3].lv_benchmarkTimeSeconds = gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox);
-        gv_supplyBenchmarks[3].lv_benchmarkSupply = gf_GetEditBoxValueasInt(gv_finalSupplyAtGameTimeEditBox);
-    }
-    TextExpressionSetToken("Param/Expression/5A5E9F5F", "A", IntToText(gv_supplyBenchmarks[3].lv_benchmarkTimeMin));
-    TextExpressionSetToken("Param/Expression/5A5E9F5F", "B", IntToText(gv_supplyBenchmarks[3].lv_benchmarkTimeSeconds));
-    gf_LogTextMessage(gv_debugMenusEnabled, TextExpressionAssemble("Param/Expression/5A5E9F5F"));
-    gv_benchmarkFinalSupplyatGameTimeValue = gf_GetEditBoxValueasInt(gv_finalSupplyAtGameTimeEditBox);
-    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkFinalSupplyatGameTimeKey, gf_GetEditBoxValueasInt(gv_finalSupplyAtGameTimeEditBox));
-    gv_practiceAgainstBenchmarkBuildOrder = libNtve_gf_DialogItemIsChecked(gv_practiceAgainstSavedBuildOrderCheckbox, 1);
-    BankValueSetFromFlag(gv_benchmarkerBank, lp_sectionKey, gv_practiceAgainstBenchmarkBuildOrderKey, gv_practiceAgainstBenchmarkBuildOrder);
-    gv_displayBuildHints = libNtve_gf_DialogItemIsChecked(gv_displayBuildOrderHintsCheckbox, 1);
-    BankValueSetFromFlag(gv_benchmarkerBank, lp_sectionKey, gv_displayBuildHintsKey, gv_displayBuildHints);
-    BankSave(gv_benchmarkerBank);
-}
-
-void gf_LoadBenchmarkMenuConfiguration (string lp_sectionKey) {
-    int autoB80F7580_ae;
-    int autoB80F7580_ai;
-
-    // Variable Declarations
-    int lv_i;
-
-    // Variable Initialization
-
-    // Implementation
-    autoB80F7580_ae = 2;
-    autoB80F7580_ai = 1;
-    lv_i = 0;
-    for ( ; ( (autoB80F7580_ai >= 0 && lv_i <= autoB80F7580_ae) || (autoB80F7580_ai <= 0 && lv_i >= autoB80F7580_ae) ) ; lv_i += autoB80F7580_ai ) {
-        gf_LoadIntFromBankIfKeyisSetElseDefault(gv_benchmarkSupplyEditBoxes[lv_i], gv_benchmarkSupplyEntryKeys[lv_i], lp_sectionKey, gv_benchmarkSupplyDefaults[lv_i]);
-    }
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeMinutesEditBox, gv_benchmarkMaxTimeMinutesKey, lp_sectionKey, gv_benchmarkMaxSupplyMinutes);
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeSecondsEditBox, gv_benchmarkMaxTimeSecondsKey, lp_sectionKey, gv_benchmarkMaxSupplySeconds);
-    if ((BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSelectionKey) > 0)) {
-        DialogControlSelectItem(gv_endBuildPulldown, PlayerGroupAll(), BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSelectionKey));
-    }
-    else {
-        DialogControlSelectItem(gv_endBuildPulldown, PlayerGroupAll(), gv_endBuildPulldownSelection);
-    }
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildMinutesEditBox, gv_benchmarkEndBuildMinutesKey, lp_sectionKey, gv_benchmarkEndBuildatGameTimeMinutes);
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildSecondsEditBox, gv_benchmarkEndBuildSecondsKey, lp_sectionKey, gv_benchmarkEndBuildatGameTimeSeconds);
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_finalSupplyAtGameTimeEditBox, gv_benchmarkFinalSupplyatGameTimeKey, lp_sectionKey, gv_benchmarkFinalSupplyatGameTimeValue);
-    if ((gf_DoesSavedBuildOrderExistForCurrentMatchup() == true)) {
-        gf_EnablePracticeAgainstBenchmarkBuildOrderOptions();
-    }
-    else {
-        gf_DisablePracticeAgainstBenchmarkBuildOrderOptions();
-    }
-    gf_LoadBooleanFromBankIfKeyisSetElseDefault(gv_practiceAgainstSavedBuildOrderCheckbox, gv_practiceAgainstBenchmarkBuildOrderKey, lp_sectionKey, false);
-    gf_LoadBooleanFromBankIfKeyisSetElseDefault(gv_displayBuildOrderHintsCheckbox, gv_displayBuildHintsKey, lp_sectionKey, false);
 }
 
 void gf_SaveBenchmarkBuildOrder () {
@@ -2195,6 +2243,7 @@ void gf_CreatePostBuildReportSupplyBenchmarkSection () {
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_sectionLabelWidth, gv_sectionLabelHeight, c_anchorTopLeft, lv_benchmarkSectionXPadding, lv_benchmarkSectionYPadding, StringExternal("Param/Value/528A76A8"), ColorWithAlpha(0,0,0,0), false, 2.0);
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_postBuildReportBenchmarksSupplyHeadingWidth, gv_postBuildReportStatLabelHeight, c_anchorTopLeft, (lv_benchmarkSectionXPadding+gv_postBuildReportBenchmarkHeadingWidth), (lv_benchmarkSectionYPadding+10), StringExternal("Param/Value/ABBB9795"), ColorWithAlpha(0,0,0,0), false, 2.0);
     libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_postBuildReportButtonWidth, gv_postBuildReportButtonHeight, c_anchorTopRight, gv_menuPadding, (lv_benchmarkSectionYPadding), StringExternal("Param/Value/6651D325"), StringExternal("Param/Value/1A352483"), "");
+    gv_postBuildReportBenchmarkUpdateButton = DialogControlLastCreated();
     gf_CreatePostBuildReportSupplyBenchmarkAnalysisRow(0);
     gf_CreatePostBuildReportSupplyBenchmarkAnalysisRow(1);
     gf_CreatePostBuildReportSupplyBenchmarkAnalysisRow(2);
@@ -2312,15 +2361,19 @@ void gf_UpdatePostBuildMatchupText () {
 }
 
 void gf_UpdatePostBuildReportDialogValues (bool lp_updateBuildOrderListBox) {
-    int auto4B009C04_ae;
-    int auto4B009C04_ai;
+    // Implementation
+    gf_UpdatePostBuildReportOverviewSection();
+    gf_UpdatePostBuildReportBenchmarkSection();
+    gf_UpdatePostBuildReportStatsSection();
+    if ((lp_updateBuildOrderListBox == true)) {
+        gf_ResetBuildOrderListBox(gv_postBuildReportBuildOrderListBox);
+        gf_UpdateBuildOrderListBoxwithCurrentBuild(gv_postBuildReportBuildOrderListBox);
+    }
+    else {
+    }
+}
 
-    // Variable Declarations
-    int lv_benchmarkRowNum;
-    int lv_statRowNum;
-
-    // Variable Initialization
-
+void gf_UpdatePostBuildReportOverviewSection () {
     // Implementation
     TextExpressionSetToken("Param/Expression/D2FEAD6E", "A", TextTimeFormat(StringToText("<min2/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))));
     libNtve_gf_SetDialogItemText(gv_postBuildReportBuildOverviewTimeLabel, TextExpressionAssemble("Param/Expression/D2FEAD6E"), PlayerGroupAll());
@@ -2328,14 +2381,42 @@ void gf_UpdatePostBuildReportDialogValues (bool lp_updateBuildOrderListBox) {
     libNtve_gf_SetDialogItemText(gv_postBuildReportBuildOverviewBenchmarkCompletionLabel, TextExpressionAssemble("Param/Expression/24ED9FE0"), PlayerGroupAll());
     TextExpressionSetToken("Param/Expression/60AFE4E0", "A", IntToText(gv_currentBuildOrderStepCursor));
     libNtve_gf_SetDialogItemText(gv_postBuildReportBuildOverviewBuildStepNumLabel, TextExpressionAssemble("Param/Expression/60AFE4E0"), PlayerGroupAll());
+}
+
+void gf_UpdatePostBuildReportBenchmarkSection () {
+    int auto4B009C04_ae;
+    int auto4B009C04_ai;
+
+    // Variable Declarations
+    int lv_rowNum;
+
+    // Variable Initialization
+
+    // Implementation
     TextExpressionSetToken("Param/Expression/3BCA4D33", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gf_GetTotalSecondsforMinSeconds(gv_supplyBenchmarks[3].lv_benchmarkTimeMin, gv_supplyBenchmarks[3].lv_benchmarkTimeSeconds)));
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportBenchmarksIndex][3][0], TextExpressionAssemble("Param/Expression/3BCA4D33"), PlayerGroupAll());
     auto4B009C04_ae = 3;
     auto4B009C04_ai = 1;
-    lv_benchmarkRowNum = 0;
-    for ( ; ( (auto4B009C04_ai >= 0 && lv_benchmarkRowNum <= auto4B009C04_ae) || (auto4B009C04_ai <= 0 && lv_benchmarkRowNum >= auto4B009C04_ae) ) ; lv_benchmarkRowNum += auto4B009C04_ai ) {
-        gf_UpdatePostBuildReportBenchmarkAnalysisRow(lv_benchmarkRowNum);
+    lv_rowNum = 0;
+    for ( ; ( (auto4B009C04_ai >= 0 && lv_rowNum <= auto4B009C04_ae) || (auto4B009C04_ai <= 0 && lv_rowNum >= auto4B009C04_ae) ) ; lv_rowNum += auto4B009C04_ai ) {
+        gf_UpdatePostBuildReportBenchmarkAnalysisRow(lv_rowNum);
     }
+}
+
+void gf_UpdatePostBuildReportBenchmarkAnalysisRow (int lp_rowNumber) {
+    // Implementation
+    TextExpressionSetToken("Param/Expression/F2C7E9FD", "A", IntToText(gv_supplyBenchmarks[lp_rowNumber].lv_supplyWhenTimerExpired));
+    TextExpressionSetToken("Param/Expression/F2C7E9FD", "B", IntToText(gv_supplyBenchmarks[lp_rowNumber].lv_benchmarkSupply));
+    libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportBenchmarksIndex][lp_rowNumber][1], TextExpressionAssemble("Param/Expression/F2C7E9FD"), PlayerGroupAll());
+}
+
+void gf_UpdatePostBuildReportStatsSection () {
+    // Variable Declarations
+    int lv_statRowNum;
+
+    // Variable Initialization
+
+    // Implementation
     gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/D3C083D3"), gv_workersCreated, gv_bestTotalWorkersCreatedEntryKey, lv_statRowNum, true);
     lv_statRowNum += 1;
     gf_UpdatePostBuildStatRowValueasTime(StringExternal("Param/Value/F52DAACD"), gf_GetTimeSupplyBlocked(), gv_bestTimeSupplyBlockedEntryKey, lv_statRowNum, false);
@@ -2354,19 +2435,6 @@ void gf_UpdatePostBuildReportDialogValues (bool lp_updateBuildOrderListBox) {
     lv_statRowNum += 1;
     gf_UpdatePostBuildStatRowValueasReal(StringExternal("Param/Value/14A329F0"), gf_GetAverageBuildAPM(), gv_bestAverageAPMEntryKey, lv_statRowNum, true);
     lv_statRowNum += 1;
-    if ((lp_updateBuildOrderListBox == true)) {
-        gf_ResetBuildOrderListBox(gv_postBuildReportBuildOrderListBox);
-        gf_UpdateBuildOrderListBoxwithCurrentBuild(gv_postBuildReportBuildOrderListBox);
-    }
-    else {
-    }
-}
-
-void gf_UpdatePostBuildReportBenchmarkAnalysisRow (int lp_rowNumber) {
-    // Implementation
-    TextExpressionSetToken("Param/Expression/F2C7E9FD", "A", IntToText(gv_supplyBenchmarks[lp_rowNumber].lv_supplyWhenTimerExpired));
-    TextExpressionSetToken("Param/Expression/F2C7E9FD", "B", IntToText(gv_supplyBenchmarks[lp_rowNumber].lv_benchmarkSupply));
-    libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportBenchmarksIndex][lp_rowNumber][1], TextExpressionAssemble("Param/Expression/F2C7E9FD"), PlayerGroupAll());
 }
 
 void gf_UpdatePostBuildStatRowValueasInt (text lp_label, int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter) {
@@ -6627,6 +6695,47 @@ void gt_ReturntoMainMenufromReport_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Update Supply Benchmarks on Button Click
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateSupplyBenchmarksonButtonClick_Func (bool testConds, bool runActions) {
+    int auto053D7F19_ae;
+    int auto053D7F19_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Conditions
+    if (testConds) {
+        if (!((EventDialogControl() == gv_postBuildReportBenchmarkUpdateButton))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    auto053D7F19_ae = 2;
+    auto053D7F19_ai = 1;
+    lv_i = 0;
+    for ( ; ( (auto053D7F19_ai >= 0 && lv_i <= auto053D7F19_ae) || (auto053D7F19_ai <= 0 && lv_i >= auto053D7F19_ae) ) ; lv_i += auto053D7F19_ai ) {
+        gv_supplyBenchmarks[lv_i].lv_benchmarkSupply = gv_supplyBenchmarks[lv_i].lv_supplyWhenTimerExpired;
+    }
+    gf_SaveMatchupBenchmarksConfiguration(gf_GetCurrentlySelectedMatchupasBankSectionKey());
+    gf_UpdatePostBuildReportBenchmarkSection();
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateSupplyBenchmarksonButtonClick_Init () {
+    gt_UpdateSupplyBenchmarksonButtonClick = TriggerCreate("gt_UpdateSupplyBenchmarksonButtonClick_Func");
+    TriggerAddEventDialogControl(gt_UpdateSupplyBenchmarksonButtonClick, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeClick);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Open Stats Dialog
 //--------------------------------------------------------------------------------------------------
 bool gt_OpenStatsDialog_Func (bool testConds, bool runActions) {
@@ -7665,6 +7774,7 @@ void InitTriggers () {
     gt_SaveBenchmarkBuildStats_Init();
     gt_ResetBenchmarkBuildStats_Init();
     gt_ReturntoMainMenufromReport_Init();
+    gt_UpdateSupplyBenchmarksonButtonClick_Init();
     gt_OpenStatsDialog_Init();
     gt_MapInitialization_Init();
     gt_EndGame_Init();
