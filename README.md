@@ -2,7 +2,8 @@
 
 ### macro trainer | build order optimizer | practice tool.
 
-Benchmarker is the starcraft practice tool you have been waiting for.  It aims to help players of all levels refine and improve their macro mechanics while at the same time practicing the builds they will need to slay all the nerds and steal their ladder points.
+Benchmarker is the Starcraft 2 practice tool you’ve been waiting for. This tool aims to help players of all levels refine and improve their macro mechanics while at the same time practicing the builds they will need to slay all the nerds and steal their ladder points.
+If you are one those players like myself who wonders where YABOT went and why there has been nothing to replace it for nearly 3 years, here finally, is your answer.
 
 **Features:**
 
@@ -14,10 +15,12 @@ Track personal supply benchmarks by matchup in-game
 - Benchmarks are automatically saved for future practice sessions
 - Benchmarks are tracked separately for each match-up so you can switch between builds quickly and easily
 
-Save "benchmark" build orders and practice against them
-- Play against "benchmark" build order objectives for real-time feedback
+Practice against "benchmark" build orders to refine and optimize your play
+- Save your best build orders (per matchup) at the end of each build
+- Track your play against a set of "benchmark" build order objectives for real-time feedback
+- See real-time “hints” for upcoming build order steps in game
 
-Display customizable alerts designed to help players get into the “rhythm” of macroing correctly.  
+Display customizable alerts designed to help players get into the rhythm of macroing correctly.  
 - Alert when your minerals or gas becomes too high
 - Alert when you are about to be supply blocked
 - Alert when your race’s macro-mechanic energy gets too high
@@ -27,16 +30,21 @@ Display customizable alerts designed to help players get into the “rhythm” o
 - Alert when your army has been sitting idle on the map for too long
 
 Provide performance reports after each build to help you create and refine the perfect build order
+- Reports on supply benchmark performance
 - Reports number of workers created
-- Reports Spending Quotient (SQ) from Do you macro like a pro?
-- Reports number of times supply blocked
-- Reports average unspent minerals
-- Reports average unspent gas
+- Reports amount of time supply blocked
+- Reports amount of time production is idle
 - Reports total army size/value/supply
 - Reports build order steps from current build
+- Reports Spending Quotient (SQ) from Do you macro like a pro? (unimplemented)
+- Reports average unspent minerals (unimplemented)
+- Reports average unspent gas (unimplemented)
+
+In-Game Stats to track your progress in real time
+- Provide performance reports after each build to help you create and refine the perfect build order
 
 A [WIN] button... because who doesn’t want a win button?
 
 Supports chat commands and hotkeys for accessing menus in game
 
-Supports versions for all current ladder pool maps
+*Note* - The beta is being released only on Overgrowth LE at the moment for testing purposes.  However, the full release version will support all current ladder pool maps.

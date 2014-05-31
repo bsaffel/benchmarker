@@ -5026,6 +5026,7 @@ text gf_GetFormattedUpgradeNameasText (string lp_upgrade) {
 
     // Implementation
     lv_upgradeCatalogString = CatalogFieldValueGet(c_gameCatalogUpgrade, lp_upgrade, "Name", c_playerAny);
+    lv_result = lv_upgradeCatalogString;
     lv_formattedUpgradeCatalogString = gf_FormatCatalogStringwithSpaces(lv_upgradeCatalogString);
     if ((gf_IsUpgradeof1Variety(lp_upgrade) == true)) {
         lv_result = (StringWord(lv_formattedUpgradeCatalogString, 4) + " " + gf_TrimSOffArmorsUpgradeName(StringWord(lv_formattedUpgradeCatalogString, 5)) + " " + StringWord(lv_formattedUpgradeCatalogString, 7));
@@ -5082,10 +5083,10 @@ text gf_GetFormattedUpgradeNameasText (string lp_upgrade) {
         lv_result = "Combat Shields";
     }
     else if ((StringContains(lv_formattedUpgradeCatalogString, "Banshee Cloak", c_stringAnywhere, c_stringCase) == true)) {
-        lv_result = "Banshee Cloak";
+        lv_result = "Cloak (Banshee)";
     }
     else if ((StringContains(lv_formattedUpgradeCatalogString, "Personal Cloaking", c_stringAnywhere, c_stringCase) == true)) {
-        lv_result = "Ghost Cloak";
+        lv_result = "Cloak (Ghost)";
     }
     else if ((StringContains(lv_formattedUpgradeCatalogString, "Warp Gate Research", c_stringAnywhere, c_stringCase) == true)) {
         lv_result = "Warp Gate";
@@ -5112,12 +5113,13 @@ text gf_GetFormattedAbilityNameasText (string lp_ability) {
 
     // Implementation
     lv_abilityCatalogString = CatalogFieldValueGet(c_gameCatalogAbil, lp_ability, "Name", c_playerAny);
+    lv_result = lv_abilityCatalogString;
     lv_formattedAbilityCatalogString = gf_FormatCatalogStringwithSpaces(lv_abilityCatalogString);
     lv_result = lv_formattedAbilityCatalogString;
-    if ((StringContains(lv_formattedAbilityCatalogString, "Upgrade To Lair", c_stringEnd, c_stringCase) == true)) {
+    if ((StringContains(lv_formattedAbilityCatalogString, "Upgrade To Lair", c_stringAnywhere, c_stringCase) == true)) {
         lv_result = "Lair";
     }
-    else if ((StringContains(lv_formattedAbilityCatalogString, "Upgrade To Hive", c_stringEnd, c_stringCase) == true)) {
+    else if ((StringContains(lv_formattedAbilityCatalogString, "Upgrade To Hive", c_stringAnywhere, c_stringCase) == true)) {
         lv_result = "Hive";
     }
     else if ((StringContains(lv_formattedAbilityCatalogString, "Upgrade To Orbital Command", c_stringAnywhere, c_stringCase) == true)) {
