@@ -3,7 +3,6 @@
 ### macro trainer | build order optimizer | practice tool.
 
 Benchmarker is the Starcraft 2 practice tool you’ve been waiting for. This tool aims to help players of all levels refine and improve their macro mechanics while at the same time practicing the builds they will need to slay all the nerds and steal their ladder points.
-If you are one those players like myself who wonders where YABOT went and why there has been nothing to replace it for nearly 3 years, here finally, is your answer.
 
 **Features:**
 

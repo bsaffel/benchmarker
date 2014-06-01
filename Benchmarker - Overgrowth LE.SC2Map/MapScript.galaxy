@@ -293,6 +293,8 @@ fixed gv_e;
 int gv_onehourinseconds;
 bool gv_paused;
 unitgroup gv_resources;
+point gv_playerStartLocation;
+point gv_aIStartLocation;
 bool gv_currentBuildIsGasTaken;
 timer gv_currentBuildBuildTimer;
 unitgroup gv_workers;
@@ -894,19 +896,20 @@ text gf_CalculateIntPercentDifferenceasText (int lp_value, int lp_previousBest, 
 text gf_CalculateRealPercentDifferenceasText (fixed lp_value, fixed lp_previousBest, bool lp_higherisBetter);
 color gf_GetColorForPercentage (fixed lp_percentage, bool lp_higherIsBetter);
 int gf_GetWinButtonYPadding ();
-text gf_GetSupplyDifferenceasFormattedText (int lp_actualSupply, int lp_benchmarkSupply);
+unitgroup gf_GetAllGasStructureUnits ();
+unitgroup gf_GetAllPlayerUnitsforType (int lp_player, string lp_unitType);
+unitgroup gf_GetAllPlayerUnits (int lp_player);
 bool gf_IsNumeric (string lp_input);
-string gf_GetIconForBuildingType (string lp_unitType);
-bool gf_IsUpgradeof1Variety (string lp_upgrade);
-text gf_GetFormattedUpgradeNameasText (string lp_upgrade);
-text gf_GetFormattedAbilityNameasText (string lp_ability);
+bool gf_IsCapitalLetterOrDigit (string lp_letter);
 string gf_FormatCatalogStringwithSpaces (string lp_string);
 string gf_TrimSOffArmorsUpgradeName (string lp_string);
-unitgroup gf_GetAllGasStructureUnits ();
-unitgroup gf_GetAllPlayer1UnitsforType (string lp_unitType);
-unitgroup gf_GetAllPlayer1Units ();
+text gf_GetFormattedUpgradeNameasText (string lp_upgrade);
+text gf_GetFormattedAbilityNameasText (string lp_ability);
 text gf_ConverttoTextWithPlusSignifPositive (int lp_int);
-bool gf_IsCapitalLetterOrDigit (string lp_letter);
+text gf_GetSupplyDifferenceasFormattedText (int lp_actualSupply, int lp_benchmarkSupply);
+string gf_GetCurrentlySelectedMatchupOpponentRace ();
+string gf_GetIconForBuildingType (string lp_unitType);
+bool gf_IsUpgradeof1Variety (string lp_upgrade);
 int gf_GetTotalSecondsforMinSeconds (int lp_minutes, int lp_seconds);
 
 //--------------------------------------------------------------------------------------------------
@@ -2905,13 +2908,15 @@ void gf_ResetGameState () {
 void gf_ResetUnits () {
     // Variable Declarations
     unitgroup lv_player1Units;
+    unitgroup lv_player2Units;
     int lv_debugGasCounter;
 
     // Variable Initialization
     lv_player1Units = UnitGroupEmpty();
+    lv_player2Units = UnitGroupEmpty();
 
     // Implementation
-    lv_player1Units = gf_GetAllPlayer1Units();
+    lv_player1Units = gf_GetAllPlayerUnits(1);
     if ((UnitGroupCount(lv_player1Units, c_unitCountAlive) >= 0)) {
         UnitGroupLoopBegin(UnitGroupFilterPlayer(gv_workers, 1, 0));
         for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
@@ -2932,7 +2937,29 @@ void gf_ResetUnits () {
             UnitRemove(UnitGroupLoopCurrent());
         }
         UnitGroupLoopEnd();
-        MeleeInitUnits();
+        MeleeInitUnitsForPlayer(1, PlayerRace(1), PlayerStartLocation(1));
+    }
+    else {
+    }
+    lv_player2Units = gf_GetAllPlayerUnits(2);
+    if ((UnitGroupCount(lv_player2Units, c_unitCountAlive) >= 0)) {
+        UnitGroupLoopBegin(UnitGroupFilterPlayer(gv_workers, 2, 0));
+        for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
+            UnitRemove(UnitGroupLoopCurrent());
+            UnitGroupRemove(gv_workers, UnitGroupLoopCurrent());
+        }
+        UnitGroupLoopEnd();
+        UnitGroupLoopBegin(UnitGroupFilterPlayer(gf_GetAllGasStructureUnits(), 2, 0));
+        for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
+            UnitRemove(UnitGroupLoopCurrent());
+        }
+        UnitGroupLoopEnd();
+        UnitGroupLoopBegin(lv_player2Units);
+        for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
+            UnitRemove(UnitGroupLoopCurrent());
+        }
+        UnitGroupLoopEnd();
+        MeleeInitUnitsForPlayer(2, gf_GetCurrentlySelectedMatchupOpponentRace(), PlayerStartLocation(2));
     }
     else {
     }
@@ -4026,7 +4053,7 @@ bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
     }
     else {
         lv_queueIsEmpty = true;
-        lv_currentProductionUnits = gf_GetAllPlayer1UnitsforType(lp_unitType);
+        lv_currentProductionUnits = gf_GetAllPlayerUnitsforType(1, lp_unitType);
         auto9BA590D3_g = lv_currentProductionUnits;
         auto9BA590D3_u = 1;
         for ( ; auto9BA590D3_u <= UnitGroupCount(auto9BA590D3_g, c_unitCountAll) ; auto9BA590D3_u += BoolToInt(lv_currenUnit == UnitGroupUnit(auto9BA590D3_g, auto9BA590D3_u)) ) {
@@ -4895,25 +4922,70 @@ int gf_GetWinButtonYPadding () {
     }
 }
 
-text gf_GetSupplyDifferenceasFormattedText (int lp_actualSupply, int lp_benchmarkSupply) {
+unitgroup gf_GetAllGasStructureUnits () {
+    unitgroup auto1E77A246_g;
+    int auto1E77A246_u;
+
     // Variable Declarations
-    int lv_difference;
-    text lv_diffAsText;
-    text lv_formattedDiffText;
+    unit lv_currentUnit;
+    unitgroup lv_result;
 
     // Variable Initialization
+    lv_result = UnitGroupEmpty();
 
     // Implementation
-    lv_difference = (lp_actualSupply-lp_benchmarkSupply);
-    lv_diffAsText = gf_ConverttoTextWithPlusSignifPositive(lv_difference);
-    if ((lv_difference < 0)) {
-        lv_formattedDiffText = TextWithColor(lv_diffAsText, (Color(100.00, 0.00, 0.00)));
+    auto1E77A246_g = UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0);
+    auto1E77A246_u = 1;
+    for ( ; auto1E77A246_u <= UnitGroupCount(auto1E77A246_g, c_unitCountAll) ; auto1E77A246_u += BoolToInt(lv_currentUnit == UnitGroupUnit(auto1E77A246_g, auto1E77A246_u)) ) {
+        lv_currentUnit = UnitGroupUnit(auto1E77A246_g, auto1E77A246_u);
+        if (((UnitGetType(lv_currentUnit) == "Extractor") || (UnitGetType(lv_currentUnit) == "Refinery") || (UnitGetType(lv_currentUnit) == "Assimilator"))) {
+            UnitGroupAdd(lv_result, lv_currentUnit);
+        }
+        else {
+        }
     }
-    else {
-        lv_formattedDiffText = TextWithColor(lv_diffAsText, (Color(22*100/255,128*100/255,0)));
+    return lv_result;
+}
+
+unitgroup gf_GetAllPlayerUnitsforType (int lp_player, string lp_unitType) {
+    unitgroup auto7054DA5F_g;
+    int auto7054DA5F_u;
+
+    // Variable Declarations
+    unit lv_currentUnit;
+    unitgroup lv_result;
+
+    // Variable Initialization
+    lv_result = UnitGroupEmpty();
+
+    // Implementation
+    auto7054DA5F_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0);
+    auto7054DA5F_u = 1;
+    for ( ; auto7054DA5F_u <= UnitGroupCount(auto7054DA5F_g, c_unitCountAll) ; auto7054DA5F_u += BoolToInt(lv_currentUnit == UnitGroupUnit(auto7054DA5F_g, auto7054DA5F_u)) ) {
+        lv_currentUnit = UnitGroupUnit(auto7054DA5F_g, auto7054DA5F_u);
+        if ((UnitGetType(lv_currentUnit) == lp_unitType)) {
+            UnitGroupAdd(lv_result, lv_currentUnit);
+        }
+        else {
+        }
     }
-    gf_LogTextMessage(gv_debugMenusEnabled, lv_formattedDiffText);
-    return lv_formattedDiffText;
+    return lv_result;
+}
+
+unitgroup gf_GetAllPlayerUnits (int lp_player) {
+    // Variable Declarations
+    unitgroup lv_result;
+
+    // Variable Initialization
+    lv_result = UnitGroupEmpty();
+
+    // Implementation
+    UnitGroupLoopBegin(UnitGroup(null, lp_player, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0));
+    for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
+        UnitGroupAdd(lv_result, UnitGroupLoopCurrent());
+    }
+    UnitGroupLoopEnd();
+    return lv_result;
 }
 
 bool gf_IsNumeric (string lp_input) {
@@ -4949,65 +5021,52 @@ bool gf_IsNumeric (string lp_input) {
     return lv_result;
 }
 
-string gf_GetIconForBuildingType (string lp_unitType) {
-    string auto77F30C81_val;
-
+bool gf_IsCapitalLetterOrDigit (string lp_letter) {
     // Implementation
-    auto77F30C81_val = lp_unitType;
-    if (auto77F30C81_val == "Nexus") {
-        return "Assets\\Textures\\btn-building-protoss-nexus.dds";
-    }
-    else if (auto77F30C81_val == "Gateway") {
-        return "Assets\\Textures\\btn-building-protoss-gateway.dds";
-    }
-    else if (auto77F30C81_val == "RoboticsFacility") {
-        return "Assets\\Textures\\btn-building-protoss-roboticsfacility.dds";
-    }
-    else if (auto77F30C81_val == "Stargate") {
-        return "Assets\\Textures\\btn-building-protoss-stargate.dds";
-    }
-    else if (auto77F30C81_val == "CommandCenter") {
-        return "Assets\\Textures\\btn-building-terran-commandcenter.dds";
-    }
-    else if (auto77F30C81_val == "OrbitalCommand") {
-        return "Assets\\Textures\\btn-techupgrade-terran-orbitalcommand.dds";
-    }
-    else if (auto77F30C81_val == "PlanetaryFortress") {
-        return "Assets\\Textures\\btn-building-terran-planetaryfortress.dds";
-    }
-    else if (auto77F30C81_val == "Barracks") {
-        return "Assets\\Textures\\btn-building-terran-barracks.dds";
-    }
-    else if (auto77F30C81_val == "Factory") {
-        return "Assets\\Textures\\btn-building-terran-factory.dds";
-    }
-    else if (auto77F30C81_val == "Starport") {
-        return "Assets\\Textures\\btn-building-terran-starport.dds";
-    }
-    else if (auto77F30C81_val == "Larva") {
-        return "Assets\\Textures\\btn-unit-zerg-larva.dds";
-    }
-    else if (auto77F30C81_val == "Hatchery") {
-        return "Assets\\Textures\\btn-building-zerg-hatchery.dds";
-    }
-    else if (auto77F30C81_val == "Lair") {
-        return "Assets\\Textures\\btn-building-zerg-lair.dds";
-    }
-    else if (auto77F30C81_val == "Hive") {
-        return "Assets\\Textures\\btn-building-zerg-hive.dds";
-    }
-    else {
-        return null;
-    }
-}
-
-bool gf_IsUpgradeof1Variety (string lp_upgrade) {
-    // Implementation
-    if (((lp_upgrade == "ProtossAirArmorsLevel1") || (lp_upgrade == "ProtossAirArmorsLevel2") || (lp_upgrade == "ProtossAirArmorsLevel3") || (lp_upgrade == "ProtossGroundArmorsLevel1") || (lp_upgrade == "ProtossGroundArmorsLevel2") || (lp_upgrade == "ProtossGroundArmorsLevel3") || (lp_upgrade == "ProtossShieldsLevel1") || (lp_upgrade == "ProtossShieldsLevel2") || (lp_upgrade == "ProtossShieldsLevel3") || (lp_upgrade == "ProtossAirWeaponsLevel1") || (lp_upgrade == "ProtossAirWeaponsLevel2") || (lp_upgrade == "ProtossAirWeaponsLevel3") || (lp_upgrade == "ProtossGroundWeaponsLevel1") || (lp_upgrade == "ProtossGroundWeaponsLevel2") || (lp_upgrade == "ProtossGroundWeaponsLevel3") || (lp_upgrade == "TerranInfantryArmorsLevel1") || (lp_upgrade == "TerranInfantryArmorsLevel2") || (lp_upgrade == "TerranInfantryArmorsLevel3") || (lp_upgrade == "TerranShipArmorsLevel1") || (lp_upgrade == "TerranShipArmorsLevel2") || (lp_upgrade == "TerranShipArmorsLevel3") || (lp_upgrade == "TerranVehicleArmorsLevel1") || (lp_upgrade == "TerranVehicleArmorsLevel2") || (lp_upgrade == "TerranVehicleArmorsLevel3") || (lp_upgrade == "TerranInfantryWeaponsLevel1") || (lp_upgrade == "TerranInfantryWeaponsLevel2") || (lp_upgrade == "TerranInfantryWeaponsLevel3") || (lp_upgrade == "TerranShipWeaponsLevel1") || (lp_upgrade == "TerranShipWeaponsLevel2") || (lp_upgrade == "TerranShipWeaponsLevel3") || (lp_upgrade == "TerranVehicleWeaponsLevel1") || (lp_upgrade == "TerranVehicleWeaponsLevel2") || (lp_upgrade == "TerranVehicleWeaponsLevel3") || (lp_upgrade == "ZergFlyerArmorsLevel1") || (lp_upgrade == "ZergFlyerArmorsLevel2") || (lp_upgrade == "ZergFlyerArmorsLevel3") || (lp_upgrade == "ZergGroundArmorsLevel1") || (lp_upgrade == "ZergGroundArmorsLevel2") || (lp_upgrade == "ZergGroundArmorsLevel3") || (lp_upgrade == "ZergFlyerWeaponsLevel1") || (lp_upgrade == "ZergFlyerWeaponsLevel2") || (lp_upgrade == "ZergFlyerWeaponsLevel3") || (lp_upgrade == "ZergMeleeWeaponsLevel1") || (lp_upgrade == "ZergMeleeWeaponsLevel2") || (lp_upgrade == "ZergMeleeWeaponsLevel3") || (lp_upgrade == "ZergMissileWeaponsLevel1") || (lp_upgrade == "ZergMissileWeaponsLevel2") || (lp_upgrade == "ZergMissileWeaponsLevel3"))) {
+    if (((lp_letter == "A") || (lp_letter == "B") || (lp_letter == "C") || (lp_letter == "D") || (lp_letter == "E") || (lp_letter == "F") || (lp_letter == "G") || (lp_letter == "H") || (lp_letter == "I") || (lp_letter == "J") || (lp_letter == "K") || (lp_letter == "L") || (lp_letter == "M") || (lp_letter == "N") || (lp_letter == "O") || (lp_letter == "P") || (lp_letter == "Q") || (lp_letter == "R") || (lp_letter == "S") || (lp_letter == "T") || (lp_letter == "U") || (lp_letter == "V") || (lp_letter == "W") || (lp_letter == "X") || (lp_letter == "Y") || (lp_letter == "Z") || (lp_letter == "1") || (lp_letter == "2") || (lp_letter == "3") || (lp_letter == "4") || (lp_letter == "5") || (lp_letter == "6") || (lp_letter == "7") || (lp_letter == "8") || (lp_letter == "9") || (lp_letter == "0"))) {
         return true;
     }
     else {
         return false;
+    }
+}
+
+string gf_FormatCatalogStringwithSpaces (string lp_string) {
+    int auto6F8A5183_ae;
+    int auto6F8A5183_ai;
+
+    // Variable Declarations
+    string lv_currentLetter;
+    string lv_result;
+    int lv_i;
+
+    // Variable Initialization
+    lv_currentLetter = "";
+    lv_result = "";
+
+    // Implementation
+    auto6F8A5183_ae = StringLength(lp_string);
+    auto6F8A5183_ai = 1;
+    lv_i = 0;
+    for ( ; ( (auto6F8A5183_ai >= 0 && lv_i <= auto6F8A5183_ae) || (auto6F8A5183_ai <= 0 && lv_i >= auto6F8A5183_ae) ) ; lv_i += auto6F8A5183_ai ) {
+        lv_currentLetter = StringSub(lp_string, lv_i, lv_i);
+        if ((gf_IsCapitalLetterOrDigit(lv_currentLetter) == true)) {
+            lv_result = (lv_result + " " + lv_currentLetter);
+        }
+        else {
+            lv_result = (lv_result + lv_currentLetter);
+        }
+    }
+    return lv_result;
+}
+
+string gf_TrimSOffArmorsUpgradeName (string lp_string) {
+    // Implementation
+    if ((lp_string == "Armors")) {
+        return "Armor";
+    }
+    else {
+        return lp_string;
     }
 }
 
@@ -5131,111 +5190,6 @@ text gf_GetFormattedAbilityNameasText (string lp_ability) {
     return StringToText(lv_result);
 }
 
-string gf_FormatCatalogStringwithSpaces (string lp_string) {
-    int auto6F8A5183_ae;
-    int auto6F8A5183_ai;
-
-    // Variable Declarations
-    string lv_currentLetter;
-    string lv_result;
-    int lv_i;
-
-    // Variable Initialization
-    lv_currentLetter = "";
-    lv_result = "";
-
-    // Implementation
-    auto6F8A5183_ae = StringLength(lp_string);
-    auto6F8A5183_ai = 1;
-    lv_i = 0;
-    for ( ; ( (auto6F8A5183_ai >= 0 && lv_i <= auto6F8A5183_ae) || (auto6F8A5183_ai <= 0 && lv_i >= auto6F8A5183_ae) ) ; lv_i += auto6F8A5183_ai ) {
-        lv_currentLetter = StringSub(lp_string, lv_i, lv_i);
-        if ((gf_IsCapitalLetterOrDigit(lv_currentLetter) == true)) {
-            lv_result = (lv_result + " " + lv_currentLetter);
-        }
-        else {
-            lv_result = (lv_result + lv_currentLetter);
-        }
-    }
-    return lv_result;
-}
-
-string gf_TrimSOffArmorsUpgradeName (string lp_string) {
-    // Implementation
-    if ((lp_string == "Armors")) {
-        return "Armor";
-    }
-    else {
-        return lp_string;
-    }
-}
-
-unitgroup gf_GetAllGasStructureUnits () {
-    unitgroup auto1E77A246_g;
-    int auto1E77A246_u;
-
-    // Variable Declarations
-    unit lv_currentUnit;
-    unitgroup lv_result;
-
-    // Variable Initialization
-    lv_result = UnitGroupEmpty();
-
-    // Implementation
-    auto1E77A246_g = UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0);
-    auto1E77A246_u = 1;
-    for ( ; auto1E77A246_u <= UnitGroupCount(auto1E77A246_g, c_unitCountAll) ; auto1E77A246_u += BoolToInt(lv_currentUnit == UnitGroupUnit(auto1E77A246_g, auto1E77A246_u)) ) {
-        lv_currentUnit = UnitGroupUnit(auto1E77A246_g, auto1E77A246_u);
-        if (((UnitGetType(lv_currentUnit) == "Extractor") || (UnitGetType(lv_currentUnit) == "Refinery") || (UnitGetType(lv_currentUnit) == "Assimilator"))) {
-            UnitGroupAdd(lv_result, lv_currentUnit);
-        }
-        else {
-        }
-    }
-    return lv_result;
-}
-
-unitgroup gf_GetAllPlayer1UnitsforType (string lp_unitType) {
-    unitgroup auto7054DA5F_g;
-    int auto7054DA5F_u;
-
-    // Variable Declarations
-    unit lv_currentUnit;
-    unitgroup lv_result;
-
-    // Variable Initialization
-    lv_result = UnitGroupEmpty();
-
-    // Implementation
-    auto7054DA5F_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0);
-    auto7054DA5F_u = 1;
-    for ( ; auto7054DA5F_u <= UnitGroupCount(auto7054DA5F_g, c_unitCountAll) ; auto7054DA5F_u += BoolToInt(lv_currentUnit == UnitGroupUnit(auto7054DA5F_g, auto7054DA5F_u)) ) {
-        lv_currentUnit = UnitGroupUnit(auto7054DA5F_g, auto7054DA5F_u);
-        if ((UnitGetType(lv_currentUnit) == lp_unitType)) {
-            UnitGroupAdd(lv_result, lv_currentUnit);
-        }
-        else {
-        }
-    }
-    return lv_result;
-}
-
-unitgroup gf_GetAllPlayer1Units () {
-    // Variable Declarations
-    unitgroup lv_result;
-
-    // Variable Initialization
-    lv_result = UnitGroupEmpty();
-
-    // Implementation
-    UnitGroupLoopBegin(UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterMissile), (1 << (c_targetFilterDead - 32)) | (1 << (c_targetFilterHidden - 32))), 0));
-    for ( ; !UnitGroupLoopDone() ; UnitGroupLoopStep() ) {
-        UnitGroupAdd(lv_result, UnitGroupLoopCurrent());
-    }
-    UnitGroupLoopEnd();
-    return lv_result;
-}
-
 text gf_ConverttoTextWithPlusSignifPositive (int lp_int) {
     // Variable Declarations
     text lv_result;
@@ -5254,9 +5208,104 @@ text gf_ConverttoTextWithPlusSignifPositive (int lp_int) {
     return lv_result;
 }
 
-bool gf_IsCapitalLetterOrDigit (string lp_letter) {
+text gf_GetSupplyDifferenceasFormattedText (int lp_actualSupply, int lp_benchmarkSupply) {
+    // Variable Declarations
+    int lv_difference;
+    text lv_diffAsText;
+    text lv_formattedDiffText;
+
+    // Variable Initialization
+
     // Implementation
-    if (((lp_letter == "A") || (lp_letter == "B") || (lp_letter == "C") || (lp_letter == "D") || (lp_letter == "E") || (lp_letter == "F") || (lp_letter == "G") || (lp_letter == "H") || (lp_letter == "I") || (lp_letter == "J") || (lp_letter == "K") || (lp_letter == "L") || (lp_letter == "M") || (lp_letter == "N") || (lp_letter == "O") || (lp_letter == "P") || (lp_letter == "Q") || (lp_letter == "R") || (lp_letter == "S") || (lp_letter == "T") || (lp_letter == "U") || (lp_letter == "V") || (lp_letter == "W") || (lp_letter == "X") || (lp_letter == "Y") || (lp_letter == "Z") || (lp_letter == "1") || (lp_letter == "2") || (lp_letter == "3") || (lp_letter == "4") || (lp_letter == "5") || (lp_letter == "6") || (lp_letter == "7") || (lp_letter == "8") || (lp_letter == "9") || (lp_letter == "0"))) {
+    lv_difference = (lp_actualSupply-lp_benchmarkSupply);
+    lv_diffAsText = gf_ConverttoTextWithPlusSignifPositive(lv_difference);
+    if ((lv_difference < 0)) {
+        lv_formattedDiffText = TextWithColor(lv_diffAsText, (Color(100.00, 0.00, 0.00)));
+    }
+    else {
+        lv_formattedDiffText = TextWithColor(lv_diffAsText, (Color(22*100/255,128*100/255,0)));
+    }
+    gf_LogTextMessage(gv_debugMenusEnabled, lv_formattedDiffText);
+    return lv_formattedDiffText;
+}
+
+string gf_GetCurrentlySelectedMatchupOpponentRace () {
+    // Variable Declarations
+    string lv_result;
+    string lv_selectedMatchup;
+
+    // Variable Initialization
+    lv_selectedMatchup = "";
+
+    // Implementation
+    lv_selectedMatchup = gf_GetCurrentlySelectedMatchupasBankSectionKey();
+    if ((StringContains(lv_selectedMatchup, "vP", c_stringAnywhere, c_stringCase) == true)) {
+        lv_result = "Prot";
+    }
+    else if ((StringContains(lv_selectedMatchup, "vT", c_stringAnywhere, c_stringCase) == true)) {
+        lv_result = "Terr";
+    }
+    else if ((StringContains(lv_selectedMatchup, "vZ", c_stringAnywhere, c_stringCase) == true)) {
+        lv_result = "Zerg";
+    }
+    return lv_result;
+}
+
+string gf_GetIconForBuildingType (string lp_unitType) {
+    string auto77F30C81_val;
+
+    // Implementation
+    auto77F30C81_val = lp_unitType;
+    if (auto77F30C81_val == "Nexus") {
+        return "Assets\\Textures\\btn-building-protoss-nexus.dds";
+    }
+    else if (auto77F30C81_val == "Gateway") {
+        return "Assets\\Textures\\btn-building-protoss-gateway.dds";
+    }
+    else if (auto77F30C81_val == "RoboticsFacility") {
+        return "Assets\\Textures\\btn-building-protoss-roboticsfacility.dds";
+    }
+    else if (auto77F30C81_val == "Stargate") {
+        return "Assets\\Textures\\btn-building-protoss-stargate.dds";
+    }
+    else if (auto77F30C81_val == "CommandCenter") {
+        return "Assets\\Textures\\btn-building-terran-commandcenter.dds";
+    }
+    else if (auto77F30C81_val == "OrbitalCommand") {
+        return "Assets\\Textures\\btn-techupgrade-terran-orbitalcommand.dds";
+    }
+    else if (auto77F30C81_val == "PlanetaryFortress") {
+        return "Assets\\Textures\\btn-building-terran-planetaryfortress.dds";
+    }
+    else if (auto77F30C81_val == "Barracks") {
+        return "Assets\\Textures\\btn-building-terran-barracks.dds";
+    }
+    else if (auto77F30C81_val == "Factory") {
+        return "Assets\\Textures\\btn-building-terran-factory.dds";
+    }
+    else if (auto77F30C81_val == "Starport") {
+        return "Assets\\Textures\\btn-building-terran-starport.dds";
+    }
+    else if (auto77F30C81_val == "Larva") {
+        return "Assets\\Textures\\btn-unit-zerg-larva.dds";
+    }
+    else if (auto77F30C81_val == "Hatchery") {
+        return "Assets\\Textures\\btn-building-zerg-hatchery.dds";
+    }
+    else if (auto77F30C81_val == "Lair") {
+        return "Assets\\Textures\\btn-building-zerg-lair.dds";
+    }
+    else if (auto77F30C81_val == "Hive") {
+        return "Assets\\Textures\\btn-building-zerg-hive.dds";
+    }
+    else {
+        return null;
+    }
+}
+
+bool gf_IsUpgradeof1Variety (string lp_upgrade) {
+    // Implementation
+    if (((lp_upgrade == "ProtossAirArmorsLevel1") || (lp_upgrade == "ProtossAirArmorsLevel2") || (lp_upgrade == "ProtossAirArmorsLevel3") || (lp_upgrade == "ProtossGroundArmorsLevel1") || (lp_upgrade == "ProtossGroundArmorsLevel2") || (lp_upgrade == "ProtossGroundArmorsLevel3") || (lp_upgrade == "ProtossShieldsLevel1") || (lp_upgrade == "ProtossShieldsLevel2") || (lp_upgrade == "ProtossShieldsLevel3") || (lp_upgrade == "ProtossAirWeaponsLevel1") || (lp_upgrade == "ProtossAirWeaponsLevel2") || (lp_upgrade == "ProtossAirWeaponsLevel3") || (lp_upgrade == "ProtossGroundWeaponsLevel1") || (lp_upgrade == "ProtossGroundWeaponsLevel2") || (lp_upgrade == "ProtossGroundWeaponsLevel3") || (lp_upgrade == "TerranInfantryArmorsLevel1") || (lp_upgrade == "TerranInfantryArmorsLevel2") || (lp_upgrade == "TerranInfantryArmorsLevel3") || (lp_upgrade == "TerranShipArmorsLevel1") || (lp_upgrade == "TerranShipArmorsLevel2") || (lp_upgrade == "TerranShipArmorsLevel3") || (lp_upgrade == "TerranVehicleArmorsLevel1") || (lp_upgrade == "TerranVehicleArmorsLevel2") || (lp_upgrade == "TerranVehicleArmorsLevel3") || (lp_upgrade == "TerranInfantryWeaponsLevel1") || (lp_upgrade == "TerranInfantryWeaponsLevel2") || (lp_upgrade == "TerranInfantryWeaponsLevel3") || (lp_upgrade == "TerranShipWeaponsLevel1") || (lp_upgrade == "TerranShipWeaponsLevel2") || (lp_upgrade == "TerranShipWeaponsLevel3") || (lp_upgrade == "TerranVehicleWeaponsLevel1") || (lp_upgrade == "TerranVehicleWeaponsLevel2") || (lp_upgrade == "TerranVehicleWeaponsLevel3") || (lp_upgrade == "ZergFlyerArmorsLevel1") || (lp_upgrade == "ZergFlyerArmorsLevel2") || (lp_upgrade == "ZergFlyerArmorsLevel3") || (lp_upgrade == "ZergGroundArmorsLevel1") || (lp_upgrade == "ZergGroundArmorsLevel2") || (lp_upgrade == "ZergGroundArmorsLevel3") || (lp_upgrade == "ZergFlyerWeaponsLevel1") || (lp_upgrade == "ZergFlyerWeaponsLevel2") || (lp_upgrade == "ZergFlyerWeaponsLevel3") || (lp_upgrade == "ZergMeleeWeaponsLevel1") || (lp_upgrade == "ZergMeleeWeaponsLevel2") || (lp_upgrade == "ZergMeleeWeaponsLevel3") || (lp_upgrade == "ZergMissileWeaponsLevel1") || (lp_upgrade == "ZergMissileWeaponsLevel2") || (lp_upgrade == "ZergMissileWeaponsLevel3"))) {
         return true;
     }
     else {
