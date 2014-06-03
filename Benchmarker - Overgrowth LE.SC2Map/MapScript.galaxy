@@ -148,6 +148,7 @@ int gv_menuItemRowIndent;
 int gv_menuItemHeight;
 int gv_checkboxWidth;
 int gv_checkboxHeight;
+int gv__1DigitEditBoxWidth;
 int gv__2DigitEditBoxWidth;
 int gv__3DigitEditBoxWidth;
 int gv__4DigitEditBoxWidth;
@@ -402,7 +403,7 @@ void InitGlobals () {
     gv_alertUpgradeGapCheckEnabled = true;
     gv_productionIdleCheckEnabled = true;
     gv_configurationOptionsSectionKey = "options";
-    gv_alertConfigurationSectionKey = "alerts";
+    gv_alertConfigurationSectionKey = "";
     gv_alertMineralsCheckEnabledEntryKey = "alertMineralsEnabled";
     gv_alertMineralsThresholdKey = "alertMineralsThreshold";
     gv_alertGasCheckEnabledEntryKey = "alertGasEnabled";
@@ -469,8 +470,9 @@ void InitGlobals () {
     gv_menuItemHeight = 50;
     gv_checkboxWidth = 50;
     gv_checkboxHeight = 50;
+    gv__1DigitEditBoxWidth = 45;
     gv__2DigitEditBoxWidth = 60;
-    gv__3DigitEditBoxWidth = 74;
+    gv__3DigitEditBoxWidth = 75;
     gv__4DigitEditBoxWidth = 90;
     gv_benchmarkEditBoxHeight = 50;
     gv_alertThresholdEditBoxHeight = 50;
@@ -500,7 +502,7 @@ void InitGlobals () {
     }
     gv_alertMenuSupplyBlockBaseWidth = 306;
     gv_alertMenuQueenNameWidth = 100;
-    gv_alertMenuOrbitalNameWidth = 235;
+    gv_alertMenuOrbitalNameWidth = 237;
     gv_alertMenuNexusNameWidth = 98;
     gv_mineralAboveThresholdAlertCheckbox = c_invalidDialogControlId;
     gv_gasAboveThresholdAlertCheckbox = c_invalidDialogControlId;
@@ -950,6 +952,7 @@ trigger gt_EnableDisableSupplyBlockAlert;
 trigger gt_EnableDisableMacroEnergyAlert;
 trigger gt_EnableDisableUpgradeGapAlert;
 trigger gt_EnableDisableProductionIdleAlert;
+trigger gt_EnableDisableAPMBelowThreshold;
 trigger gt_SelectBenchmarkMenu;
 trigger gt_OpenMainMenu;
 trigger gt_SelectAlertMenu;
@@ -1662,6 +1665,18 @@ void gf_CreateAlertMenuDialog () {
     gf_CreateAlertMenuThresholdEditBox(gv__2DigitEditBoxWidth, lv_rowNum);
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_alertRowLabelWidths[lv_rowNum][1], gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_checkboxWidth+gv_alertRowLabelWidths[lv_rowNum][0]+gv__2DigitEditBoxWidth), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_labelAlignmentSpacer+gv_sectionLabelHeight+lv_rowNum*gv_menuItemHeight), StringExternal("Param/Value/0F44E262"), ColorWithAlpha(0,0,0,0), false, 2.0);
     gv_alertMenuDialogItemGrid[lv_rowNum][3] = DialogControlLastCreated();
+    DialogControlCreate(DialogLastCreated(), c_triggerControlTypeEditBox);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/0CE33496"), PlayerGroupAll());
+    DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv__1DigitEditBoxWidth, gv_benchmarkEditBoxHeight);
+    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_checkboxWidth+gv_alertRowLabelWidths[lv_rowNum][0]+gv__2DigitEditBoxWidth+gv_alertRowLabelWidths[lv_rowNum][1]), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_sectionLabelHeight+lv_rowNum*gv_menuItemHeight));
+    gv_alertMenuDialogItemGrid[lv_rowNum][4] = DialogControlLastCreated();
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_alertRowLabelWidths[lv_rowNum][2], gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_checkboxWidth+gv_alertRowLabelWidths[lv_rowNum][0]+gv__2DigitEditBoxWidth+gv_alertRowLabelWidths[lv_rowNum][1]+gv__1DigitEditBoxWidth), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_labelAlignmentSpacer+gv_sectionLabelHeight+lv_rowNum*gv_menuItemHeight), StringExternal("Param/Value/3158EDF4"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_alertMenuDialogItemGrid[lv_rowNum][5] = DialogControlLastCreated();
+    DialogControlCreate(DialogLastCreated(), c_triggerControlTypeEditBox);
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/A8A17D46"), PlayerGroupAll());
+    DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv__1DigitEditBoxWidth, gv_benchmarkEditBoxHeight);
+    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_checkboxWidth+gv_alertRowLabelWidths[lv_rowNum][0]+gv__2DigitEditBoxWidth+gv_alertRowLabelWidths[lv_rowNum][1]+gv__1DigitEditBoxWidth+gv_alertRowLabelWidths[lv_rowNum][2]), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_sectionLabelHeight+lv_rowNum*gv_menuItemHeight));
+    gv_alertMenuDialogItemGrid[lv_rowNum][6] = DialogControlLastCreated();
     lv_rowNum += 1;
     gf_CreateAlertMenuCheckbox(lv_rowNum);
     gv_productionIdleAboveThresholdAlertCheckbox = DialogControlLastCreated();
@@ -2782,7 +2797,8 @@ void gf_InitializeDialogDefaults () {
     else {
     }
     gv_alertRowLabelWidths[4][0] = 400;
-    gv_alertRowLabelWidths[4][1] = gv_secondsLabelWidth;
+    gv_alertRowLabelWidths[4][1] = 161;
+    gv_alertRowLabelWidths[4][2] = 17;
     gv_alertRowLabelWidths[5][0] = 483;
     gv_alertRowLabelWidths[5][1] = gv_secondsLabelWidth;
     gv_alertRowLabelWidths[6][0] = 300;
@@ -6516,6 +6532,38 @@ void gt_EnableDisableProductionIdleAlert_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Enable/Disable APM Below Threshold
+//--------------------------------------------------------------------------------------------------
+bool gt_EnableDisableAPMBelowThreshold_Func (bool testConds, bool runActions) {
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Conditions
+    if (testConds) {
+        if (!((EventDialogControl() == gv_aPMBelowThresholdAlertCheckbox))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_aPMBelowThresholdCheckEnabled = libNtve_gf_DialogItemIsChecked(EventDialogControl(), 1);
+    gf_EnableDisableAlertRow(gv_aPMBelowThresholdCheckEnabled, 6, 5);
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_EnableDisableAPMBelowThreshold_Init () {
+    gt_EnableDisableAPMBelowThreshold = TriggerCreate("gt_EnableDisableAPMBelowThreshold_Func");
+    TriggerAddEventDialogControl(gt_EnableDisableAPMBelowThreshold, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeChecked);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Select Benchmark Menu
 //--------------------------------------------------------------------------------------------------
 bool gt_SelectBenchmarkMenu_Func (bool testConds, bool runActions) {
@@ -8065,6 +8113,7 @@ void InitTriggers () {
     gt_EnableDisableMacroEnergyAlert_Init();
     gt_EnableDisableUpgradeGapAlert_Init();
     gt_EnableDisableProductionIdleAlert_Init();
+    gt_EnableDisableAPMBelowThreshold_Init();
     gt_SelectBenchmarkMenu_Init();
     gt_OpenMainMenu_Init();
     gt_SelectAlertMenu_Init();
