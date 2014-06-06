@@ -801,6 +801,7 @@ void gf_ResetCurrentBuildOrderStepsVariables ();
 void gf_ResetBenchmarkBuildOrderStepsVariables ();
 void gf_ResetBenchmarkBuildOrderObjectives ();
 void gf_ResetBenchmarkSupplyObjectives ();
+void gf_ResetBuildOrderTimers ();
 void gf_PauseGame ();
 void gf_UnpauseGame ();
 void gf_PauseAllTimers ();
@@ -832,7 +833,6 @@ void gf_EvaluateUpgradeForBenchmarkBuildOrderStep (string lp_upgrade);
 void gf_EvaluateAbilityForBenchmarkBuildOrderStep (string lp_ability);
 void gf_CompleteCurrentBuildStepAndCycle ();
 void gf_FailCurrentBuildStepAndCycle ();
-void gf_ResetBuildOrderTimers ();
 void gf_ResetStatistics ();
 void gf_CreateScreenButtons ();
 bool gf_IsOverlordCurrentlyInProgress ();
@@ -3155,6 +3155,7 @@ void gf_ResetCurrentBuildOrderStepsVariables () {
         gv_currentBuildOrderSteps[lv_i].lv_cancelled = false;
     }
     gv_currentBuildOrderStepCursor = 0;
+    gv_buildOrderCycleOffset = 0;
 }
 
 void gf_ResetBenchmarkBuildOrderStepsVariables () {
@@ -3238,6 +3239,12 @@ void gf_ResetBenchmarkSupplyObjectives () {
     gv_supplyBenchmarks[1].lv_actualSupplyatBenchmarkTime = 0;
     gv_supplyBenchmarks[2].lv_actualSupplyatBenchmarkTime = 0;
     gv_supplyBenchmarks[3].lv_actualSupplyatBenchmarkTime = 0;
+}
+
+void gf_ResetBuildOrderTimers () {
+    // Implementation
+    gv_multipleUnitFailureTimer = TimerCreate();
+    TimerPause(gv_multipleUnitFailureTimer, true);
 }
 
 void gf_PauseGame () {
@@ -3731,12 +3738,6 @@ void gf_FailCurrentBuildStepAndCycle () {
     gv_benchmarkBuildOrderStepCursor += 1;
     gf_CycleBenchmarkBuildOrderObjectives();
     gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
-}
-
-void gf_ResetBuildOrderTimers () {
-    // Implementation
-    gv_multipleUnitFailureTimer = TimerCreate();
-    TimerPause(gv_multipleUnitFailureTimer, true);
 }
 
 void gf_ResetStatistics () {
@@ -4656,7 +4657,7 @@ bool gf_IsUpgradeTypeValidForBuildOrder (string lp_upgrade) {
     // Variable Initialization
 
     // Implementation
-    if (((lp_upgrade == "WarpGateResearch") || (lp_upgrade == "BlinkTech") || (lp_upgrade == "Charge") || (lp_upgrade == "ExtendedThermalLance") || (lp_upgrade == "GraviticDrive") || (lp_upgrade == "ObserverGraviticBooster") || (lp_upgrade == "PsiStormTech") || (lp_upgrade == "Stimpack") || (lp_upgrade == "PunisherGrenades") || (lp_upgrade == "ShieldWall") || (lp_upgrade == "BansheeCloak") || (lp_upgrade == "HighCapacityBarrels") || (lp_upgrade == "HunterSeeker") || (lp_upgrade == "HunterSeeker") || (lp_upgrade == "zerglingmovementspeed") || (lp_upgrade == "zerglingattackspeed") || (lp_upgrade == "TunnelingClaws") || (lp_upgrade == "GlialReconstitution") || (lp_upgrade == "hydraliskspeed") || (lp_upgrade == "HydraliskSpeedUpgrade") || (lp_upgrade == "InfestorEnergyUpgrade") || (lp_upgrade == "LocustLifetimeIncrease") || (lp_upgrade == "ChitinousPlating") || (lp_upgrade == "Burrow") || (lp_upgrade == "ProtossAirArmorsLevel1") || (lp_upgrade == "ProtossAirArmorsLevel2") || (lp_upgrade == "ProtossAirArmorsLevel3") || (lp_upgrade == "ProtossGroundArmorsLevel1") || (lp_upgrade == "ProtossGroundArmorsLevel2") || (lp_upgrade == "ProtossGroundArmorsLevel3") || (lp_upgrade == "ProtossShieldsLevel1") || (lp_upgrade == "ProtossShieldsLevel2") || (lp_upgrade == "ProtossShieldsLevel3") || (lp_upgrade == "ProtossAirWeaponsLevel1") || (lp_upgrade == "ProtossAirWeaponsLevel2") || (lp_upgrade == "ProtossAirWeaponsLevel3") || (lp_upgrade == "ProtossGroundWeaponsLevel1") || (lp_upgrade == "ProtossGroundWeaponsLevel2") || (lp_upgrade == "ProtossGroundWeaponsLevel3") || (lp_upgrade == "TerranInfantryArmorsLevel1") || (lp_upgrade == "TerranInfantryArmorsLevel2") || (lp_upgrade == "TerranInfantryArmorsLevel3") || (lp_upgrade == "TerranShipArmorsLevel1") || (lp_upgrade == "TerranShipArmorsLevel2") || (lp_upgrade == "TerranShipArmorsLevel3") || (lp_upgrade == "TerranVehicleArmorsLevel1") || (lp_upgrade == "TerranVehicleArmorsLevel2") || (lp_upgrade == "TerranVehicleArmorsLevel3") || (lp_upgrade == "TerranInfantryWeaponsLevel1") || (lp_upgrade == "TerranInfantryWeaponsLevel2") || (lp_upgrade == "TerranInfantryWeaponsLevel3") || (lp_upgrade == "TerranShipWeaponsLevel1") || (lp_upgrade == "TerranShipWeaponsLevel2") || (lp_upgrade == "TerranShipWeaponsLevel3") || (lp_upgrade == "TerranVehicleWeaponsLevel1") || (lp_upgrade == "TerranVehicleWeaponsLevel2") || (lp_upgrade == "TerranVehicleWeaponsLevel3") || (lp_upgrade == "ZergFlyerArmorsLevel1") || (lp_upgrade == "ZergFlyerArmorsLevel2") || (lp_upgrade == "ZergFlyerArmorsLevel3") || (lp_upgrade == "ZergGroundArmorsLevel1") || (lp_upgrade == "ZergGroundArmorsLevel2") || (lp_upgrade == "ZergGroundArmorsLevel3") || (lp_upgrade == "ZergFlyerWeaponsLevel1") || (lp_upgrade == "ZergFlyerWeaponsLevel2") || (lp_upgrade == "ZergFlyerWeaponsLevel3") || (lp_upgrade == "ZergMeleeWeaponsLevel1") || (lp_upgrade == "ZergMeleeWeaponsLevel2") || (lp_upgrade == "ZergMeleeWeaponsLevel3") || (lp_upgrade == "ZergMissileWeaponsLevel1") || (lp_upgrade == "ZergMissileWeaponsLevel2") || (lp_upgrade == "ZergMissileWeaponsLevel3"))) {
+    if (((lp_upgrade == "WarpGateResearch") || (lp_upgrade == "BlinkTech") || (lp_upgrade == "Charge") || (lp_upgrade == "ExtendedThermalLance") || (lp_upgrade == "GraviticDrive") || (lp_upgrade == "ObserverGraviticBooster") || (lp_upgrade == "PsiStormTech") || (lp_upgrade == "AnionPulseCrystals") || (lp_upgrade == "AnionPulseCrystals") || (lp_upgrade == "Stimpack") || (lp_upgrade == "PunisherGrenades") || (lp_upgrade == "ShieldWall") || (lp_upgrade == "BansheeCloak") || (lp_upgrade == "HighCapacityBarrels") || (lp_upgrade == "HunterSeeker") || (lp_upgrade == "RavenCorvidReactor") || (lp_upgrade == "zerglingmovementspeed") || (lp_upgrade == "zerglingattackspeed") || (lp_upgrade == "TunnelingClaws") || (lp_upgrade == "GlialReconstitution") || (lp_upgrade == "hydraliskspeed") || (lp_upgrade == "HydraliskSpeedUpgrade") || (lp_upgrade == "InfestorEnergyUpgrade") || (lp_upgrade == "LocustLifetimeIncrease") || (lp_upgrade == "ChitinousPlating") || (lp_upgrade == "Burrow") || (lp_upgrade == "overlordtransport") || (lp_upgrade == "overlordspeed") || (lp_upgrade == "ProtossAirArmorsLevel1") || (lp_upgrade == "ProtossAirArmorsLevel2") || (lp_upgrade == "ProtossAirArmorsLevel3") || (lp_upgrade == "ProtossGroundArmorsLevel1") || (lp_upgrade == "ProtossGroundArmorsLevel2") || (lp_upgrade == "ProtossGroundArmorsLevel3") || (lp_upgrade == "ProtossShieldsLevel1") || (lp_upgrade == "ProtossShieldsLevel2") || (lp_upgrade == "ProtossShieldsLevel3") || (lp_upgrade == "ProtossAirWeaponsLevel1") || (lp_upgrade == "ProtossAirWeaponsLevel2") || (lp_upgrade == "ProtossAirWeaponsLevel3") || (lp_upgrade == "ProtossGroundWeaponsLevel1") || (lp_upgrade == "ProtossGroundWeaponsLevel2") || (lp_upgrade == "ProtossGroundWeaponsLevel3") || (lp_upgrade == "TerranInfantryArmorsLevel1") || (lp_upgrade == "TerranInfantryArmorsLevel2") || (lp_upgrade == "TerranInfantryArmorsLevel3") || (lp_upgrade == "TerranShipArmorsLevel1") || (lp_upgrade == "TerranShipArmorsLevel2") || (lp_upgrade == "TerranShipArmorsLevel3") || (lp_upgrade == "TerranVehicleArmorsLevel1") || (lp_upgrade == "TerranVehicleArmorsLevel2") || (lp_upgrade == "TerranVehicleArmorsLevel3") || (lp_upgrade == "TerranInfantryWeaponsLevel1") || (lp_upgrade == "TerranInfantryWeaponsLevel2") || (lp_upgrade == "TerranInfantryWeaponsLevel3") || (lp_upgrade == "TerranShipWeaponsLevel1") || (lp_upgrade == "TerranShipWeaponsLevel2") || (lp_upgrade == "TerranShipWeaponsLevel3") || (lp_upgrade == "TerranVehicleWeaponsLevel1") || (lp_upgrade == "TerranVehicleWeaponsLevel2") || (lp_upgrade == "TerranVehicleWeaponsLevel3") || (lp_upgrade == "ZergFlyerArmorsLevel1") || (lp_upgrade == "ZergFlyerArmorsLevel2") || (lp_upgrade == "ZergFlyerArmorsLevel3") || (lp_upgrade == "ZergGroundArmorsLevel1") || (lp_upgrade == "ZergGroundArmorsLevel2") || (lp_upgrade == "ZergGroundArmorsLevel3") || (lp_upgrade == "ZergFlyerWeaponsLevel1") || (lp_upgrade == "ZergFlyerWeaponsLevel2") || (lp_upgrade == "ZergFlyerWeaponsLevel3") || (lp_upgrade == "ZergMeleeWeaponsLevel1") || (lp_upgrade == "ZergMeleeWeaponsLevel2") || (lp_upgrade == "ZergMeleeWeaponsLevel3") || (lp_upgrade == "ZergMissileWeaponsLevel1") || (lp_upgrade == "ZergMissileWeaponsLevel2") || (lp_upgrade == "ZergMissileWeaponsLevel3"))) {
         lv_result = true;
     }
     else {
@@ -5894,10 +5895,13 @@ bool gt_StartBuild_Func (bool testConds, bool runActions) {
     gf_SaveBenchmarkMenuConfiguration(gf_GetCurrentlySelectedMatchupasBankSectionKey());
     gf_SaveAlertMenuConfiguration();
     gf_ResetGameState();
+    gf_LogTextMessage(gv_debugMapMechanicsEnabled, StringExternal("Param/Value/17DBE949"));
     gf_InitializeBuildConfiguration();
+    gf_LogTextMessage(gv_debugMapMechanicsEnabled, StringExternal("Param/Value/EF170396"));
     TimerStart(gv_currentBuildBuildTimer, gv_onehourinseconds, false, c_timeGame);
     gf_StartBenchmarkTimers();
     gf_UnpauseGame();
+    gf_LogTextMessage(gv_debugMapMechanicsEnabled, StringExternal("Param/Value/10A5A2AE"));
     CameraPan(1, PlayerStartLocation(1), 0.5, -1, 5.0, true);
     CinematicFade(true, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
     return true;
@@ -7602,7 +7606,7 @@ bool gt_ForkBuildOrder_Func (bool testConds, bool runActions) {
 
     // Conditions
     if (testConds) {
-        if (!((gv_practiceAgainstBenchmarkBuildOrder == true))) {
+        if (!(((gv_practiceAgainstBenchmarkBuildOrder == true) && (gv_paused == false)))) {
             return false;
         }
     }
