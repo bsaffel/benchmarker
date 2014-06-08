@@ -2490,12 +2490,21 @@ void gf_UpdatePostBuildReportDialogValues (bool lp_updateBuildOrderListBox) {
 
 void gf_UpdatePostBuildReportOverviewSection () {
     // Variable Declarations
+    text lv_buildTimeText;
     text lv_benchmarkStepsText;
 
     // Variable Initialization
 
     // Implementation
-    TextExpressionSetToken("Param/Expression/D2FEAD6E", "A", TextTimeFormat(StringToText("<min2/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))));
+    if (((gv_practiceAgainstBenchmarkBuildOrder == true))) {
+        TextExpressionSetToken("Param/Expression/48512523", "A", TextTimeFormat(StringToText("<hour2/>:<min2/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))));
+        TextExpressionSetToken("Param/Expression/48512523", "B", IntToText(gv_totalNumBenchmarkBuildOrderSteps));
+        lv_buildTimeText = TextExpressionAssemble("Param/Expression/48512523");
+    }
+    else {
+        lv_buildTimeText = TextTimeFormat(StringToText("<hour2/>:<min2/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer)));
+    }
+    TextExpressionSetToken("Param/Expression/D2FEAD6E", "A", lv_buildTimeText);
     libNtve_gf_SetDialogItemText(gv_postBuildReportBuildOverviewTimeLabel, TextExpressionAssemble("Param/Expression/D2FEAD6E"), PlayerGroupAll());
     TextExpressionSetToken("Param/Expression/24ED9FE0", "A", IntToText(gv_numBenchmarksMetThisBuild));
     libNtve_gf_SetDialogItemText(gv_postBuildReportBuildOverviewBenchmarkCompletionLabel, TextExpressionAssemble("Param/Expression/24ED9FE0"), PlayerGroupAll());
