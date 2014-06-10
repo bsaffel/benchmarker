@@ -124,10 +124,12 @@ string gv_numBenchmarkBuildOrderStepsEntryKey;
 string gv_stepTypeBuildOrderStepEntryKey;
 string gv_unitTypeBuildOrderStepEntryKey;
 string gv_upgradeBuildOrderStepEntryKey;
+string gv_abilityBuildOrderStepEntryKey;
 string gv_supplyBuildOrderStepEntryKey;
 string gv_amountBuildOrderStepEntryKey;
 string gv_elapsedSecondsBuildOrderStepEntryKey;
-string gv_benchmarkBuildTimeKey;
+string gv_benchmarkBuildOrderTimeKey;
+string gv_benchmarkBuildOrderSupplyBenchmarksMetKey;
 string[4] gv_currentMatchupSectionKeys;
 string gv_zvTMatchupSectionKey;
 string gv_zvZMatchupSectionKey;
@@ -351,6 +353,7 @@ int[11] gv_benchmarkBuildOrderStepObjectives;
 gs_BuildOrderStep[51] gv_benchmarkBuildOrderSteps;
 int gv_benchmarkBuildOrderStepCursor;
 int gv_benchmarkBuildOrderTimeSeconds;
+int gv_benchmarkBuildOrderSupplyBenchmarksMet;
 int gv_benchmarkBuildOrderObjectiveCycleThreshold;
 int gv_buildOrderCycleOffset;
 int gv_maxDisplayedBuildOrderObjectives1;
@@ -452,10 +455,12 @@ void InitGlobals () {
     gv_stepTypeBuildOrderStepEntryKey = "stepType";
     gv_unitTypeBuildOrderStepEntryKey = "unitType";
     gv_upgradeBuildOrderStepEntryKey = "upgrade";
+    gv_abilityBuildOrderStepEntryKey = "ability";
     gv_supplyBuildOrderStepEntryKey = "supply";
     gv_amountBuildOrderStepEntryKey = "amount";
     gv_elapsedSecondsBuildOrderStepEntryKey = "elapsedSeconds";
-    gv_benchmarkBuildTimeKey = "benchmarkBuildTime";
+    gv_benchmarkBuildOrderTimeKey = "benchmarkBuildTime";
+    gv_benchmarkBuildOrderSupplyBenchmarksMetKey = "benchmarkBuildSupplyBenchmarksMet";
     for (init_i = 0; init_i <= 3; init_i += 1) {
         gv_currentMatchupSectionKeys[init_i] = "";
     }
@@ -605,7 +610,7 @@ void InitGlobals () {
     gv_postBuildReportBuildOverviewLabelHeight = 45;
     gv_postBuildReportBenchmarkHeadingWidth = 260;
     gv_postBuildReportBenchmarksSupplyHeadingWidth = 200;
-    gv_postBuildReportBenchmarkAnalysisRowLabelWidth = 205;
+    gv_postBuildReportBenchmarkAnalysisRowLabelWidth = 250;
     gv_postBuildReportBenchmarkAnalysisRowHeight = 35;
     gv_postBuildReportBenchmarkUpdateButton = c_invalidDialogControlId;
     gv_postBuildReportStatLabelHeight = 35;
@@ -1433,9 +1438,12 @@ void gf_SaveCurrentBuildAsBenchmarkBuildOrderForCurrentMatchup () {
     BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey, gv_currentBuildOrderStepCursor);
     TextExpressionSetToken("Param/Expression/1DC37812", "A", IntToText(gv_currentBuildOrderStepCursor));
     gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/1DC37812"));
-    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_benchmarkBuildTimeKey, FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer)));
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_benchmarkBuildOrderTimeKey, FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer)));
     TextExpressionSetToken("Param/Expression/49DC8CAF", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))));
     gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/49DC8CAF"));
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_benchmarkBuildOrderSupplyBenchmarksMetKey, gv_numBenchmarksMetThisBuild);
+    TextExpressionSetToken("Param/Expression/49EB79CE", "A", IntToText(gv_numBenchmarksMetThisBuild));
+    gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/49EB79CE"));
     BankSave(gv_benchmarkerBank);
 }
 
@@ -1462,7 +1470,8 @@ void gf_LoadBenchmarkBuildOrderforCurrentMatchup () {
             gf_LoadBenchmarkBuildStep(lv_currentStepNum);
         }
         gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/0A79CDD8"));
-        gv_benchmarkBuildOrderTimeSeconds = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_benchmarkBuildTimeKey);
+        gv_benchmarkBuildOrderTimeSeconds = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_benchmarkBuildOrderTimeKey);
+        gv_benchmarkBuildOrderSupplyBenchmarksMet = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_benchmarkBuildOrderSupplyBenchmarksMetKey);
     }
     else {
         gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/DCA924E4"));
@@ -1501,6 +1510,7 @@ void gf_SaveBenchmarkBuildStep (int lp_stepNumber) {
     BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_stepTypeBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lp_stepNumber].lv_stepType);
     BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_unitTypeBuildOrderStepEntryKey), (gv_currentBuildOrderSteps[lp_stepNumber].lv_unitType));
     BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_upgradeBuildOrderStepEntryKey), (gv_currentBuildOrderSteps[lp_stepNumber].lv_upgrade));
+    BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_abilityBuildOrderStepEntryKey), (gv_currentBuildOrderSteps[lp_stepNumber].lv_ability));
     BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_supplyBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lp_stepNumber].lv_supply);
     BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_amountBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lp_stepNumber].lv_amount);
     BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_elapsedSecondsBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
@@ -1511,6 +1521,7 @@ void gf_LoadBenchmarkBuildStep (int lp_stepNumber) {
     gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_stepType = BankValueGetAsString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_stepTypeBuildOrderStepEntryKey));
     gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_unitType = (BankValueGetAsString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_unitTypeBuildOrderStepEntryKey)));
     gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_upgrade = (BankValueGetAsString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_upgradeBuildOrderStepEntryKey)));
+    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_ability = (BankValueGetAsString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_abilityBuildOrderStepEntryKey)));
     gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supply = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_supplyBuildOrderStepEntryKey));
     gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_amount = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_amountBuildOrderStepEntryKey));
     gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_elapsedSecondsBuildOrderStepEntryKey));
@@ -2295,10 +2306,10 @@ void gf_CreatePostBuildReportBuildOverviewLabels () {
 
     // Implementation
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_postBuildReportBuildOverviewLabelNameWidth, gv_sectionLabelHeight, c_anchorTopLeft, lv_overviewSectionXPadding, lv_overviewSectionYPadding, StringExternal("Param/Value/1E1892EE"), ColorWithAlpha(0,0,0,0), false, 2.0);
-    gf_CreatePostBuildReportBuildOverviewAnalysisRow(TextExpressionAssemble("Param/Expression/0F620834"), 0);
-    gv_postBuildReportBuildOverviewBenchmarkCompletionLabel = DialogControlLastCreated();
-    gf_CreatePostBuildReportBuildOverviewAnalysisRow(TextExpressionAssemble("Param/Expression/25AF69B7"), 1);
+    gf_CreatePostBuildReportBuildOverviewAnalysisRow(TextExpressionAssemble("Param/Expression/25AF69B7"), 0);
     gv_postBuildReportBuildOverviewTimeLabel = DialogControlLastCreated();
+    gf_CreatePostBuildReportBuildOverviewAnalysisRow(TextExpressionAssemble("Param/Expression/0F620834"), 1);
+    gv_postBuildReportBuildOverviewBenchmarkCompletionLabel = DialogControlLastCreated();
     gf_CreatePostBuildReportBuildOverviewAnalysisRow(TextExpressionAssemble("Param/Expression/BF49CC8A"), 2);
     gv_postBuildReportBuildOverviewBuildStepNumLabel = DialogControlLastCreated();
 }
@@ -2351,7 +2362,7 @@ void gf_CreatePostBuildReportSupplyBenchmarkAnalysisRow (int lp_rowNumber) {
     TextExpressionSetToken("Param/Expression/03085794", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gf_GetTotalSecondsforMinSeconds(gv_supplyBenchmarks[lp_rowNumber].lv_benchmarkTimeMin, gv_supplyBenchmarks[lp_rowNumber].lv_benchmarkTimeSeconds)));
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_postBuildReportBenchmarksSupplyHeadingWidth, gv_postBuildReportStatLabelHeight, c_anchorTopLeft, (lv_benchmarkSectionRowXPadding), (lv_benchmarkSectionRowYPadding+(lp_rowNumber*gv_postBuildReportBenchmarkAnalysisRowHeight)), TextExpressionAssemble("Param/Expression/03085794"), ColorWithAlpha(0,0,0,0), false, 2.0);
     gv_postBuildReportDialogItems[gv_postBuildReportBenchmarksIndex][lp_rowNumber][0] = DialogControlLastCreated();
-    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_postBuildReportBenchmarksSupplyHeadingWidth, gv_postBuildReportStatLabelHeight, c_anchorTopLeft, (lv_benchmarkSectionRowXPadding+gv_postBuildReportBenchmarkAnalysisRowLabelWidth), (lv_benchmarkSectionRowYPadding+(lp_rowNumber*gv_postBuildReportBenchmarkAnalysisRowHeight)), StringExternal("Param/Value/2FE0F67D"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_postBuildReportBenchmarkAnalysisRowLabelWidth, gv_postBuildReportStatLabelHeight, c_anchorTopLeft, (lv_benchmarkSectionRowXPadding+gv_postBuildReportBenchmarkAnalysisRowLabelWidth), (lv_benchmarkSectionRowYPadding+(lp_rowNumber*gv_postBuildReportBenchmarkAnalysisRowHeight)), StringExternal("Param/Value/2FE0F67D"), ColorWithAlpha(0,0,0,0), false, 2.0);
     gv_postBuildReportDialogItems[gv_postBuildReportBenchmarksIndex][lp_rowNumber][1] = DialogControlLastCreated();
 }
 
@@ -2485,32 +2496,34 @@ void gf_UpdatePostBuildReportDialogValues (bool lp_updateBuildOrderListBox) {
 
 void gf_UpdatePostBuildReportOverviewSection () {
     // Variable Declarations
+    text lv_supplyBenchmarksMetText;
     text lv_buildTimeText;
     text lv_benchmarkStepsText;
 
     // Variable Initialization
 
     // Implementation
-    TextExpressionSetToken("Param/Expression/24ED9FE0", "A", IntToText(gv_numBenchmarksMetThisBuild));
-    libNtve_gf_SetDialogItemText(gv_postBuildReportBuildOverviewBenchmarkCompletionLabel, TextExpressionAssemble("Param/Expression/24ED9FE0"), PlayerGroupAll());
     if (((gv_practiceAgainstBenchmarkBuildOrder == true))) {
         TextExpressionSetToken("Param/Expression/48512523", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))));
         TextExpressionSetToken("Param/Expression/48512523", "B", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkBuildOrderTimeSeconds));
         lv_buildTimeText = TextExpressionAssemble("Param/Expression/48512523");
-    }
-    else {
-        lv_buildTimeText = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer)));
-    }
-    TextExpressionSetToken("Param/Expression/D2FEAD6E", "A", lv_buildTimeText);
-    libNtve_gf_SetDialogItemText(gv_postBuildReportBuildOverviewTimeLabel, TextExpressionAssemble("Param/Expression/D2FEAD6E"), PlayerGroupAll());
-    if (((gv_practiceAgainstBenchmarkBuildOrder == true))) {
+        TextExpressionSetToken("Param/Expression/423A89C7", "A", IntToText(gv_numBenchmarksMetThisBuild));
+        TextExpressionSetToken("Param/Expression/423A89C7", "B", IntToText(gv_benchmarkBuildOrderSupplyBenchmarksMet));
+        lv_supplyBenchmarksMetText = TextExpressionAssemble("Param/Expression/423A89C7");
         TextExpressionSetToken("Param/Expression/DA3A6761", "A", IntToText(gv_numCompletedBenchmarkBuildOrderSteps));
         TextExpressionSetToken("Param/Expression/DA3A6761", "B", IntToText(gv_totalNumBenchmarkBuildOrderSteps));
         lv_benchmarkStepsText = TextExpressionAssemble("Param/Expression/DA3A6761");
     }
     else {
+        lv_buildTimeText = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer)));
+        TextExpressionSetToken("Param/Expression/14C275AD", "A", IntToText(gv_numBenchmarksMetThisBuild));
+        lv_supplyBenchmarksMetText = TextExpressionAssemble("Param/Expression/14C275AD");
         lv_benchmarkStepsText = IntToText(gv_currentBuildOrderStepCursor);
     }
+    TextExpressionSetToken("Param/Expression/D2FEAD6E", "A", lv_buildTimeText);
+    libNtve_gf_SetDialogItemText(gv_postBuildReportBuildOverviewTimeLabel, TextExpressionAssemble("Param/Expression/D2FEAD6E"), PlayerGroupAll());
+    TextExpressionSetToken("Param/Expression/24ED9FE0", "A", lv_supplyBenchmarksMetText);
+    libNtve_gf_SetDialogItemText(gv_postBuildReportBuildOverviewBenchmarkCompletionLabel, TextExpressionAssemble("Param/Expression/24ED9FE0"), PlayerGroupAll());
     TextExpressionSetToken("Param/Expression/60AFE4E0", "A", lv_benchmarkStepsText);
     libNtve_gf_SetDialogItemText(gv_postBuildReportBuildOverviewBuildStepNumLabel, TextExpressionAssemble("Param/Expression/60AFE4E0"), PlayerGroupAll());
 }
@@ -3297,6 +3310,7 @@ void gf_CompleteFinalBenchmarkObjective () {
         TextExpressionSetToken("Param/Expression/739A89F7", "A", ObjectiveGetName(gv_benchmarkFinalBenchmarkObjective));
         TextExpressionSetToken("Param/Expression/739A89F7", "B", TextTimeFormat(StringToText("<min2/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))));
         ObjectiveSetName(gv_benchmarkFinalBenchmarkObjective, TextExpressionAssemble("Param/Expression/739A89F7"));
+        gv_numBenchmarksMetThisBuild += 1;
     }
     else {
     }
@@ -5896,6 +5910,7 @@ bool gt_StartBuild_Func (bool testConds, bool runActions) {
     }
 
     gf_HideBenchmarkDialog();
+    UIDisplayMessage(PlayerGroupAll(), c_messageAreaDirective, StringExternal("Param/Value/27023A8A"));
     gf_SaveBenchmarkMenuConfiguration(gf_GetCurrentlySelectedMatchupasBankSectionKey());
     gf_SaveAlertMenuConfiguration();
     gf_ResetGameState();
@@ -5906,7 +5921,9 @@ bool gt_StartBuild_Func (bool testConds, bool runActions) {
     gf_StartBenchmarkTimers();
     gf_UnpauseGame();
     gf_LogTextMessage(gv_debugMapMechanicsEnabled, StringExternal("Param/Value/10A5A2AE"));
+    Wait(1.0, c_timeGame);
     CameraPan(1, PlayerStartLocation(1), 0.5, -1, 5.0, true);
+    UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
     CinematicFade(true, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
     return true;
 }
@@ -6076,7 +6093,6 @@ bool gt_EndBuildatMaxSupply_Func (bool testConds, bool runActions) {
     }
 
     gf_CompleteFinalBenchmarkObjective();
-    gv_numBenchmarksMetThisBuild += 1;
     gv_supplyBenchmarks[3].lv_actualSupplyatBenchmarkTime = PlayerScoreValueGetAsInt(1, "FoodUsed");
     TriggerExecute(gt_OpenPostBuildReportDialog, false, false);
     return true;
@@ -6109,7 +6125,6 @@ bool gt_EndBuildatSpecifiedGameTime_Func (bool testConds, bool runActions) {
     gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/7BCEB932"));
     if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) >= gv_benchmarkFinalSupplyatGameTimeValue)) {
         gf_CompleteFinalBenchmarkObjective();
-        gv_numBenchmarksMetThisBuild += 1;
     }
     else {
         gf_FailFinalBenchmarkObjective();
