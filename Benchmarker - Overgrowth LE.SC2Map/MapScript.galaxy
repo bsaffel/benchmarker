@@ -3261,7 +3261,7 @@ void gf_ResetBenchmarkSupplyObjectives () {
 
 void gf_ResetBuildOrderTimers () {
     // Implementation
-    gv_multipleUnitFailureTimer = TimerCreate();
+    TimerRestart(gv_multipleUnitFailureTimer);
     TimerPause(gv_multipleUnitFailureTimer, true);
 }
 
@@ -3301,6 +3301,7 @@ void gf_UnpauseAllTimers () {
     // Implementation
     gf_UnpauseBenchmarkTimers();
     gf_UnpauseAlertTimers();
+    TimerPause(gv_multipleUnitFailureTimer, false);
     TimerPause(gv_currentBuildBuildTimer, false);
 }
 
@@ -3663,8 +3664,9 @@ void gf_EvaluateUnitTypeForBenchmarkBuildOrderStep (string lp_unitType, int lp_a
         if ((gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep(lp_unitType, gv_benchmarkBuildOrderStepCursor) == true)) {
             TextExpressionSetToken("Param/Expression/B1051469", "A", IntToText(gv_benchmarkBuildOrderStepCursor));
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/B1051469"));
-            if (((gf_IsAmountCorrectForBenchmarkBuildOrderStep(lp_amount, gv_benchmarkBuildOrderStepCursor) == true) && (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor)]) == c_objectiveStateActive))) {
+            if (((gf_IsAmountCorrectForBenchmarkBuildOrderStep(lp_amount, gv_benchmarkBuildOrderStepCursor) == true))) {
                 gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/69B6DB0E"));
+                gf_CompleteCurrentBuildStepAndCycle();
                 if ((TimerGetRemaining(gv_multipleUnitFailureTimer) > 0.0)) {
                     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/F6401EA7"));
                     TimerRestart(gv_multipleUnitFailureTimer);
@@ -3672,19 +3674,14 @@ void gf_EvaluateUnitTypeForBenchmarkBuildOrderStep (string lp_unitType, int lp_a
                 }
                 else {
                 }
-                gf_CompleteCurrentBuildStepAndCycle();
             }
             else {
                 TextExpressionSetToken("Param/Expression/00348550", "A", IntToText(lp_amount));
                 TextExpressionSetToken("Param/Expression/00348550", "B", IntToText(gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_amount));
                 gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/00348550"));
-                if ((gv_currentBuildOrderStepCursor > 0)) {
-                    TextExpressionSetToken("Param/Expression/8A069115", "A", IntToText(gv_multipleUnitTimeCutoffThreshold));
-                    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/8A069115"));
-                    TimerStart(gv_multipleUnitFailureTimer, gv_multipleUnitTimeCutoffThreshold, false, c_timeGame);
-                }
-                else {
-                }
+                TextExpressionSetToken("Param/Expression/8A069115", "A", IntToText(gv_multipleUnitTimeCutoffThreshold));
+                gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/8A069115"));
+                TimerStart(gv_multipleUnitFailureTimer, IntToFixed(gv_multipleUnitTimeCutoffThreshold), false, c_timeGame);
             }
         }
         else {
@@ -4722,13 +4719,6 @@ bool gf_IsAbilityValidForBuildOrder (string lp_ability) {
     // Implementation
     if (((lp_ability == "UpgradeToPlanetaryFortress") || (lp_ability == "UpgradeToOrbital") || (lp_ability == "UpgradeToLair") || (lp_ability == "UpgradeToHive"))) {
         lv_result = true;
-    }
-    else {
-    }
-    if ((gv_debugBuildOrderEnabled == true)) {
-        TextExpressionSetToken("Param/Expression/96144553", "A", StringToText((lp_ability)));
-        TextExpressionSetToken("Param/Expression/96144553", "B", libNtve_gf_ConvertBooleanToText(lv_result));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/96144553"));
     }
     else {
     }
@@ -7589,9 +7579,14 @@ void gt_OnAbilityCancelUpdateCurrentBuildOrder_Init () {
 // Trigger: On Multiple Unit Failure Timer Expires
 //--------------------------------------------------------------------------------------------------
 bool gt_OnMultipleUnitFailureTimerExpires_Func (bool testConds, bool runActions) {
+    // Variable Declarations
+    text lv_temp;
+
+    // Variable Initialization
+
     // Conditions
     if (testConds) {
-        if (!((gv_practiceAgainstBenchmarkBuildOrder == true))) {
+        if (!((TimerGetElapsed(gv_currentBuildBuildTimer) > 1))) {
             return false;
         }
     }
@@ -7604,7 +7599,10 @@ bool gt_OnMultipleUnitFailureTimerExpires_Func (bool testConds, bool runActions)
     TextExpressionSetToken("Param/Expression/721980B5", "A", UnitTypeGetName(gv_lastCreatedBuildOrderUnitType));
     TextExpressionSetToken("Param/Expression/721980B5", "B", IntToText(gv_benchmarkBuildOrderStepCursor));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/721980B5"));
+    lv_temp = gv_lastCreatedBuildStepUnitUpgradeAbilityText;
+    gv_lastCreatedBuildStepUnitUpgradeAbilityText = StringExternal("Param/Value/26EB1C7A");
     gf_FailCurrentBuildStepAndCycle();
+    gv_lastCreatedBuildStepUnitUpgradeAbilityText = lv_temp;
     return true;
 }
 
