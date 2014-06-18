@@ -3654,7 +3654,7 @@ void gf_AddAbilityBuildOrderStep (string lp_buildStepAbility) {
 
 void gf_EvaluateUnitTypeForBenchmarkBuildOrderStep (string lp_unitType, int lp_amount) {
     // Implementation
-    if ((gv_benchmarkBuildOrderStepCursor > 0) && ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[(gf_GetObjectiveIndexforBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor)-1)]) == c_objectiveStateFailed) && (gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep(lp_unitType, (gv_benchmarkBuildOrderStepCursor-1)) == true))) {
+    if ((gv_benchmarkBuildOrderStepCursor > 0) && ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[(gf_GetObjectiveIndexforBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor)-1)]) == c_objectiveStateFailed) && (gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep(lp_unitType, (gv_benchmarkBuildOrderStepCursor-1)) == true) && (gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep(lp_unitType, (gv_benchmarkBuildOrderStepCursor)) == false) && (gf_IsAmountCorrectForBenchmarkBuildOrderStep(lp_amount, (gv_benchmarkBuildOrderStepCursor-1)) == true))) {
         TextExpressionSetToken("Param/Expression/BEEDD1E2", "B", UnitTypeGetName(lp_unitType));
         TextExpressionSetToken("Param/Expression/BEEDD1E2", "A", IntToText((gv_benchmarkBuildOrderStepCursor-1)));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/BEEDD1E2"));
