@@ -605,12 +605,12 @@ void InitGlobals () {
     gv_postBuildReportBuildOverviewTimeLabel = c_invalidDialogControlId;
     gv_postBuildReportBuildOverviewBenchmarkCompletionLabel = c_invalidDialogControlId;
     gv_postBuildReportBuildOverviewBuildStepNumLabel = c_invalidDialogControlId;
-    gv_postBuildReportBuildOverviewLabelNameWidth = 275;
-    gv_postBuildReportBuildOverviewLabelValueWidth = 225;
+    gv_postBuildReportBuildOverviewLabelNameWidth = 235;
+    gv_postBuildReportBuildOverviewLabelValueWidth = 275;
     gv_postBuildReportBuildOverviewLabelHeight = 45;
     gv_postBuildReportBenchmarkHeadingWidth = 260;
     gv_postBuildReportBenchmarksSupplyHeadingWidth = 200;
-    gv_postBuildReportBenchmarkAnalysisRowLabelWidth = 250;
+    gv_postBuildReportBenchmarkAnalysisRowLabelWidth = 200;
     gv_postBuildReportBenchmarkAnalysisRowHeight = 35;
     gv_postBuildReportBenchmarkUpdateButton = c_invalidDialogControlId;
     gv_postBuildReportStatLabelHeight = 35;
@@ -780,9 +780,9 @@ void gf_UpdatePostBuildReportOverviewSection ();
 void gf_UpdatePostBuildReportBenchmarkSection ();
 void gf_UpdatePostBuildReportBenchmarkAnalysisRow (int lp_rowNumber);
 void gf_UpdatePostBuildReportStatsSection ();
-void gf_UpdatePostBuildStatRowValueasInt (text lp_label, int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter);
+void gf_UpdatePostBuildStatRowValueasInt (text lp_label, int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter, bool lp_differenceAsPercentage);
 void gf_UpdatePostBuildStatRowValueasReal (text lp_label, fixed lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter);
-void gf_UpdatePostBuildStatRowValueasTime (text lp_label, int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter);
+void gf_UpdatePostBuildStatRowValueasTime (text lp_label, int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter, bool lp_displayasPercentage);
 void gf_CreateStatsDialog ();
 void gf_CreateStatsDialogHeaderRowLabels ();
 void gf_CreateStatsDialogRow (int lp_rowOffset);
@@ -906,9 +906,6 @@ int gf_GetNumUpgradesResearched ();
 int gf_GetTotalMineralsCollected ();
 int gf_GetTotalGasCollected ();
 fixed gf_CalculateSpendingQuotient ();
-text gf_CalculateIntPercentDifferenceasText (int lp_value, int lp_previousBest, bool lp_higherisBetter);
-text gf_CalculateRealPercentDifferenceasText (fixed lp_value, fixed lp_previousBest, bool lp_higherisBetter);
-color gf_GetColorForPercentage (fixed lp_percentage, bool lp_higherIsBetter);
 int gf_GetWinButtonYPadding ();
 unitgroup gf_GetAllGasStructureUnits ();
 unitgroup gf_GetAllPlayerUnitsforType (int lp_player, string lp_unitType);
@@ -917,10 +914,13 @@ bool gf_IsNumeric (string lp_input);
 bool gf_IsCapitalLetterOrDigit (string lp_letter);
 string gf_FormatCatalogStringwithSpaces (string lp_string);
 string gf_TrimSOffArmorsUpgradeName (string lp_string);
+text gf_GetIntDifferenceasText (int lp_value, int lp_previousBest, bool lp_higherisBetter, bool lp_displayasPercentage);
+text gf_CalculateRealPercentDifferenceasText (fixed lp_value, fixed lp_previousBest, bool lp_higherisBetter);
+text gf_ConvertInttoTextWithPlusSignifPositive (int lp_int);
 text gf_GetFormattedUpgradeNameasText (string lp_upgrade);
 text gf_GetFormattedAbilityNameasText (string lp_ability);
-text gf_ConverttoTextWithPlusSignifPositive (int lp_int);
 text gf_GetSupplyDifferenceasFormattedText (int lp_actualSupply, int lp_benchmarkSupply);
+color gf_GetColorForReal (fixed lp_percentage, bool lp_higherIsBetter);
 string gf_GetIconForBuildingType (string lp_unitType);
 bool gf_IsUpgradeof1Variety (string lp_upgrade);
 int gf_GetTotalSecondsforMinSeconds (int lp_minutes, int lp_seconds);
@@ -2564,29 +2564,30 @@ void gf_UpdatePostBuildReportStatsSection () {
     // Variable Initialization
 
     // Implementation
-    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/D3C083D3"), gv_workersCreated, gv_bestTotalWorkersCreatedEntryKey, lv_statRowNum, true);
+    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/D3C083D3"), gv_workersCreated, gv_bestTotalWorkersCreatedEntryKey, lv_statRowNum, true, false);
     lv_statRowNum += 1;
-    gf_UpdatePostBuildStatRowValueasTime(StringExternal("Param/Value/F52DAACD"), gf_GetTimeSupplyBlocked(), gv_bestTimeSupplyBlockedEntryKey, lv_statRowNum, false);
+    gf_UpdatePostBuildStatRowValueasTime(StringExternal("Param/Value/F52DAACD"), gf_GetTimeSupplyBlocked(), gv_bestTimeSupplyBlockedEntryKey, lv_statRowNum, false, false);
     lv_statRowNum += 1;
-    gf_UpdatePostBuildStatRowValueasTime(StringExternal("Param/Value/E59E74B8"), gf_GetIdleProductionTime(), gv_bestIdleProductionTimeEntryKey, lv_statRowNum, false);
+    gf_UpdatePostBuildStatRowValueasTime(StringExternal("Param/Value/E59E74B8"), gf_GetIdleProductionTime(), gv_bestIdleProductionTimeEntryKey, lv_statRowNum, false, false);
     lv_statRowNum += 1;
-    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/F9CF4469"), gf_GetTotalMineralsCollected(), gv_bestTotalMineralsCollectedEntryKey, lv_statRowNum, true);
+    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/F9CF4469"), gf_GetTotalMineralsCollected(), gv_bestTotalMineralsCollectedEntryKey, lv_statRowNum, true, true);
     lv_statRowNum += 1;
-    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/B88570A5"), gf_GetTotalGasCollected(), gv_bestTotalGasCollectedEntryKey, lv_statRowNum, true);
+    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/B88570A5"), gf_GetTotalGasCollected(), gv_bestTotalGasCollectedEntryKey, lv_statRowNum, true, true);
     lv_statRowNum += 1;
-    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/89E5DE2C"), gf_GetTotalArmySupply(), gv_bestTotalArmySupplyEntryKey, lv_statRowNum, true);
+    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/89E5DE2C"), gf_GetTotalArmySupply(), gv_bestTotalArmySupplyEntryKey, lv_statRowNum, true, false);
     lv_statRowNum += 1;
-    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/EBB3E7BB"), gf_GetTotalArmyValueMinerals(), gv_bestTotalArmyValueMineralsEntryKey, lv_statRowNum, true);
+    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/EBB3E7BB"), gf_GetTotalArmyValueMinerals(), gv_bestTotalArmyValueMineralsEntryKey, lv_statRowNum, true, true);
     lv_statRowNum += 1;
-    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/87426EC9"), gf_GetTotalArmyValueGas(), gv_bestTotalArmyValueGasEntryKey, lv_statRowNum, true);
+    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/87426EC9"), gf_GetTotalArmyValueGas(), gv_bestTotalArmyValueGasEntryKey, lv_statRowNum, true, true);
     lv_statRowNum += 1;
     gf_UpdatePostBuildStatRowValueasReal(StringExternal("Param/Value/14A329F0"), gf_GetAverageBuildAPM(), gv_bestAverageAPMEntryKey, lv_statRowNum, true);
     lv_statRowNum += 1;
 }
 
-void gf_UpdatePostBuildStatRowValueasInt (text lp_label, int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter) {
+void gf_UpdatePostBuildStatRowValueasInt (text lp_label, int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter, bool lp_differenceAsPercentage) {
     // Variable Declarations
     int lv_benchmarkValue;
+    text lv_differenceText;
 
     // Variable Initialization
 
@@ -2598,7 +2599,9 @@ void gf_UpdatePostBuildStatRowValueasInt (text lp_label, int lp_value, string lp
     lv_benchmarkValue = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_benchmarkEntryKey);
     TextExpressionSetToken("Param/Expression/F6BAF499", "A", IntToText(lv_benchmarkValue));
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][2], TextExpressionAssemble("Param/Expression/F6BAF499"), PlayerGroupAll());
-    libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][3], gf_CalculateIntPercentDifferenceasText(lp_value, lv_benchmarkValue, lp_higherIsBetter), PlayerGroupAll());
+    lv_differenceText = gf_GetIntDifferenceasText(lp_value, lv_benchmarkValue, lp_higherIsBetter, lp_differenceAsPercentage);
+    TextExpressionSetToken("Param/Expression/CBC6EA6A", "A", lv_differenceText);
+    libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][3], TextExpressionAssemble("Param/Expression/CBC6EA6A"), PlayerGroupAll());
 }
 
 void gf_UpdatePostBuildStatRowValueasReal (text lp_label, fixed lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter) {
@@ -2618,7 +2621,7 @@ void gf_UpdatePostBuildStatRowValueasReal (text lp_label, fixed lp_value, string
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][3], gf_CalculateRealPercentDifferenceasText(lp_value, lv_benchmarkValue, lp_higherIsBetter), PlayerGroupAll());
 }
 
-void gf_UpdatePostBuildStatRowValueasTime (text lp_label, int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter) {
+void gf_UpdatePostBuildStatRowValueasTime (text lp_label, int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter, bool lp_displayasPercentage) {
     // Variable Declarations
     int lv_benchmarkValue;
 
@@ -2632,7 +2635,7 @@ void gf_UpdatePostBuildStatRowValueasTime (text lp_label, int lp_value, string l
     lv_benchmarkValue = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_benchmarkEntryKey);
     TextExpressionSetToken("Param/Expression/430A1346", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_benchmarkValue));
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][2], TextExpressionAssemble("Param/Expression/430A1346"), PlayerGroupAll());
-    libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][3], gf_CalculateIntPercentDifferenceasText(lp_value, lv_benchmarkValue, lp_higherIsBetter), PlayerGroupAll());
+    libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][3], gf_GetIntDifferenceasText(lp_value, lv_benchmarkValue, lp_higherIsBetter, lp_displayasPercentage), PlayerGroupAll());
 }
 
 void gf_CreateStatsDialog () {
@@ -4639,7 +4642,7 @@ bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType) {
     else if (((gv_trackSupplyUnitsAsObjectives == true) && ((gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_unitType == "Overlord") || (gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_unitType == "Pylon") || (gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_unitType == "SupplyDepot") || (PlayerScoreValueGetAsInt(1, "FoodUsed") <= gv_trackSupplyUnitObjectivesUntil)) && ((lp_unitType == "Overlord") || (lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon")))) {
         lv_result = true;
     }
-    else if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (!(((lp_unitType == "CreepTumorQueen") || (lp_unitType == "CreepTumor") || (lp_unitType == "CreepTumorBurrowed")))) && (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery"))))) && (lp_unitType != "SupplyDepot") && (lp_unitType != "Pylon"))) {
+    else if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (!(((lp_unitType == "CreepTumorQueen") || (lp_unitType == "CreepTumor") || (lp_unitType == "CreepTumorBurrowed")))) && (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery")) && ((gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_unitType != "Extractor") || (gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_unitType != "Assimilator") || (gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_unitType != "Refinery"))))) && (lp_unitType != "SupplyDepot") && (lp_unitType != "Pylon"))) {
         lv_result = true;
     }
     TextExpressionSetToken("Param/Expression/E84E69DA", "A", UnitTypeGetName(lp_unitType));
@@ -4913,67 +4916,6 @@ fixed gf_CalculateSpendingQuotient () {
     return lv_result;
 }
 
-text gf_CalculateIntPercentDifferenceasText (int lp_value, int lp_previousBest, bool lp_higherisBetter) {
-    // Variable Declarations
-    fixed lv_percentDifference;
-    text lv_percentDifferenceText;
-    text lv_coloredPercentDifferenceText;
-
-    // Variable Initialization
-
-    // Implementation
-    if (((lp_value > 0) && (lp_previousBest > 0))) {
-        lv_percentDifference = (100*((IntToFixed(lp_value)-IntToFixed(lp_previousBest))/IntToFixed(lp_previousBest)));
-        TextExpressionSetToken("Param/Expression/C52C6861", "A", FixedToText(lv_percentDifference, 2));
-        lv_percentDifferenceText = TextExpressionAssemble("Param/Expression/C52C6861");
-    }
-    else {
-        lv_percentDifferenceText = StringExternal("Param/Value/69E3E79E");
-    }
-    TextExpressionSetToken("Param/Expression/627D2026", "A", TextWithColor(lv_percentDifferenceText, gf_GetColorForPercentage(lv_percentDifference, lp_higherisBetter)));
-    lv_coloredPercentDifferenceText = TextExpressionAssemble("Param/Expression/627D2026");
-    return lv_coloredPercentDifferenceText;
-}
-
-text gf_CalculateRealPercentDifferenceasText (fixed lp_value, fixed lp_previousBest, bool lp_higherisBetter) {
-    // Variable Declarations
-    fixed lv_percentDifference;
-    text lv_percentDifferenceText;
-    text lv_coloredPercentDifferenceText;
-
-    // Variable Initialization
-
-    // Implementation
-    if (((lp_value > 0) && (lp_previousBest > 0))) {
-        lv_percentDifference = (100*((lp_value-lp_previousBest)/lp_previousBest));
-        TextExpressionSetToken("Param/Expression/57AF9E6B", "A", FixedToText(lv_percentDifference, 2));
-        lv_percentDifferenceText = TextExpressionAssemble("Param/Expression/57AF9E6B");
-    }
-    else {
-        lv_percentDifferenceText = StringExternal("Param/Value/5EC7DC33");
-    }
-    TextExpressionSetToken("Param/Expression/25E9AAD7", "A", TextWithColor(lv_percentDifferenceText, gf_GetColorForPercentage(lv_percentDifference, lp_higherisBetter)));
-    lv_coloredPercentDifferenceText = TextExpressionAssemble("Param/Expression/25E9AAD7");
-    return lv_coloredPercentDifferenceText;
-}
-
-color gf_GetColorForPercentage (fixed lp_percentage, bool lp_higherIsBetter) {
-    // Variable Declarations
-    color lv_result;
-
-    // Variable Initialization
-    lv_result = Color(149*100/255,150*100/255,151*100/255);
-
-    // Implementation
-    if ((((lp_percentage > 0.0) && (lp_higherIsBetter == true)) || ((lp_percentage < 0.0) && (lp_higherIsBetter == false)))) {
-        lv_result = Color(22*100/255,128*100/255,0);
-    }
-    else if ((((lp_percentage < 0.0) && (lp_higherIsBetter == true)) || ((lp_percentage > 0.0) && (lp_higherIsBetter == false)))) {
-        lv_result = Color(100.00, 0.00, 0.00);
-    }
-    return lv_result;
-}
-
 int gf_GetWinButtonYPadding () {
     string autoDB867731_val;
 
@@ -5141,6 +5083,75 @@ string gf_TrimSOffArmorsUpgradeName (string lp_string) {
     }
 }
 
+text gf_GetIntDifferenceasText (int lp_value, int lp_previousBest, bool lp_higherisBetter, bool lp_displayasPercentage) {
+    // Variable Declarations
+    fixed lv_difference;
+    text lv_differenceText;
+    text lv_coloredDifferenceText;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((lp_value > 0) && (lp_previousBest > 0))) {
+        if ((lp_displayasPercentage == true)) {
+            lv_difference = (100*((IntToFixed(lp_value)-IntToFixed(lp_previousBest))/IntToFixed(lp_previousBest)));
+            TextExpressionSetToken("Param/Expression/C52C6861", "A", FixedToText(lv_difference, 2));
+            lv_differenceText = TextExpressionAssemble("Param/Expression/C52C6861");
+        }
+        else {
+            lv_difference = (IntToFixed(lp_value)-IntToFixed(lp_previousBest));
+            TextExpressionSetToken("Param/Expression/7519E7BF", "A", gf_ConvertInttoTextWithPlusSignifPositive((lp_value-lp_previousBest)));
+            lv_differenceText = TextExpressionAssemble("Param/Expression/7519E7BF");
+        }
+    }
+    else {
+        lv_differenceText = StringExternal("Param/Value/69E3E79E");
+    }
+    TextExpressionSetToken("Param/Expression/627D2026", "A", TextWithColor(lv_differenceText, gf_GetColorForReal(lv_difference, lp_higherisBetter)));
+    lv_coloredDifferenceText = TextExpressionAssemble("Param/Expression/627D2026");
+    return lv_coloredDifferenceText;
+}
+
+text gf_CalculateRealPercentDifferenceasText (fixed lp_value, fixed lp_previousBest, bool lp_higherisBetter) {
+    // Variable Declarations
+    fixed lv_percentDifference;
+    text lv_percentDifferenceText;
+    text lv_coloredPercentDifferenceText;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((lp_value > 0) && (lp_previousBest > 0))) {
+        lv_percentDifference = (100*((lp_value-lp_previousBest)/lp_previousBest));
+        TextExpressionSetToken("Param/Expression/57AF9E6B", "A", FixedToText(lv_percentDifference, 2));
+        lv_percentDifferenceText = TextExpressionAssemble("Param/Expression/57AF9E6B");
+    }
+    else {
+        lv_percentDifferenceText = StringExternal("Param/Value/5EC7DC33");
+    }
+    TextExpressionSetToken("Param/Expression/25E9AAD7", "A", TextWithColor(lv_percentDifferenceText, gf_GetColorForReal(lv_percentDifference, lp_higherisBetter)));
+    lv_coloredPercentDifferenceText = TextExpressionAssemble("Param/Expression/25E9AAD7");
+    return lv_coloredPercentDifferenceText;
+}
+
+text gf_ConvertInttoTextWithPlusSignifPositive (int lp_int) {
+    // Variable Declarations
+    text lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((lp_int > 0)) {
+        TextExpressionSetToken("Param/Expression/B99F7846", "A", IntToText(lp_int));
+        lv_result = TextExpressionAssemble("Param/Expression/B99F7846");
+    }
+    else {
+        TextExpressionSetToken("Param/Expression/DD4AB624", "A", IntToText(lp_int));
+        lv_result = TextExpressionAssemble("Param/Expression/DD4AB624");
+    }
+    return lv_result;
+}
+
 text gf_GetFormattedUpgradeNameasText (string lp_upgrade) {
     // Variable Declarations
     string lv_result;
@@ -5261,24 +5272,6 @@ text gf_GetFormattedAbilityNameasText (string lp_ability) {
     return StringToText(lv_result);
 }
 
-text gf_ConverttoTextWithPlusSignifPositive (int lp_int) {
-    // Variable Declarations
-    text lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if ((lp_int > 0)) {
-        TextExpressionSetToken("Param/Expression/B99F7846", "A", IntToText(lp_int));
-        lv_result = TextExpressionAssemble("Param/Expression/B99F7846");
-    }
-    else {
-        TextExpressionSetToken("Param/Expression/DD4AB624", "A", IntToText(lp_int));
-        lv_result = TextExpressionAssemble("Param/Expression/DD4AB624");
-    }
-    return lv_result;
-}
-
 text gf_GetSupplyDifferenceasFormattedText (int lp_actualSupply, int lp_benchmarkSupply) {
     // Variable Declarations
     int lv_difference;
@@ -5289,7 +5282,7 @@ text gf_GetSupplyDifferenceasFormattedText (int lp_actualSupply, int lp_benchmar
 
     // Implementation
     lv_difference = (lp_actualSupply-lp_benchmarkSupply);
-    lv_diffAsText = gf_ConverttoTextWithPlusSignifPositive(lv_difference);
+    lv_diffAsText = gf_ConvertInttoTextWithPlusSignifPositive(lv_difference);
     if ((lv_difference < 0)) {
         lv_formattedDiffText = TextWithColor(lv_diffAsText, (Color(100.00, 0.00, 0.00)));
     }
@@ -5298,6 +5291,23 @@ text gf_GetSupplyDifferenceasFormattedText (int lp_actualSupply, int lp_benchmar
     }
     gf_LogTextMessage(gv_debugMenusEnabled, lv_formattedDiffText);
     return lv_formattedDiffText;
+}
+
+color gf_GetColorForReal (fixed lp_percentage, bool lp_higherIsBetter) {
+    // Variable Declarations
+    color lv_result;
+
+    // Variable Initialization
+    lv_result = Color(149*100/255,150*100/255,151*100/255);
+
+    // Implementation
+    if ((((lp_percentage > 0.0) && (lp_higherIsBetter == true)) || ((lp_percentage < 0.0) && (lp_higherIsBetter == false)))) {
+        lv_result = Color(22*100/255,128*100/255,0);
+    }
+    else if ((((lp_percentage < 0.0) && (lp_higherIsBetter == true)) || ((lp_percentage > 0.0) && (lp_higherIsBetter == false)))) {
+        lv_result = Color(100.00, 0.00, 0.00);
+    }
+    return lv_result;
 }
 
 string gf_GetIconForBuildingType (string lp_unitType) {
