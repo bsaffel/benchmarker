@@ -840,9 +840,9 @@ void gf_PauseBenchmarkTimers ();
 void gf_UnpauseBenchmarkTimers ();
 void gf_CreateBenchmarkBuildOrderObjectives ();
 void gf_CreateBenchmarkBuildOrderStepasSecondaryObjective (int lp_buildStep);
-void gf_CompleteBenchmarkBuildOrderObjective (int lp_benchmarkBuildOrderStep);
-void gf_FailBenchmarkBuildOrderObjective (int lp_benchmarkBuildOrderStep);
-void gf_CorrectFailedBenchmarkBuildOrderObjective (int lp_benchmarkBuildOrderStep);
+void gf_CompleteObjectiveForBenchmarkBuildOrderStep (int lp_benchmarkBuildOrderStep);
+void gf_FailObjectiveForBenchmarkBuildOrderStep (int lp_benchmarkBuildOrderStep);
+void gf_CorrectObjectiveForFailedBenchmarkBuildOrderStep (int lp_benchmarkBuildOrderStep);
 void gf_CycleBenchmarkBuildOrderObjectives ();
 void gf_AdjustAllBenchmarkBuildOrderObjectivePositionsUpby1 ();
 void gf_DestroyBenchmarkBuildOrderObjectives ();
@@ -956,10 +956,6 @@ trigger gt_ProductionIdleAboveThresholdTimerExpiresFireAlert;
 trigger gt_APMBelowThreshold;
 trigger gt_StartBuild;
 trigger gt_ResetBuild;
-trigger gt_CloseStatsandResumeBuildfromOkButton;
-trigger gt_CloseStatsandResumeBuildfromHotkey;
-trigger gt_CloseHelpandResumeBuildfromOkButton;
-trigger gt_CloseHelpandResumeBuildfromHotkey;
 trigger gt_EndBuildatMaxSupply;
 trigger gt_EndBuildatSpecifiedGameTime;
 trigger gt_EndBuildFromHotkey;
@@ -987,6 +983,8 @@ trigger gt_TogglePracticeAgainstSavedBuild;
 trigger gt_UpdateFinalSupplyAtGameTimeText;
 trigger gt_ClearSavedBenchmarkBuildforMatchuponButtonPress;
 trigger gt_OpenHelpDialog;
+trigger gt_CloseHelpandResumeBuildfromOkButton;
+trigger gt_CloseHelpandResumeBuildfromHotkey;
 trigger gt_OpenPostBuildReportDialog;
 trigger gt_SaveBenchmarkBuildStats;
 trigger gt_ResetBenchmarkBuildStats;
@@ -994,6 +992,8 @@ trigger gt_ReturntoMainMenufromReport;
 trigger gt_UpdateSupplyBenchmarksonButtonClick;
 trigger gt_MuteVictoryFanfare;
 trigger gt_OpenStatsDialog;
+trigger gt_CloseStatsandResumeBuildfromOkButton;
+trigger gt_CloseStatsandResumeBuildfromHotkey;
 trigger gt_MapInitialization;
 trigger gt_EndGame;
 trigger gt_Benchmark1TimerExpires;
@@ -3530,7 +3530,7 @@ void gf_CreateBenchmarkBuildOrderStepasSecondaryObjective (int lp_buildStep) {
     ObjectiveCreate(lv_stepObjectiveText, StringExternal("Param/Value/63BE4A54"), c_objectiveStateActive, false);
 }
 
-void gf_CompleteBenchmarkBuildOrderObjective (int lp_benchmarkBuildOrderStep) {
+void gf_CompleteObjectiveForBenchmarkBuildOrderStep (int lp_benchmarkBuildOrderStep) {
     // Variable Declarations
     text lv_objectiveText;
 
@@ -3541,7 +3541,7 @@ void gf_CompleteBenchmarkBuildOrderObjective (int lp_benchmarkBuildOrderStep) {
         TextExpressionSetToken("Param/Expression/AA9B4DC6", "A", IntToText(lp_benchmarkBuildOrderStep));
         TextExpressionSetToken("Param/Expression/AA9B4DC6", "B", IntToText(gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkBuildOrderStep)));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/AA9B4DC6"));
-        gf_FailBenchmarkBuildOrderObjective(gf_GetObjectiveIndexforBenchmarkBuildOrderStep((lp_benchmarkBuildOrderStep - 1)));
+        gf_FailObjectiveForBenchmarkBuildOrderStep(gf_GetObjectiveIndexforBenchmarkBuildOrderStep((lp_benchmarkBuildOrderStep - 1)));
     }
     else {
     }
@@ -3555,7 +3555,7 @@ void gf_CompleteBenchmarkBuildOrderObjective (int lp_benchmarkBuildOrderStep) {
     gv_numCompletedBenchmarkBuildOrderSteps += 1;
 }
 
-void gf_FailBenchmarkBuildOrderObjective (int lp_benchmarkBuildOrderStep) {
+void gf_FailObjectiveForBenchmarkBuildOrderStep (int lp_benchmarkBuildOrderStep) {
     // Implementation
     TextExpressionSetToken("Param/Expression/E3F2B274", "A", IntToText(lp_benchmarkBuildOrderStep));
     TextExpressionSetToken("Param/Expression/E3F2B274", "B", IntToText(gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkBuildOrderStep)));
@@ -3567,11 +3567,21 @@ void gf_FailBenchmarkBuildOrderObjective (int lp_benchmarkBuildOrderStep) {
     gv_numFailedBenchmarkBuildOrderSteps += 1;
 }
 
-void gf_CorrectFailedBenchmarkBuildOrderObjective (int lp_benchmarkBuildOrderStep) {
+void gf_CorrectObjectiveForFailedBenchmarkBuildOrderStep (int lp_benchmarkBuildOrderStep) {
+    // Variable Declarations
+    int lv_objectiveIndex;
+    text lv_originalText;
+    text lv_correctedText;
+
+    // Variable Initialization
+
     // Implementation
-    TextExpressionSetToken("Param/Expression/45B375BE", "A", ObjectiveGetName(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep((gv_benchmarkBuildOrderStepCursor-1))]));
-    TextExpressionSetToken("Param/Expression/45B375BE", "B", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))));
-    ObjectiveSetName(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkBuildOrderStep)], TextExpressionAssemble("Param/Expression/45B375BE"));
+    lv_objectiveIndex = gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkBuildOrderStep);
+    lv_originalText = ObjectiveGetName(gv_benchmarkBuildOrderStepObjectives[lp_benchmarkBuildOrderStep]);
+    TextExpressionSetToken("Param/Expression/77F3C697", "A", lv_originalText);
+    TextExpressionSetToken("Param/Expression/77F3C697", "B", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))));
+    lv_correctedText = TextExpressionAssemble("Param/Expression/77F3C697");
+    ObjectiveSetName(gv_benchmarkBuildOrderStepObjectives[lv_objectiveIndex], lv_correctedText);
     gv_numCorrectedBenchmarkBuildOrderSteps += 1;
 }
 
@@ -3719,7 +3729,7 @@ void gf_EvaluateUnitTypeForBenchmarkBuildOrderStep (string lp_unitType, int lp_a
         TextExpressionSetToken("Param/Expression/BEEDD1E2", "B", UnitTypeGetName(lp_unitType));
         TextExpressionSetToken("Param/Expression/BEEDD1E2", "A", IntToText((gv_benchmarkBuildOrderStepCursor-1)));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/BEEDD1E2"));
-        gf_CorrectFailedBenchmarkBuildOrderObjective(gf_GetObjectiveIndexforBenchmarkBuildOrderStep((gv_benchmarkBuildOrderStepCursor - 1)));
+        gf_CorrectObjectiveForFailedBenchmarkBuildOrderStep((gv_benchmarkBuildOrderStepCursor-1));
     }
     else {
         if ((gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep(lp_unitType, gv_benchmarkBuildOrderStepCursor) == true)) {
@@ -3759,17 +3769,17 @@ void gf_EvaluateUpgradeForBenchmarkBuildOrderStep (string lp_upgrade) {
         TextExpressionSetToken("Param/Expression/7C2BBC82", "B", gf_GetFormattedUpgradeNameasText(lp_upgrade));
         TextExpressionSetToken("Param/Expression/7C2BBC82", "A", IntToText((gv_benchmarkBuildOrderStepCursor-1)));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/7C2BBC82"));
-        gf_CorrectFailedBenchmarkBuildOrderObjective((gf_GetObjectiveIndexforBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor) - 1));
+        gf_CorrectObjectiveForFailedBenchmarkBuildOrderStep((gf_GetObjectiveIndexforBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor) - 1));
     }
     else {
         if ((gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep(lp_upgrade, gv_benchmarkBuildOrderStepCursor) == true)) {
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/8670BD48"));
-            gf_CompleteBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
+            gf_CompleteObjectiveForBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor);
         }
         else {
             TextExpressionSetToken("Param/Expression/6BCF5D11", "A", IntToText((gv_benchmarkBuildOrderStepCursor-1)));
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/6BCF5D11"));
-            gf_FailBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
+            gf_FailObjectiveForBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor);
         }
         gv_benchmarkBuildOrderStepCursor += 1;
         gf_CycleBenchmarkBuildOrderObjectives();
@@ -3784,17 +3794,17 @@ void gf_EvaluateAbilityForBenchmarkBuildOrderStep (string lp_ability) {
         TextExpressionSetToken("Param/Expression/AD3A1002", "B", gf_GetFormattedAbilityNameasText(lp_ability));
         TextExpressionSetToken("Param/Expression/AD3A1002", "A", IntToText((gv_benchmarkBuildOrderStepCursor-1)));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/AD3A1002"));
-        gf_CorrectFailedBenchmarkBuildOrderObjective((gf_GetObjectiveIndexforBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor) - 1));
+        gf_CorrectObjectiveForFailedBenchmarkBuildOrderStep((gf_GetObjectiveIndexforBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor) - 1));
     }
     else {
         if ((gf_IsAbilityTypeCorrectForBenchmarkBuildOrderStep(lp_ability, gv_benchmarkBuildOrderStepCursor) == true)) {
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/651DF3CD"));
-            gf_CompleteBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
+            gf_CompleteObjectiveForBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor);
         }
         else {
             TextExpressionSetToken("Param/Expression/7E18F04E", "A", IntToText((gv_benchmarkBuildOrderStepCursor-1)));
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/7E18F04E"));
-            gf_FailBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
+            gf_FailObjectiveForBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor);
         }
         gv_benchmarkBuildOrderStepCursor += 1;
         gf_CycleBenchmarkBuildOrderObjectives();
@@ -3803,7 +3813,7 @@ void gf_EvaluateAbilityForBenchmarkBuildOrderStep (string lp_ability) {
 
 void gf_CompleteCurrentBuildStepAndCycle () {
     // Implementation
-    gf_CompleteBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
+    gf_CompleteObjectiveForBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor);
     gv_benchmarkBuildOrderStepCursor += 1;
     gf_CycleBenchmarkBuildOrderObjectives();
     gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
@@ -3811,7 +3821,7 @@ void gf_CompleteCurrentBuildStepAndCycle () {
 
 void gf_FailCurrentBuildStepAndCycle () {
     // Implementation
-    gf_FailBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
+    gf_FailObjectiveForBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor);
     gv_benchmarkBuildOrderStepCursor += 1;
     gf_CycleBenchmarkBuildOrderObjectives();
     gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
@@ -6034,110 +6044,6 @@ void gt_ResetBuild_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Close Stats and Resume Build from Ok Button
-//--------------------------------------------------------------------------------------------------
-bool gt_CloseStatsandResumeBuildfromOkButton_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!((EventDialogControl() == gv_statsOkButton))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gf_CloseStatsDialogandUnpause();
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_CloseStatsandResumeBuildfromOkButton_Init () {
-    gt_CloseStatsandResumeBuildfromOkButton = TriggerCreate("gt_CloseStatsandResumeBuildfromOkButton_Func");
-    TriggerAddEventDialogControl(gt_CloseStatsandResumeBuildfromOkButton, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeClick);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Close Stats and Resume Build from Hotkey
-//--------------------------------------------------------------------------------------------------
-bool gt_CloseStatsandResumeBuildfromHotkey_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!((gv_isStatsDialogOpen == true))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gf_CloseStatsDialogandUnpause();
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_CloseStatsandResumeBuildfromHotkey_Init () {
-    gt_CloseStatsandResumeBuildfromHotkey = TriggerCreate("gt_CloseStatsandResumeBuildfromHotkey_Func");
-    TriggerAddEventKeyPressed(gt_CloseStatsandResumeBuildfromHotkey, 1, c_keyZ, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Close Help and Resume Build from Ok Button
-//--------------------------------------------------------------------------------------------------
-bool gt_CloseHelpandResumeBuildfromOkButton_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!((EventDialogControl() == gv_helpOkButton))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gf_CloseHelpDialogandUnpause();
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_CloseHelpandResumeBuildfromOkButton_Init () {
-    gt_CloseHelpandResumeBuildfromOkButton = TriggerCreate("gt_CloseHelpandResumeBuildfromOkButton_Func");
-    TriggerAddEventDialogControl(gt_CloseHelpandResumeBuildfromOkButton, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeClick);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Close Help and Resume Build from Hotkey
-//--------------------------------------------------------------------------------------------------
-bool gt_CloseHelpandResumeBuildfromHotkey_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!((gv_isHelpDialogOpen == true))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gf_CloseHelpDialogandUnpause();
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_CloseHelpandResumeBuildfromHotkey_Init () {
-    gt_CloseHelpandResumeBuildfromHotkey = TriggerCreate("gt_CloseHelpandResumeBuildfromHotkey_Func");
-    TriggerAddEventKeyPressed(gt_CloseHelpandResumeBuildfromHotkey, 1, c_keyX, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
-}
-
-//--------------------------------------------------------------------------------------------------
 // Trigger: End Build at Max Supply
 //--------------------------------------------------------------------------------------------------
 bool gt_EndBuildatMaxSupply_Func (bool testConds, bool runActions) {
@@ -6923,9 +6829,9 @@ bool gt_OpenHelpDialog_Func (bool testConds, bool runActions) {
     }
 
     gf_PauseGame();
+    gf_HideBenchmarkDialog();
     DialogSetVisible(gv_statsDialog, PlayerGroupAll(), false);
     gv_isStatsDialogOpen = false;
-    DialogSetVisible(gv_benchmarkDialog, PlayerGroupAll(), false);
     DialogSetVisible(gv_helpDialog, PlayerGroupAll(), true);
     gv_isHelpDialogOpen = true;
     return true;
@@ -6936,6 +6842,58 @@ void gt_OpenHelpDialog_Init () {
     gt_OpenHelpDialog = TriggerCreate("gt_OpenHelpDialog_Func");
     TriggerAddEventChatMessage(gt_OpenHelpDialog, c_playerAny, "-help", true);
     TriggerAddEventKeyPressed(gt_OpenHelpDialog, 1, c_keyX, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Close Help and Resume Build from Ok Button
+//--------------------------------------------------------------------------------------------------
+bool gt_CloseHelpandResumeBuildfromOkButton_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((EventDialogControl() == gv_helpOkButton))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gf_CloseHelpDialogandUnpause();
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_CloseHelpandResumeBuildfromOkButton_Init () {
+    gt_CloseHelpandResumeBuildfromOkButton = TriggerCreate("gt_CloseHelpandResumeBuildfromOkButton_Func");
+    TriggerAddEventDialogControl(gt_CloseHelpandResumeBuildfromOkButton, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeClick);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Close Help and Resume Build from Hotkey
+//--------------------------------------------------------------------------------------------------
+bool gt_CloseHelpandResumeBuildfromHotkey_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_isHelpDialogOpen == true))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gf_CloseHelpDialogandUnpause();
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_CloseHelpandResumeBuildfromHotkey_Init () {
+    gt_CloseHelpandResumeBuildfromHotkey = TriggerCreate("gt_CloseHelpandResumeBuildfromHotkey_Func");
+    TriggerAddEventKeyPressed(gt_CloseHelpandResumeBuildfromHotkey, 1, c_keyX, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -7172,7 +7130,7 @@ bool gt_OpenStatsDialog_Func (bool testConds, bool runActions) {
     }
 
     gf_PauseGame();
-    DialogSetVisible(gv_benchmarkDialog, PlayerGroupAll(), false);
+    gf_HideBenchmarkDialog();
     DialogSetVisible(gv_helpDialog, PlayerGroupAll(), false);
     gv_isHelpDialogOpen = false;
     gf_RefreshStatsDialog();
@@ -7187,6 +7145,58 @@ void gt_OpenStatsDialog_Init () {
     TriggerAddEventChatMessage(gt_OpenStatsDialog, c_playerAny, "-s", true);
     TriggerAddEventChatMessage(gt_OpenStatsDialog, c_playerAny, "-stats", true);
     TriggerAddEventKeyPressed(gt_OpenStatsDialog, 1, c_keyZ, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Close Stats and Resume Build from Ok Button
+//--------------------------------------------------------------------------------------------------
+bool gt_CloseStatsandResumeBuildfromOkButton_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((EventDialogControl() == gv_statsOkButton))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gf_CloseStatsDialogandUnpause();
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_CloseStatsandResumeBuildfromOkButton_Init () {
+    gt_CloseStatsandResumeBuildfromOkButton = TriggerCreate("gt_CloseStatsandResumeBuildfromOkButton_Func");
+    TriggerAddEventDialogControl(gt_CloseStatsandResumeBuildfromOkButton, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeClick);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Close Stats and Resume Build from Hotkey
+//--------------------------------------------------------------------------------------------------
+bool gt_CloseStatsandResumeBuildfromHotkey_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_isStatsDialogOpen == true))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gf_CloseStatsDialogandUnpause();
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_CloseStatsandResumeBuildfromHotkey_Init () {
+    gt_CloseStatsandResumeBuildfromHotkey = TriggerCreate("gt_CloseStatsandResumeBuildfromHotkey_Func");
+    TriggerAddEventKeyPressed(gt_CloseStatsandResumeBuildfromHotkey, 1, c_keyZ, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -8173,10 +8183,6 @@ void InitTriggers () {
     gt_APMBelowThreshold_Init();
     gt_StartBuild_Init();
     gt_ResetBuild_Init();
-    gt_CloseStatsandResumeBuildfromOkButton_Init();
-    gt_CloseStatsandResumeBuildfromHotkey_Init();
-    gt_CloseHelpandResumeBuildfromOkButton_Init();
-    gt_CloseHelpandResumeBuildfromHotkey_Init();
     gt_EndBuildatMaxSupply_Init();
     gt_EndBuildatSpecifiedGameTime_Init();
     gt_EndBuildFromHotkey_Init();
@@ -8204,6 +8210,8 @@ void InitTriggers () {
     gt_UpdateFinalSupplyAtGameTimeText_Init();
     gt_ClearSavedBenchmarkBuildforMatchuponButtonPress_Init();
     gt_OpenHelpDialog_Init();
+    gt_CloseHelpandResumeBuildfromOkButton_Init();
+    gt_CloseHelpandResumeBuildfromHotkey_Init();
     gt_OpenPostBuildReportDialog_Init();
     gt_SaveBenchmarkBuildStats_Init();
     gt_ResetBenchmarkBuildStats_Init();
@@ -8211,6 +8219,8 @@ void InitTriggers () {
     gt_UpdateSupplyBenchmarksonButtonClick_Init();
     gt_MuteVictoryFanfare_Init();
     gt_OpenStatsDialog_Init();
+    gt_CloseStatsandResumeBuildfromOkButton_Init();
+    gt_CloseStatsandResumeBuildfromHotkey_Init();
     gt_MapInitialization_Init();
     gt_EndGame_Init();
     gt_Benchmark1TimerExpires_Init();
