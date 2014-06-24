@@ -83,11 +83,6 @@
             Protoss
         </Comment>
     </Element>
-    <Element Type="Comment" Id="08C2AB45">
-        <Comment>
-            If unit type is correct for previous step, ignore so that that step can be completed without cascade failure (this must be checked before current benchmark bo step is evaluated)
-        </Comment>
-    </Element>
     <Element Type="Comment" Id="08ECF9F5">
         <Comment>
             Upgrade Gap Alert
@@ -560,11 +555,6 @@
             Save Final Supply
         </Comment>
     </Element>
-    <Element Type="Comment" Id="4007A18A">
-        <Comment>
-            If unit type is correct for previous step, ignore so that that step can be completed without cascade failure (this must be checked before current benchmark bo step is evaluated)
-        </Comment>
-    </Element>
     <Element Type="Comment" Id="4052F23F">
         <Comment>
             Gas
@@ -651,6 +641,14 @@
         </Comment>
         <SubFunctionType Type="SubFuncType" Library="Ntve" Id="AD43BC93"/>
     </Element>
+    <Element Type="Comment" Id="47F6660A">
+        <Comment>
+             
+            IF the upgrade type is correct
+             
+        </Comment>
+        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000003"/>
+    </Element>
     <Element Type="Comment" Id="488DD0D5">
         <Comment>
             This must be executed prior to any action which removes/kills units when finishing a build
@@ -662,12 +660,6 @@
         </Comment>
         <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000001"/>
     </Element>
-    <Element Type="Comment" Id="49459A80">
-        <Comment>
-            If the correct step is performed immediately after a failed step, it should update the objective text of the above step to include the time it was corrected.
-        </Comment>
-        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000004"/>
-    </Element>
     <Element Type="Comment" Id="4A5CB10D">
         <Comment>
             Use Default APM Duration
@@ -678,6 +670,14 @@
         <Comment>
             Save Menu Configuration
         </Comment>
+    </Element>
+    <Element Type="Comment" Id="4AC19735">
+        <Comment>
+             
+            ELSE fail the the build step objective
+             
+        </Comment>
+        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000005"/>
     </Element>
     <Element Type="Comment" Id="4BB106DF">
         <Comment>
@@ -803,6 +803,14 @@
         <Comment>
             Idle Production Time
         </Comment>
+    </Element>
+    <Element Type="Comment" Id="58C9A3FD">
+        <Comment>
+             
+            THEN complete the build step objective
+             
+        </Comment>
+        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000004"/>
     </Element>
     <Element Type="Comment" Id="597258EB">
         <Comment>
@@ -1062,6 +1070,14 @@
         </Comment>
         <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000002"/>
     </Element>
+    <Element Type="Comment" Id="7B58E9DF">
+        <Comment>
+             
+            IF we should correct the previous step
+             
+        </Comment>
+        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000003"/>
+    </Element>
     <Element Type="Comment" Id="7BA06AA3">
         <Comment>
             Load Supply Count
@@ -1097,6 +1113,14 @@
         <Comment>
             Create Save Button
         </Comment>
+    </Element>
+    <Element Type="Comment" Id="7F41891B">
+        <Comment>
+             
+            THEN correct previous step
+             
+        </Comment>
+        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000004"/>
     </Element>
     <Element Type="Comment" Id="804CAB2A">
         <Comment>
@@ -1231,6 +1255,22 @@
             Clear Elapsed Seconds
         </Comment>
     </Element>
+    <Element Type="Comment" Id="8A1F8179">
+        <Comment>
+             
+            IF we should correct the previous step
+             
+        </Comment>
+        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000003"/>
+    </Element>
+    <Element Type="Comment" Id="8ADC6441">
+        <Comment>
+             
+            ELSE fail the the build step objective
+             
+        </Comment>
+        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000005"/>
+    </Element>
     <Element Type="Comment" Id="8C277FC2">
         <Comment>
             Clear Step Type
@@ -1325,6 +1365,14 @@
             Workers Created
         </Comment>
     </Element>
+    <Element Type="Comment" Id="986D8D1B">
+        <Comment>
+             
+            THEN correct previous step
+             
+        </Comment>
+        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000004"/>
+    </Element>
     <Element Type="Comment" Id="98FA45C1">
         <Comment>
             IF unit type is a structure
@@ -1378,16 +1426,6 @@
             Zerg
         </Comment>
         <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000001"/>
-    </Element>
-    <Element Type="Comment" Id="9D9178AF">
-        <Comment>
-            If this isn't the very first thing being created
-            AND 
-            (If the Upgrade is correct for the previous step 
-            AND
-            The previous step was failed)
-        </Comment>
-        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000003"/>
     </Element>
     <Element Type="Comment" Id="9DCA36FC">
         <Comment>
@@ -1533,15 +1571,13 @@
             Total Minerals Collected
         </Comment>
     </Element>
-    <Element Type="Comment" Id="ACF1A103">
+    <Element Type="Comment" Id="ACE204AC">
         <Comment>
-            If this isn't the very first thing being created
-            AND 
-            (If the Upgrade is correct for the previous step 
-            AND
-            The previous step was failed)
+             
+            THEN complete the build step objective
+             
         </Comment>
-        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000003"/>
+        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000004"/>
     </Element>
     <Element Type="Comment" Id="ACF2BBEE">
         <Comment>
@@ -1574,12 +1610,6 @@
             Protoss
         </Comment>
         <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000001"/>
-    </Element>
-    <Element Type="Comment" Id="AF88E9BA">
-        <Comment>
-            TODO There's probably a failure condition here where the number of units made for the previous step isn't being checked.  So if they fail an x2 or x3 step, they will be able to have it considered passed by only making 1 of the unit after they fail
-        </Comment>
-        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000004"/>
     </Element>
     <Element Type="Comment" Id="B0065423">
         <Comment>
@@ -1671,12 +1701,6 @@
             APM Below Threshold Alert
         </Comment>
     </Element>
-    <Element Type="Comment" Id="BA4A74EF">
-        <Comment>
-            If the correct step is performed immediately after a failed step, it should update the objective text of the above step to include the time it was corrected.
-        </Comment>
-        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000004"/>
-    </Element>
     <Element Type="Comment" Id="BA555935">
         <Comment>
             Terran
@@ -1762,12 +1786,6 @@
         <Comment>
             Load Elapsed Seconds
         </Comment>
-    </Element>
-    <Element Type="Comment" Id="C864B74C">
-        <Comment>
-            TODO There's probably a failture condition here where the number of units made for the previous step isn't being checked.  So if they fail an x2 or x3 step, they will be able to have it considered passed by only making 1 of the unit after they fail
-        </Comment>
-        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000004"/>
     </Element>
     <Element Type="Comment" Id="C91B7CB0">
         <Comment>
@@ -1938,6 +1956,14 @@
             Army Supply
         </Comment>
     </Element>
+    <Element Type="Comment" Id="E032D493">
+        <Comment>
+             
+            ELSE evaluate current step
+             
+        </Comment>
+        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000005"/>
+    </Element>
     <Element Type="Comment" Id="E091C078">
         <Comment>
             Total Upgrades Researched
@@ -1961,11 +1987,6 @@
             Alerts
         </Comment>
     </Element>
-    <Element Type="Comment" Id="E25DFBE9">
-        <Comment>
-            If unit type is correct for previous step, ignore so that that step can be completed without cascade failure (this must be checked before current benchmark bo step is evaluated)
-        </Comment>
-    </Element>
     <Element Type="Comment" Id="E30B0FE4">
         <Comment>
             APM
@@ -1975,6 +1996,14 @@
         <Comment>
             Hide any other open dialogs
         </Comment>
+    </Element>
+    <Element Type="Comment" Id="E3A08F35">
+        <Comment>
+             
+            IF the ability type is correct
+             
+        </Comment>
+        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000003"/>
     </Element>
     <Element Type="Comment" Id="E409B9FC">
         <Comment>
@@ -2001,6 +2030,14 @@
             ****** Put structures to be excluded from the build order here ******
         </Comment>
         <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000001"/>
+    </Element>
+    <Element Type="Comment" Id="E72F3DD7">
+        <Comment>
+             
+            ELSE evaluate current step
+             
+        </Comment>
+        <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000005"/>
     </Element>
     <Element Type="Comment" Id="E7CC85B9">
         <Comment>
@@ -6225,7 +6262,6 @@
         <FlagAction/>
         <Parameter Type="ParamDef" Id="B9555F96"/>
         <FunctionCall Type="FunctionCall" Id="77F61F2E"/>
-        <FunctionCall Type="Comment" Id="E25DFBE9"/>
         <FunctionCall Type="FunctionCall" Id="016C0539"/>
     </Element>
     <Element Type="FunctionDef" Id="DAE366DE">
@@ -6239,7 +6275,6 @@
         <FlagAction/>
         <Parameter Type="ParamDef" Id="05077E07"/>
         <Parameter Type="ParamDef" Id="FC7A9C7C"/>
-        <FunctionCall Type="Comment" Id="08C2AB45"/>
         <FunctionCall Type="FunctionCall" Id="7C8AD946"/>
     </Element>
     <Element Type="FunctionDef" Id="DC10213F">
@@ -6598,7 +6633,6 @@
         <FlagAction/>
         <Parameter Type="ParamDef" Id="12746E8C"/>
         <FunctionCall Type="FunctionCall" Id="FC81D3BD"/>
-        <FunctionCall Type="Comment" Id="4007A18A"/>
         <FunctionCall Type="FunctionCall" Id="F2AD3F64"/>
     </Element>
     <Element Type="FunctionDef" Id="F870E4A8">
@@ -6917,15 +6951,15 @@
     </Element>
     <Element Type="FunctionCall" Id="016C0539">
         <FunctionDef Type="FunctionDef" Library="Ntve" Id="00000137"/>
+        <FunctionCall Type="Comment" Id="E032D493"/>
+        <FunctionCall Type="Comment" Id="7F41891B"/>
+        <FunctionCall Type="Comment" Id="7B58E9DF"/>
         <FunctionCall Type="FunctionCall" Id="46AA246B"/>
-        <FunctionCall Type="Comment" Id="9D9178AF"/>
         <FunctionCall Type="FunctionCall" Id="69408946"/>
         <FunctionCall Type="FunctionCall" Id="37A54156"/>
         <FunctionCall Type="FunctionCall" Id="4583627B"/>
         <FunctionCall Type="FunctionCall" Id="40A55871"/>
-        <FunctionCall Type="Comment" Id="49459A80"/>
         <FunctionCall Type="FunctionCall" Id="CD373C34"/>
-        <FunctionCall Type="Comment" Id="AF88E9BA"/>
         <FunctionCall Type="FunctionCall" Id="CEF70642"/>
     </Element>
     <Element Type="FunctionCall" Id="018423AA">
@@ -8532,6 +8566,9 @@
     <Element Type="FunctionCall" Id="10958097">
         <FunctionDef Type="FunctionDef" Library="Ntve" Id="00000137"/>
         <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000005"/>
+        <FunctionCall Type="Comment" Id="8ADC6441"/>
+        <FunctionCall Type="Comment" Id="58C9A3FD"/>
+        <FunctionCall Type="Comment" Id="47F6660A"/>
         <FunctionCall Type="FunctionCall" Id="73DA0998"/>
         <FunctionCall Type="FunctionCall" Id="E8E3073C"/>
         <FunctionCall Type="FunctionCall" Id="0BD8D7B9"/>
@@ -12122,6 +12159,9 @@
     <Element Type="FunctionCall" Id="37A54156">
         <FunctionDef Type="FunctionDef" Library="Ntve" Id="00000137"/>
         <SubFunctionType Type="SubFuncType" Library="Ntve" Id="00000005"/>
+        <FunctionCall Type="Comment" Id="4AC19735"/>
+        <FunctionCall Type="Comment" Id="ACE204AC"/>
+        <FunctionCall Type="Comment" Id="E3A08F35"/>
         <FunctionCall Type="FunctionCall" Id="35EFEE01"/>
         <FunctionCall Type="FunctionCall" Id="7DAE1F8C"/>
         <FunctionCall Type="FunctionCall" Id="8EABCF8D"/>
@@ -30231,15 +30271,15 @@
     </Element>
     <Element Type="FunctionCall" Id="F2AD3F64">
         <FunctionDef Type="FunctionDef" Library="Ntve" Id="00000137"/>
+        <FunctionCall Type="Comment" Id="E72F3DD7"/>
+        <FunctionCall Type="Comment" Id="986D8D1B"/>
+        <FunctionCall Type="Comment" Id="8A1F8179"/>
         <FunctionCall Type="FunctionCall" Id="9237BBCB"/>
-        <FunctionCall Type="Comment" Id="ACF1A103"/>
         <FunctionCall Type="FunctionCall" Id="C4E958E6"/>
         <FunctionCall Type="FunctionCall" Id="10958097"/>
         <FunctionCall Type="FunctionCall" Id="BCCA1413"/>
         <FunctionCall Type="FunctionCall" Id="EC27463C"/>
-        <FunctionCall Type="Comment" Id="BA4A74EF"/>
         <FunctionCall Type="FunctionCall" Id="C6D005D3"/>
-        <FunctionCall Type="Comment" Id="C864B74C"/>
         <FunctionCall Type="FunctionCall" Id="4A97731B"/>
     </Element>
     <Element Type="FunctionCall" Id="F2B0EE7D">
@@ -31239,8 +31279,8 @@
         <Parameter Type="Param" Id="A6C99F79"/>
     </Element>
     <Element Type="FunctionCall" Id="FD626B0C">
-        <FunctionDef Type="FunctionDef" Id="F9B94C44"/>
-        <Parameter Type="Param" Id="EF54EB6F"/>
+        <FunctionDef Type="FunctionDef" Id="BE017DE1"/>
+        <Parameter Type="Param" Id="2789849A"/>
     </Element>
     <Element Type="FunctionCall" Id="FD6A105B">
         <FunctionDef Type="FunctionDef" Library="Ntve" Id="00000304"/>
@@ -38617,6 +38657,10 @@
     <Element Type="Param" Id="2786422A">
         <ParameterDef Type="ParamDef" Library="Ntve" Id="51567265"/>
         <Preset Type="PresetValue" Library="Ntve" Id="1E7A4625"/>
+    </Element>
+    <Element Type="Param" Id="2789849A">
+        <ParameterDef Type="ParamDef" Id="C532DAD8"/>
+        <Parameter Type="ParamDef" Id="B9555F96"/>
     </Element>
     <Element Type="Param" Id="27994D7F">
         <ParameterDef Type="ParamDef" Library="Ntve" Id="00000534"/>
@@ -73850,10 +73894,6 @@
     <Element Type="Param" Id="EF5079A6">
         <ParameterDef Type="ParamDef" Library="Ntve" Id="51567265"/>
         <Preset Type="PresetValue" Library="Ntve" Id="500677B2"/>
-    </Element>
-    <Element Type="Param" Id="EF54EB6F">
-        <ParameterDef Type="ParamDef" Id="95E61073"/>
-        <Parameter Type="ParamDef" Id="B9555F96"/>
     </Element>
     <Element Type="Param" Id="EF65A4A8">
         <ParameterDef Type="ParamDef" Library="Ntve" Id="ABB380C4"/>
