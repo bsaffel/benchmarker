@@ -359,11 +359,18 @@ bool gv_displayBuildHints;
 fixed gv_buildHintTimeThreshold;
 timer gv_displayBuildHintCooldownTimer;
 int gv_buildHintCursor;
+text gv_performanceFeedbackMarvelousText;
+text gv_performanceFeedbackPerfectText;
+text gv_performanceFeedbackGreatText;
+text gv_performanceFeedbackGoodText;
+text gv_performanceFeedbackAlmostText;
+text gv_performanceFeedbackBooText;
+text gv_performanceFeedbackMissText;
 bool gv_displayPerformanceFeedback;
 int gv_performanceFeedbackDuration;
+int gv_maxDisplayedBuildOrderObjectives1;
 int gv_benchmarkBuildOrderObjectiveCycleThreshold;
 int gv_buildOrderCycleOffset;
-int gv_maxDisplayedBuildOrderObjectives1;
 color gv_benchmarkSupplyObjectiveTextColor;
 int gv_greenBenchmarkSupplyThreshold;
 int gv_greenBenchmarkSecondsThreshold;
@@ -682,6 +689,13 @@ void InitGlobals () {
         gv_benchmarkBuildOrderSteps[init_i].lv_stepType = "";
     }
     gv_displayBuildHintCooldownTimer = TimerCreate();
+    gv_performanceFeedbackMarvelousText = StringExternal("Param/Value/13587AA1");
+    gv_performanceFeedbackPerfectText = StringExternal("Param/Value/BB5CA700");
+    gv_performanceFeedbackGreatText = StringExternal("Param/Value/990C8248");
+    gv_performanceFeedbackGoodText = StringExternal("Param/Value/58B82B47");
+    gv_performanceFeedbackAlmostText = StringExternal("Param/Value/4E53ED16");
+    gv_performanceFeedbackBooText = StringExternal("Param/Value/886B76A3");
+    gv_performanceFeedbackMissText = StringExternal("Param/Value/9EA4B5C3");
     gv_benchmarkSupplyObjectiveTextColor = Color(100.00, 53.33, 6.67);
     gv_greenBenchmarkSupplyThreshold = 2;
     gv_greenBenchmarkSecondsThreshold = 5;
@@ -856,7 +870,8 @@ void gf_EvaluateUpgradeForBenchmarkBuildOrderStep (string lp_upgrade);
 void gf_EvaluateAbilityForBenchmarkBuildOrderStep (string lp_ability);
 void gf_CompleteCurrentBuildStepAndCycle ();
 void gf_FailCurrentBuildStepAndCycle ();
-void gf_DisplayBenchmarkBuildOrderPerformanceFeedback ();
+void gf_DisplayPerformanceFeedbackForCorrectStep ();
+void gf_DisplayPerformanceFeedbackForFailedStep ();
 void gf_ResetStatistics ();
 void gf_CreateScreenButtons ();
 bool gf_IsOverlordCurrentlyInProgress ();
@@ -932,6 +947,7 @@ string gf_TrimSOffArmorsUpgradeName (string lp_string);
 text gf_GetIntDifferenceasText (int lp_value, int lp_previousBest, bool lp_higherisBetter, bool lp_displayasPercentage);
 text gf_GetRealDifferenceasText (fixed lp_value, fixed lp_previousBest, bool lp_higherisBetter);
 text gf_ConvertInttoTextWithPlusSignifPositive (int lp_int);
+text gf_ConvertInttoTimeTextWithPlusSignifPositive (int lp_int);
 text gf_GetFormattedUpgradeNameasText (string lp_upgrade);
 text gf_GetFormattedAbilityNameasText (string lp_ability);
 text gf_GetSupplyDifferenceasFormattedText (int lp_actualSupply, int lp_benchmarkSupply);
@@ -3814,6 +3830,11 @@ void gf_EvaluateAbilityForBenchmarkBuildOrderStep (string lp_ability) {
 void gf_CompleteCurrentBuildStepAndCycle () {
     // Implementation
     gf_CompleteObjectiveForBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor);
+    if ((gv_displayPerformanceFeedback == true)) {
+        gf_DisplayPerformanceFeedbackForCorrectStep();
+    }
+    else {
+    }
     gv_benchmarkBuildOrderStepCursor += 1;
     gf_CycleBenchmarkBuildOrderObjectives();
     gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
@@ -3822,12 +3843,116 @@ void gf_CompleteCurrentBuildStepAndCycle () {
 void gf_FailCurrentBuildStepAndCycle () {
     // Implementation
     gf_FailObjectiveForBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor);
+    if ((gv_displayPerformanceFeedback == true)) {
+        gf_DisplayPerformanceFeedbackForFailedStep();
+    }
+    else {
+    }
     gv_benchmarkBuildOrderStepCursor += 1;
     gf_CycleBenchmarkBuildOrderObjectives();
     gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
 }
 
-void gf_DisplayBenchmarkBuildOrderPerformanceFeedback () {
+trigger auto_gf_DisplayPerformanceFeedbackForCorrectStep_Trigger = null;
+
+void gf_DisplayPerformanceFeedbackForCorrectStep () {
+    if (auto_gf_DisplayPerformanceFeedbackForCorrectStep_Trigger == null) {
+        auto_gf_DisplayPerformanceFeedbackForCorrectStep_Trigger = TriggerCreate("auto_gf_DisplayPerformanceFeedbackForCorrectStep_TriggerFunc");
+    }
+
+    TriggerExecute(auto_gf_DisplayPerformanceFeedbackForCorrectStep_Trigger, false, false);
+}
+
+bool auto_gf_DisplayPerformanceFeedbackForCorrectStep_TriggerFunc (bool testConds, bool runActions) {
+    // Variable Declarations
+    int lv_supplyDifference;
+    int lv_secondsDifference;
+    text lv_judgementText;
+    text lv_secondsAndSupplyText;
+    text lv_displayText;
+    int lv_waitTime;
+    int lv_perfectSecondsThreshold;
+    int lv_greatSecondsThreshold;
+    int lv_goodSecondsThreshold;
+    int lv_almostSecondsThreshold;
+
+    // Variable Initialization
+    lv_waitTime = 4;
+    lv_greatSecondsThreshold = 5;
+    lv_goodSecondsThreshold = 10;
+    lv_almostSecondsThreshold = 15;
+
+    // Implementation
+    lv_secondsDifference = (gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_elapsedSeconds-gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_elapsedSeconds);
+    lv_supplyDifference = (gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_supply-gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_supply);
+    if ((lv_secondsDifference < lv_perfectSecondsThreshold)) {
+        lv_judgementText = gv_performanceFeedbackMarvelousText;
+    }
+    else if ((lv_secondsDifference == lv_perfectSecondsThreshold)) {
+        lv_judgementText = gv_performanceFeedbackPerfectText;
+    }
+    else if (((lv_secondsDifference >= (lv_perfectSecondsThreshold+1)) && (lv_secondsDifference <= lv_greatSecondsThreshold))) {
+        lv_judgementText = gv_performanceFeedbackGreatText;
+    }
+    else if (((lv_secondsDifference >= (lv_greatSecondsThreshold+1)) && (lv_secondsDifference <= lv_goodSecondsThreshold))) {
+        lv_judgementText = gv_performanceFeedbackGoodText;
+    }
+    else if (((lv_secondsDifference >= (lv_goodSecondsThreshold+1)) && (lv_secondsDifference <= lv_almostSecondsThreshold))) {
+        lv_judgementText = gv_performanceFeedbackAlmostText;
+    }
+    else if ((lv_secondsDifference > (lv_almostSecondsThreshold+1))) {
+        lv_judgementText = gv_performanceFeedbackBooText;
+    }
+    TextExpressionSetToken("Param/Expression/1B21CC80", "A", gf_ConvertInttoTextWithPlusSignifPositive(lv_supplyDifference));
+    TextExpressionSetToken("Param/Expression/1B21CC80", "B", gf_ConvertInttoTimeTextWithPlusSignifPositive(lv_secondsDifference));
+    lv_secondsAndSupplyText = TextExpressionAssemble("Param/Expression/1B21CC80");
+    TextExpressionSetToken("Param/Expression/3A1BC0E8", "A", lv_judgementText);
+    TextExpressionSetToken("Param/Expression/3A1BC0E8", "B", lv_secondsAndSupplyText);
+    lv_displayText = TextExpressionAssemble("Param/Expression/3A1BC0E8");
+    UIDisplayMessage(PlayerGroupAll(), c_messageAreaDirective, lv_displayText);
+    Wait(lv_waitTime, c_timeGame);
+    UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
+    return true;
+}
+
+trigger auto_gf_DisplayPerformanceFeedbackForFailedStep_Trigger = null;
+
+void gf_DisplayPerformanceFeedbackForFailedStep () {
+    if (auto_gf_DisplayPerformanceFeedbackForFailedStep_Trigger == null) {
+        auto_gf_DisplayPerformanceFeedbackForFailedStep_Trigger = TriggerCreate("auto_gf_DisplayPerformanceFeedbackForFailedStep_TriggerFunc");
+    }
+
+    TriggerExecute(auto_gf_DisplayPerformanceFeedbackForFailedStep_Trigger, false, false);
+}
+
+bool auto_gf_DisplayPerformanceFeedbackForFailedStep_TriggerFunc (bool testConds, bool runActions) {
+    // Variable Declarations
+    text lv_judgementText;
+    text lv_failureText;
+    text lv_displayText;
+    int lv_waitTime;
+    int lv_perfectSecondsThreshold;
+    int lv_greatSecondsThreshold;
+    int lv_goodSecondsThreshold;
+    int lv_almostSecondsThreshold;
+
+    // Variable Initialization
+    lv_waitTime = 4;
+    lv_greatSecondsThreshold = 5;
+    lv_goodSecondsThreshold = 10;
+    lv_almostSecondsThreshold = 15;
+
+    // Implementation
+    lv_judgementText = gv_performanceFeedbackMissText;
+    TextExpressionSetToken("Param/Expression/484F7C30", "A", gv_lastCreatedBuildStepUnitUpgradeAbilityText);
+    lv_failureText = TextExpressionAssemble("Param/Expression/484F7C30");
+    TextExpressionSetToken("Param/Expression/A76B73DD", "A", lv_judgementText);
+    TextExpressionSetToken("Param/Expression/A76B73DD", "B", lv_failureText);
+    lv_displayText = TextExpressionAssemble("Param/Expression/A76B73DD");
+    UIDisplayMessage(PlayerGroupAll(), c_messageAreaDirective, lv_displayText);
+    Wait(lv_waitTime, c_timeGame);
+    UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
+    return true;
 }
 
 void gf_ResetStatistics () {
@@ -5216,6 +5341,21 @@ text gf_ConvertInttoTextWithPlusSignifPositive (int lp_int) {
     else {
         TextExpressionSetToken("Param/Expression/DD4AB624", "A", IntToText(lp_int));
         lv_result = TextExpressionAssemble("Param/Expression/DD4AB624");
+    }
+    return lv_result;
+}
+
+text gf_ConvertInttoTimeTextWithPlusSignifPositive (int lp_int) {
+    // Variable Declarations
+    text lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_result = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lp_int);
+    if ((lp_int > 0)) {
+        TextExpressionSetToken("Param/Expression/0EE3AA8E", "A", lv_result);
+        lv_result = TextExpressionAssemble("Param/Expression/0EE3AA8E");
     }
     return lv_result;
 }
