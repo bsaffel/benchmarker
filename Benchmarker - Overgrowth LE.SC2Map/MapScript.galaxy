@@ -870,7 +870,7 @@ void gf_EvaluateUpgradeForBenchmarkBuildOrderStep (string lp_upgrade);
 void gf_EvaluateAbilityForBenchmarkBuildOrderStep (string lp_ability);
 void gf_CompleteCurrentBuildStepAndCycle ();
 void gf_FailCurrentBuildStepAndCycle ();
-void gf_DisplayPerformanceFeedbackForCorrectStep ();
+void gf_DisplayPerformanceFeedbackForCorrectStep (int lp_currentIndex, int lp_benchmarkIndex);
 void gf_DisplayPerformanceFeedbackForFailedStep ();
 void gf_ResetStatistics ();
 void gf_CreateScreenButtons ();
@@ -3831,7 +3831,7 @@ void gf_CompleteCurrentBuildStepAndCycle () {
     // Implementation
     gf_CompleteObjectiveForBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor);
     if ((gv_displayPerformanceFeedback == true)) {
-        gf_DisplayPerformanceFeedbackForCorrectStep();
+        gf_DisplayPerformanceFeedbackForCorrectStep(gv_currentBuildOrderStepCursor, gv_benchmarkBuildOrderStepCursor);
     }
     else {
     }
@@ -3854,8 +3854,13 @@ void gf_FailCurrentBuildStepAndCycle () {
 }
 
 trigger auto_gf_DisplayPerformanceFeedbackForCorrectStep_Trigger = null;
+int auto_gf_DisplayPerformanceFeedbackForCorrectStep_lp_currentIndex;
+int auto_gf_DisplayPerformanceFeedbackForCorrectStep_lp_benchmarkIndex;
 
-void gf_DisplayPerformanceFeedbackForCorrectStep () {
+void gf_DisplayPerformanceFeedbackForCorrectStep (int lp_currentIndex, int lp_benchmarkIndex) {
+    auto_gf_DisplayPerformanceFeedbackForCorrectStep_lp_currentIndex = lp_currentIndex;
+    auto_gf_DisplayPerformanceFeedbackForCorrectStep_lp_benchmarkIndex = lp_benchmarkIndex;
+
     if (auto_gf_DisplayPerformanceFeedbackForCorrectStep_Trigger == null) {
         auto_gf_DisplayPerformanceFeedbackForCorrectStep_Trigger = TriggerCreate("auto_gf_DisplayPerformanceFeedbackForCorrectStep_TriggerFunc");
     }
@@ -3864,6 +3869,9 @@ void gf_DisplayPerformanceFeedbackForCorrectStep () {
 }
 
 bool auto_gf_DisplayPerformanceFeedbackForCorrectStep_TriggerFunc (bool testConds, bool runActions) {
+    int lp_currentIndex = auto_gf_DisplayPerformanceFeedbackForCorrectStep_lp_currentIndex;
+    int lp_benchmarkIndex = auto_gf_DisplayPerformanceFeedbackForCorrectStep_lp_benchmarkIndex;
+
     // Variable Declarations
     int lv_supplyDifference;
     int lv_secondsDifference;
@@ -3883,8 +3891,8 @@ bool auto_gf_DisplayPerformanceFeedbackForCorrectStep_TriggerFunc (bool testCond
     lv_almostSecondsThreshold = 15;
 
     // Implementation
-    lv_secondsDifference = (gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_elapsedSeconds-gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_elapsedSeconds);
-    lv_supplyDifference = (gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_supply-gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_supply);
+    lv_secondsDifference = (gv_currentBuildOrderSteps[lp_currentIndex].lv_elapsedSeconds-gv_benchmarkBuildOrderSteps[lp_benchmarkIndex].lv_elapsedSeconds);
+    lv_supplyDifference = (gv_currentBuildOrderSteps[lp_currentIndex].lv_supply-gv_benchmarkBuildOrderSteps[lp_benchmarkIndex].lv_supply);
     if ((lv_secondsDifference < lv_perfectSecondsThreshold)) {
         lv_judgementText = gv_performanceFeedbackMarvelousText;
     }
@@ -3909,6 +3917,7 @@ bool auto_gf_DisplayPerformanceFeedbackForCorrectStep_TriggerFunc (bool testCond
     TextExpressionSetToken("Param/Expression/3A1BC0E8", "A", lv_judgementText);
     TextExpressionSetToken("Param/Expression/3A1BC0E8", "B", lv_secondsAndSupplyText);
     lv_displayText = TextExpressionAssemble("Param/Expression/3A1BC0E8");
+    UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
     UIDisplayMessage(PlayerGroupAll(), c_messageAreaDirective, lv_displayText);
     Wait(lv_waitTime, c_timeGame);
     UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
@@ -5350,12 +5359,16 @@ text gf_ConvertInttoTimeTextWithPlusSignifPositive (int lp_int) {
     text lv_result;
 
     // Variable Initialization
+    lv_result = StringExternal("Param/Value/4EE86693");
 
     // Implementation
-    lv_result = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lp_int);
     if ((lp_int > 0)) {
-        TextExpressionSetToken("Param/Expression/0EE3AA8E", "A", lv_result);
-        lv_result = TextExpressionAssemble("Param/Expression/0EE3AA8E");
+        TextExpressionSetToken("Param/Expression/AD52C056", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lp_int));
+        lv_result = TextExpressionAssemble("Param/Expression/AD52C056");
+    }
+    else if ((lp_int < 0)) {
+        TextExpressionSetToken("Param/Expression/09C7A8D5", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), AbsI(lp_int)));
+        lv_result = TextExpressionAssemble("Param/Expression/09C7A8D5");
     }
     return lv_result;
 }
@@ -6161,6 +6174,7 @@ bool gt_ResetBuild_Func (bool testConds, bool runActions) {
         return true;
     }
 
+    UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
     UIDisplayMessage(PlayerGroupAll(), c_messageAreaDirective, StringExternal("Param/Value/B010EEE3"));
     CinematicFade(false, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
     Wait(0.5, c_timeGame);
