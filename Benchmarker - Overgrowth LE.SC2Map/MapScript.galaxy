@@ -998,18 +998,18 @@ trigger gt_SelectEndBuildAtGameTime;
 trigger gt_TogglePracticeAgainstSavedBuild;
 trigger gt_UpdateFinalSupplyAtGameTimeText;
 trigger gt_ClearSavedBenchmarkBuildforMatchuponButtonPress;
-trigger gt_OpenHelpDialog;
 trigger gt_CloseHelpandResumeBuildfromOkButton;
 trigger gt_CloseHelpandResumeBuildfromHotkey;
+trigger gt_OpenHelpDialog;
 trigger gt_OpenPostBuildReportDialog;
 trigger gt_SaveBenchmarkBuildStats;
 trigger gt_ResetBenchmarkBuildStats;
 trigger gt_ReturntoMainMenufromReport;
 trigger gt_UpdateSupplyBenchmarksonButtonClick;
 trigger gt_MuteVictoryFanfare;
-trigger gt_OpenStatsDialog;
 trigger gt_CloseStatsandResumeBuildfromOkButton;
 trigger gt_CloseStatsandResumeBuildfromHotkey;
+trigger gt_OpenStatsDialog;
 trigger gt_MapInitialization;
 trigger gt_EndGame;
 trigger gt_Benchmark1TimerExpires;
@@ -3891,6 +3891,9 @@ bool auto_gf_DisplayPerformanceFeedbackForCorrectStep_TriggerFunc (bool testCond
     lv_almostSecondsThreshold = 15;
 
     // Implementation
+    TextExpressionSetToken("Param/Expression/20AC23A6", "A", IntToText(lp_currentIndex));
+    TextExpressionSetToken("Param/Expression/20AC23A6", "B", IntToText(lp_benchmarkIndex));
+    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/20AC23A6"));
     lv_secondsDifference = (gv_currentBuildOrderSteps[lp_currentIndex].lv_elapsedSeconds-gv_benchmarkBuildOrderSteps[lp_benchmarkIndex].lv_elapsedSeconds);
     lv_supplyDifference = (gv_currentBuildOrderSteps[lp_currentIndex].lv_supply-gv_benchmarkBuildOrderSteps[lp_benchmarkIndex].lv_supply);
     if ((lv_secondsDifference < lv_perfectSecondsThreshold)) {
@@ -6967,38 +6970,6 @@ void gt_ClearSavedBenchmarkBuildforMatchuponButtonPress_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Open Help Dialog
-//--------------------------------------------------------------------------------------------------
-bool gt_OpenHelpDialog_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!(((gv_isHelpDialogOpen == false) && (gv_paused == false)))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gf_PauseGame();
-    gf_HideBenchmarkDialog();
-    DialogSetVisible(gv_statsDialog, PlayerGroupAll(), false);
-    gv_isStatsDialogOpen = false;
-    DialogSetVisible(gv_helpDialog, PlayerGroupAll(), true);
-    gv_isHelpDialogOpen = true;
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_OpenHelpDialog_Init () {
-    gt_OpenHelpDialog = TriggerCreate("gt_OpenHelpDialog_Func");
-    TriggerAddEventChatMessage(gt_OpenHelpDialog, c_playerAny, "-help", true);
-    TriggerAddEventKeyPressed(gt_OpenHelpDialog, 1, c_keyX, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
-}
-
-//--------------------------------------------------------------------------------------------------
 // Trigger: Close Help and Resume Build from Ok Button
 //--------------------------------------------------------------------------------------------------
 bool gt_CloseHelpandResumeBuildfromOkButton_Func (bool testConds, bool runActions) {
@@ -7048,6 +7019,38 @@ bool gt_CloseHelpandResumeBuildfromHotkey_Func (bool testConds, bool runActions)
 void gt_CloseHelpandResumeBuildfromHotkey_Init () {
     gt_CloseHelpandResumeBuildfromHotkey = TriggerCreate("gt_CloseHelpandResumeBuildfromHotkey_Func");
     TriggerAddEventKeyPressed(gt_CloseHelpandResumeBuildfromHotkey, 1, c_keyX, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Open Help Dialog
+//--------------------------------------------------------------------------------------------------
+bool gt_OpenHelpDialog_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((gv_isHelpDialogOpen == false) && (gv_paused == false)))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gf_PauseGame();
+    gf_HideBenchmarkDialog();
+    DialogSetVisible(gv_statsDialog, PlayerGroupAll(), false);
+    gv_isStatsDialogOpen = false;
+    DialogSetVisible(gv_helpDialog, PlayerGroupAll(), true);
+    gv_isHelpDialogOpen = true;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_OpenHelpDialog_Init () {
+    gt_OpenHelpDialog = TriggerCreate("gt_OpenHelpDialog_Func");
+    TriggerAddEventChatMessage(gt_OpenHelpDialog, c_playerAny, "-help", true);
+    TriggerAddEventKeyPressed(gt_OpenHelpDialog, 1, c_keyX, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -7268,40 +7271,6 @@ void gt_MuteVictoryFanfare_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Open Stats Dialog
-//--------------------------------------------------------------------------------------------------
-bool gt_OpenStatsDialog_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!(((gv_isStatsDialogOpen == false) && (gv_paused == false)))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gf_PauseGame();
-    gf_HideBenchmarkDialog();
-    DialogSetVisible(gv_helpDialog, PlayerGroupAll(), false);
-    gv_isHelpDialogOpen = false;
-    gf_RefreshStatsDialog();
-    DialogSetVisible(gv_statsDialog, PlayerGroupAll(), true);
-    gv_isStatsDialogOpen = true;
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_OpenStatsDialog_Init () {
-    gt_OpenStatsDialog = TriggerCreate("gt_OpenStatsDialog_Func");
-    TriggerAddEventChatMessage(gt_OpenStatsDialog, c_playerAny, "-s", true);
-    TriggerAddEventChatMessage(gt_OpenStatsDialog, c_playerAny, "-stats", true);
-    TriggerAddEventKeyPressed(gt_OpenStatsDialog, 1, c_keyZ, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
-}
-
-//--------------------------------------------------------------------------------------------------
 // Trigger: Close Stats and Resume Build from Ok Button
 //--------------------------------------------------------------------------------------------------
 bool gt_CloseStatsandResumeBuildfromOkButton_Func (bool testConds, bool runActions) {
@@ -7351,6 +7320,48 @@ bool gt_CloseStatsandResumeBuildfromHotkey_Func (bool testConds, bool runActions
 void gt_CloseStatsandResumeBuildfromHotkey_Init () {
     gt_CloseStatsandResumeBuildfromHotkey = TriggerCreate("gt_CloseStatsandResumeBuildfromHotkey_Func");
     TriggerAddEventKeyPressed(gt_CloseStatsandResumeBuildfromHotkey, 1, c_keyZ, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Open Stats Dialog
+//--------------------------------------------------------------------------------------------------
+bool gt_OpenStatsDialog_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((gv_isStatsDialogOpen == false) && (gv_paused == false)))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gf_PauseGame();
+    if ((gv_isBenchmarkAlertDialogOpen == true)) {
+        gf_HideBenchmarkDialog();
+    }
+    else {
+    }
+    if ((gv_isHelpDialogOpen == true)) {
+        DialogSetVisible(gv_helpDialog, PlayerGroupAll(), false);
+        gv_isHelpDialogOpen = false;
+    }
+    else {
+    }
+    gf_RefreshStatsDialog();
+    DialogSetVisible(gv_statsDialog, PlayerGroupAll(), true);
+    gv_isStatsDialogOpen = true;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_OpenStatsDialog_Init () {
+    gt_OpenStatsDialog = TriggerCreate("gt_OpenStatsDialog_Func");
+    TriggerAddEventChatMessage(gt_OpenStatsDialog, c_playerAny, "-s", true);
+    TriggerAddEventChatMessage(gt_OpenStatsDialog, c_playerAny, "-stats", true);
+    TriggerAddEventKeyPressed(gt_OpenStatsDialog, 1, c_keyZ, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -8363,18 +8374,18 @@ void InitTriggers () {
     gt_TogglePracticeAgainstSavedBuild_Init();
     gt_UpdateFinalSupplyAtGameTimeText_Init();
     gt_ClearSavedBenchmarkBuildforMatchuponButtonPress_Init();
-    gt_OpenHelpDialog_Init();
     gt_CloseHelpandResumeBuildfromOkButton_Init();
     gt_CloseHelpandResumeBuildfromHotkey_Init();
+    gt_OpenHelpDialog_Init();
     gt_OpenPostBuildReportDialog_Init();
     gt_SaveBenchmarkBuildStats_Init();
     gt_ResetBenchmarkBuildStats_Init();
     gt_ReturntoMainMenufromReport_Init();
     gt_UpdateSupplyBenchmarksonButtonClick_Init();
     gt_MuteVictoryFanfare_Init();
-    gt_OpenStatsDialog_Init();
     gt_CloseStatsandResumeBuildfromOkButton_Init();
     gt_CloseStatsandResumeBuildfromHotkey_Init();
+    gt_OpenStatsDialog_Init();
     gt_MapInitialization_Init();
     gt_EndGame_Init();
     gt_Benchmark1TimerExpires_Init();
