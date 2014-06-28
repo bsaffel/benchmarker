@@ -912,7 +912,11 @@ text gf_GetSupplyforLatestCompletedBuildOrderStepasText ();
 int gf_GetSupplyforLatestCompletedBuildOrderStep ();
 text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber);
 int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor);
-bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType);
+bool gf_IsUnitTypeValidForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkStep);
+bool gf_IsUnitTypeAStructure (string lp_unitType);
+bool gf_IsUnitTypeAnEligibleSupplyUnit (string lp_unitType, int lp_benchmarkStep);
+bool gf_IsUnitTypeAnIneligibleGasCollectionUnit (string lp_unitType, int lp_benchmarkStep);
+bool gf_IsUnitTypeAnExplicitlyIgnoredStructureType (string lp_unitType);
 bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkBuildOrderStepIndex);
 bool gf_IsUpgradeTypeValidForBuildOrder (string lp_upgrade);
 bool gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep (string lp_upgrade, int lp_benchmarkBuildOrderStepIndex);
@@ -3339,7 +3343,7 @@ void gf_ResetBenchmarkSupplyObjectives () {
 
 void gf_ResetBuildOrderTimers () {
     // Implementation
-    TimerRestart(gv_multipleUnitFailureTimer);
+    TimerStart(gv_multipleUnitFailureTimer, 3600.0, false, c_timeGame);
     TimerPause(gv_multipleUnitFailureTimer, true);
 }
 
@@ -3665,9 +3669,18 @@ void gf_DestroyBenchmarkBuildOrderObjectives () {
 }
 
 void gf_HighlightBenchmarkBuildOrderObjective (int lp_step) {
+    // Variable Declarations
+    int lv_objectiveIndex;
+
+    // Variable Initialization
+
     // Implementation
+    lv_objectiveIndex = gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_step);
+    TextExpressionSetToken("Param/Expression/4FF3063D", "A", null);
+    TextExpressionSetToken("Param/Expression/4FF3063D", "B", IntToText(lp_step));
+    gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/4FF3063D"));
     TextExpressionSetToken("Param/Expression/F715B5A3", "A", ObjectiveGetName(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_step)]));
-    ObjectiveSetName(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_step)], TextExpressionAssemble("Param/Expression/F715B5A3"));
+    ObjectiveSetName(gv_benchmarkBuildOrderStepObjectives[lv_objectiveIndex], TextExpressionAssemble("Param/Expression/F715B5A3"));
 }
 
 void gf_InitializeBenchmarkBuildOrder () {
@@ -3840,7 +3853,7 @@ void gf_CompleteBenchmarkStepObjectiveWithCurrentStepAndCycle (int lp_benchmarkS
     }
     gv_benchmarkBuildOrderStepCursor += 1;
     gf_CycleBenchmarkBuildOrderObjectives();
-    gf_HighlightBenchmarkBuildOrderObjective(lp_benchmarkStep);
+    gf_HighlightBenchmarkBuildOrderObjective((lp_benchmarkStep+1));
 }
 
 void gf_FailBenchmarkStepObjectiveWithCurrentStepAndCycle (int lp_benchmarkStep, int lp_currentStep) {
@@ -3853,7 +3866,7 @@ void gf_FailBenchmarkStepObjectiveWithCurrentStepAndCycle (int lp_benchmarkStep,
     }
     gv_benchmarkBuildOrderStepCursor += 1;
     gf_CycleBenchmarkBuildOrderObjectives();
-    gf_HighlightBenchmarkBuildOrderObjective(lp_benchmarkStep);
+    gf_HighlightBenchmarkBuildOrderObjective((lp_benchmarkStep+1));
 }
 
 trigger auto_gf_DisplayPerformanceFeedbackForCorrectStep_Trigger = null;
@@ -4834,7 +4847,7 @@ int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor) {
     return lv_result;
 }
 
-bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType) {
+bool gf_IsUnitTypeValidForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkStep) {
     // Variable Declarations
     bool lv_result;
 
@@ -4847,15 +4860,79 @@ bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType) {
     else if ((lp_unitType == "MothershipCore")) {
         lv_result = true;
     }
-    else if (((gv_trackSupplyUnitsAsObjectives == true) && ((gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_unitType == "Overlord") || (gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_unitType == "Pylon") || (gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_unitType == "SupplyDepot") || (PlayerScoreValueGetAsInt(1, "FoodUsed") <= gv_trackSupplyUnitObjectivesUntil)) && ((lp_unitType == "Overlord") || (lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon")))) {
+    else if ((gf_IsUnitTypeAnEligibleSupplyUnit(lp_unitType, lp_benchmarkStep) == true)) {
         lv_result = true;
     }
-    else if (((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1) && (!(((lp_unitType == "CreepTumorQueen") || (lp_unitType == "CreepTumor") || (lp_unitType == "CreepTumorBurrowed")))) && (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery")) && ((gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_unitType != "Extractor") || (gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_unitType != "Assimilator") || (gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_unitType != "Refinery"))))) && (lp_unitType != "SupplyDepot") && (lp_unitType != "Pylon"))) {
+    else if (((gf_IsUnitTypeAStructure(lp_unitType) == true) && (gf_IsUnitTypeAnExplicitlyIgnoredStructureType(lp_unitType) == false) && (gf_IsUnitTypeAnIneligibleGasCollectionUnit(lp_unitType, lp_benchmarkStep) == false) && (lp_unitType != "SupplyDepot") && (lp_unitType != "Pylon"))) {
         lv_result = true;
     }
     TextExpressionSetToken("Param/Expression/E84E69DA", "A", UnitTypeGetName(lp_unitType));
     TextExpressionSetToken("Param/Expression/E84E69DA", "B", libNtve_gf_ConvertBooleanToText(lv_result));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/E84E69DA"));
+    return lv_result;
+}
+
+bool gf_IsUnitTypeAStructure (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1)) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    return lv_result;
+}
+
+bool gf_IsUnitTypeAnEligibleSupplyUnit (string lp_unitType, int lp_benchmarkStep) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((gv_trackSupplyUnitsAsObjectives == true) && ((gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType == "Overlord") || (gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType == "Pylon") || (gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType == "SupplyDepot") || (PlayerScoreValueGetAsInt(1, "FoodUsed") <= gv_trackSupplyUnitObjectivesUntil)) && ((lp_unitType == "Overlord") || (lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon")))) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    return lv_result;
+}
+
+bool gf_IsUnitTypeAnIneligibleGasCollectionUnit (string lp_unitType, int lp_benchmarkStep) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery")) && (PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType != "Extractor") && (gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType != "Assimilator") && (gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType != "Refinery")))) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    return lv_result;
+}
+
+bool gf_IsUnitTypeAnExplicitlyIgnoredStructureType (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((lp_unitType == "CreepTumorQueen") || (lp_unitType == "CreepTumor") || (lp_unitType == "CreepTumorBurrowed"))) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
     return lv_result;
 }
 
@@ -6144,7 +6221,6 @@ bool gt_StartBuild_Func (bool testConds, bool runActions) {
     gf_SaveBenchmarkMenuConfiguration(gf_GetCurrentlySelectedMatchupasBankSectionKey());
     gf_SaveAlertMenuConfiguration();
     gf_ResetGameState();
-    gf_LogTextMessage(gv_debugMapMechanicsEnabled, StringExternal("Param/Value/17DBE949"));
     gf_InitializeBuildConfiguration();
     gf_LogTextMessage(gv_debugMapMechanicsEnabled, StringExternal("Param/Value/EF170396"));
     TimerStart(gv_currentBuildBuildTimer, gv_onehourinseconds, false, c_timeGame);
@@ -7651,7 +7727,7 @@ void gt_EverySecondCheckforBuildHints_Init () {
 bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions) {
     // Conditions
     if (testConds) {
-        if (!((gf_IsUnitTypeValidForBuildOrder(libNtve_gf_TriggeringProgressUnitType()) == true))) {
+        if (!((gf_IsUnitTypeValidForBenchmarkBuildOrderStep(libNtve_gf_TriggeringProgressUnitType(), gv_benchmarkBuildOrderStepCursor) == true))) {
             return false;
         }
     }
@@ -7863,13 +7939,6 @@ bool gt_OnMultipleUnitFailureTimerExpires_Func (bool testConds, bool runActions)
     text lv_temp;
 
     // Variable Initialization
-
-    // Conditions
-    if (testConds) {
-        if (!((TimerGetElapsed(gv_currentBuildBuildTimer) > 1))) {
-            return false;
-        }
-    }
 
     // Actions
     if (!runActions) {
