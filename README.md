@@ -9,10 +9,10 @@ Benchmarker is the Starcraft 2 practice tool you’ve been waiting for. This too
 Reset builds on the fly without having to remake a custom game.
 
 Track personal supply benchmarks by matchup in-game
--Set supply benchmarks at 6, 8, and 10 minutes
--Configure builds to end at either maximum supply or a specific game time
--Benchmarks are automatically saved for future practice sessions
--Benchmarks are tracked separately for each match-up so you can switch between builds quickly and easily
+- Set supply benchmarks at 6, 8, and 10 minutes
+- Configure builds to end at either maximum supply or a specific game time
+- Benchmarks are automatically saved for future practice sessions
+- Benchmarks are tracked separately for each match-up so you can switch between builds quickly and easily
 
 Practice against "benchmark" build orders to refine and optimize your play
 - Save your best build orders (per matchup) at the end of each build
