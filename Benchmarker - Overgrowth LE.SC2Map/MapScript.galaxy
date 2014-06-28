@@ -981,6 +981,7 @@ trigger gt_ToggleDebugBank;
 trigger gt_ToggleDebugBuildOrder;
 trigger gt_ToggleDebugMapMechanics;
 trigger gt_ToggleDebugMenus;
+trigger gt_DebugBooleanConditionFromHotkey;
 trigger gt_MuteUnmuteAlerts;
 trigger gt_EnableDisableMineralAlert;
 trigger gt_EnableDisableGasAlert;
@@ -3791,7 +3792,7 @@ void gf_EvaluateUpgradeForBenchmarkBuildOrderStep (string lp_upgrade, int lp_cur
         TextExpressionSetToken("Param/Expression/7C2BBC82", "B", gf_GetFormattedUpgradeNameasText(lp_upgrade));
         TextExpressionSetToken("Param/Expression/7C2BBC82", "A", IntToText((lp_benchmarkStep-1)));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/7C2BBC82"));
-        gf_CorrectObjectiveForFailedBenchmarkBuildOrderStep((gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep) - 1));
+        gf_CorrectObjectiveForFailedBenchmarkBuildOrderStep((lp_benchmarkStep - 1));
     }
     else {
         if ((gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep(lp_upgrade, lp_benchmarkStep) == true)) {
@@ -3814,7 +3815,7 @@ void gf_EvaluateAbilityForBenchmarkBuildOrderStep (string lp_ability, int lp_cur
         TextExpressionSetToken("Param/Expression/AD3A1002", "B", gf_GetFormattedAbilityNameasText(lp_ability));
         TextExpressionSetToken("Param/Expression/AD3A1002", "A", IntToText((lp_benchmarkStep-1)));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/AD3A1002"));
-        gf_CorrectObjectiveForFailedBenchmarkBuildOrderStep((gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep) - 1));
+        gf_CorrectObjectiveForFailedBenchmarkBuildOrderStep((lp_benchmarkStep - 1));
     }
     else {
         if ((gf_IsAbilityTypeCorrectForBenchmarkBuildOrderStep(lp_ability, lp_benchmarkStep) == true)) {
@@ -6449,6 +6450,40 @@ void gt_ToggleDebugMenus_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Debug Boolean Condition From Hotkey
+//--------------------------------------------------------------------------------------------------
+bool gt_DebugBooleanConditionFromHotkey_Func (bool testConds, bool runActions) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    if (((gf_IsEndBuildatMaxSupplySelected() == true) && (PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) >= 200) && (gv_paused == false))) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    TextExpressionSetToken("Param/Expression/6AE5DFF2", "A", libNtve_gf_ConvertBooleanToText(gf_IsEndBuildatMaxSupplySelected()));
+    TextExpressionSetToken("Param/Expression/6AE5DFF2", "B", libNtve_gf_ConvertBooleanToText((PlayerScoreValueGetAsInt(1, "FoodUsed") >= 200)));
+    TextExpressionSetToken("Param/Expression/6AE5DFF2", "C", libNtve_gf_ConvertBooleanToText(gv_paused));
+    TextExpressionSetToken("Param/Expression/6AE5DFF2", "D", libNtve_gf_ConvertBooleanToText(lv_result));
+    gf_LogTextMessage(true, TextExpressionAssemble("Param/Expression/6AE5DFF2"));
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_DebugBooleanConditionFromHotkey_Init () {
+    gt_DebugBooleanConditionFromHotkey = TriggerCreate("gt_DebugBooleanConditionFromHotkey_Func");
+    TriggerAddEventKeyPressed(gt_DebugBooleanConditionFromHotkey, c_playerAny, c_keyNumPadMinus, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Mute/Unmute Alerts
 //--------------------------------------------------------------------------------------------------
 bool gt_MuteUnmuteAlerts_Func (bool testConds, bool runActions) {
@@ -8359,6 +8394,7 @@ void InitTriggers () {
     gt_ToggleDebugBuildOrder_Init();
     gt_ToggleDebugMapMechanics_Init();
     gt_ToggleDebugMenus_Init();
+    gt_DebugBooleanConditionFromHotkey_Init();
     gt_MuteUnmuteAlerts_Init();
     gt_EnableDisableMineralAlert_Init();
     gt_EnableDisableGasAlert_Init();
