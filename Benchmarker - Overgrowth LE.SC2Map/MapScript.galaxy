@@ -298,6 +298,9 @@ int gv_statsDialogTitleSpacer;
 int gv_statsDialog;
 int gv_statsOkButton;
 int gv_statsDialogBuildOrderListBox;
+color gv_zergColorLight;
+color gv_terramColorLight;
+color gv_protossColorLight;
 bool gv_paused;
 unitgroup gv_resources;
 bool gv_currentBuildIsGasTaken;
@@ -658,6 +661,9 @@ void InitGlobals () {
     gv_statsDialog = c_invalidDialogId;
     gv_statsOkButton = c_invalidDialogControlId;
     gv_statsDialogBuildOrderListBox = c_invalidDialogControlId;
+    gv_zergColorLight = Color(96.86, 64.31, 62.35);
+    gv_terramColorLight = Color(65.88, 62.35, 84.31);
+    gv_protossColorLight = Color(72.55, 93.33, 74.90);
     gv_paused = true;
     gv_resources = UnitGroupEmpty();
     gv_currentBuildBuildTimer = TimerCreate();
@@ -950,6 +956,7 @@ string gf_FormatCatalogStringwithSpaces (string lp_string);
 string gf_TrimSOffArmorsUpgradeName (string lp_string);
 text gf_GetIntDifferenceasText (int lp_value, int lp_previousBest, bool lp_higherisBetter, bool lp_displayasPercentage);
 text gf_GetRealDifferenceasText (fixed lp_value, fixed lp_previousBest, bool lp_higherisBetter);
+text gf_GetTimeDifferenceasText (int lp_value, int lp_previousBest, bool lp_higherisBetter, bool lp_displayasPercentage);
 text gf_ConvertInttoTextWithPlusSignifPositive (int lp_int);
 text gf_ConvertInttoTimeTextWithPlusSignifPositive (int lp_int);
 text gf_GetFormattedUpgradeNameasText (string lp_upgrade);
@@ -5385,7 +5392,7 @@ text gf_GetIntDifferenceasText (int lp_value, int lp_previousBest, bool lp_highe
         }
         else {
             lv_difference = (IntToFixed(lp_value)-IntToFixed(lp_previousBest));
-            TextExpressionSetToken("Param/Expression/7519E7BF", "A", gf_ConvertInttoTextWithPlusSignifPositive((lp_value-lp_previousBest)));
+            TextExpressionSetToken("Param/Expression/7519E7BF", "A", gf_ConvertInttoTimeTextWithPlusSignifPositive(FixedToInt(lv_difference)));
             lv_differenceText = TextExpressionAssemble("Param/Expression/7519E7BF");
         }
     }
@@ -5417,6 +5424,35 @@ text gf_GetRealDifferenceasText (fixed lp_value, fixed lp_previousBest, bool lp_
     TextExpressionSetToken("Param/Expression/25E9AAD7", "A", TextWithColor(lv_percentDifferenceText, gf_GetColorForReal(lv_percentDifference, lp_higherisBetter)));
     lv_coloredPercentDifferenceText = TextExpressionAssemble("Param/Expression/25E9AAD7");
     return lv_coloredPercentDifferenceText;
+}
+
+text gf_GetTimeDifferenceasText (int lp_value, int lp_previousBest, bool lp_higherisBetter, bool lp_displayasPercentage) {
+    // Variable Declarations
+    fixed lv_difference;
+    text lv_differenceText;
+    text lv_coloredDifferenceText;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((lp_value > 0) && (lp_previousBest > 0))) {
+        if ((lp_displayasPercentage == true)) {
+            lv_difference = (100*((IntToFixed(lp_value)-IntToFixed(lp_previousBest))/IntToFixed(lp_previousBest)));
+            TextExpressionSetToken("Param/Expression/1D8F45C2", "A", FixedToText(lv_difference, 2));
+            lv_differenceText = TextExpressionAssemble("Param/Expression/1D8F45C2");
+        }
+        else {
+            lv_difference = (IntToFixed(lp_value)-IntToFixed(lp_previousBest));
+            TextExpressionSetToken("Param/Expression/70C9E411", "A", gf_ConvertInttoTextWithPlusSignifPositive((lp_value-lp_previousBest)));
+            lv_differenceText = TextExpressionAssemble("Param/Expression/70C9E411");
+        }
+    }
+    else {
+        lv_differenceText = StringExternal("Param/Value/1447CA50");
+    }
+    TextExpressionSetToken("Param/Expression/FF848506", "A", TextWithColor(lv_differenceText, gf_GetColorForReal(lv_difference, lp_higherisBetter)));
+    lv_coloredDifferenceText = TextExpressionAssemble("Param/Expression/FF848506");
+    return lv_coloredDifferenceText;
 }
 
 text gf_ConvertInttoTextWithPlusSignifPositive (int lp_int) {
