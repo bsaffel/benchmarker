@@ -2719,7 +2719,7 @@ void gf_UpdatePostBuildStatRowValueasTime (text lp_label, int lp_value, string l
     lv_benchmarkValue = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_benchmarkEntryKey);
     TextExpressionSetToken("Param/Expression/430A1346", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_benchmarkValue));
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][2], TextExpressionAssemble("Param/Expression/430A1346"), PlayerGroupAll());
-    lv_diffText = gf_GetIntDifferenceasText(lp_value, lv_benchmarkValue, lp_higherIsBetter, lp_displayasPercentage);
+    lv_diffText = gf_GetTimeDifferenceasText(lp_value, lv_benchmarkValue, lp_higherIsBetter, lp_displayasPercentage);
     TextExpressionSetToken("Param/Expression/F7F5AD3C", "A", lv_diffText);
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][3], TextExpressionAssemble("Param/Expression/F7F5AD3C"), PlayerGroupAll());
 }
@@ -3784,6 +3784,7 @@ void gf_EvaluateUnitTypeForBenchmarkBuildOrderStep (string lp_unitType, int lp_c
                 if ((TimerGetRemaining(gv_multipleUnitFailureTimer) > 0.0)) {
                     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/F6401EA7"));
                     TimerRestart(gv_multipleUnitFailureTimer);
+                    Wait(0.001, c_timeReal);
                     TimerPause(gv_multipleUnitFailureTimer, true);
                 }
                 else {
@@ -4847,10 +4848,6 @@ int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor) {
 
     // Implementation
     lv_result = (lp_cursor - gv_buildOrderCycleOffset);
-    TextExpressionSetToken("Param/Expression/FE96BC14", "A", IntToText(lp_cursor));
-    TextExpressionSetToken("Param/Expression/FE96BC14", "B", IntToText(lv_result));
-    TextExpressionSetToken("Param/Expression/FE96BC14", "C", IntToText(gv_buildOrderCycleOffset));
-    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/FE96BC14"));
     return lv_result;
 }
 
@@ -5392,8 +5389,8 @@ text gf_GetIntDifferenceasText (int lp_value, int lp_previousBest, bool lp_highe
         }
         else {
             lv_difference = (IntToFixed(lp_value)-IntToFixed(lp_previousBest));
-            TextExpressionSetToken("Param/Expression/7519E7BF", "A", gf_ConvertInttoTimeTextWithPlusSignifPositive(FixedToInt(lv_difference)));
-            lv_differenceText = TextExpressionAssemble("Param/Expression/7519E7BF");
+            TextExpressionSetToken("Param/Expression/70C9E411", "A", gf_ConvertInttoTextWithPlusSignifPositive((lp_value-lp_previousBest)));
+            lv_differenceText = TextExpressionAssemble("Param/Expression/70C9E411");
         }
     }
     else {
@@ -5443,8 +5440,8 @@ text gf_GetTimeDifferenceasText (int lp_value, int lp_previousBest, bool lp_high
         }
         else {
             lv_difference = (IntToFixed(lp_value)-IntToFixed(lp_previousBest));
-            TextExpressionSetToken("Param/Expression/70C9E411", "A", gf_ConvertInttoTextWithPlusSignifPositive((lp_value-lp_previousBest)));
-            lv_differenceText = TextExpressionAssemble("Param/Expression/70C9E411");
+            TextExpressionSetToken("Param/Expression/BDB89428", "A", gf_ConvertInttoTimeTextWithPlusSignifPositive(FixedToInt(lv_difference)));
+            lv_differenceText = TextExpressionAssemble("Param/Expression/BDB89428");
         }
     }
     else {
