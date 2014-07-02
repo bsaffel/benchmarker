@@ -303,7 +303,8 @@ color gv_terramColorLight;
 color gv_protossColorLight;
 bool gv_paused;
 unitgroup gv_resources;
-bool gv_initialLoadComplete;
+bool gv_isFirstBuild;
+bool gv_isFirstReset;
 bool gv_currentBuildIsGasTaken;
 timer gv_currentBuildBuildTimer;
 int gv_onehourinseconds;
@@ -668,6 +669,8 @@ void InitGlobals () {
     gv_protossColorLight = Color(72.55, 93.33, 74.90);
     gv_paused = true;
     gv_resources = UnitGroupEmpty();
+    gv_isFirstBuild = true;
+    gv_isFirstReset = true;
     gv_currentBuildBuildTimer = TimerCreate();
     gv_onehourinseconds = 216000;
     gv_e = 2.7183;
@@ -835,6 +838,7 @@ void gf_InitializeGameDefaults ();
 void gf_InitializeMapResourcesUnitGroup ();
 void gf_InitializeBank ();
 void gf_InitializeBuildConfiguration ();
+void gf_InitializeBenchmarkSupplyObjectives ();
 void gf_CreateMatchupBankSections ();
 void gf_ResetGameState ();
 void gf_ResetUnits ();
@@ -1056,6 +1060,7 @@ trigger gt_OverlordInProgressFix;
 trigger gt_OverlordCompletedorCancelledFix;
 trigger gt_HatcheryLarvaSpawnFix;
 trigger gt_MineralPatchRemovedFix;
+trigger gt_MineralPatchRemovedFix2;
 
 //--------------------------------------------------------------------------------------------------
 // Global Functions
@@ -2982,8 +2987,41 @@ void gf_InitializeBank () {
 
 void gf_InitializeBuildConfiguration () {
     // Implementation
-    gf_InitializeBenchmarkBuildOrder();
+    gf_InitializeBenchmarkSupplyObjectives();
     gf_ShowBenchmarkSupplyObjectives();
+    gf_InitializeBenchmarkBuildOrder();
+}
+
+void gf_InitializeBenchmarkSupplyObjectives () {
+    int auto5072DD98_ae;
+    int auto5072DD98_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    auto5072DD98_ae = 2;
+    auto5072DD98_ai = 1;
+    lv_i = 0;
+    for ( ; ( (auto5072DD98_ai >= 0 && lv_i <= auto5072DD98_ae) || (auto5072DD98_ai <= 0 && lv_i >= auto5072DD98_ae) ) ; lv_i += auto5072DD98_ai ) {
+        ObjectiveSetState(gv_benchmarkSupplyObjectives[lv_i], c_objectiveStateActive);
+        TextExpressionSetToken("Param/Expression/FE4CB76C", "C", TextWithColor(IntToText(gv_supplyBenchmarks[lv_i].lv_benchmarkSupply), gv_benchmarkSupplyObjectiveTextColor));
+        TextExpressionSetToken("Param/Expression/FE4CB76C", "B", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gf_GetTotalSecondsforMinSeconds(gv_supplyBenchmarks[lv_i].lv_benchmarkTimeMin, gv_supplyBenchmarks[lv_i].lv_benchmarkTimeSeconds)));
+        ObjectiveSetName(gv_benchmarkSupplyObjectives[lv_i], TextExpressionAssemble("Param/Expression/FE4CB76C"));
+        Wait(0.25, c_timeGame);
+    }
+    ObjectiveSetState(gv_benchmarkFinalBenchmarkObjective, c_objectiveStateActive);
+    if ((gf_IsEndBuildatMaxSupplySelected() == true)) {
+        TextExpressionSetToken("Param/Expression/0E7777EB", "B", TextWithColor(TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkMaxSupplyTotalSeconds), gv_benchmarkSupplyObjectiveTextColor));
+        ObjectiveSetName(gv_benchmarkFinalBenchmarkObjective, TextExpressionAssemble("Param/Expression/0E7777EB"));
+    }
+    else {
+        TextExpressionSetToken("Param/Expression/FF78F416", "A", TextWithColor(IntToText(gv_benchmarkFinalSupplyatGameTimeValue), gv_benchmarkSupplyObjectiveTextColor));
+        TextExpressionSetToken("Param/Expression/FF78F416", "B", TextWithColor(TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkEndBuildatGameTimeTotalSeconds), gv_benchmarkSupplyObjectiveTextColor));
+        ObjectiveSetName(gv_benchmarkFinalBenchmarkObjective, TextExpressionAssemble("Param/Expression/FF78F416"));
+    }
 }
 
 void gf_CreateMatchupBankSections () {
@@ -3311,36 +3349,12 @@ void gf_ResetBenchmarkBuildOrderObjectives () {
 }
 
 void gf_ResetBenchmarkSupplyObjectives () {
-    int auto197B812D_ae;
-    int auto197B812D_ai;
-
     // Variable Declarations
     int lv_i;
 
     // Variable Initialization
 
     // Implementation
-    auto197B812D_ae = 2;
-    auto197B812D_ai = 1;
-    lv_i = 0;
-    for ( ; ( (auto197B812D_ai >= 0 && lv_i <= auto197B812D_ae) || (auto197B812D_ai <= 0 && lv_i >= auto197B812D_ae) ) ; lv_i += auto197B812D_ai ) {
-        ObjectiveSetState(gv_benchmarkSupplyObjectives[lv_i], c_objectiveStateActive);
-        TextExpressionSetToken("Param/Expression/0ED07185", "C", TextWithColor(IntToText(gv_supplyBenchmarks[lv_i].lv_benchmarkSupply), gv_benchmarkSupplyObjectiveTextColor));
-        TextExpressionSetToken("Param/Expression/0ED07185", "B", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gf_GetTotalSecondsforMinSeconds(gv_supplyBenchmarks[lv_i].lv_benchmarkTimeMin, gv_supplyBenchmarks[lv_i].lv_benchmarkTimeSeconds)));
-        ObjectiveSetName(gv_benchmarkSupplyObjectives[lv_i], TextExpressionAssemble("Param/Expression/0ED07185"));
-        Wait(0.25, c_timeGame);
-    }
-    if ((gf_IsEndBuildatMaxSupplySelected() == true)) {
-        ObjectiveSetState(gv_benchmarkFinalBenchmarkObjective, c_objectiveStateActive);
-        TextExpressionSetToken("Param/Expression/B6B33C58", "B", TextWithColor(TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkMaxSupplyTotalSeconds), gv_benchmarkSupplyObjectiveTextColor));
-        ObjectiveSetName(gv_benchmarkFinalBenchmarkObjective, TextExpressionAssemble("Param/Expression/B6B33C58"));
-    }
-    else {
-        ObjectiveSetState(gv_benchmarkFinalBenchmarkObjective, c_objectiveStateActive);
-        TextExpressionSetToken("Param/Expression/9AFFA0B9", "A", TextWithColor(IntToText(gv_benchmarkFinalSupplyatGameTimeValue), gv_benchmarkSupplyObjectiveTextColor));
-        TextExpressionSetToken("Param/Expression/9AFFA0B9", "B", TextWithColor(TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkEndBuildatGameTimeTotalSeconds), gv_benchmarkSupplyObjectiveTextColor));
-        ObjectiveSetName(gv_benchmarkFinalBenchmarkObjective, TextExpressionAssemble("Param/Expression/9AFFA0B9"));
-    }
     gv_numBenchmarksMetThisBuild = 0;
     gv_supplyBenchmarks[0].lv_actualSupplyatBenchmarkTime = 0;
     gv_supplyBenchmarks[1].lv_actualSupplyatBenchmarkTime = 0;
@@ -3531,6 +3545,8 @@ void gf_CreateBenchmarkBuildOrderObjectives () {
 
     // Implementation
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/A1F4609D"));
+    libNtve_gf_DisplayScreenButton(gv_forkScreenButtonID, StringExternal("Param/Value/4265F0EA"), 105, 35, c_anchorTopLeft, 160, 198, gt_ForkBuildOrder);
+    libNtve_gf_SetDialogItemTooltip(libNtve_gf_ScreenButton(gv_forkScreenButtonID), StringExternal("Param/Value/D99E1BC8"), PlayerGroupAll());
     auto98326FC4_ae = gv_maxDisplayedBuildOrderObjectives1;
     auto98326FC4_ai = 1;
     lv_i = 0;
@@ -3542,8 +3558,6 @@ void gf_CreateBenchmarkBuildOrderObjectives () {
         else {
         }
     }
-    libNtve_gf_DisplayScreenButton(gv_forkScreenButtonID, StringExternal("Param/Value/4265F0EA"), 105, 35, c_anchorTopLeft, 160, 198, gt_ForkBuildOrder);
-    libNtve_gf_SetDialogItemTooltip(libNtve_gf_ScreenButton(gv_forkScreenButtonID), StringExternal("Param/Value/D99E1BC8"), PlayerGroupAll());
     gf_HighlightBenchmarkBuildOrderObjective(0);
 }
 
@@ -6256,20 +6270,24 @@ bool gt_StartBuild_Func (bool testConds, bool runActions) {
     UIDisplayMessage(PlayerGroupAll(), c_messageAreaDirective, StringExternal("Param/Value/27023A8A"));
     gf_SaveBenchmarkMenuConfiguration(gf_GetCurrentlySelectedMatchupasBankSectionKey());
     gf_SaveAlertMenuConfiguration();
-    gf_ResetGameState();
+    if ((gv_isFirstBuild == false)) {
+        gf_ResetGameState();
+    }
+    else {
+        gf_ResetBuildOrderTimers();
+    }
     gf_InitializeBuildConfiguration();
-    gf_LogTextMessage(gv_debugMapMechanicsEnabled, StringExternal("Param/Value/EF170396"));
-    TimerStart(gv_currentBuildBuildTimer, gv_onehourinseconds, false, c_timeGame);
-    gf_StartBenchmarkTimers();
-    gf_UnpauseGame();
     gf_LogTextMessage(gv_debugMapMechanicsEnabled, StringExternal("Param/Value/10A5A2AE"));
     Wait(1.0, c_timeGame);
-    if ((gv_initialLoadComplete == false)) {
+    if ((gv_isFirstBuild == true)) {
         Wait(1.0, c_timeGame);
-        gv_initialLoadComplete = true;
+        gv_isFirstBuild = false;
     }
     else {
     }
+    TimerStart(gv_currentBuildBuildTimer, gv_onehourinseconds, false, c_timeGame);
+    gf_StartBenchmarkTimers();
+    gf_UnpauseGame();
     CameraPan(1, PlayerStartLocation(1), 0.5, -1, 5.0, true);
     UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
     CinematicFade(true, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
@@ -6306,6 +6324,12 @@ bool gt_ResetBuild_Func (bool testConds, bool runActions) {
     gf_ResetGameState();
     gf_InitializeBuildConfiguration();
     Wait(0.5, c_timeGame);
+    if ((gv_isFirstReset == true)) {
+        Wait(1.0, c_timeGame);
+        gv_isFirstReset = false;
+    }
+    else {
+    }
     gf_UnpauseGame();
     if (((gv_debugAlertsEnabled == false) && (gv_debugBankEnabled == false) && (gv_debugBuildOrderEnabled == false) && (gv_debugMapMechanicsEnabled == false) && (gv_debugMenusEnabled == false) && (gv_debugStatsEnabled == false))) {
         UIClearMessages(PlayerGroupAll(), c_messageAreaAll);
@@ -8496,7 +8520,7 @@ void gt_HatcheryLarvaSpawnFix_Init () {
 bool gt_MineralPatchRemovedFix_Func (bool testConds, bool runActions) {
     // Conditions
     if (testConds) {
-        if (!(((UnitGetType(EventUnit()) == "MineralField") || (UnitGetType(EventUnit()) == "RichMineralField") || (UnitGetType(EventUnit()) == "LabMineralField")))) {
+        if (!(((UnitGetPropertyFixed(EventUnit(), c_unitPropResources, c_unitPropCurrent) == 0.0) && ((UnitGetType(EventUnit()) == "MineralField") || (UnitGetType(EventUnit()) == "RichMineralField") || (UnitGetType(EventUnit()) == "LabMineralField"))))) {
             return false;
         }
     }
@@ -8513,7 +8537,26 @@ bool gt_MineralPatchRemovedFix_Func (bool testConds, bool runActions) {
 //--------------------------------------------------------------------------------------------------
 void gt_MineralPatchRemovedFix_Init () {
     gt_MineralPatchRemovedFix = TriggerCreate("gt_MineralPatchRemovedFix_Func");
-    TriggerAddEventUnitDied(gt_MineralPatchRemovedFix, null);
+    TriggerAddEventUnitProperty(gt_MineralPatchRemovedFix, null, c_unitPropResources);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Mineral Patch Removed Fix 2
+//--------------------------------------------------------------------------------------------------
+bool gt_MineralPatchRemovedFix2_Func (bool testConds, bool runActions) {
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/6DE6FF73"));
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_MineralPatchRemovedFix2_Init () {
+    gt_MineralPatchRemovedFix2 = TriggerCreate("gt_MineralPatchRemovedFix2_Func");
+    TriggerAddEventUnitBehaviorChange(gt_MineralPatchRemovedFix2, null, "MineralFieldMinerals", c_unitBehaviorChangeAny);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -8604,6 +8647,7 @@ void InitTriggers () {
     gt_OverlordCompletedorCancelledFix_Init();
     gt_HatcheryLarvaSpawnFix_Init();
     gt_MineralPatchRemovedFix_Init();
+    gt_MineralPatchRemovedFix2_Init();
 }
 
 //--------------------------------------------------------------------------------------------------
