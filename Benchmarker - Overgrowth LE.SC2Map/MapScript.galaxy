@@ -303,6 +303,7 @@ color gv_terramColorLight;
 color gv_protossColorLight;
 bool gv_paused;
 unitgroup gv_resources;
+bool gv_initialLoadComplete;
 bool gv_currentBuildIsGasTaken;
 timer gv_currentBuildBuildTimer;
 int gv_onehourinseconds;
@@ -312,6 +313,7 @@ int gv_numMorphingOverlords;
 unitgroup gv_morphingOverlords;
 timer gv_overlordInProgressTimer;
 int gv_overlordMorphDuration;
+int gv_numUnitsinMapResourcesGroup;
 gs_SupplyBenchmark[5] gv_supplyBenchmarks;
 int[4] gv_benchmarkSupplyObjectives;
 int gv_benchmarkFinalBenchmarkObjective;
@@ -1053,6 +1055,7 @@ trigger gt_WorkerInGasDuringResetFix;
 trigger gt_OverlordInProgressFix;
 trigger gt_OverlordCompletedorCancelledFix;
 trigger gt_HatcheryLarvaSpawnFix;
+trigger gt_MineralPatchRemovedFix;
 
 //--------------------------------------------------------------------------------------------------
 // Global Functions
@@ -2958,25 +2961,16 @@ void gf_InitializeMapResourcesUnitGroup () {
     for ( ; auto59129081_u <= UnitGroupCount(auto59129081_g, c_unitCountAll) ; auto59129081_u += BoolToInt(lv_currentResource == UnitGroupUnit(auto59129081_g, auto59129081_u)) ) {
         lv_currentResource = UnitGroupUnit(auto59129081_g, auto59129081_u);
         UnitGroupAdd(gv_resources, lv_currentResource);
-        if ((gv_debugMapMechanicsEnabled == true)) {
-            TextExpressionSetToken("Param/Expression/2322ADF7", "A", UnitTypeGetName(UnitGetType(lv_currentResource)));
-            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/2322ADF7"));
-        }
-        else {
-        }
     }
     autoAECA9D28_g = UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter((1 << c_targetFilterRawResource), 0, 0, 0), 0);
     autoAECA9D28_u = 1;
     for ( ; autoAECA9D28_u <= UnitGroupCount(autoAECA9D28_g, c_unitCountAll) ; autoAECA9D28_u += BoolToInt(lv_currentResource == UnitGroupUnit(autoAECA9D28_g, autoAECA9D28_u)) ) {
         lv_currentResource = UnitGroupUnit(autoAECA9D28_g, autoAECA9D28_u);
         UnitGroupAdd(gv_resources, lv_currentResource);
-        if ((gv_debugMapMechanicsEnabled == true)) {
-            TextExpressionSetToken("Param/Expression/1C0F331A", "A", UnitTypeGetName(UnitGetType(lv_currentResource)));
-            UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/1C0F331A"));
-        }
-        else {
-        }
     }
+    gv_numUnitsinMapResourcesGroup = UnitGroupCount(gv_resources, c_unitCountAll);
+    TextExpressionSetToken("Param/Expression/EA97869B", "A", IntToText(gv_numUnitsinMapResourcesGroup));
+    gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/EA97869B"));
 }
 
 void gf_InitializeBank () {
@@ -3103,6 +3097,9 @@ void gf_ResetMapResources () {
     // Variable Initialization
 
     // Implementation
+    TextExpressionSetToken("Param/Expression/F5B8F259", "A", IntToText(gv_numUnitsinMapResourcesGroup));
+    TextExpressionSetToken("Param/Expression/F5B8F259", "B", IntToText(UnitGroupCount(gv_resources, c_unitCountAll)));
+    gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/F5B8F259"));
     auto239B13AC_g = gv_resources;
     auto239B13AC_u = 1;
     for ( ; auto239B13AC_u <= UnitGroupCount(auto239B13AC_g, c_unitCountAll) ; auto239B13AC_u += BoolToInt(lv_currentResource == UnitGroupUnit(auto239B13AC_g, auto239B13AC_u)) ) {
@@ -3119,6 +3116,9 @@ void gf_ResetMapResources () {
         else {
         }
     }
+    TextExpressionSetToken("Param/Expression/44F472C2", "A", IntToText(0));
+    TextExpressionSetToken("Param/Expression/44F472C2", "B", IntToText(0));
+    gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/44F472C2"));
     if ((gv_debugMapMechanicsEnabled == true)) {
         TextExpressionSetToken("Param/Expression/F4AFF87D", "A", IntToText(lv_resourcesReplaced));
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/F4AFF87D"));
@@ -6264,6 +6264,12 @@ bool gt_StartBuild_Func (bool testConds, bool runActions) {
     gf_UnpauseGame();
     gf_LogTextMessage(gv_debugMapMechanicsEnabled, StringExternal("Param/Value/10A5A2AE"));
     Wait(1.0, c_timeGame);
+    if ((gv_initialLoadComplete == false)) {
+        Wait(1.0, c_timeGame);
+        gv_initialLoadComplete = true;
+    }
+    else {
+    }
     CameraPan(1, PlayerStartLocation(1), 0.5, -1, 5.0, true);
     UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
     CinematicFade(true, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
@@ -6301,7 +6307,11 @@ bool gt_ResetBuild_Func (bool testConds, bool runActions) {
     gf_InitializeBuildConfiguration();
     Wait(0.5, c_timeGame);
     gf_UnpauseGame();
-    UIClearMessages(PlayerGroupAll(), c_messageAreaAll);
+    if (((gv_debugAlertsEnabled == false) && (gv_debugBankEnabled == false) && (gv_debugBuildOrderEnabled == false) && (gv_debugMapMechanicsEnabled == false) && (gv_debugMenusEnabled == false) && (gv_debugStatsEnabled == false))) {
+        UIClearMessages(PlayerGroupAll(), c_messageAreaAll);
+    }
+    else {
+    }
     CameraPan(1, PlayerStartLocation(1), 0.5, -1, 5.0, true);
     CinematicFade(true, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
     return true;
@@ -8481,6 +8491,32 @@ void gt_HatcheryLarvaSpawnFix_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Mineral Patch Removed Fix
+//--------------------------------------------------------------------------------------------------
+bool gt_MineralPatchRemovedFix_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((UnitGetType(EventUnit()) == "MineralField") || (UnitGetType(EventUnit()) == "RichMineralField") || (UnitGetType(EventUnit()) == "LabMineralField")))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/24F7116E"));
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_MineralPatchRemovedFix_Init () {
+    gt_MineralPatchRemovedFix = TriggerCreate("gt_MineralPatchRemovedFix_Func");
+    TriggerAddEventUnitDied(gt_MineralPatchRemovedFix, null);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger Initialization
 //--------------------------------------------------------------------------------------------------
 void InitTriggers () {
@@ -8567,6 +8603,7 @@ void InitTriggers () {
     gt_OverlordInProgressFix_Init();
     gt_OverlordCompletedorCancelledFix_Init();
     gt_HatcheryLarvaSpawnFix_Init();
+    gt_MineralPatchRemovedFix_Init();
 }
 
 //--------------------------------------------------------------------------------------------------
