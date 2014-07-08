@@ -311,7 +311,6 @@ color gv_protossColorLight;
 bool gv_paused;
 gs_Resource[257] gv_mapResources;
 int gv_numMapResources;
-unitgroup gv_resources;
 bool gv_isFirstBuild;
 bool gv_isFirstReset;
 bool gv_currentBuildIsGasTaken;
@@ -323,6 +322,7 @@ int gv_numMorphingOverlords;
 unitgroup gv_morphingOverlords;
 timer gv_overlordInProgressTimer;
 int gv_overlordMorphDuration;
+fixed gv_zergHatcheryCreepRadius;
 gs_SupplyBenchmark[5] gv_supplyBenchmarks;
 int[4] gv_benchmarkSupplyObjectives;
 int gv_benchmarkFinalBenchmarkObjective;
@@ -676,7 +676,6 @@ void InitGlobals () {
     gv_terramColorLight = Color(65.88, 62.35, 84.31);
     gv_protossColorLight = Color(72.55, 93.33, 74.90);
     gv_paused = true;
-    gv_resources = UnitGroupEmpty();
     gv_isFirstBuild = true;
     gv_isFirstReset = true;
     gv_currentBuildBuildTimer = TimerCreate();
@@ -685,6 +684,7 @@ void InitGlobals () {
     gv_workers = UnitGroupEmpty();
     gv_morphingOverlords = UnitGroupEmpty();
     gv_overlordInProgressTimer = TimerCreate();
+    gv_zergHatcheryCreepRadius = 12.0;
     for (init_i = 0; init_i <= 3; init_i += 1) {
         gv_benchmarkSupplyObjectives[init_i] = c_invalidObjectiveId;
     }
@@ -844,6 +844,7 @@ void gf_InitializeBankDefaults ();
 void gf_InitializeDialogDefaults ();
 void gf_InitializeGameDefaults ();
 void gf_InitializeMapResources ();
+void gf_InitializeUnits ();
 void gf_AddResourceToMapResources (unit lp_unit);
 void gf_InitializeBank ();
 void gf_InitializeBuildConfiguration ();
@@ -853,6 +854,9 @@ void gf_ResetGameState ();
 void gf_ResetUnits ();
 void gf_ResetMapResources ();
 void gf_ResetTechTree ();
+void gf_ResetUnitAbilities ();
+void gf_ResetMapVision ();
+void gf_ResetCreep ();
 void gf_ResetCamera ();
 void gf_ResetGameVariables ();
 void gf_ResetBenchmarkSupplyObjectives ();
@@ -1069,7 +1073,6 @@ trigger gt_WorkerInGasDuringResetFix;
 trigger gt_OverlordInProgressFix;
 trigger gt_OverlordCompletedorCancelledFix;
 trigger gt_HatcheryLarvaSpawnFix;
-trigger gt_MineralPatchRemovedFix;
 
 //--------------------------------------------------------------------------------------------------
 // Global Functions
@@ -2986,6 +2989,13 @@ void gf_InitializeMapResources () {
     gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/EA97869B"));
 }
 
+void gf_InitializeUnits () {
+    // Implementation
+    MeleeInitUnitsForPlayer(1, PlayerRace(1), PlayerStartLocation(1));
+    MeleeInitUnitsForPlayer(2, gf_GetCurrentlySelectedMatchupOpponentRace(), PlayerStartLocation(2));
+    MeleeInitResources();
+}
+
 void gf_AddResourceToMapResources (unit lp_unit) {
     // Implementation
     gv_mapResources[gv_numMapResources].lv_unit = lp_unit;
@@ -3061,20 +3071,24 @@ void gf_ResetGameState () {
     lv_player1Units = UnitGroupEmpty();
 
     // Implementation
-    gf_ResetTechTree();
     gf_ResetGameVariables();
     gf_ResetStatistics();
+    gf_ResetTechTree();
+    gf_ResetUnits();
+    gf_ResetMapResources();
     gf_ResetCurrentBuildOrderStepsVariables();
     gf_ResetBenchmarkSupplyObjectives();
     gf_ResetBenchmarkBuildOrderObjectives();
     gf_ResetBenchmarkBuildOrderStepsVariables();
-    gf_ResetUnits();
-    gf_ResetMapResources();
     gf_ResetAlertTimers();
     gf_ResetBenchmarkTimers();
     gf_ResetBuildOrderTimers();
     TimerRestart(gv_currentBuildBuildTimer);
     gf_ResetCamera();
+    gf_InitializeBuildConfiguration();
+    Wait(0.5, c_timeGame);
+    gf_ResetMapVision();
+    gf_InitializeUnits();
 }
 
 void gf_ResetUnits () {
@@ -3109,7 +3123,6 @@ void gf_ResetUnits () {
             UnitRemove(UnitGroupLoopCurrent());
         }
         UnitGroupLoopEnd();
-        MeleeInitUnitsForPlayer(1, PlayerRace(1), PlayerStartLocation(1));
     }
     else {
     }
@@ -3131,11 +3144,9 @@ void gf_ResetUnits () {
             UnitRemove(UnitGroupLoopCurrent());
         }
         UnitGroupLoopEnd();
-        MeleeInitUnitsForPlayer(2, gf_GetCurrentlySelectedMatchupOpponentRace(), PlayerStartLocation(2));
     }
     else {
     }
-    MeleeInitResources();
 }
 
 void gf_ResetMapResources () {
@@ -3153,9 +3164,6 @@ void gf_ResetMapResources () {
     // Variable Initialization
 
     // Implementation
-    TextExpressionSetToken("Param/Expression/F5B8F259", "A", IntToText(gv_numMapResources));
-    TextExpressionSetToken("Param/Expression/F5B8F259", "B", IntToText(UnitGroupCount(gv_resources, c_unitCountAll)));
-    gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/F5B8F259"));
     autoF8EF1DFA_ae = gv_numMapResources;
     autoF8EF1DFA_ai = 1;
     lv_i = 0;
@@ -3262,6 +3270,27 @@ void gf_ResetTechTree () {
     libNtve_gf_SetUpgradeLevelForPlayer(1, "GraviticDrive", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "ExtendedThermalLance", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "ObserverGraviticBooster", 0);
+}
+
+void gf_ResetUnitAbilities () {
+}
+
+void gf_ResetMapVision () {
+    // Implementation
+    VisRevealArea(1, RegionEntireMap(), 0.001, false);
+    if ((PlayerRace(1) == "Zerg")) {
+        gf_ResetCreep();
+    }
+    else {
+    }
+    Wait(0.05, c_timeGame);
+    VisExploreArea(1, RegionEntireMap(), false, false);
+}
+
+void gf_ResetCreep () {
+    // Implementation
+    CreepModify(PlayerStartLocation(1), 256.0, false, false);
+    CreepModify(PlayerStartLocation(1), gv_zergHatcheryCreepRadius, true, false);
 }
 
 void gf_ResetCamera () {
@@ -3391,7 +3420,7 @@ void gf_ResetBenchmarkBuildOrderObjectives () {
 
 void gf_ResetBuildOrderTimers () {
     // Implementation
-    TimerStart(gv_multipleUnitFailureTimer, 3600.0, false, c_timeGame);
+    TimerStart(gv_multipleUnitFailureTimer, 99999.0, false, c_timeReal);
     TimerPause(gv_multipleUnitFailureTimer, true);
 }
 
@@ -6327,9 +6356,9 @@ bool gt_StartBuild_Func (bool testConds, bool runActions) {
     else {
         MeleeInitResources();
         gf_ResetBuildOrderTimers();
+        gf_InitializeBuildConfiguration();
+        gf_LogTextMessage(gv_debugMapMechanicsEnabled, StringExternal("Param/Value/10A5A2AE"));
     }
-    gf_InitializeBuildConfiguration();
-    gf_LogTextMessage(gv_debugMapMechanicsEnabled, StringExternal("Param/Value/10A5A2AE"));
     Wait(1.0, c_timeGame);
     if ((gv_isFirstBuild == true)) {
         Wait(0.5, c_timeGame);
@@ -6371,13 +6400,11 @@ bool gt_ResetBuild_Func (bool testConds, bool runActions) {
     UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
     UIDisplayMessage(PlayerGroupAll(), c_messageAreaDirective, StringExternal("Param/Value/B010EEE3"));
     CinematicFade(false, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
-    Wait(0.5, c_timeGame);
     gf_PauseGame();
     gf_ResetGameState();
-    gf_InitializeBuildConfiguration();
-    Wait(0.5, c_timeGame);
+    Wait(1.0, c_timeGame);
     if ((gv_isFirstReset == true)) {
-        Wait(0.5, c_timeGame);
+        Wait(1.0, c_timeGame);
         gv_isFirstReset = false;
     }
     else {
@@ -8121,7 +8148,7 @@ bool gt_ForkBuildOrder_Func (bool testConds, bool runActions) {
     lv_i = gf_GetObjectiveIndexforBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor);
     for ( ; ( (auto991C8C82_ai >= 0 && lv_i <= auto991C8C82_ae) || (auto991C8C82_ai <= 0 && lv_i >= auto991C8C82_ae) ) ; lv_i += auto991C8C82_ai ) {
         ObjectiveDestroy(gv_benchmarkBuildOrderStepObjectives[lv_i]);
-        Wait(0.2, c_timeGame);
+        Wait(0.1, c_timeGame);
     }
     libNtve_gf_HideScreenButton(false, gv_forkScreenButtonID);
     UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
@@ -8567,40 +8594,6 @@ void gt_HatcheryLarvaSpawnFix_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Mineral Patch Removed Fix
-//--------------------------------------------------------------------------------------------------
-bool gt_MineralPatchRemovedFix_Func (bool testConds, bool runActions) {
-    // Variable Declarations
-    int lv_mapResourceIndex;
-
-    // Variable Initialization
-
-    // Conditions
-    if (testConds) {
-        if (!(((UnitGetPropertyFixed(EventUnit(), c_unitPropResources, c_unitPropCurrent) == 0.0) && ((UnitGetType(EventUnit()) == "MineralField") || (UnitGetType(EventUnit()) == "RichMineralField") || (UnitGetType(EventUnit()) == "LabMineralField"))))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    lv_mapResourceIndex = gf_GetMapResourceIndexForUnit(EventUnit());
-    gv_mapResources[lv_mapResourceIndex].lv_isMinedOut = true;
-    TextExpressionSetToken("Param/Expression/24F7116E", "A", IntToText(lv_mapResourceIndex));
-    gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/24F7116E"));
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_MineralPatchRemovedFix_Init () {
-    gt_MineralPatchRemovedFix = TriggerCreate("gt_MineralPatchRemovedFix_Func");
-    TriggerAddEventUnitProperty(gt_MineralPatchRemovedFix, null, c_unitPropResources);
-}
-
-//--------------------------------------------------------------------------------------------------
 // Trigger Initialization
 //--------------------------------------------------------------------------------------------------
 void InitTriggers () {
@@ -8687,7 +8680,6 @@ void InitTriggers () {
     gt_OverlordInProgressFix_Init();
     gt_OverlordCompletedorCancelledFix_Init();
     gt_HatcheryLarvaSpawnFix_Init();
-    gt_MineralPatchRemovedFix_Init();
 }
 
 //--------------------------------------------------------------------------------------------------
