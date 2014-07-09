@@ -856,6 +856,7 @@ void gf_ResetMapResources ();
 void gf_ResetTechTree ();
 void gf_ResetUnitAbilities ();
 void gf_ResetMapVision ();
+void gf_ResetWatchtowerVision ();
 void gf_ResetCreep ();
 void gf_ResetCamera ();
 void gf_ResetGameVariables ();
@@ -3283,13 +3284,31 @@ void gf_ResetMapVision () {
     }
     else {
     }
-    Wait(0.05, c_timeGame);
+    Wait(0.1, c_timeGame);
     VisExploreArea(1, RegionEntireMap(), false, false);
+    gf_ResetWatchtowerVision();
+}
+
+trigger auto_gf_ResetWatchtowerVision_Trigger = null;
+
+void gf_ResetWatchtowerVision () {
+    if (auto_gf_ResetWatchtowerVision_Trigger == null) {
+        auto_gf_ResetWatchtowerVision_Trigger = TriggerCreate("auto_gf_ResetWatchtowerVision_TriggerFunc");
+    }
+
+    TriggerExecute(auto_gf_ResetWatchtowerVision_Trigger, false, false);
+}
+
+bool auto_gf_ResetWatchtowerVision_TriggerFunc (bool testConds, bool runActions) {
+    // Implementation
+    Wait(2.1, c_timeGame);
+    VisExploreArea(1, RegionEntireMap(), false, false);
+    return true;
 }
 
 void gf_ResetCreep () {
     // Implementation
-    CreepModify(PlayerStartLocation(1), 256.0, false, false);
+    CreepModify(RegionGetCenter(RegionEntireMap()), 256.0, false, false);
     CreepModify(PlayerStartLocation(1), gv_zergHatcheryCreepRadius, true, false);
 }
 
