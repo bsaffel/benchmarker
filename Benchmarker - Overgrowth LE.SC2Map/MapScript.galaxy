@@ -843,8 +843,9 @@ void gf_LogTextMessage (bool lp_alertTypeFlag, text lp_message);
 void gf_InitializeBankDefaults ();
 void gf_InitializeDialogDefaults ();
 void gf_InitializeGameDefaults ();
+void gf_InitializeGameState ();
 void gf_InitializeMapResources ();
-void gf_InitializeUnits ();
+void gf_InitializeUnitsAndStartingResources ();
 void gf_AddResourceToMapResources (unit lp_unit);
 void gf_InitializeBank ();
 void gf_InitializeBuildConfiguration ();
@@ -2962,6 +2963,15 @@ void gf_InitializeGameDefaults () {
     gv_benchmarkSupplyDefaults[2] = 80;
 }
 
+void gf_InitializeGameState () {
+    // Implementation
+    gf_InitializeUnitsAndStartingResources();
+    gf_ResetBuildOrderTimers();
+    gf_InitializeBuildConfiguration();
+    gf_LogTextMessage(gv_debugMapMechanicsEnabled, StringExternal("Param/Value/10A5A2AE"));
+    gf_ResetCamera();
+}
+
 void gf_InitializeMapResources () {
     unitgroup auto59129081_g;
     int auto59129081_u;
@@ -2990,9 +3000,19 @@ void gf_InitializeMapResources () {
     gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/EA97869B"));
 }
 
-void gf_InitializeUnits () {
+void gf_InitializeUnitsAndStartingResources () {
     // Implementation
     MeleeInitUnitsForPlayer(1, PlayerRace(1), PlayerStartLocation(1));
+    if ((PlayerRace(1) == "Zerg")) {
+        CreepModify(PlayerStartLocation(1), gv_zergHatcheryCreepRadius, true, false);
+    }
+    else {
+    }
+    if ((gf_GetCurrentlySelectedMatchupOpponentRace() == "Zerg")) {
+        CreepModify(PlayerStartLocation(2), gv_zergHatcheryCreepRadius, true, false);
+    }
+    else {
+    }
     MeleeInitUnitsForPlayer(2, gf_GetCurrentlySelectedMatchupOpponentRace(), PlayerStartLocation(2));
     MeleeInitResources();
 }
@@ -3077,6 +3097,7 @@ void gf_ResetGameState () {
     gf_ResetTechTree();
     gf_ResetUnits();
     gf_ResetMapResources();
+    gf_ResetCreep();
     gf_ResetCurrentBuildOrderStepsVariables();
     gf_ResetBenchmarkSupplyObjectives();
     gf_ResetBenchmarkBuildOrderObjectives();
@@ -3089,7 +3110,7 @@ void gf_ResetGameState () {
     gf_InitializeBuildConfiguration();
     Wait(0.5, c_timeGame);
     gf_ResetMapVision();
-    gf_InitializeUnits();
+    gf_InitializeUnitsAndStartingResources();
 }
 
 void gf_ResetUnits () {
@@ -3218,35 +3239,42 @@ void gf_ResetTechTree () {
     libNtve_gf_SetUpgradeLevelForPlayer(1, "zerglingmovementspeed", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "zerglingattackspeed", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "ChitinousPlating", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranInfantryArmorsLevel1", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranInfantryArmorsLevel2", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranInfantryArmorsLevel3", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranShipArmorsLevel1", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranShipArmorsLevel2", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranShipArmorsLevel3", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranVehicleArmorsLevel1", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranVehicleArmorsLevel2", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranVehicleArmorsLevel3", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranInfantryWeaponsLevel1", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranInfantryWeaponsLevel2", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranInfantryWeaponsLevel3", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranShipWeaponsLevel1", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranShipWeaponsLevel2", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranShipWeaponsLevel3", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranInfantryArmorsLevel1", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranInfantryArmorsLevel2", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranInfantryArmorsLevel3", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranVehicleWeaponsLevel1", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranVehicleWeaponsLevel2", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranVehicleWeaponsLevel3", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranBuildingArmor", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranVehicleArmorsLevel1", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranVehicleArmorsLevel2", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranVehicleArmorsLevel3", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranShipWeaponsLevel1", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranShipWeaponsLevel2", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranShipWeaponsLevel3", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranShipArmorsLevel1", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranShipArmorsLevel2", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranShipArmorsLevel3", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranVehicleAndShipWeaponsLevel1", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranVehicleAndShipWeaponsLevel2", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranVehicleAndShipWeaponsLevel3", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranVehicleAndShipArmorsLevel1", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranVehicleAndShipArmorsLevel2", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranVehicleAndShipArmorsLevel3", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "Stimpack", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "ShieldWall", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "PunisherGrenades", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "BansheeCloak", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "PersonalCloaking", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "HighCapacityBarrels", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "HunterSeeker", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "SiegeTech", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "Stimpack", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "HunterSeeker", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "RavenCorvidReactor", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "PunisherGrenades", 0);
-    libNtve_gf_SetUpgradeLevelForPlayer(1, "ShieldWall", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "HiSecAutoTracking", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "NeosteelFrame", 0);
+    libNtve_gf_SetUpgradeLevelForPlayer(1, "TerranBuildingArmor", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "ProtossAirArmorsLevel1", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "ProtossAirArmorsLevel2", 0);
     libNtve_gf_SetUpgradeLevelForPlayer(1, "ProtossAirArmorsLevel3", 0);
@@ -3279,11 +3307,6 @@ void gf_ResetUnitAbilities () {
 void gf_ResetMapVision () {
     // Implementation
     VisRevealArea(1, RegionEntireMap(), 0.001, false);
-    if ((PlayerRace(1) == "Zerg")) {
-        gf_ResetCreep();
-    }
-    else {
-    }
     Wait(0.1, c_timeGame);
     VisExploreArea(1, RegionEntireMap(), false, false);
     gf_ResetWatchtowerVision();
@@ -3308,8 +3331,7 @@ bool auto_gf_ResetWatchtowerVision_TriggerFunc (bool testConds, bool runActions)
 
 void gf_ResetCreep () {
     // Implementation
-    CreepModify(RegionGetCenter(RegionEntireMap()), 256.0, false, false);
-    CreepModify(PlayerStartLocation(1), gv_zergHatcheryCreepRadius, true, false);
+    CreepModify(RegionGetCenter(RegionEntireMap()), 512.0, false, false);
 }
 
 void gf_ResetCamera () {
@@ -5080,7 +5102,7 @@ bool gf_IsUpgradeTypeValidForBuildOrder (string lp_upgrade) {
     // Variable Initialization
 
     // Implementation
-    if (((lp_upgrade == "WarpGateResearch") || (lp_upgrade == "BlinkTech") || (lp_upgrade == "Charge") || (lp_upgrade == "ExtendedThermalLance") || (lp_upgrade == "GraviticDrive") || (lp_upgrade == "ObserverGraviticBooster") || (lp_upgrade == "PsiStormTech") || (lp_upgrade == "AnionPulseCrystals") || (lp_upgrade == "AnionPulseCrystals") || (lp_upgrade == "Stimpack") || (lp_upgrade == "PunisherGrenades") || (lp_upgrade == "ShieldWall") || (lp_upgrade == "BansheeCloak") || (lp_upgrade == "HighCapacityBarrels") || (lp_upgrade == "HunterSeeker") || (lp_upgrade == "RavenCorvidReactor") || (lp_upgrade == "zerglingmovementspeed") || (lp_upgrade == "zerglingattackspeed") || (lp_upgrade == "CentrificalHooks") || (lp_upgrade == "TunnelingClaws") || (lp_upgrade == "GlialReconstitution") || (lp_upgrade == "hydraliskspeed") || (lp_upgrade == "HydraliskSpeedUpgrade") || (lp_upgrade == "InfestorEnergyUpgrade") || (lp_upgrade == "LocustLifetimeIncrease") || (lp_upgrade == "ChitinousPlating") || (lp_upgrade == "Burrow") || (lp_upgrade == "overlordtransport") || (lp_upgrade == "overlordspeed") || (lp_upgrade == "ProtossAirArmorsLevel1") || (lp_upgrade == "ProtossAirArmorsLevel2") || (lp_upgrade == "ProtossAirArmorsLevel3") || (lp_upgrade == "ProtossGroundArmorsLevel1") || (lp_upgrade == "ProtossGroundArmorsLevel2") || (lp_upgrade == "ProtossGroundArmorsLevel3") || (lp_upgrade == "ProtossShieldsLevel1") || (lp_upgrade == "ProtossShieldsLevel2") || (lp_upgrade == "ProtossShieldsLevel3") || (lp_upgrade == "ProtossAirWeaponsLevel1") || (lp_upgrade == "ProtossAirWeaponsLevel2") || (lp_upgrade == "ProtossAirWeaponsLevel3") || (lp_upgrade == "ProtossGroundWeaponsLevel1") || (lp_upgrade == "ProtossGroundWeaponsLevel2") || (lp_upgrade == "ProtossGroundWeaponsLevel3") || (lp_upgrade == "TerranInfantryArmorsLevel1") || (lp_upgrade == "TerranInfantryArmorsLevel2") || (lp_upgrade == "TerranInfantryArmorsLevel3") || (lp_upgrade == "TerranShipArmorsLevel1") || (lp_upgrade == "TerranShipArmorsLevel2") || (lp_upgrade == "TerranShipArmorsLevel3") || (lp_upgrade == "TerranVehicleArmorsLevel1") || (lp_upgrade == "TerranVehicleArmorsLevel2") || (lp_upgrade == "TerranVehicleArmorsLevel3") || (lp_upgrade == "TerranInfantryWeaponsLevel1") || (lp_upgrade == "TerranInfantryWeaponsLevel2") || (lp_upgrade == "TerranInfantryWeaponsLevel3") || (lp_upgrade == "TerranShipWeaponsLevel1") || (lp_upgrade == "TerranShipWeaponsLevel2") || (lp_upgrade == "TerranShipWeaponsLevel3") || (lp_upgrade == "TerranVehicleWeaponsLevel1") || (lp_upgrade == "TerranVehicleWeaponsLevel2") || (lp_upgrade == "TerranVehicleWeaponsLevel3") || (lp_upgrade == "ZergFlyerArmorsLevel1") || (lp_upgrade == "ZergFlyerArmorsLevel2") || (lp_upgrade == "ZergFlyerArmorsLevel3") || (lp_upgrade == "ZergGroundArmorsLevel1") || (lp_upgrade == "ZergGroundArmorsLevel2") || (lp_upgrade == "ZergGroundArmorsLevel3") || (lp_upgrade == "ZergFlyerWeaponsLevel1") || (lp_upgrade == "ZergFlyerWeaponsLevel2") || (lp_upgrade == "ZergFlyerWeaponsLevel3") || (lp_upgrade == "ZergMeleeWeaponsLevel1") || (lp_upgrade == "ZergMeleeWeaponsLevel2") || (lp_upgrade == "ZergMeleeWeaponsLevel3") || (lp_upgrade == "ZergMissileWeaponsLevel1") || (lp_upgrade == "ZergMissileWeaponsLevel2") || (lp_upgrade == "ZergMissileWeaponsLevel3"))) {
+    if (((lp_upgrade == "WarpGateResearch") || (lp_upgrade == "BlinkTech") || (lp_upgrade == "Charge") || (lp_upgrade == "ExtendedThermalLance") || (lp_upgrade == "GraviticDrive") || (lp_upgrade == "ObserverGraviticBooster") || (lp_upgrade == "PsiStormTech") || (lp_upgrade == "AnionPulseCrystals") || (lp_upgrade == "AnionPulseCrystals") || (lp_upgrade == "Stimpack") || (lp_upgrade == "PunisherGrenades") || (lp_upgrade == "ShieldWall") || (lp_upgrade == "BansheeCloak") || (lp_upgrade == "HighCapacityBarrels") || (lp_upgrade == "HunterSeeker") || (lp_upgrade == "RavenCorvidReactor") || (lp_upgrade == "zerglingmovementspeed") || (lp_upgrade == "zerglingattackspeed") || (lp_upgrade == "CentrificalHooks") || (lp_upgrade == "TunnelingClaws") || (lp_upgrade == "GlialReconstitution") || (lp_upgrade == "hydraliskspeed") || (lp_upgrade == "HydraliskSpeedUpgrade") || (lp_upgrade == "InfestorEnergyUpgrade") || (lp_upgrade == "LocustLifetimeIncrease") || (lp_upgrade == "ChitinousPlating") || (lp_upgrade == "Burrow") || (lp_upgrade == "overlordtransport") || (lp_upgrade == "overlordspeed") || (lp_upgrade == "ProtossAirArmorsLevel1") || (lp_upgrade == "ProtossAirArmorsLevel2") || (lp_upgrade == "ProtossAirArmorsLevel3") || (lp_upgrade == "ProtossGroundArmorsLevel1") || (lp_upgrade == "ProtossGroundArmorsLevel2") || (lp_upgrade == "ProtossGroundArmorsLevel3") || (lp_upgrade == "ProtossShieldsLevel1") || (lp_upgrade == "ProtossShieldsLevel2") || (lp_upgrade == "ProtossShieldsLevel3") || (lp_upgrade == "ProtossAirWeaponsLevel1") || (lp_upgrade == "ProtossAirWeaponsLevel2") || (lp_upgrade == "ProtossAirWeaponsLevel3") || (lp_upgrade == "ProtossGroundWeaponsLevel1") || (lp_upgrade == "ProtossGroundWeaponsLevel2") || (lp_upgrade == "ProtossGroundWeaponsLevel3") || (lp_upgrade == "TerranInfantryWeaponsLevel1") || (lp_upgrade == "TerranInfantryWeaponsLevel2") || (lp_upgrade == "TerranInfantryWeaponsLevel3") || (lp_upgrade == "TerranInfantryArmorsLevel1") || (lp_upgrade == "TerranInfantryArmorsLevel2") || (lp_upgrade == "TerranInfantryArmorsLevel3") || (lp_upgrade == "TerranVehicleWeaponsLevel1") || (lp_upgrade == "TerranVehicleWeaponsLevel2") || (lp_upgrade == "TerranVehicleWeaponsLevel3") || (lp_upgrade == "TerranVehicleArmorsLevel1") || (lp_upgrade == "TerranVehicleArmorsLevel2") || (lp_upgrade == "TerranVehicleArmorsLevel3") || (lp_upgrade == "TerranShipWeaponsLevel1") || (lp_upgrade == "TerranShipWeaponsLevel2") || (lp_upgrade == "TerranShipWeaponsLevel3") || (lp_upgrade == "TerranShipArmorsLevel1") || (lp_upgrade == "TerranShipArmorsLevel2") || (lp_upgrade == "TerranShipArmorsLevel3") || (lp_upgrade == "TerranVehicleAndShipWeaponsLevel1") || (lp_upgrade == "TerranVehicleAndShipWeaponsLevel2") || (lp_upgrade == "TerranVehicleAndShipWeaponsLevel3") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel1") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel2") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel3") || (lp_upgrade == "ZergFlyerArmorsLevel1") || (lp_upgrade == "ZergFlyerArmorsLevel2") || (lp_upgrade == "ZergFlyerArmorsLevel3") || (lp_upgrade == "ZergGroundArmorsLevel1") || (lp_upgrade == "ZergGroundArmorsLevel2") || (lp_upgrade == "ZergGroundArmorsLevel3") || (lp_upgrade == "ZergFlyerWeaponsLevel1") || (lp_upgrade == "ZergFlyerWeaponsLevel2") || (lp_upgrade == "ZergFlyerWeaponsLevel3") || (lp_upgrade == "ZergMeleeWeaponsLevel1") || (lp_upgrade == "ZergMeleeWeaponsLevel2") || (lp_upgrade == "ZergMeleeWeaponsLevel3") || (lp_upgrade == "ZergMissileWeaponsLevel1") || (lp_upgrade == "ZergMissileWeaponsLevel2") || (lp_upgrade == "ZergMissileWeaponsLevel3"))) {
         lv_result = true;
     }
     else {
@@ -6373,21 +6395,18 @@ bool gt_StartBuild_Func (bool testConds, bool runActions) {
         gf_ResetGameState();
     }
     else {
-        MeleeInitResources();
-        gf_ResetBuildOrderTimers();
-        gf_InitializeBuildConfiguration();
-        gf_LogTextMessage(gv_debugMapMechanicsEnabled, StringExternal("Param/Value/10A5A2AE"));
+        gf_InitializeGameState();
     }
-    Wait(1.0, c_timeGame);
+    Wait(1.5, c_timeGame);
     if ((gv_isFirstBuild == true)) {
         Wait(0.5, c_timeGame);
         gv_isFirstBuild = false;
     }
     else {
     }
+    gf_UnpauseGame();
     TimerStart(gv_currentBuildBuildTimer, gv_onehourinseconds, false, c_timeGame);
     gf_StartBenchmarkTimers();
-    gf_UnpauseGame();
     CameraPan(1, PlayerStartLocation(1), 0.5, -1, 5.0, true);
     UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
     CinematicFade(true, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
@@ -6423,14 +6442,15 @@ bool gt_ResetBuild_Func (bool testConds, bool runActions) {
     gf_ResetGameState();
     Wait(1.0, c_timeGame);
     if ((gv_isFirstReset == true)) {
-        Wait(1.0, c_timeGame);
+        Wait(0.5, c_timeGame);
         gv_isFirstReset = false;
     }
     else {
     }
     gf_UnpauseGame();
+    UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
     if (((gv_debugAlertsEnabled == false) && (gv_debugBankEnabled == false) && (gv_debugBuildOrderEnabled == false) && (gv_debugMapMechanicsEnabled == false) && (gv_debugMenusEnabled == false) && (gv_debugStatsEnabled == false))) {
-        UIClearMessages(PlayerGroupAll(), c_messageAreaAll);
+        UIClearMessages(PlayerGroupAll(), c_messageAreaChat);
     }
     else {
     }
@@ -7667,7 +7687,6 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_InitializeBankDefaults();
     gf_InitializeBank();
     gf_InitializeMapResources();
-    MeleeInitUnits();
     gf_PauseGame();
     gf_InitializeBenchmarkDialog();
     gf_ShowBenchmarkDialog();
