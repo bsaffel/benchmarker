@@ -906,6 +906,7 @@ bool gf_IsSupplyDepotorPylonUnderConstruction ();
 text gf_GetRaceMacroUnitName ();
 int gf_GetDefaultMacroEnergyThreshold ();
 bool gf_IsRaceMacroEnergyAboveThreshold ();
+bool gf_AreAllUpgradeStructuresBusyForUpgrade (string lp_upgrade);
 string gf_GetNextUpgrade (string lp_currentUpgrade);
 bool gf_IsTimeraProductionIdleTimer (timer lp_timer);
 bool gf_DoesAlertTimerExistForUnitType (string lp_unitType);
@@ -4234,6 +4235,16 @@ bool gf_IsRaceMacroEnergyAboveThreshold () {
     return lv_result;
 }
 
+bool gf_AreAllUpgradeStructuresBusyForUpgrade (string lp_upgrade) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    return lv_result;
+}
+
 string gf_GetNextUpgrade (string lp_currentUpgrade) {
     string autoB7B7DC32_val;
 
@@ -5641,6 +5652,11 @@ text gf_GetFormattedUpgradeNameasText (string lp_upgrade) {
     lv_upgradeCatalogString = CatalogFieldValueGet(c_gameCatalogUpgrade, lp_upgrade, "Name", c_playerAny);
     lv_result = lv_upgradeCatalogString;
     lv_formattedUpgradeCatalogString = gf_FormatCatalogStringwithSpaces(lv_upgradeCatalogString);
+    if (((lp_upgrade == "TerranVehicleAndShipWeaponsLevel1") || (lp_upgrade == "TerranVehicleAndShipWeaponsLevel2") || (lp_upgrade == "TerranVehicleAndShipWeaponsLevel3") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel1") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel3") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel2"))) {
+        lv_result = (StringWord(lv_formattedUpgradeCatalogString, 4) + "/" + gf_TrimSOffArmorsUpgradeName(StringWord(lv_formattedUpgradeCatalogString, 6)) + " " + StringWord(lv_formattedUpgradeCatalogString, 7) + " " + StringWord(lv_formattedUpgradeCatalogString, 8));
+    }
+    else {
+    }
     if ((gf_IsUpgradeof1Variety(lp_upgrade) == true)) {
         lv_result = (StringWord(lv_formattedUpgradeCatalogString, 4) + " " + gf_TrimSOffArmorsUpgradeName(StringWord(lv_formattedUpgradeCatalogString, 5)) + " " + StringWord(lv_formattedUpgradeCatalogString, 7));
     }
@@ -5738,10 +5754,10 @@ text gf_GetFormattedAbilityNameasText (string lp_ability) {
     else if ((StringContains(lv_formattedAbilityCatalogString, "Upgrade To Hive", c_stringAnywhere, c_stringCase) == true)) {
         lv_result = "Hive";
     }
-    else if ((StringContains(lv_formattedAbilityCatalogString, "Upgrade To Orbital Command", c_stringAnywhere, c_stringCase) == true)) {
+    else if ((StringContains(lv_formattedAbilityCatalogString, "Upgrade To Orbital", c_stringAnywhere, c_stringCase) == true)) {
         lv_result = "Orbital Command";
     }
-    else if ((StringContains(lv_formattedAbilityCatalogString, "Upgrade To Planetary Fortress", c_stringAnywhere, c_stringCase) == true)) {
+    else if ((StringContains(lv_formattedAbilityCatalogString, "Upgrade To Planetary", c_stringAnywhere, c_stringCase) == true)) {
         lv_result = "Planetary Fortress";
     }
     return StringToText(lv_result);
