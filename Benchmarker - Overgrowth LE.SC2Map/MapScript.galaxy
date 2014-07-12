@@ -314,6 +314,7 @@ int gv_numMapResources;
 bool gv_isFirstBuild;
 bool gv_isFirstReset;
 bool gv_currentBuildIsGasTaken;
+bool gv_currentBuildWasForked;
 timer gv_currentBuildBuildTimer;
 int gv_onehourinseconds;
 fixed gv_e;
@@ -3094,6 +3095,11 @@ void gf_ResetGameState () {
     lv_player1Units = UnitGroupEmpty();
 
     // Implementation
+    if ((gv_currentBuildWasForked == true)) {
+        gv_practiceAgainstBenchmarkBuildOrder = true;
+    }
+    else {
+    }
     gf_ResetGameVariables();
     gf_ResetStatistics();
     gf_ResetTechTree();
@@ -3414,6 +3420,8 @@ void gf_ResetCurrentBuildOrderStepsVariables () {
     }
     gv_currentBuildOrderStepCursor = 0;
     gv_buildOrderCycleOffset = 0;
+    gv_currentBuildIsGasTaken = false;
+    gv_currentBuildWasForked = false;
 }
 
 void gf_ResetBenchmarkBuildOrderStepsVariables () {
@@ -8219,6 +8227,7 @@ bool gt_ForkBuildOrder_Func (bool testConds, bool runActions) {
     }
     libNtve_gf_HideScreenButton(false, gv_forkScreenButtonID);
     UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
+    gv_currentBuildWasForked = true;
     return true;
 }
 
