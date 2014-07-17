@@ -47,15 +47,15 @@ struct gs_BuildOrderStep {
 //--------------------------------------------------------------------------------------------------
 // Global Variables
 //--------------------------------------------------------------------------------------------------
+bool gv_muteAlertsEnabled;
+fixed gv_warningPingCooldownSeconds;
+int gv_alertCooldownSeconds;
 int gv_aPMThreshold;
 int gv_aPMThresholdDuration;
 int gv_aPMBelowThresholdAlertCounter;
 int gv_aPMBelowThresholdAlertCheckbox;
 bool gv_aPMBelowThresholdCheckEnabled;
 timer gv_aPMBelowThresholdCooldownTimer;
-bool gv_muteAlertsEnabled;
-fixed gv_warningPingCooldownSeconds;
-int gv_alertCooldownSeconds;
 int gv_alertMineralsThreshold;
 timer gv_alertMineralsCooldownTimer;
 bool gv_alertMineralsCheckEnabled;
@@ -1198,29 +1198,31 @@ void gf_ResetAlertTimers () {
     int auto5984B6EA_ai;
 
     // Variable Declarations
+    int lv_infinity;
     int lv_i;
     int lv_j;
 
     // Variable Initialization
+    lv_infinity = 99999;
 
     // Implementation
-    gf_PauseAlertTimers();
     auto453C1E1D_ae = gv_alertUpgradeGapNumUpgrades;
     auto453C1E1D_ai = 1;
     lv_i = 0;
     for ( ; ( (auto453C1E1D_ai >= 0 && lv_i <= auto453C1E1D_ae) || (auto453C1E1D_ai <= 0 && lv_i >= auto453C1E1D_ae) ) ; lv_i += auto453C1E1D_ai ) {
-        gv_alertUpgradeGapTimers[lv_i] = null;
-        gv_alertUpgradeGapCooldownTimers[lv_i] = null;
+        TimerStart(gv_alertUpgradeGapTimers[lv_i], lv_infinity, false, c_timeGame);
+        TimerStart(gv_alertUpgradeGapCooldownTimers[lv_i], lv_infinity, false, c_timeGame);
         gv_alertUpgradeGapUpgrades[lv_i] = null;
     }
     auto5984B6EA_ae = gv_productionIdleNumProductionTypes;
     auto5984B6EA_ai = 1;
     lv_j = 0;
     for ( ; ( (auto5984B6EA_ai >= 0 && lv_j <= auto5984B6EA_ae) || (auto5984B6EA_ai <= 0 && lv_j >= auto5984B6EA_ae) ) ; lv_j += auto5984B6EA_ai ) {
-        gv_productionIdleAlertTimers[lv_i] = null;
-        gv_productionIdleCooldownTimers[lv_i] = null;
+        TimerStart(gv_productionIdleAlertTimers[lv_i], lv_infinity, false, c_timeGame);
+        TimerStart(gv_productionIdleCooldownTimers[lv_i], lv_infinity, false, c_timeGame);
         gv_productionIdleUnitTypes[lv_i] = null;
     }
+    gf_PauseAlertTimers();
 }
 
 void gf_SaveBenchmarkMenuConfiguration (string lp_sectionKey) {
@@ -4306,6 +4308,12 @@ string gf_GetNextUpgrade (string lp_currentUpgrade) {
     else if (autoB7B7DC32_val == "TerranVehicleArmorsLevel2") {
         return "TerranVehicleArmorsLevel3";
     }
+    else if (autoB7B7DC32_val == "TerranVehicleAndShipArmorsLevel1") {
+        return "TerranVehicleAndShipArmorsLevel2";
+    }
+    else if (autoB7B7DC32_val == "TerranVehicleAndShipArmorsLevel2") {
+        return "TerranVehicleAndShipArmorsLevel3";
+    }
     else if (autoB7B7DC32_val == "TerranInfantryWeaponsLevel1") {
         return "TerranInfantryWeaponsLevel2";
     }
@@ -4323,6 +4331,12 @@ string gf_GetNextUpgrade (string lp_currentUpgrade) {
     }
     else if (autoB7B7DC32_val == "TerranVehicleWeaponsLevel2") {
         return "TerranVehicleWeaponsLevel3";
+    }
+    else if (autoB7B7DC32_val == "TerranVehicleAndShipWeaponsLevel1") {
+        return "TerranVehicleAndShipWeaponsLevel2";
+    }
+    else if (autoB7B7DC32_val == "TerranVehicleAndShipWeaponsLevel2") {
+        return "TerranVehicleAndShipWeaponsLevel3";
     }
     else if (autoB7B7DC32_val == "ZergFlyerArmorsLevel1") {
         return "ZergFlyerArmorsLevel2";
@@ -6107,7 +6121,7 @@ bool gt_UpgradeGapAboveThresholdNewUpgradeStartsStopActiveTimers_Func (bool test
 
     // Conditions
     if (testConds) {
-        if (!(((gv_paused == false) && (gv_alertUpgradeGapCheckEnabled == true) && ((libNtve_gf_TriggeringProgressUpgrade() == "ZergMeleeWeaponsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergMeleeWeaponsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergMissileWeaponsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergMissileWeaponsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergFlyerWeaponsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergFlyerWeaponsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergGroundArmorsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergGroundArmorsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergFlyerArmorsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergGroundArmorsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranInfantryWeaponsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranInfantryWeaponsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranShipWeaponsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranShipWeaponsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranVehicleWeaponsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranVehicleWeaponsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranInfantryArmorsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranInfantryArmorsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranShipArmorsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranShipArmorsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranVehicleArmorsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranVehicleArmorsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossGroundWeaponsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossGroundWeaponsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossAirWeaponsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossAirWeaponsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossAirArmorsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossAirArmorsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossGroundArmorsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossGroundArmorsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossShieldsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossShieldsLevel3"))))) {
+        if (!(((gv_paused == false) && (gv_alertUpgradeGapCheckEnabled == true) && ((libNtve_gf_TriggeringProgressUpgrade() == "ZergMeleeWeaponsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergMeleeWeaponsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergMissileWeaponsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergMissileWeaponsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergFlyerWeaponsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergFlyerWeaponsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergGroundArmorsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergGroundArmorsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergFlyerArmorsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ZergGroundArmorsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranInfantryWeaponsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranInfantryWeaponsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranShipWeaponsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranShipWeaponsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranVehicleWeaponsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranVehicleWeaponsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranVehicleAndShipWeaponsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranVehicleAndShipWeaponsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranInfantryArmorsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranInfantryArmorsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranShipArmorsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranShipArmorsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranVehicleArmorsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranVehicleArmorsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranVehicleAndShipArmorsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "TerranVehicleAndShipArmorsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossGroundWeaponsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossGroundWeaponsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossAirWeaponsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossAirWeaponsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossAirArmorsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossAirArmorsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossGroundArmorsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossGroundArmorsLevel3") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossShieldsLevel2") || (libNtve_gf_TriggeringProgressUpgrade() == "ProtossShieldsLevel3"))))) {
             return false;
         }
     }
@@ -7752,6 +7766,7 @@ bool gt_EndGame_Func (bool testConds, bool runActions) {
     }
     UnitGroupLoopEnd();
     GameOver(1, c_gameOverVictory, true, true);
+    gf_PauseGame();
     return true;
 }
 
