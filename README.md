@@ -4,7 +4,7 @@
 
 Benchmarker is the Starcraft 2 practice tool you’ve been waiting for. This tool aims to help players of all levels refine and improve their macro mechanics while at the same time practicing the builds they will need to slay all the nerds and steal their ladder points.
 
-####Features
+### Features
 
 Reset builds on the fly without having to remake a custom game.
 
@@ -49,7 +49,7 @@ Supports chat commands and hotkeys for accessing menus in game
 
 *Note - The beta is being released only on Overgrowth LE at the moment for testing purposes.  However, the full release version will support all current ladder pool maps.*
 
-####How To Play
+### How To Play
 
 **For first time players:**
 
@@ -64,11 +64,11 @@ Once you have completed a build you can elect to save it or start over.  If you 
 
 Build Order steps are marked complete when the correct build-order-eligible unit or upgrade is made.  They are marked failed when the incorrect build-order-eligible unit or upgrade is made
 
-####Recommended Practice Technique
+### Recommended Practice Technique
 
 This tool is designed around the idea of perfecting one standard “macro” build for each matchup.  It is intended to help you with learning that build order, improving your macro mechanics, and refining your timings all as part of a single practice session.  For most players below Master League this single build approach is commonly recommended as a great way to improve both on mechanics and understanding basic timings.  So at least until multiple benchmark builds are added (and they almost certainly will be at some point), here are some of my recommended practice techniques:
 
-**Standard Macro Practice**
+##### Standard Macro Practice
 
 1. Pick a matchup.
 2. Think about what you consider your strongest “standard” macro build in that matchup.
@@ -79,7 +79,7 @@ This tool is designed around the idea of perfecting one standard “macro” bui
 7. After your chosen time is up or when you are satisfied with your current performance, move on to your next matchup and repeat steps 2 - 6 until done with each matchup.
 8. Go on the ladder and collect your wins.
 
-**Learning A New Build**
+##### Learning A New Build
 
 1. Pick a build.
 2. Select the appropriate matchup for the build.
@@ -95,7 +95,7 @@ This tool is designed around the idea of perfecting one standard “macro” bui
 
 More advanced players should ideally be comfortable cycling through different benchmark builds for a matchup since they are already familiar with them.  If a large number of users start to ask for multiple different named benchmark builds it could be implemented before the 1.0 release.
 
-####Useful Tips
+### Useful Tips
 
 - *You can stack build order units* if you make 2 of the same unit type within 15 seconds of each other. If the unit type is valid for tracking in build orders, it will be considered 2x of the same step rather than two independent steps.  This also applies to any number of the same build order unit type within 15 seconds of each other.
 - *You can update supply benchmarks automatically* from the post-build report.  This option is available upon finishing a build and lets you automatically save the first three supply benchmarks as the actual supply values from the current build.
