@@ -162,6 +162,8 @@ bool gv_debugMapMechanicsEnabled;
 bool gv_debugAlertsEnabled;
 bool gv_debugBankEnabled;
 bool gv_debugStatsEnabled;
+int[21] gv_debugTimerWindows;
+int gv_numDebugTimerWindows;
 int gv_menuPadding;
 int gv_menuItemRowIndent;
 int gv_menuItemHeight;
@@ -320,7 +322,6 @@ bool gv_paused;
 gs_Resource[257] gv_mapResources;
 int gv_numMapResources;
 bool gv_isFirstBuild;
-bool gv_isFirstReset;
 bool gv_currentBuildIsGasTaken;
 bool gv_currentBuildWasForked;
 timer gv_currentBuildBuildTimer;
@@ -333,6 +334,9 @@ timer gv_overlordInProgressTimer;
 int gv_overlordMorphDuration;
 fixed gv_zergHatcheryCreepRadius;
 int gv_neverexpires;
+bool gv_haveZergAssetsBeenLoaded;
+bool gv_haveTerranAssetsBeenLoaded;
+bool gv_haveProtossAssetsBeenLoaded;
 gs_SupplyBenchmark[5] gv_supplyBenchmarks;
 int[4] gv_benchmarkSupplyObjectives;
 int gv_benchmarkFinalBenchmarkObjective;
@@ -520,6 +524,9 @@ void InitGlobals () {
     gv_pvTMatchupSectionKey = "PvT";
     gv_pvZMatchupSectionKey = "PvZ";
     gv_pvPMatchupSectionKey = "PvP";
+    for (init_i = 0; init_i <= 20; init_i += 1) {
+        gv_debugTimerWindows[init_i] = c_timerWindowNone;
+    }
     gv_menuPadding = 60;
     gv_menuItemRowIndent = 15;
     gv_menuItemHeight = 50;
@@ -695,7 +702,6 @@ void InitGlobals () {
     gv_protossColorLight = Color(72.55, 93.33, 74.90);
     gv_paused = true;
     gv_isFirstBuild = true;
-    gv_isFirstReset = true;
     gv_currentBuildBuildTimer = TimerCreate();
     gv_onehourinseconds = 216000;
     gv_e = 2.7183;
@@ -863,12 +869,15 @@ void gf_RefreshStatsDialogRow (int lp_rowOffset, text lp_labelText, text lp_stat
 void gf_CloseStatsDialogandUnpause ();
 void gf_LogStringMessage (bool lp_alertTypeFlag, string lp_message);
 void gf_LogTextMessage (bool lp_alertTypeFlag, text lp_message);
+void gf_AddDebugTimerWindow (timer lp_timer, text lp_windowName);
+void gf_ClearDebugTimerWindows ();
 void gf_InitializeBankDefaults ();
 void gf_InitializeDialogDefaults ();
 void gf_InitializeGameDefaults ();
 void gf_InitializeGameState ();
 void gf_InitializeMapResources ();
 void gf_InitializeUnitsAndStartingResources ();
+void gf_WaitForRaceAssetsToLoadIfNecessary ();
 void gf_AddResourceToMapResources (unit lp_unit);
 void gf_InitializeBank ();
 void gf_InitializeBuildConfiguration ();
@@ -888,7 +897,7 @@ void gf_ResetBenchmarkSupplyObjectives ();
 void gf_ResetCurrentBuildOrderStepsVariables ();
 void gf_ResetBenchmarkBuildOrderStepsVariables ();
 void gf_ResetBenchmarkBuildOrderObjectives ();
-void gf_ResetAlerts ();
+void gf_ResetAlertTimers ();
 void gf_ResetBenchmarkTimers ();
 void gf_ResetBuildOrderTimers ();
 void gf_PauseGame ();
@@ -1114,6 +1123,14 @@ void gf_AddUpgradeGapAlert (string lp_delayedUpgrade) {
     gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/A3731B98"));
     gv_upgradeGapAlerts[gv_alertUpgradeGapNumUpgrades].lv_delayedUpgrade = lp_delayedUpgrade;
     TimerStart(gv_upgradeGapAlerts[gv_alertUpgradeGapNumUpgrades].lv_alertTimer, gv_alertUpgradeGapThreshold, false, c_timeGame);
+    if ((gv_debugAlertsEnabled == true)) {
+        TextExpressionSetToken("Param/Expression/46760CB3", "A", gf_GetFormattedUpgradeNameasText(lp_delayedUpgrade));
+        gf_AddDebugTimerWindow(gv_upgradeGapAlerts[gv_alertUpgradeGapNumUpgrades].lv_alertTimer, TextExpressionAssemble("Param/Expression/46760CB3"));
+        TextExpressionSetToken("Param/Expression/D1487546", "A", gf_GetFormattedUpgradeNameasText(lp_delayedUpgrade));
+        gf_AddDebugTimerWindow(gv_upgradeGapAlerts[gv_alertUpgradeGapNumUpgrades].lv_cooldownTimer, TextExpressionAssemble("Param/Expression/D1487546"));
+    }
+    else {
+    }
     gv_alertUpgradeGapNumUpgrades += 1;
 }
 
@@ -1195,6 +1212,14 @@ void gf_AddProductionIdleAlert (string lp_unitType) {
     gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/04F20F4B"));
     TimerStart(gv_productionIdleAlerts[gv_productionIdleNumProductionUnitTypes].lv_alertTimer, gv_productionIdleAlertSecondsThreshold, false, c_timeGame);
     gv_productionIdleAlerts[gv_productionIdleNumProductionUnitTypes].lv_unitType = lp_unitType;
+    if ((gv_debugAlertsEnabled == true)) {
+        TextExpressionSetToken("Param/Expression/2DCFD2AA", "A", UnitTypeGetName(lp_unitType));
+        gf_AddDebugTimerWindow(gv_productionIdleAlerts[gv_productionIdleNumProductionUnitTypes].lv_alertTimer, TextExpressionAssemble("Param/Expression/2DCFD2AA"));
+        TextExpressionSetToken("Param/Expression/8E290B4F", "A", UnitTypeGetName(lp_unitType));
+        gf_AddDebugTimerWindow(gv_productionIdleAlerts[gv_productionIdleNumProductionUnitTypes].lv_cooldownTimer, TextExpressionAssemble("Param/Expression/8E290B4F"));
+    }
+    else {
+    }
     gv_productionIdleNumProductionUnitTypes += 1;
 }
 
@@ -1265,25 +1290,25 @@ void gf_PauseAllAlertTimers () {
     int auto33B8CBD4_ai;
 
     // Variable Declarations
-    int lv_i;
-    int lv_j;
+    int lv_upgradeIndex;
+    int lv_unitTypeIndex;
 
     // Variable Initialization
 
     // Implementation
     autoDAB23CA2_ae = gv_alertUpgradeGapNumUpgrades;
     autoDAB23CA2_ai = 1;
-    lv_i = 0;
-    for ( ; ( (autoDAB23CA2_ai >= 0 && lv_i <= autoDAB23CA2_ae) || (autoDAB23CA2_ai <= 0 && lv_i >= autoDAB23CA2_ae) ) ; lv_i += autoDAB23CA2_ai ) {
-        TimerPause(gv_upgradeGapAlerts[lv_i].lv_alertTimer, true);
-        TimerPause(gv_upgradeGapAlerts[lv_i].lv_cooldownTimer, true);
+    lv_upgradeIndex = 0;
+    for ( ; ( (autoDAB23CA2_ai >= 0 && lv_upgradeIndex <= autoDAB23CA2_ae) || (autoDAB23CA2_ai <= 0 && lv_upgradeIndex >= autoDAB23CA2_ae) ) ; lv_upgradeIndex += autoDAB23CA2_ai ) {
+        TimerPause(gv_upgradeGapAlerts[lv_upgradeIndex].lv_alertTimer, true);
+        TimerPause(gv_upgradeGapAlerts[lv_upgradeIndex].lv_cooldownTimer, true);
     }
     auto33B8CBD4_ae = gv_productionIdleNumProductionUnitTypes;
     auto33B8CBD4_ai = 1;
-    lv_j = 0;
-    for ( ; ( (auto33B8CBD4_ai >= 0 && lv_j <= auto33B8CBD4_ae) || (auto33B8CBD4_ai <= 0 && lv_j >= auto33B8CBD4_ae) ) ; lv_j += auto33B8CBD4_ai ) {
-        TimerPause(gv_productionIdleAlerts[lv_i].lv_alertTimer, true);
-        TimerPause(gv_productionIdleAlerts[lv_i].lv_cooldownTimer, true);
+    lv_unitTypeIndex = 0;
+    for ( ; ( (auto33B8CBD4_ai >= 0 && lv_unitTypeIndex <= auto33B8CBD4_ae) || (auto33B8CBD4_ai <= 0 && lv_unitTypeIndex >= auto33B8CBD4_ae) ) ; lv_unitTypeIndex += auto33B8CBD4_ai ) {
+        TimerPause(gv_productionIdleAlerts[lv_unitTypeIndex].lv_alertTimer, true);
+        TimerPause(gv_productionIdleAlerts[lv_unitTypeIndex].lv_cooldownTimer, true);
     }
 }
 
@@ -1294,25 +1319,25 @@ void gf_UnpauseAllAlertTimers () {
     int autoA8434BF4_ai;
 
     // Variable Declarations
-    int lv_i;
-    int lv_j;
+    int lv_upgradeIndex;
+    int lv_unitTypeIndex;
 
     // Variable Initialization
 
     // Implementation
     auto88C88B75_ae = gv_alertUpgradeGapNumUpgrades;
     auto88C88B75_ai = 1;
-    lv_i = 0;
-    for ( ; ( (auto88C88B75_ai >= 0 && lv_i <= auto88C88B75_ae) || (auto88C88B75_ai <= 0 && lv_i >= auto88C88B75_ae) ) ; lv_i += auto88C88B75_ai ) {
-        TimerPause(gv_upgradeGapAlerts[lv_i].lv_alertTimer, false);
-        TimerPause(gv_upgradeGapAlerts[lv_i].lv_cooldownTimer, false);
+    lv_upgradeIndex = 0;
+    for ( ; ( (auto88C88B75_ai >= 0 && lv_upgradeIndex <= auto88C88B75_ae) || (auto88C88B75_ai <= 0 && lv_upgradeIndex >= auto88C88B75_ae) ) ; lv_upgradeIndex += auto88C88B75_ai ) {
+        TimerPause(gv_upgradeGapAlerts[lv_upgradeIndex].lv_alertTimer, false);
+        TimerPause(gv_upgradeGapAlerts[lv_upgradeIndex].lv_cooldownTimer, false);
     }
     autoA8434BF4_ae = gv_productionIdleNumProductionUnitTypes;
     autoA8434BF4_ai = 1;
-    lv_i = 0;
-    for ( ; ( (autoA8434BF4_ai >= 0 && lv_i <= autoA8434BF4_ae) || (autoA8434BF4_ai <= 0 && lv_i >= autoA8434BF4_ae) ) ; lv_i += autoA8434BF4_ai ) {
-        TimerPause(gv_productionIdleAlerts[lv_i].lv_alertTimer, false);
-        TimerPause(gv_productionIdleAlerts[lv_i].lv_cooldownTimer, false);
+    lv_upgradeIndex = 0;
+    for ( ; ( (autoA8434BF4_ai >= 0 && lv_upgradeIndex <= autoA8434BF4_ae) || (autoA8434BF4_ai <= 0 && lv_upgradeIndex >= autoA8434BF4_ae) ) ; lv_upgradeIndex += autoA8434BF4_ai ) {
+        TimerPause(gv_productionIdleAlerts[lv_unitTypeIndex].lv_alertTimer, false);
+        TimerPause(gv_productionIdleAlerts[lv_unitTypeIndex].lv_cooldownTimer, false);
     }
 }
 
@@ -2960,6 +2985,32 @@ void gf_LogTextMessage (bool lp_alertTypeFlag, text lp_message) {
     }
 }
 
+void gf_AddDebugTimerWindow (timer lp_timer, text lp_windowName) {
+    // Implementation
+    TimerWindowCreate(lp_timer, lp_windowName, true, false);
+    gv_debugTimerWindows[gv_numDebugTimerWindows] = TimerWindowLastCreated();
+    gv_numDebugTimerWindows += 1;
+}
+
+void gf_ClearDebugTimerWindows () {
+    int auto507A3A19_ae;
+    int auto507A3A19_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    auto507A3A19_ae = gv_numDebugTimerWindows;
+    auto507A3A19_ai = 1;
+    lv_i = 0;
+    for ( ; ( (auto507A3A19_ai >= 0 && lv_i <= auto507A3A19_ae) || (auto507A3A19_ai <= 0 && lv_i >= auto507A3A19_ae) ) ; lv_i += auto507A3A19_ai ) {
+        TimerWindowDestroy(gv_debugTimerWindows[lv_i]);
+    }
+    gv_numDebugTimerWindows = 0;
+}
+
 void gf_InitializeBankDefaults () {
     string auto12733010_val;
 
@@ -3061,7 +3112,6 @@ void gf_InitializeGameDefaults () {
 
 void gf_InitializeGameState () {
     // Implementation
-    gf_InitializeUnitsAndStartingResources();
     gf_ResetBuildOrderTimers();
     gf_InitializeBuildConfiguration();
     gf_LogTextMessage(gv_debugMapMechanicsEnabled, StringExternal("Param/Value/10A5A2AE"));
@@ -3111,6 +3161,25 @@ void gf_InitializeUnitsAndStartingResources () {
     }
     MeleeInitUnitsForPlayer(2, gf_GetCurrentlySelectedMatchupOpponentRace(), PlayerStartLocation(2));
     MeleeInitResources();
+    gf_WaitForRaceAssetsToLoadIfNecessary();
+}
+
+void gf_WaitForRaceAssetsToLoadIfNecessary () {
+    // Implementation
+    if (((PlayerRace(1) == "Zerg") || (PlayerRace(2) == "Zerg") || (gf_GetCurrentlySelectedMatchupOpponentRace() == "Zerg"))) {
+        gv_haveZergAssetsBeenLoaded = true;
+    }
+    else if (((PlayerRace(1) == "Terr") || (PlayerRace(2) == "Terr") || (gf_GetCurrentlySelectedMatchupOpponentRace() == "Terr"))) {
+        gv_haveTerranAssetsBeenLoaded = true;
+    }
+    else if (((PlayerRace(1) == "Prot") || (PlayerRace(2) == "Prot") || (gf_GetCurrentlySelectedMatchupOpponentRace() == "Prot"))) {
+        gv_haveProtossAssetsBeenLoaded = true;
+    }
+    if (((gv_isFirstBuild == false) && (((gf_GetCurrentlySelectedMatchupOpponentRace() == "Zerg") && (gv_haveZergAssetsBeenLoaded == false)) || ((gf_GetCurrentlySelectedMatchupOpponentRace() == "Terr") && (gv_haveTerranAssetsBeenLoaded == false)) || ((gf_GetCurrentlySelectedMatchupOpponentRace() == "Prot") && (gv_haveProtossAssetsBeenLoaded == false))))) {
+        Wait(1.0, c_timeGame);
+    }
+    else {
+    }
 }
 
 void gf_AddResourceToMapResources (unit lp_unit) {
@@ -3202,13 +3271,13 @@ void gf_ResetGameState () {
     gf_ResetBenchmarkSupplyObjectives();
     gf_ResetBenchmarkBuildOrderObjectives();
     gf_ResetBenchmarkBuildOrderStepsVariables();
-    gf_ResetAlerts();
+    gf_ResetAlertTimers();
     gf_ResetBenchmarkTimers();
     gf_ResetBuildOrderTimers();
     TimerRestart(gv_currentBuildBuildTimer);
     gf_ResetCamera();
     gf_InitializeBuildConfiguration();
-    Wait(0.5, c_timeGame);
+    Wait(0.25, c_timeGame);
     gf_ResetMapVision();
     gf_InitializeUnitsAndStartingResources();
 }
@@ -3561,38 +3630,43 @@ void gf_ResetBenchmarkBuildOrderObjectives () {
     }
 }
 
-void gf_ResetAlerts () {
+void gf_ResetAlertTimers () {
     int auto453C1E1D_ae;
     int auto453C1E1D_ai;
     int auto5984B6EA_ae;
     int auto5984B6EA_ai;
 
     // Variable Declarations
-    int lv_i;
-    int lv_j;
+    int lv_upgradeIndex;
+    int lv_unitTypeIndex;
 
     // Variable Initialization
 
     // Implementation
     auto453C1E1D_ae = gv_alertUpgradeGapNumUpgrades;
     auto453C1E1D_ai = 1;
-    lv_i = 0;
-    for ( ; ( (auto453C1E1D_ai >= 0 && lv_i <= auto453C1E1D_ae) || (auto453C1E1D_ai <= 0 && lv_i >= auto453C1E1D_ae) ) ; lv_i += auto453C1E1D_ai ) {
-        TimerStart(gv_upgradeGapAlerts[lv_i].lv_alertTimer, gv_neverexpires, false, c_timeGame);
-        TimerStart(gv_upgradeGapAlerts[lv_i].lv_cooldownTimer, gv_neverexpires, false, c_timeGame);
-        gv_upgradeGapAlerts[lv_i].lv_delayedUpgrade = null;
+    lv_upgradeIndex = 0;
+    for ( ; ( (auto453C1E1D_ai >= 0 && lv_upgradeIndex <= auto453C1E1D_ae) || (auto453C1E1D_ai <= 0 && lv_upgradeIndex >= auto453C1E1D_ae) ) ; lv_upgradeIndex += auto453C1E1D_ai ) {
+        TextExpressionSetToken("Param/Expression/3C4987E6", "A", gf_GetFormattedUpgradeNameasText(gv_upgradeGapAlerts[lv_upgradeIndex].lv_delayedUpgrade));
+        TextExpressionSetToken("Param/Expression/3C4987E6", "B", IntToText(lv_upgradeIndex));
+        gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/3C4987E6"));
+        TimerStart(gv_upgradeGapAlerts[lv_upgradeIndex].lv_alertTimer, gv_neverexpires, false, c_timeGame);
+        TimerPause(gv_upgradeGapAlerts[lv_upgradeIndex].lv_alertTimer, true);
+        TimerStart(gv_upgradeGapAlerts[lv_upgradeIndex].lv_cooldownTimer, gv_neverexpires, false, c_timeGame);
+        TimerPause(gv_upgradeGapAlerts[lv_upgradeIndex].lv_cooldownTimer, true);
     }
-    gv_alertUpgradeGapNumUpgrades = 0;
     auto5984B6EA_ae = gv_productionIdleNumProductionUnitTypes;
     auto5984B6EA_ai = 1;
-    lv_j = 0;
-    for ( ; ( (auto5984B6EA_ai >= 0 && lv_j <= auto5984B6EA_ae) || (auto5984B6EA_ai <= 0 && lv_j >= auto5984B6EA_ae) ) ; lv_j += auto5984B6EA_ai ) {
-        TimerStart(gv_productionIdleAlerts[lv_i].lv_alertTimer, gv_neverexpires, false, c_timeGame);
-        TimerStart(gv_productionIdleAlerts[lv_i].lv_cooldownTimer, gv_neverexpires, false, c_timeGame);
-        gv_productionIdleAlerts[lv_i].lv_unitType = null;
+    lv_unitTypeIndex = 0;
+    for ( ; ( (auto5984B6EA_ai >= 0 && lv_unitTypeIndex <= auto5984B6EA_ae) || (auto5984B6EA_ai <= 0 && lv_unitTypeIndex >= auto5984B6EA_ae) ) ; lv_unitTypeIndex += auto5984B6EA_ai ) {
+        TextExpressionSetToken("Param/Expression/B0C0E1EF", "A", UnitTypeGetName(gv_productionIdleAlerts[lv_unitTypeIndex].lv_unitType));
+        TextExpressionSetToken("Param/Expression/B0C0E1EF", "B", IntToText(lv_unitTypeIndex));
+        gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/B0C0E1EF"));
+        TimerStart(gv_productionIdleAlerts[lv_unitTypeIndex].lv_alertTimer, gv_neverexpires, false, c_timeGame);
+        TimerPause(gv_productionIdleAlerts[lv_unitTypeIndex].lv_alertTimer, true);
+        TimerStart(gv_productionIdleAlerts[lv_unitTypeIndex].lv_cooldownTimer, gv_neverexpires, false, c_timeGame);
+        TimerPause(gv_productionIdleAlerts[lv_unitTypeIndex].lv_cooldownTimer, true);
     }
-    gv_productionIdleNumProductionUnitTypes = 0;
-    gf_PauseAllAlertTimers();
 }
 
 void gf_ResetBenchmarkTimers () {
@@ -3605,7 +3679,7 @@ void gf_ResetBenchmarkTimers () {
 
 void gf_ResetBuildOrderTimers () {
     // Implementation
-    TimerStart(gv_multipleUnitFailureTimer, 99999.0, false, c_timeReal);
+    TimerStart(gv_multipleUnitFailureTimer, gv_neverexpires, false, c_timeGame);
     TimerPause(gv_multipleUnitFailureTimer, true);
 }
 
@@ -4713,9 +4787,13 @@ bool gf_IsUnitTypeTrainingQueueEmpty (string lp_unitType) {
             else {
                 if ((gf_IsUnitBusyResearchinganUpgrade(lv_currenUnit) == true)) {
                     lv_queueIsEmpty = false;
+                    TextExpressionSetToken("Param/Expression/987CB6FA", "A", UnitTypeGetName(UnitGetType(lv_currenUnit)));
+                    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/987CB6FA"));
                 }
                 else {
                     lv_queueIsEmpty = true;
+                    TextExpressionSetToken("Param/Expression/91F3C79E", "A", UnitTypeGetName(UnitGetType(lv_currenUnit)));
+                    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/91F3C79E"));
                 }
             }
         }
@@ -5858,84 +5936,89 @@ text gf_GetFormattedUpgradeNameasText (string lp_upgrade) {
     lv_condensedFormattedUpgradeCatalogString = "";
 
     // Implementation
-    lv_upgradeCatalogString = CatalogFieldValueGet(c_gameCatalogUpgrade, lp_upgrade, "Name", c_playerAny);
-    lv_result = lv_upgradeCatalogString;
-    lv_formattedUpgradeCatalogString = gf_FormatCatalogStringwithSpaces(lv_upgradeCatalogString);
-    if (((lp_upgrade == "TerranVehicleAndShipWeaponsLevel1") || (lp_upgrade == "TerranVehicleAndShipWeaponsLevel2") || (lp_upgrade == "TerranVehicleAndShipWeaponsLevel3") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel1") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel3") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel2"))) {
-        lv_result = (StringWord(lv_formattedUpgradeCatalogString, 4) + "&" + StringWord(lv_formattedUpgradeCatalogString, 6) + " " + gf_TrimSOffArmorsUpgradeName(StringWord(lv_formattedUpgradeCatalogString, 7)) + " " + StringWord(lv_formattedUpgradeCatalogString, 9));
+    if ((lp_upgrade == null)) {
+        lv_result = "null";
     }
     else {
-    }
-    if ((gf_IsAttackDefenseUpgrade(lp_upgrade) == true)) {
-        lv_result = (StringWord(lv_formattedUpgradeCatalogString, 4) + " " + gf_TrimSOffArmorsUpgradeName(StringWord(lv_formattedUpgradeCatalogString, 5)) + " " + StringWord(lv_formattedUpgradeCatalogString, 7));
-    }
-    else {
-    }
-    if ((StringContains(lv_formattedUpgradeCatalogString, "zerglingmovementspeed", c_stringEnd, c_stringCase) == true)) {
-        lv_result = "Zergling Speed";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "CentrificalHooks", c_stringEnd, c_stringCase) == true)) {
-        lv_result = "Baneling Speed";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "zerglingattacktspeed", c_stringEnd, c_stringCase) == true)) {
-        lv_result = "Adrenal Glands";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "hydraliskspeed", c_stringEnd, c_stringCase) == true)) {
-        lv_result = "Hydralisk Attack Range";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "HydraliskSpeedUpgrade", c_stringEnd, c_stringCase) == true)) {
-        lv_result = "Hydralisk Speed";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "overlordspeed", c_stringEnd, c_stringCase) == true)) {
-        lv_result = "Overlord Speed";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "overlordtransport", c_stringEnd, c_stringCase) == true)) {
-        lv_result = "Overlord Transport";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "Glial Reconstitution", c_stringEnd, c_stringCase) == true)) {
-        lv_result = "Roach Speed";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "Tunneling Claws", c_stringEnd, c_stringCase) == true)) {
-        lv_result = "Burrow Movement";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "Locust Lifetime Increase", c_stringEnd, c_stringCase) == true)) {
-        lv_result = "Enduring Locusts";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "Centrifical Hooks", c_stringEnd, c_stringCase) == true)) {
-        lv_result = "Baneling Speed";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "Chitinous Plating", c_stringEnd, c_stringCase) == true)) {
-        lv_result = "Chitinous Plating";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "Burrow", c_stringEnd, c_stringCase) == true)) {
-        lv_result = "Burrow";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "High Capacity Barrels", c_stringAnywhere, c_stringCase) == true)) {
-        lv_result = "Blue Flame";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "Stimpack", c_stringAnywhere, c_stringCase) == true)) {
-        lv_result = "Stim";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "Punisher Grenades", c_stringAnywhere, c_stringCase) == true)) {
-        lv_result = "Concussive Shells";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "Shield Wall", c_stringAnywhere, c_stringCase) == true)) {
-        lv_result = "Combat Shields";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "Banshee Cloak", c_stringAnywhere, c_stringCase) == true)) {
-        lv_result = "Cloak (Banshee)";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "Personal Cloaking", c_stringAnywhere, c_stringCase) == true)) {
-        lv_result = "Cloak (Ghost)";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "Warp Gate Research", c_stringAnywhere, c_stringCase) == true)) {
-        lv_result = "Warp Gate";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "Blink Tech", c_stringAnywhere, c_stringCase) == true)) {
-        lv_result = "Blink";
-    }
-    else if ((StringContains(lv_formattedUpgradeCatalogString, "Charge", c_stringAnywhere, c_stringCase) == true)) {
-        lv_result = "Charge";
+        lv_upgradeCatalogString = CatalogFieldValueGet(c_gameCatalogUpgrade, lp_upgrade, "Name", c_playerAny);
+        lv_result = lv_upgradeCatalogString;
+        lv_formattedUpgradeCatalogString = gf_FormatCatalogStringwithSpaces(lv_upgradeCatalogString);
+        if (((lp_upgrade == "TerranVehicleAndShipWeaponsLevel1") || (lp_upgrade == "TerranVehicleAndShipWeaponsLevel2") || (lp_upgrade == "TerranVehicleAndShipWeaponsLevel3") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel1") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel3") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel2"))) {
+            lv_result = (StringWord(lv_formattedUpgradeCatalogString, 4) + "&" + StringWord(lv_formattedUpgradeCatalogString, 6) + " " + gf_TrimSOffArmorsUpgradeName(StringWord(lv_formattedUpgradeCatalogString, 7)) + " " + StringWord(lv_formattedUpgradeCatalogString, 9));
+        }
+        else {
+        }
+        if ((gf_IsAttackDefenseUpgrade(lp_upgrade) == true)) {
+            lv_result = (StringWord(lv_formattedUpgradeCatalogString, 4) + " " + gf_TrimSOffArmorsUpgradeName(StringWord(lv_formattedUpgradeCatalogString, 5)) + " " + StringWord(lv_formattedUpgradeCatalogString, 7));
+        }
+        else {
+        }
+        if ((StringContains(lv_formattedUpgradeCatalogString, "zerglingmovementspeed", c_stringEnd, c_stringCase) == true)) {
+            lv_result = "Zergling Speed";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "CentrificalHooks", c_stringEnd, c_stringCase) == true)) {
+            lv_result = "Baneling Speed";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "zerglingattacktspeed", c_stringEnd, c_stringCase) == true)) {
+            lv_result = "Adrenal Glands";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "hydraliskspeed", c_stringEnd, c_stringCase) == true)) {
+            lv_result = "Hydralisk Attack Range";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "HydraliskSpeedUpgrade", c_stringEnd, c_stringCase) == true)) {
+            lv_result = "Hydralisk Speed";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "overlordspeed", c_stringEnd, c_stringCase) == true)) {
+            lv_result = "Overlord Speed";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "overlordtransport", c_stringEnd, c_stringCase) == true)) {
+            lv_result = "Overlord Transport";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "Glial Reconstitution", c_stringEnd, c_stringCase) == true)) {
+            lv_result = "Roach Speed";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "Tunneling Claws", c_stringEnd, c_stringCase) == true)) {
+            lv_result = "Burrow Movement";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "Locust Lifetime Increase", c_stringEnd, c_stringCase) == true)) {
+            lv_result = "Enduring Locusts";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "Centrifical Hooks", c_stringEnd, c_stringCase) == true)) {
+            lv_result = "Baneling Speed";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "Chitinous Plating", c_stringEnd, c_stringCase) == true)) {
+            lv_result = "Chitinous Plating";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "Burrow", c_stringEnd, c_stringCase) == true)) {
+            lv_result = "Burrow";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "High Capacity Barrels", c_stringAnywhere, c_stringCase) == true)) {
+            lv_result = "Blue Flame";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "Stimpack", c_stringAnywhere, c_stringCase) == true)) {
+            lv_result = "Stim";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "Punisher Grenades", c_stringAnywhere, c_stringCase) == true)) {
+            lv_result = "Concussive Shells";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "Shield Wall", c_stringAnywhere, c_stringCase) == true)) {
+            lv_result = "Combat Shields";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "Banshee Cloak", c_stringAnywhere, c_stringCase) == true)) {
+            lv_result = "Cloak (Banshee)";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "Personal Cloaking", c_stringAnywhere, c_stringCase) == true)) {
+            lv_result = "Cloak (Ghost)";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "Warp Gate Research", c_stringAnywhere, c_stringCase) == true)) {
+            lv_result = "Warp Gate";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "Blink Tech", c_stringAnywhere, c_stringCase) == true)) {
+            lv_result = "Blink";
+        }
+        else if ((StringContains(lv_formattedUpgradeCatalogString, "Charge", c_stringAnywhere, c_stringCase) == true)) {
+            lv_result = "Charge";
+        }
     }
     return StringToText(lv_result);
 }
@@ -6574,7 +6657,7 @@ bool gt_StartBuild_Func (bool testConds, bool runActions) {
     else {
         gf_InitializeGameState();
     }
-    Wait(1.5, c_timeGame);
+    Wait(0.5, c_timeGame);
     if ((gv_isFirstBuild == true)) {
         Wait(0.5, c_timeGame);
         gv_isFirstBuild = false;
@@ -6617,20 +6700,14 @@ bool gt_ResetBuild_Func (bool testConds, bool runActions) {
     CinematicFade(false, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
     gf_PauseGame();
     gf_ResetGameState();
-    Wait(1.0, c_timeGame);
-    if ((gv_isFirstReset == true)) {
-        Wait(0.5, c_timeGame);
-        gv_isFirstReset = false;
-    }
-    else {
-    }
-    gf_UnpauseGame();
     UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
     if (((gv_debugAlertsEnabled == false) && (gv_debugBankEnabled == false) && (gv_debugBuildOrderEnabled == false) && (gv_debugMapMechanicsEnabled == false) && (gv_debugMenusEnabled == false) && (gv_debugStatsEnabled == false))) {
         UIClearMessages(PlayerGroupAll(), c_messageAreaChat);
     }
     else {
     }
+    Wait(0.5, c_timeGame);
+    gf_UnpauseGame();
     CameraPan(1, PlayerStartLocation(1), 0.5, -1, 5.0, true);
     CinematicFade(true, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
     return true;
@@ -6749,6 +6826,7 @@ bool gt_ToggleDebugAlerts_Func (bool testConds, bool runActions) {
     }
     else {
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/26B62EAA"));
+        gf_ClearDebugTimerWindows();
         gv_debugAlertsEnabled = false;
     }
     return true;
@@ -6823,10 +6901,12 @@ bool gt_ToggleDebugBuildOrder_Func (bool testConds, bool runActions) {
 
     if ((gv_debugBuildOrderEnabled == false)) {
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/6F56ECFB"));
+        gf_AddDebugTimerWindow(gv_multipleUnitFailureTimer, StringExternal("Param/Value/D2522762"));
         gv_debugBuildOrderEnabled = true;
     }
     else {
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/A4733019"));
+        gf_ClearDebugTimerWindows();
         gv_debugBuildOrderEnabled = false;
     }
     return true;
@@ -7866,6 +7946,7 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_InitializeBankDefaults();
     gf_InitializeBank();
     gf_InitializeMapResources();
+    gf_InitializeUnitsAndStartingResources();
     gf_PauseGame();
     gf_InitializeBenchmarkDialog();
     gf_ShowBenchmarkDialog();
