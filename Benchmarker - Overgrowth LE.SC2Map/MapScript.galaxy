@@ -62,6 +62,8 @@ struct gs_BuildOrderStep {
 bool gv_muteAlertsEnabled;
 fixed gv_warningPingCooldownSeconds;
 int gv_alertCooldownSeconds;
+timer[61] gv_pausedAlertTimers;
+int gv_numPausedAlertTimers;
 bool gv_aPMBelowThresholdEnabled;
 int gv_aPMThreshold;
 int gv_aPMThresholdDuration;
@@ -90,7 +92,7 @@ gs_UpgradeGapAlert[31] gv_upgradeGapAlerts;
 int gv_alertUpgradeGapNumUpgrades;
 bool gv_productionIdleAlertEnabled;
 int gv_productionIdleAlertSecondsThreshold;
-gs_ProductionIdleAlert[21] gv_productionIdleAlerts;
+gs_ProductionIdleAlert[31] gv_productionIdleAlerts;
 int gv_productionIdleNumProductionUnitTypes;
 bank gv_benchmarkerBank;
 string gv_configurationOptionsSectionKey;
@@ -437,6 +439,9 @@ void InitGlobals () {
     int init_j;
     int init_k;
 
+    for (init_i = 0; init_i <= 60; init_i += 1) {
+        gv_pausedAlertTimers[init_i] = TimerCreate();
+    }
     gv_aPMBelowThresholdAlertCheckbox = c_invalidDialogControlId;
     gv_aPMBelowThresholdCooldownTimer = TimerCreate();
     gv_alertMineralsEnabled = true;
@@ -453,7 +458,7 @@ void InitGlobals () {
         gv_upgradeGapAlerts[init_i].lv_cooldownTimer = TimerCreate();
     }
     gv_productionIdleAlertEnabled = true;
-    for (init_i = 0; init_i <= 20; init_i += 1) {
+    for (init_i = 0; init_i <= 30; init_i += 1) {
         gv_productionIdleAlerts[init_i].lv_alertTimer = TimerCreate();
         gv_productionIdleAlerts[init_i].lv_cooldownTimer = TimerCreate();
     }
@@ -775,6 +780,10 @@ void gf_RestartProductionIdleAlertTimer (string lp_unitType);
 void gf_RestartProductionIdleCooldownTimer (string lp_unitType);
 void gf_PauseAllAlertTimers ();
 void gf_UnpauseAllAlertTimers ();
+void gf_StorePausedAlertTimers ();
+void gf_CheckTimerAndStoreIfPaused (timer lp_timer);
+void gf_PauseStoredAlertTimers ();
+void gf_ClearStoredPausedAlertTimers ();
 void gf_SaveBenchmarkMenuConfiguration (string lp_sectionKey);
 void gf_RefreshSupplyBenchmarksConfigurationValuesFromDialog ();
 void gf_RefreshBuildCompletionConfigurationValuesFromDialog ();
@@ -1248,8 +1257,8 @@ void gf_FireProductionIdleAlert (timer lp_timer) {
 
     // Implementation
     lv_alertIndex = gf_GetProductionIdleAlertIndexForTimer(lp_timer);
-    TextExpressionSetToken("Param/Expression/0021D979", "A", UnitTypeGetName(gv_productionIdleAlerts[lv_alertIndex].lv_unitType));
-    UIAlert("ProductionIdleTooLong", 1, TextExpressionAssemble("Param/Expression/0021D979"), gf_GetIconForBuildingType(gv_productionIdleAlerts[lv_alertIndex].lv_unitType));
+    TextExpressionSetToken("Param/Expression/0021D979", "A", UnitTypeGetName(gv_productionIdleAlerts[0].lv_unitType));
+    UIAlert("ProductionIdleTooLong", 1, TextExpressionAssemble("Param/Expression/0021D979"), gf_GetIconForBuildingType(gv_productionIdleAlerts[0].lv_unitType));
     if ((gv_muteAlertsEnabled == false)) {
         SoundPlay(SoundLink("Alert_UniObjectiveCompleted", -1), PlayerGroupAll(), 50.0, 0.0);
     }
@@ -1301,6 +1310,7 @@ void gf_PauseAllAlertTimers () {
     // Variable Initialization
 
     // Implementation
+    gf_StorePausedAlertTimers();
     autoDAB23CA2_ae = gv_alertUpgradeGapNumUpgrades;
     autoDAB23CA2_ai = 1;
     lv_upgradeIndex = 0;
@@ -1344,6 +1354,86 @@ void gf_UnpauseAllAlertTimers () {
         TimerPause(gv_productionIdleAlerts[lv_unitTypeIndex].lv_alertTimer, false);
         TimerPause(gv_productionIdleAlerts[lv_unitTypeIndex].lv_cooldownTimer, false);
     }
+    gf_PauseStoredAlertTimers();
+    gf_ClearStoredPausedAlertTimers();
+}
+
+void gf_StorePausedAlertTimers () {
+    int auto1A1F78DB_ae;
+    int auto1A1F78DB_ai;
+    int auto0939AF26_ae;
+    int auto0939AF26_ai;
+
+    // Variable Declarations
+    int lv_upgradeIndex;
+    int lv_unitTypeIndex;
+
+    // Variable Initialization
+
+    // Implementation
+    auto1A1F78DB_ae = gv_alertUpgradeGapNumUpgrades;
+    auto1A1F78DB_ai = 1;
+    lv_upgradeIndex = 0;
+    for ( ; ( (auto1A1F78DB_ai >= 0 && lv_upgradeIndex <= auto1A1F78DB_ae) || (auto1A1F78DB_ai <= 0 && lv_upgradeIndex >= auto1A1F78DB_ae) ) ; lv_upgradeIndex += auto1A1F78DB_ai ) {
+        gf_CheckTimerAndStoreIfPaused(gv_upgradeGapAlerts[lv_upgradeIndex].lv_alertTimer);
+        gf_CheckTimerAndStoreIfPaused(gv_upgradeGapAlerts[lv_upgradeIndex].lv_cooldownTimer);
+    }
+    auto0939AF26_ae = gv_productionIdleNumProductionUnitTypes;
+    auto0939AF26_ai = 1;
+    lv_unitTypeIndex = 0;
+    for ( ; ( (auto0939AF26_ai >= 0 && lv_unitTypeIndex <= auto0939AF26_ae) || (auto0939AF26_ai <= 0 && lv_unitTypeIndex >= auto0939AF26_ae) ) ; lv_unitTypeIndex += auto0939AF26_ai ) {
+        gf_CheckTimerAndStoreIfPaused(gv_productionIdleAlerts[lv_unitTypeIndex].lv_alertTimer);
+        gf_CheckTimerAndStoreIfPaused(gv_productionIdleAlerts[lv_unitTypeIndex].lv_cooldownTimer);
+    }
+    TextExpressionSetToken("Param/Expression/C506AD84", "A", IntToText(gv_numPausedAlertTimers));
+    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/C506AD84"));
+}
+
+void gf_CheckTimerAndStoreIfPaused (timer lp_timer) {
+    // Implementation
+    if ((TimerIsPaused(lp_timer) == true)) {
+        gv_pausedAlertTimers[gv_numPausedAlertTimers] = lp_timer;
+        gv_numPausedAlertTimers += 1;
+    }
+    else {
+    }
+}
+
+void gf_PauseStoredAlertTimers () {
+    int auto35F4B622_ae;
+    int auto35F4B622_ai;
+
+    // Variable Declarations
+    int lv_index;
+
+    // Variable Initialization
+
+    // Implementation
+    auto35F4B622_ae = gv_numPausedAlertTimers;
+    auto35F4B622_ai = 1;
+    lv_index = 0;
+    for ( ; ( (auto35F4B622_ai >= 0 && lv_index <= auto35F4B622_ae) || (auto35F4B622_ai <= 0 && lv_index >= auto35F4B622_ae) ) ; lv_index += auto35F4B622_ai ) {
+        TimerPause(gv_pausedAlertTimers[lv_index], true);
+    }
+}
+
+void gf_ClearStoredPausedAlertTimers () {
+    int auto671DADCF_ae;
+    int auto671DADCF_ai;
+
+    // Variable Declarations
+    int lv_index;
+
+    // Variable Initialization
+
+    // Implementation
+    auto671DADCF_ae = gv_numPausedAlertTimers;
+    auto671DADCF_ai = 1;
+    lv_index = 0;
+    for ( ; ( (auto671DADCF_ai >= 0 && lv_index <= auto671DADCF_ae) || (auto671DADCF_ai <= 0 && lv_index >= auto671DADCF_ae) ) ; lv_index += auto671DADCF_ai ) {
+        gv_pausedAlertTimers[lv_index] = null;
+    }
+    gv_numPausedAlertTimers = 0;
 }
 
 void gf_SaveBenchmarkMenuConfiguration (string lp_sectionKey) {
@@ -3664,13 +3754,13 @@ void gf_ResetAlertTimers () {
     auto5984B6EA_ai = 1;
     lv_unitTypeIndex = 0;
     for ( ; ( (auto5984B6EA_ai >= 0 && lv_unitTypeIndex <= auto5984B6EA_ae) || (auto5984B6EA_ai <= 0 && lv_unitTypeIndex >= auto5984B6EA_ae) ) ; lv_unitTypeIndex += auto5984B6EA_ai ) {
-        TextExpressionSetToken("Param/Expression/B0C0E1EF", "A", UnitTypeGetName(gv_productionIdleAlerts[lv_unitTypeIndex].lv_unitType));
+        TextExpressionSetToken("Param/Expression/B0C0E1EF", "A", UnitTypeGetName(gv_productionIdleAlerts[0].lv_unitType));
         TextExpressionSetToken("Param/Expression/B0C0E1EF", "B", IntToText(lv_unitTypeIndex));
         gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/B0C0E1EF"));
-        TimerStart(gv_productionIdleAlerts[lv_unitTypeIndex].lv_alertTimer, gv_neverexpires, false, c_timeGame);
-        TimerPause(gv_productionIdleAlerts[lv_unitTypeIndex].lv_alertTimer, true);
-        TimerStart(gv_productionIdleAlerts[lv_unitTypeIndex].lv_cooldownTimer, gv_neverexpires, false, c_timeGame);
-        TimerPause(gv_productionIdleAlerts[lv_unitTypeIndex].lv_cooldownTimer, true);
+        TimerStart(gv_productionIdleAlerts[0].lv_alertTimer, gv_neverexpires, false, c_timeGame);
+        TimerPause(gv_productionIdleAlerts[0].lv_alertTimer, true);
+        TimerStart(gv_productionIdleAlerts[0].lv_cooldownTimer, gv_neverexpires, false, c_timeGame);
+        TimerPause(gv_productionIdleAlerts[0].lv_cooldownTimer, true);
     }
 }
 
@@ -4713,7 +4803,7 @@ bool gf_IsTimeraProductionIdleTimer (timer lp_timer) {
     autoD5049005_ai = 1;
     lv_i = 0;
     for ( ; ( (autoD5049005_ai >= 0 && lv_i <= autoD5049005_ae) || (autoD5049005_ai <= 0 && lv_i >= autoD5049005_ae) ) ; lv_i += autoD5049005_ai ) {
-        if (((lp_timer == gv_productionIdleAlerts[lv_i].lv_alertTimer) || (lp_timer == gv_productionIdleAlerts[lv_i].lv_cooldownTimer))) {
+        if (((lp_timer == gv_productionIdleAlerts[0].lv_alertTimer) || (lp_timer == gv_productionIdleAlerts[0].lv_cooldownTimer))) {
             lv_result = true;
         }
         else {
@@ -4737,7 +4827,7 @@ bool gf_DoesProductionIdleAlertExistForUnitType (string lp_unitType) {
     auto4C73585D_ai = 1;
     lv_i = 0;
     for ( ; ( (auto4C73585D_ai >= 0 && lv_i <= auto4C73585D_ae) || (auto4C73585D_ai <= 0 && lv_i >= auto4C73585D_ae) ) ; lv_i += auto4C73585D_ai ) {
-        if ((gv_productionIdleAlerts[lv_i].lv_unitType == lp_unitType)) {
+        if ((gv_productionIdleAlerts[0].lv_unitType == lp_unitType)) {
             lv_result = true;
         }
         else {
@@ -4778,7 +4868,7 @@ bool gf_IsAnyProductionUnitTypeQueueIdle () {
         autoBD02A5A8_ai = 1;
         lv_i = 0;
         for ( ; ( (autoBD02A5A8_ai >= 0 && lv_i <= autoBD02A5A8_ae) || (autoBD02A5A8_ai <= 0 && lv_i >= autoBD02A5A8_ae) ) ; lv_i += autoBD02A5A8_ai ) {
-            if ((gf_IsUnitTypeTrainingQueueEmpty(gv_productionIdleAlerts[lv_i].lv_unitType, true) == true)) {
+            if ((gf_IsUnitTypeTrainingQueueEmpty(gv_productionIdleAlerts[0].lv_unitType, true) == true)) {
                 lv_result = true;
             }
             else {
@@ -4911,7 +5001,7 @@ int gf_GetProductionIdleAlertIndexForUnitType (string lp_unitType) {
     autoD4F7F426_ai = 1;
     lv_i = 0;
     for ( ; ( (autoD4F7F426_ai >= 0 && lv_i <= autoD4F7F426_ae) || (autoD4F7F426_ai <= 0 && lv_i >= autoD4F7F426_ae) ) ; lv_i += autoD4F7F426_ai ) {
-        if ((lp_unitType == gv_productionIdleAlerts[lv_i].lv_unitType)) {
+        if ((lp_unitType == gv_productionIdleAlerts[0].lv_unitType)) {
             lv_result = lv_i;
             break;
         }
@@ -4936,7 +5026,7 @@ int gf_GetProductionIdleAlertIndexForTimer (timer lp_timer) {
     auto852680E5_ai = 1;
     lv_i = 0;
     for ( ; ( (auto852680E5_ai >= 0 && lv_i <= auto852680E5_ae) || (auto852680E5_ai <= 0 && lv_i >= auto852680E5_ae) ) ; lv_i += auto852680E5_ai ) {
-        if (((lp_timer == gv_productionIdleAlerts[lv_i].lv_alertTimer) || (lp_timer == gv_productionIdleAlerts[lv_i].lv_cooldownTimer))) {
+        if (((lp_timer == gv_productionIdleAlerts[0].lv_alertTimer) || (lp_timer == gv_productionIdleAlerts[0].lv_cooldownTimer))) {
             lv_result = lv_i;
             break;
         }
@@ -6444,7 +6534,7 @@ bool gt_ProductionIdleAboveThresholdTimerExpiresFireAlert_Func (bool testConds, 
         return true;
     }
 
-    lv_alertUnitType = gv_productionIdleAlerts[gf_GetProductionIdleAlertIndexForTimer(EventTimer())].lv_unitType;
+    lv_alertUnitType = gv_productionIdleAlerts[0].lv_unitType;
     if ((gf_IsUnitTypeTrainingQueueEmpty(lv_alertUnitType, false) == true)) {
         TextExpressionSetToken("Param/Expression/CD58AD2D", "A", UnitTypeGetName(lv_alertUnitType));
         gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/CD58AD2D"));
