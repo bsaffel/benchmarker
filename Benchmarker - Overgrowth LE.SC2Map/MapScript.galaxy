@@ -1257,8 +1257,8 @@ void gf_FireProductionIdleAlert (timer lp_timer) {
 
     // Implementation
     lv_alertIndex = gf_GetProductionIdleAlertIndexForTimer(lp_timer);
-    TextExpressionSetToken("Param/Expression/0021D979", "A", UnitTypeGetName(gv_productionIdleAlerts[0].lv_unitType));
-    UIAlert("ProductionIdleTooLong", 1, TextExpressionAssemble("Param/Expression/0021D979"), gf_GetIconForBuildingType(gv_productionIdleAlerts[0].lv_unitType));
+    TextExpressionSetToken("Param/Expression/0021D979", "A", UnitTypeGetName(gv_productionIdleAlerts[lv_alertIndex].lv_unitType));
+    UIAlert("ProductionIdleTooLong", 1, TextExpressionAssemble("Param/Expression/0021D979"), gf_GetIconForBuildingType(gv_productionIdleAlerts[lv_alertIndex].lv_unitType));
     if ((gv_muteAlertsEnabled == false)) {
         SoundPlay(SoundLink("Alert_UniObjectiveCompleted", -1), PlayerGroupAll(), 50.0, 0.0);
     }
@@ -3754,13 +3754,13 @@ void gf_ResetAlertTimers () {
     auto5984B6EA_ai = 1;
     lv_unitTypeIndex = 0;
     for ( ; ( (auto5984B6EA_ai >= 0 && lv_unitTypeIndex <= auto5984B6EA_ae) || (auto5984B6EA_ai <= 0 && lv_unitTypeIndex >= auto5984B6EA_ae) ) ; lv_unitTypeIndex += auto5984B6EA_ai ) {
-        TextExpressionSetToken("Param/Expression/B0C0E1EF", "A", UnitTypeGetName(gv_productionIdleAlerts[0].lv_unitType));
+        TextExpressionSetToken("Param/Expression/B0C0E1EF", "A", UnitTypeGetName(gv_productionIdleAlerts[lv_unitTypeIndex].lv_unitType));
         TextExpressionSetToken("Param/Expression/B0C0E1EF", "B", IntToText(lv_unitTypeIndex));
         gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/B0C0E1EF"));
-        TimerStart(gv_productionIdleAlerts[0].lv_alertTimer, gv_neverexpires, false, c_timeGame);
-        TimerPause(gv_productionIdleAlerts[0].lv_alertTimer, true);
-        TimerStart(gv_productionIdleAlerts[0].lv_cooldownTimer, gv_neverexpires, false, c_timeGame);
-        TimerPause(gv_productionIdleAlerts[0].lv_cooldownTimer, true);
+        TimerStart(gv_productionIdleAlerts[lv_unitTypeIndex].lv_alertTimer, gv_neverexpires, false, c_timeGame);
+        TimerPause(gv_productionIdleAlerts[lv_unitTypeIndex].lv_alertTimer, true);
+        TimerStart(gv_productionIdleAlerts[lv_unitTypeIndex].lv_cooldownTimer, gv_neverexpires, false, c_timeGame);
+        TimerPause(gv_productionIdleAlerts[lv_unitTypeIndex].lv_cooldownTimer, true);
     }
 }
 
@@ -4803,7 +4803,7 @@ bool gf_IsTimeraProductionIdleTimer (timer lp_timer) {
     autoD5049005_ai = 1;
     lv_i = 0;
     for ( ; ( (autoD5049005_ai >= 0 && lv_i <= autoD5049005_ae) || (autoD5049005_ai <= 0 && lv_i >= autoD5049005_ae) ) ; lv_i += autoD5049005_ai ) {
-        if (((lp_timer == gv_productionIdleAlerts[0].lv_alertTimer) || (lp_timer == gv_productionIdleAlerts[0].lv_cooldownTimer))) {
+        if (((lp_timer == gv_productionIdleAlerts[lv_i].lv_alertTimer) || (lp_timer == gv_productionIdleAlerts[lv_i].lv_cooldownTimer))) {
             lv_result = true;
         }
         else {
@@ -4827,7 +4827,7 @@ bool gf_DoesProductionIdleAlertExistForUnitType (string lp_unitType) {
     auto4C73585D_ai = 1;
     lv_i = 0;
     for ( ; ( (auto4C73585D_ai >= 0 && lv_i <= auto4C73585D_ae) || (auto4C73585D_ai <= 0 && lv_i >= auto4C73585D_ae) ) ; lv_i += auto4C73585D_ai ) {
-        if ((gv_productionIdleAlerts[0].lv_unitType == lp_unitType)) {
+        if ((gv_productionIdleAlerts[lv_i].lv_unitType == lp_unitType)) {
             lv_result = true;
         }
         else {
@@ -4868,7 +4868,7 @@ bool gf_IsAnyProductionUnitTypeQueueIdle () {
         autoBD02A5A8_ai = 1;
         lv_i = 0;
         for ( ; ( (autoBD02A5A8_ai >= 0 && lv_i <= autoBD02A5A8_ae) || (autoBD02A5A8_ai <= 0 && lv_i >= autoBD02A5A8_ae) ) ; lv_i += autoBD02A5A8_ai ) {
-            if ((gf_IsUnitTypeTrainingQueueEmpty(gv_productionIdleAlerts[0].lv_unitType, true) == true)) {
+            if ((gf_IsUnitTypeTrainingQueueEmpty(gv_productionIdleAlerts[lv_i].lv_unitType, true) == true)) {
                 lv_result = true;
             }
             else {
@@ -5001,7 +5001,7 @@ int gf_GetProductionIdleAlertIndexForUnitType (string lp_unitType) {
     autoD4F7F426_ai = 1;
     lv_i = 0;
     for ( ; ( (autoD4F7F426_ai >= 0 && lv_i <= autoD4F7F426_ae) || (autoD4F7F426_ai <= 0 && lv_i >= autoD4F7F426_ae) ) ; lv_i += autoD4F7F426_ai ) {
-        if ((lp_unitType == gv_productionIdleAlerts[0].lv_unitType)) {
+        if ((lp_unitType == gv_productionIdleAlerts[lv_i].lv_unitType)) {
             lv_result = lv_i;
             break;
         }
@@ -5026,7 +5026,7 @@ int gf_GetProductionIdleAlertIndexForTimer (timer lp_timer) {
     auto852680E5_ai = 1;
     lv_i = 0;
     for ( ; ( (auto852680E5_ai >= 0 && lv_i <= auto852680E5_ae) || (auto852680E5_ai <= 0 && lv_i >= auto852680E5_ae) ) ; lv_i += auto852680E5_ai ) {
-        if (((lp_timer == gv_productionIdleAlerts[0].lv_alertTimer) || (lp_timer == gv_productionIdleAlerts[0].lv_cooldownTimer))) {
+        if (((lp_timer == gv_productionIdleAlerts[lv_i].lv_alertTimer) || (lp_timer == gv_productionIdleAlerts[lv_i].lv_cooldownTimer))) {
             lv_result = lv_i;
             break;
         }
@@ -6534,7 +6534,7 @@ bool gt_ProductionIdleAboveThresholdTimerExpiresFireAlert_Func (bool testConds, 
         return true;
     }
 
-    lv_alertUnitType = gv_productionIdleAlerts[0].lv_unitType;
+    lv_alertUnitType = gv_productionIdleAlerts[gf_GetProductionIdleAlertIndexForTimer(EventTimer())].lv_unitType;
     if ((gf_IsUnitTypeTrainingQueueEmpty(lv_alertUnitType, false) == true)) {
         TextExpressionSetToken("Param/Expression/CD58AD2D", "A", UnitTypeGetName(lv_alertUnitType));
         gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/CD58AD2D"));
