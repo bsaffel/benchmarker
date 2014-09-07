@@ -6944,7 +6944,7 @@ bool gt_ResetBuild_Func (bool testConds, bool runActions) {
     }
     else {
     }
-    Wait(0.5, c_timeGame);
+    Wait(1.0, c_timeGame);
     gf_UnpauseGame();
     CameraPan(1, PlayerStartLocation(1), 0.5, -1, 5.0, true);
     CinematicFade(true, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
@@ -6965,7 +6965,7 @@ void gt_ResetBuild_Init () {
 bool gt_EndBuildatMaxSupply_Func (bool testConds, bool runActions) {
     // Conditions
     if (testConds) {
-        if (!(((gf_IsEndBuildatMaxSupplySelected() == true) && (PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) >= 200) && (gv_paused == false)))) {
+        if (!(((gf_IsEndBuildatMaxSupplySelected() == true) && (PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) >= 199) && (gv_paused == false)))) {
             return false;
         }
     }
@@ -7230,6 +7230,7 @@ bool gt_DebugBooleanConditionFromHotkey_Func (bool testConds, bool runActions) {
         lv_result = false;
     }
     TextExpressionSetToken("Param/Expression/6AE5DFF2", "A", libNtve_gf_ConvertBooleanToText(gf_IsEndBuildatMaxSupplySelected()));
+    TextExpressionSetToken("Param/Expression/6AE5DFF2", "E", IntToText(PlayerScoreValueGetAsInt(1, "FoodUsed")));
     TextExpressionSetToken("Param/Expression/6AE5DFF2", "B", libNtve_gf_ConvertBooleanToText((PlayerScoreValueGetAsInt(1, "FoodUsed") >= 200)));
     TextExpressionSetToken("Param/Expression/6AE5DFF2", "C", libNtve_gf_ConvertBooleanToText(gv_paused));
     TextExpressionSetToken("Param/Expression/6AE5DFF2", "D", libNtve_gf_ConvertBooleanToText(lv_result));
