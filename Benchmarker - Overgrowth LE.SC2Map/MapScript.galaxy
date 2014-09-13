@@ -189,21 +189,18 @@ int gv_benchmarkEndBuildatGameTimeTotalSeconds;
 int gv_benchmarkFinalSupplyatGameTimeValue;
 int gv_numBenchmarksMetThisBuild;
 bool gv_practiceAgainstBenchmarkBuildOrder;
-string gv_lastCreatedBuildOrderUpgrade;
-string gv_lastCreatedBuildOrderAbility;
-bool gv_lastCreatedBuildOrderTypeWasUnit;
-bool gv_lastCreatedBuildOrderTypeWasUpgrade;
-bool gv_lastCreatedBuildOrderTypeWasAbility;
 fixed gv_lastCreatedUnitTimestamp;
 string gv_unitStepType;
 string gv_upgradeStepType;
 string gv_abilityStepType;
 text gv_lastCreatedBuildStepUnitUpgradeAbilityText;
 bool gv_buildOrderStepLock;
-int gv_maxCurrentBuildOrderStepsTracked;
-int gv_currentBuildOrderStepCursor;
+timer[11] gv_activeMultiUnitFailureTimers;
+int gv_numStoredActiveMultiUnitFailureTimers;
 gs_BuildOrderStep[51] gv_currentBuildOrderSteps;
-int gv_multipleUnitTimeCutoffThreshold;
+int gv_currentBuildOrderStepCursor;
+int gv_maxCurrentBuildOrderStepsTracked;
+int gv_multipleUnitFailureThreshold;
 int gv_totalNumBenchmarkBuildOrderSteps;
 int gv_numCompletedBenchmarkBuildOrderSteps;
 int gv_numFailedBenchmarkBuildOrderSteps;
@@ -550,12 +547,15 @@ void InitGlobals () {
     gv_unitStepType = "unit";
     gv_upgradeStepType = "upgrade";
     gv_abilityStepType = "ability";
-    gv_maxCurrentBuildOrderStepsTracked = 50;
+    for (init_i = 0; init_i <= 10; init_i += 1) {
+        gv_activeMultiUnitFailureTimers[init_i] = TimerCreate();
+    }
     for (init_i = 0; init_i <= 50; init_i += 1) {
         gv_currentBuildOrderSteps[init_i].lv_stepType = "";
         gv_currentBuildOrderSteps[init_i].lv_completingUnits = UnitGroupEmpty();
         gv_currentBuildOrderSteps[init_i].lv_multipleUnitFailureTimer = TimerCreate();
     }
+    gv_maxCurrentBuildOrderStepsTracked = 50;
     for (init_i = 0; init_i <= 10; init_i += 1) {
         gv_benchmarkBuildOrderStepObjectives[init_i] = c_invalidObjectiveId;
     }
@@ -791,10 +791,6 @@ void gf_StopProductionIdleTimer (string lp_unitType);
 void gf_FireProductionIdleAlert (timer lp_timer);
 void gf_RestartProductionIdleAlertTimer (string lp_unitType);
 void gf_RestartProductionIdleCooldownTimer (string lp_unitType);
-void gf_PauseActiveAlertTimers ();
-void gf_PauseAndStoreTimerIfActive (timer lp_timer);
-void gf_UnpauseActiveAlertTimers ();
-void gf_ClearStoredActiveAlertTimers ();
 void gf_SaveBenchmarkMenuConfiguration (string lp_sectionKey);
 void gf_RefreshSupplyBenchmarksConfigurationValuesFromDialog ();
 void gf_RefreshBuildCompletionConfigurationValuesFromDialog ();
@@ -826,8 +822,6 @@ void gf_CreateHiddenBenchmarkSupplyObjectives ();
 void gf_ShowBenchmarkSupplyObjectives ();
 void gf_HideBenchmarkSupplyObjectives ();
 void gf_StartBenchmarkTimers ();
-void gf_PauseBenchmarkTimers ();
-void gf_UnpauseBenchmarkTimers ();
 void gf_CreateBenchmarkBuildOrderObjectives ();
 void gf_CreateBenchmarkBuildOrderStepasSecondaryObjective (int lp_buildStep);
 void gf_CompleteObjectiveForBenchmarkBuildOrderStep (int lp_benchmarkBuildOrderStep);
@@ -919,6 +913,7 @@ void gf_CloseStatsDialogandUnpause ();
 void gf_LogStringMessage (bool lp_alertTypeFlag, string lp_message);
 void gf_LogTextMessage (bool lp_alertTypeFlag, text lp_message);
 void gf_DisplayDebugTimerWindowsForExistingAlertTimers ();
+void gf_DisplayDebugTimerWindowsForExistingMultipleUnitFailureTimers ();
 void gf_AddDebugTimerWindow (timer lp_timer, text lp_windowName);
 void gf_ClearDebugTimerWindows ();
 void gf_InitializeBankDefaults ();
@@ -949,11 +944,20 @@ void gf_ResetBenchmarkBuildOrderStepsVariables ();
 void gf_ResetBenchmarkBuildOrderObjectives ();
 void gf_ResetAlertTimers ();
 void gf_ResetBenchmarkTimers ();
-void gf_ResetBuildOrderTimers ();
 void gf_PauseGame ();
-void gf_UnpauseGame ();
 void gf_PauseAllTimers ();
+void gf_PauseBenchmarkTimers ();
+void gf_PauseActiveAlertTimers ();
+void gf_PauseAndStoreAlertTimerIfActive (timer lp_timer);
+void gf_PauseActiveMultiUnitFailureTimers ();
+void gf_PauseAndStoreMultiUnitFailureTimerIfActive (timer lp_timer);
+void gf_UnpauseGame ();
 void gf_UnpauseAllTimers ();
+void gf_UnpauseBenchmarkTimers ();
+void gf_UnpauseActiveAlertTimers ();
+void gf_UnpauseActiveMultiUnitFailureTimers ();
+void gf_ClearStoredActiveAlertTimers ();
+void gf_ClearStoredActiveMultiUnitFailureTimers ();
 void gf_CreateScreenButtons ();
 bool gf_IsOverlordCurrentlyInProgress ();
 bool gf_IsSupplyDepotorPylonUnderConstruction ();
@@ -1312,97 +1316,6 @@ void gf_RestartProductionIdleCooldownTimer (string lp_unitType) {
     TimerStart(gv_productionIdleAlerts[lv_alertIndex].lv_alertTimer, gv_neverexpires, false, c_timeGame);
     TimerPause(gv_productionIdleAlerts[lv_alertIndex].lv_alertTimer, true);
     TimerStart(gv_productionIdleAlerts[lv_alertIndex].lv_cooldownTimer, gv_alertCooldownSeconds, false, c_timeGame);
-}
-
-void gf_PauseActiveAlertTimers () {
-    int autoC2EA04E2_ae;
-    int autoC2EA04E2_ai;
-    int auto7D260D51_ae;
-    int auto7D260D51_ai;
-
-    // Variable Declarations
-    int lv_upgradeIndex;
-    int lv_unitTypeIndex;
-
-    // Variable Initialization
-
-    // Implementation
-    autoC2EA04E2_ae = gv_alertUpgradeGapNumUpgrades;
-    autoC2EA04E2_ai = 1;
-    lv_upgradeIndex = 0;
-    for ( ; ( (autoC2EA04E2_ai >= 0 && lv_upgradeIndex <= autoC2EA04E2_ae) || (autoC2EA04E2_ai <= 0 && lv_upgradeIndex >= autoC2EA04E2_ae) ) ; lv_upgradeIndex += autoC2EA04E2_ai ) {
-        if ((gv_upgradeGapAlerts[lv_upgradeIndex].lv_delayedUpgrade != null)) {
-            gf_PauseAndStoreTimerIfActive(gv_upgradeGapAlerts[lv_upgradeIndex].lv_alertTimer);
-            gf_PauseAndStoreTimerIfActive(gv_upgradeGapAlerts[lv_upgradeIndex].lv_cooldownTimer);
-        }
-        else {
-        }
-    }
-    auto7D260D51_ae = gv_productionIdleNumProductionUnitTypes;
-    auto7D260D51_ai = 1;
-    lv_unitTypeIndex = 0;
-    for ( ; ( (auto7D260D51_ai >= 0 && lv_unitTypeIndex <= auto7D260D51_ae) || (auto7D260D51_ai <= 0 && lv_unitTypeIndex >= auto7D260D51_ae) ) ; lv_unitTypeIndex += auto7D260D51_ai ) {
-        if ((gv_productionIdleAlerts[lv_unitTypeIndex].lv_unitType != null)) {
-            gf_PauseAndStoreTimerIfActive(gv_productionIdleAlerts[lv_unitTypeIndex].lv_alertTimer);
-            gf_PauseAndStoreTimerIfActive(gv_productionIdleAlerts[lv_unitTypeIndex].lv_cooldownTimer);
-        }
-        else {
-        }
-    }
-    TextExpressionSetToken("Param/Expression/D173786C", "A", IntToText(gv_numStoredActiveAlertTimers));
-    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/D173786C"));
-}
-
-void gf_PauseAndStoreTimerIfActive (timer lp_timer) {
-    // Implementation
-    if (((TimerIsPaused(lp_timer) == false) && (TimerGetRemaining(lp_timer) > 0.0))) {
-        gv_activeAlertTimers[gv_numStoredActiveAlertTimers] = lp_timer;
-        TimerPause(lp_timer, true);
-        gv_numStoredActiveAlertTimers += 1;
-    }
-    else {
-    }
-}
-
-void gf_UnpauseActiveAlertTimers () {
-    int auto35F4B622_ae;
-    int auto35F4B622_ai;
-
-    // Variable Declarations
-    int lv_index;
-
-    // Variable Initialization
-
-    // Implementation
-    auto35F4B622_ae = gv_numStoredActiveAlertTimers;
-    auto35F4B622_ai = 1;
-    lv_index = 0;
-    for ( ; ( (auto35F4B622_ai >= 0 && lv_index <= auto35F4B622_ae) || (auto35F4B622_ai <= 0 && lv_index >= auto35F4B622_ae) ) ; lv_index += auto35F4B622_ai ) {
-        TimerPause(gv_activeAlertTimers[lv_index], false);
-    }
-    TextExpressionSetToken("Param/Expression/07449D5C", "A", IntToText(gv_numStoredActiveAlertTimers));
-    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/07449D5C"));
-}
-
-void gf_ClearStoredActiveAlertTimers () {
-    int auto671DADCF_ae;
-    int auto671DADCF_ai;
-
-    // Variable Declarations
-    int lv_index;
-
-    // Variable Initialization
-
-    // Implementation
-    auto671DADCF_ae = gv_numStoredActiveAlertTimers;
-    auto671DADCF_ai = 1;
-    lv_index = 0;
-    for ( ; ( (auto671DADCF_ai >= 0 && lv_index <= auto671DADCF_ae) || (auto671DADCF_ai <= 0 && lv_index >= auto671DADCF_ae) ) ; lv_index += auto671DADCF_ai ) {
-        gv_activeAlertTimers[lv_index] = null;
-    }
-    TextExpressionSetToken("Param/Expression/C15D3C9B", "A", IntToText(gv_numStoredActiveAlertTimers));
-    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/C15D3C9B"));
-    gv_numStoredActiveAlertTimers = 0;
 }
 
 void gf_SaveBenchmarkMenuConfiguration (string lp_sectionKey) {
@@ -1981,22 +1894,6 @@ void gf_StartBenchmarkTimers () {
     }
 }
 
-void gf_PauseBenchmarkTimers () {
-    // Implementation
-    TimerPause(gv_benchmark1Timer, true);
-    TimerPause(gv_benchmark2Timer, true);
-    TimerPause(gv_benchmark3Timer, true);
-    TimerPause(gv_finalBenchmarkTimer, true);
-}
-
-void gf_UnpauseBenchmarkTimers () {
-    // Implementation
-    TimerPause(gv_benchmark1Timer, false);
-    TimerPause(gv_benchmark2Timer, false);
-    TimerPause(gv_benchmark3Timer, false);
-    TimerPause(gv_finalBenchmarkTimer, false);
-}
-
 void gf_CreateBenchmarkBuildOrderObjectives () {
     int auto98326FC4_ae;
     int auto98326FC4_ai;
@@ -2046,6 +1943,7 @@ void gf_CompleteObjectiveForBenchmarkBuildOrderStep (int lp_benchmarkBuildOrderS
         TextExpressionSetToken("Param/Expression/AA9B4DC6", "A", IntToText(lp_benchmarkBuildOrderStep));
         TextExpressionSetToken("Param/Expression/AA9B4DC6", "B", IntToText(gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkBuildOrderStep)));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/AA9B4DC6"));
+        gf_FailObjectiveForBenchmarkBuildOrderStep(gf_GetObjectiveIndexforBenchmarkBuildOrderStep((lp_benchmarkBuildOrderStep - 1)), false);
     }
     else {
     }
@@ -2209,15 +2107,11 @@ void gf_AddUnitBuildOrderStep (int lp_currentStep, unit lp_triggeringUnit) {
     UnitGroupAdd(gv_currentBuildOrderSteps[lp_currentStep].lv_completingUnits, lp_triggeringUnit);
     TextExpressionSetToken("Param/Expression/08B35931", "A", gf_GetCurrentBuildOrderStepText(lp_currentStep));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/08B35931"));
-    gv_lastCreatedBuildOrderTypeWasUnit = true;
-    gv_lastCreatedBuildOrderTypeWasUpgrade = false;
-    gv_lastCreatedBuildOrderTypeWasAbility = false;
     gv_lastCreatedBuildStepUnitUpgradeAbilityText = UnitTypeGetName(lv_triggeringUnitType);
 }
 
 void gf_AddUpgradeBuildOrderStep (int lp_currentStep, string lp_buildStepUpgrade) {
     // Implementation
-    gv_lastCreatedBuildOrderUpgrade = lp_buildStepUpgrade;
     gv_lastCreatedUnitTimestamp = TimerGetElapsed(gv_currentBuildBuildTimer);
     gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_stepType = gv_upgradeStepType;
     gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_upgrade = lp_buildStepUpgrade;
@@ -2227,9 +2121,6 @@ void gf_AddUpgradeBuildOrderStep (int lp_currentStep, string lp_buildStepUpgrade
     gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_completingUpgrade = lp_buildStepUpgrade;
     TextExpressionSetToken("Param/Expression/2B969709", "A", gf_GetCurrentBuildOrderStepText(lp_currentStep));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/2B969709"));
-    gv_lastCreatedBuildOrderTypeWasUpgrade = true;
-    gv_lastCreatedBuildOrderTypeWasUnit = false;
-    gv_lastCreatedBuildOrderTypeWasAbility = false;
     gv_lastCreatedBuildStepUnitUpgradeAbilityText = gf_GetFormattedUpgradeNameasText(lp_buildStepUpgrade);
 }
 
@@ -2241,7 +2132,6 @@ void gf_AddAbilityBuildOrderStep (int lp_currentStep, abilcmd lp_triggerringAbil
 
     // Implementation
     lv_triggeringAbilityType = AbilityCommandGetAbility(lp_triggerringAbilityCommand);
-    gv_lastCreatedBuildOrderAbility = lv_triggeringAbilityType;
     gv_lastCreatedUnitTimestamp = TimerGetElapsed(gv_currentBuildBuildTimer);
     gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_stepType = gv_abilityStepType;
     gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_ability = lv_triggeringAbilityType;
@@ -2251,9 +2141,6 @@ void gf_AddAbilityBuildOrderStep (int lp_currentStep, abilcmd lp_triggerringAbil
     gv_currentBuildOrderSteps[gv_currentBuildOrderStepCursor].lv_completingAbility = lp_triggerringAbilityCommand;
     TextExpressionSetToken("Param/Expression/736976D0", "A", gf_GetCurrentBuildOrderStepText(lp_currentStep));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/736976D0"));
-    gv_lastCreatedBuildOrderTypeWasAbility = true;
-    gv_lastCreatedBuildOrderTypeWasUpgrade = false;
-    gv_lastCreatedBuildOrderTypeWasUnit = false;
     gv_lastCreatedBuildStepUnitUpgradeAbilityText = gf_GetFormattedAbilityNameasText(lv_triggeringAbilityType);
 }
 
@@ -2271,10 +2158,10 @@ void gf_EvaluateUnitTypeForBenchmarkBuildOrderStep (string lp_unitType, int lp_c
         if (((gf_IsAmountCorrectForBenchmarkBuildOrderStep(lv_currentAmountForStep, lp_benchmarkStep) == true))) {
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/69B6DB0E"));
             gf_CompleteBenchmarkStepObjectiveWithCurrentStepAndCycle(lp_benchmarkStep, lp_currentStep);
-            if ((TimerGetRemaining(gv_multipleUnitFailureTimer) > 0.0)) {
+            if ((TimerGetRemaining(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer) > 0.0)) {
                 gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/F6401EA7"));
-                TimerStart(gv_multipleUnitFailureTimer, gv_neverexpires, false, c_timeGame);
-                TimerPause(gv_multipleUnitFailureTimer, true);
+                TimerStart(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer, gv_neverexpires, false, c_timeGame);
+                TimerPause(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer, true);
             }
             else {
             }
@@ -2283,9 +2170,16 @@ void gf_EvaluateUnitTypeForBenchmarkBuildOrderStep (string lp_unitType, int lp_c
             TextExpressionSetToken("Param/Expression/00348550", "A", IntToText(lv_currentAmountForStep));
             TextExpressionSetToken("Param/Expression/00348550", "B", IntToText(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_amount));
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/00348550"));
-            TextExpressionSetToken("Param/Expression/8A069115", "A", IntToText(gv_multipleUnitTimeCutoffThreshold));
+            TextExpressionSetToken("Param/Expression/8A069115", "A", IntToText(gv_multipleUnitFailureThreshold));
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/8A069115"));
-            TimerStart(gv_multipleUnitFailureTimer, IntToFixed(gv_multipleUnitTimeCutoffThreshold), false, c_timeGame);
+            TimerStart(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer, IntToFixed(gv_multipleUnitFailureThreshold), false, c_timeGame);
+            if ((gv_debugAlertsEnabled == true)) {
+                TextExpressionSetToken("Param/Expression/2DA3C1EA", "B", IntToText(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_amount));
+                TextExpressionSetToken("Param/Expression/2DA3C1EA", "A", UnitTypeGetName(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType));
+                gf_AddDebugTimerWindow(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer, TextExpressionAssemble("Param/Expression/2DA3C1EA"));
+            }
+            else {
+            }
         }
     }
     else {
@@ -3677,6 +3571,30 @@ void gf_DisplayDebugTimerWindowsForExistingAlertTimers () {
     }
 }
 
+void gf_DisplayDebugTimerWindowsForExistingMultipleUnitFailureTimers () {
+    int auto6DD605DA_ae;
+    int auto6DD605DA_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    auto6DD605DA_ae = gv_benchmarkBuildOrderStepCursor;
+    auto6DD605DA_ai = 1;
+    lv_i = 0;
+    for ( ; ( (auto6DD605DA_ai >= 0 && lv_i <= auto6DD605DA_ae) || (auto6DD605DA_ai <= 0 && lv_i >= auto6DD605DA_ae) ) ; lv_i += auto6DD605DA_ai ) {
+        if ((TimerGetElapsed(gv_benchmarkBuildOrderSteps[lv_i].lv_multipleUnitFailureTimer) > 0.0)) {
+            TextExpressionSetToken("Param/Expression/6E9BC307", "B", IntToText(gv_benchmarkBuildOrderSteps[lv_i].lv_amount));
+            TextExpressionSetToken("Param/Expression/6E9BC307", "A", UnitTypeGetName(gv_benchmarkBuildOrderSteps[lv_i].lv_unitType));
+            gf_AddDebugTimerWindow(gv_benchmarkBuildOrderSteps[lv_i].lv_multipleUnitFailureTimer, TextExpressionAssemble("Param/Expression/6E9BC307"));
+        }
+        else {
+        }
+    }
+}
+
 void gf_AddDebugTimerWindow (timer lp_timer, text lp_windowName) {
     // Implementation
     TimerWindowCreate(lp_timer, lp_windowName, true, false);
@@ -3790,7 +3708,7 @@ void gf_InitializeGameDefaults () {
     gv_supplyBenchmarks[2].lv_benchmarkTimeMin = 10;
     gv_supplyBenchmarks[2].lv_benchmarkTimeSeconds = 0;
     gv_trackSupplyUnitsAsSteps = true;
-    gv_multipleUnitTimeCutoffThreshold = 15;
+    gv_multipleUnitFailureThreshold = 15;
     gv_trackSupplyUnitAsStepSupplyLimit = 40;
     gv_trackQueensAsStepSupplyLimit = 40;
     gv_buildOrderMaxGasSupply = 60;
@@ -3804,7 +3722,6 @@ void gf_InitializeGameDefaults () {
 
 void gf_InitializeGameState () {
     // Implementation
-    gf_ResetBuildOrderTimers();
     gf_InitializeBuildConfiguration();
     gf_LogTextMessage(gv_debugMapMechanicsEnabled, StringExternal("Param/Value/10A5A2AE"));
     gf_ResetUnits();
@@ -3968,7 +3885,6 @@ void gf_ResetGameState () {
     gf_ResetBenchmarkBuildOrderStepsVariables();
     gf_ResetAlertTimers();
     gf_ResetBenchmarkTimers();
-    gf_ResetBuildOrderTimers();
     TimerRestart(gv_currentBuildBuildTimer);
     gf_ResetCamera();
     gf_InitializeBuildConfiguration();
@@ -4353,10 +4269,10 @@ void gf_ResetAlertTimers () {
         gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/3C4987E6"));
         TimerStart(gv_upgradeGapAlerts[lv_upgradeIndex].lv_alertTimer, gv_neverexpires, false, c_timeGame);
         TimerPause(gv_upgradeGapAlerts[lv_upgradeIndex].lv_alertTimer, true);
-        gf_PauseAndStoreTimerIfActive(gv_upgradeGapAlerts[lv_upgradeIndex].lv_alertTimer);
+        gf_PauseAndStoreAlertTimerIfActive(gv_upgradeGapAlerts[lv_upgradeIndex].lv_alertTimer);
         TimerStart(gv_upgradeGapAlerts[lv_upgradeIndex].lv_cooldownTimer, gv_neverexpires, false, c_timeGame);
         TimerPause(gv_upgradeGapAlerts[lv_upgradeIndex].lv_cooldownTimer, true);
-        gf_PauseAndStoreTimerIfActive(gv_upgradeGapAlerts[lv_upgradeIndex].lv_cooldownTimer);
+        gf_PauseAndStoreAlertTimerIfActive(gv_upgradeGapAlerts[lv_upgradeIndex].lv_cooldownTimer);
     }
     auto5984B6EA_ae = gv_productionIdleNumProductionUnitTypes;
     auto5984B6EA_ai = 1;
@@ -4367,10 +4283,10 @@ void gf_ResetAlertTimers () {
         gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/B0C0E1EF"));
         TimerStart(gv_productionIdleAlerts[lv_unitTypeIndex].lv_alertTimer, gv_neverexpires, false, c_timeGame);
         TimerPause(gv_productionIdleAlerts[lv_unitTypeIndex].lv_alertTimer, true);
-        gf_PauseAndStoreTimerIfActive(gv_productionIdleAlerts[lv_unitTypeIndex].lv_alertTimer);
+        gf_PauseAndStoreAlertTimerIfActive(gv_productionIdleAlerts[lv_unitTypeIndex].lv_alertTimer);
         TimerStart(gv_productionIdleAlerts[lv_unitTypeIndex].lv_cooldownTimer, gv_neverexpires, false, c_timeGame);
         TimerPause(gv_productionIdleAlerts[lv_unitTypeIndex].lv_cooldownTimer, true);
-        gf_PauseAndStoreTimerIfActive(gv_productionIdleAlerts[lv_unitTypeIndex].lv_cooldownTimer);
+        gf_PauseAndStoreAlertTimerIfActive(gv_productionIdleAlerts[lv_unitTypeIndex].lv_cooldownTimer);
     }
     TextExpressionSetToken("Param/Expression/466A7E42", "A", IntToText(gv_numStoredActiveAlertTimers));
     gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/466A7E42"));
@@ -4385,10 +4301,6 @@ void gf_ResetBenchmarkTimers () {
     TimerRestart(gv_finalBenchmarkTimer);
 }
 
-void gf_ResetBuildOrderTimers () {
-    // Implementation
-}
-
 void gf_PauseGame () {
     // Variable Declarations
     int lv_i;
@@ -4399,6 +4311,107 @@ void gf_PauseGame () {
     gv_paused = true;
     gf_PauseAllTimers();
     UnitPauseAll(true);
+}
+
+void gf_PauseAllTimers () {
+    // Implementation
+    TimerPause(gv_currentBuildBuildTimer, true);
+    gf_PauseBenchmarkTimers();
+    gf_PauseActiveAlertTimers();
+    gf_PauseActiveMultiUnitFailureTimers();
+}
+
+void gf_PauseBenchmarkTimers () {
+    // Implementation
+    TimerPause(gv_benchmark1Timer, true);
+    TimerPause(gv_benchmark2Timer, true);
+    TimerPause(gv_benchmark3Timer, true);
+    TimerPause(gv_finalBenchmarkTimer, true);
+}
+
+void gf_PauseActiveAlertTimers () {
+    int autoC2EA04E2_ae;
+    int autoC2EA04E2_ai;
+    int auto7D260D51_ae;
+    int auto7D260D51_ai;
+
+    // Variable Declarations
+    int lv_upgradeIndex;
+    int lv_unitTypeIndex;
+
+    // Variable Initialization
+
+    // Implementation
+    autoC2EA04E2_ae = gv_alertUpgradeGapNumUpgrades;
+    autoC2EA04E2_ai = 1;
+    lv_upgradeIndex = 0;
+    for ( ; ( (autoC2EA04E2_ai >= 0 && lv_upgradeIndex <= autoC2EA04E2_ae) || (autoC2EA04E2_ai <= 0 && lv_upgradeIndex >= autoC2EA04E2_ae) ) ; lv_upgradeIndex += autoC2EA04E2_ai ) {
+        if ((gv_upgradeGapAlerts[lv_upgradeIndex].lv_delayedUpgrade != null)) {
+            gf_PauseAndStoreAlertTimerIfActive(gv_upgradeGapAlerts[lv_upgradeIndex].lv_alertTimer);
+            gf_PauseAndStoreAlertTimerIfActive(gv_upgradeGapAlerts[lv_upgradeIndex].lv_cooldownTimer);
+        }
+        else {
+        }
+    }
+    auto7D260D51_ae = gv_productionIdleNumProductionUnitTypes;
+    auto7D260D51_ai = 1;
+    lv_unitTypeIndex = 0;
+    for ( ; ( (auto7D260D51_ai >= 0 && lv_unitTypeIndex <= auto7D260D51_ae) || (auto7D260D51_ai <= 0 && lv_unitTypeIndex >= auto7D260D51_ae) ) ; lv_unitTypeIndex += auto7D260D51_ai ) {
+        if ((gv_productionIdleAlerts[lv_unitTypeIndex].lv_unitType != null)) {
+            gf_PauseAndStoreAlertTimerIfActive(gv_productionIdleAlerts[lv_unitTypeIndex].lv_alertTimer);
+            gf_PauseAndStoreAlertTimerIfActive(gv_productionIdleAlerts[lv_unitTypeIndex].lv_cooldownTimer);
+        }
+        else {
+        }
+    }
+    TextExpressionSetToken("Param/Expression/D173786C", "A", IntToText(gv_numStoredActiveAlertTimers));
+    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/D173786C"));
+}
+
+void gf_PauseAndStoreAlertTimerIfActive (timer lp_timer) {
+    // Implementation
+    if (((TimerIsPaused(lp_timer) == false) && (TimerGetRemaining(lp_timer) > 0.0))) {
+        gv_activeAlertTimers[gv_numStoredActiveAlertTimers] = lp_timer;
+        TimerPause(lp_timer, true);
+        gv_numStoredActiveAlertTimers += 1;
+    }
+    else {
+    }
+}
+
+void gf_PauseActiveMultiUnitFailureTimers () {
+    int auto617D7A49_ae;
+    int auto617D7A49_ai;
+
+    // Variable Declarations
+    int lv_i;
+
+    // Variable Initialization
+
+    // Implementation
+    auto617D7A49_ae = gv_benchmarkBuildOrderStepCursor;
+    auto617D7A49_ai = 1;
+    lv_i = 0;
+    for ( ; ( (auto617D7A49_ai >= 0 && lv_i <= auto617D7A49_ae) || (auto617D7A49_ai <= 0 && lv_i >= auto617D7A49_ae) ) ; lv_i += auto617D7A49_ai ) {
+        if ((gv_benchmarkBuildOrderSteps[lv_i].lv_amount > 1)) {
+            gf_PauseAndStoreMultiUnitFailureTimerIfActive(gv_benchmarkBuildOrderSteps[lv_i].lv_multipleUnitFailureTimer);
+        }
+        else {
+        }
+    }
+    TextExpressionSetToken("Param/Expression/4ED3735D", "A", IntToText(gv_numStoredActiveMultiUnitFailureTimers));
+    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/4ED3735D"));
+}
+
+void gf_PauseAndStoreMultiUnitFailureTimerIfActive (timer lp_timer) {
+    // Implementation
+    if (((TimerIsPaused(lp_timer) == false) && (TimerGetRemaining(lp_timer) > 0.0))) {
+        gv_activeMultiUnitFailureTimers[gv_numStoredActiveMultiUnitFailureTimers] = lp_timer;
+        TimerPause(lp_timer, true);
+        gv_numStoredActiveMultiUnitFailureTimers += 1;
+    }
+    else {
+    }
 }
 
 void gf_UnpauseGame () {
@@ -4413,21 +4426,104 @@ void gf_UnpauseGame () {
     gv_paused = false;
 }
 
-void gf_PauseAllTimers () {
-    // Implementation
-    TimerPause(gv_currentBuildBuildTimer, true);
-    TimerPause(gv_multipleUnitFailureTimer, true);
-    gf_PauseBenchmarkTimers();
-    gf_PauseActiveAlertTimers();
-}
-
 void gf_UnpauseAllTimers () {
     // Implementation
     gf_UnpauseBenchmarkTimers();
     gf_UnpauseActiveAlertTimers();
+    gf_UnpauseActiveMultiUnitFailureTimers();
     gf_ClearStoredActiveAlertTimers();
-    TimerPause(gv_multipleUnitFailureTimer, false);
+    gf_ClearStoredActiveMultiUnitFailureTimers();
     TimerPause(gv_currentBuildBuildTimer, false);
+}
+
+void gf_UnpauseBenchmarkTimers () {
+    // Implementation
+    TimerPause(gv_benchmark1Timer, false);
+    TimerPause(gv_benchmark2Timer, false);
+    TimerPause(gv_benchmark3Timer, false);
+    TimerPause(gv_finalBenchmarkTimer, false);
+}
+
+void gf_UnpauseActiveAlertTimers () {
+    int auto35F4B622_ae;
+    int auto35F4B622_ai;
+
+    // Variable Declarations
+    int lv_index;
+
+    // Variable Initialization
+
+    // Implementation
+    auto35F4B622_ae = gv_numStoredActiveAlertTimers;
+    auto35F4B622_ai = 1;
+    lv_index = 0;
+    for ( ; ( (auto35F4B622_ai >= 0 && lv_index <= auto35F4B622_ae) || (auto35F4B622_ai <= 0 && lv_index >= auto35F4B622_ae) ) ; lv_index += auto35F4B622_ai ) {
+        TimerPause(gv_activeAlertTimers[lv_index], false);
+    }
+    TextExpressionSetToken("Param/Expression/07449D5C", "A", IntToText(gv_numStoredActiveAlertTimers));
+    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/07449D5C"));
+}
+
+void gf_UnpauseActiveMultiUnitFailureTimers () {
+    int auto21C7D7EA_ae;
+    int auto21C7D7EA_ai;
+
+    // Variable Declarations
+    int lv_index;
+
+    // Variable Initialization
+
+    // Implementation
+    auto21C7D7EA_ae = gv_numStoredActiveMultiUnitFailureTimers;
+    auto21C7D7EA_ai = 1;
+    lv_index = 0;
+    for ( ; ( (auto21C7D7EA_ai >= 0 && lv_index <= auto21C7D7EA_ae) || (auto21C7D7EA_ai <= 0 && lv_index >= auto21C7D7EA_ae) ) ; lv_index += auto21C7D7EA_ai ) {
+        TimerPause(gv_activeMultiUnitFailureTimers[lv_index], false);
+    }
+    TextExpressionSetToken("Param/Expression/57B49AF4", "A", IntToText(gv_numStoredActiveMultiUnitFailureTimers));
+    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/57B49AF4"));
+}
+
+void gf_ClearStoredActiveAlertTimers () {
+    int auto671DADCF_ae;
+    int auto671DADCF_ai;
+
+    // Variable Declarations
+    int lv_index;
+
+    // Variable Initialization
+
+    // Implementation
+    auto671DADCF_ae = gv_numStoredActiveAlertTimers;
+    auto671DADCF_ai = 1;
+    lv_index = 0;
+    for ( ; ( (auto671DADCF_ai >= 0 && lv_index <= auto671DADCF_ae) || (auto671DADCF_ai <= 0 && lv_index >= auto671DADCF_ae) ) ; lv_index += auto671DADCF_ai ) {
+        gv_activeAlertTimers[lv_index] = null;
+    }
+    TextExpressionSetToken("Param/Expression/C15D3C9B", "A", IntToText(gv_numStoredActiveAlertTimers));
+    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/C15D3C9B"));
+    gv_numStoredActiveAlertTimers = 0;
+}
+
+void gf_ClearStoredActiveMultiUnitFailureTimers () {
+    int autoEE1768E8_ae;
+    int autoEE1768E8_ai;
+
+    // Variable Declarations
+    int lv_index;
+
+    // Variable Initialization
+
+    // Implementation
+    autoEE1768E8_ae = gv_numStoredActiveMultiUnitFailureTimers;
+    autoEE1768E8_ai = 1;
+    lv_index = 0;
+    for ( ; ( (autoEE1768E8_ai >= 0 && lv_index <= autoEE1768E8_ae) || (autoEE1768E8_ai <= 0 && lv_index >= autoEE1768E8_ae) ) ; lv_index += autoEE1768E8_ai ) {
+        gv_activeMultiUnitFailureTimers[lv_index] = null;
+    }
+    TextExpressionSetToken("Param/Expression/830069E2", "A", IntToText(gv_numStoredActiveMultiUnitFailureTimers));
+    gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/830069E2"));
+    gv_numStoredActiveMultiUnitFailureTimers = 0;
 }
 
 void gf_CreateScreenButtons () {
@@ -5332,7 +5428,7 @@ int gf_GetSupplyforLatestCompletedBuildOrderStep (int lp_currentStep) {
 
     // Implementation
     lv_currentSupply = PlayerScoreValueGetAsInt(1, "FoodUsed");
-    if ((gv_lastCreatedBuildOrderTypeWasUnit == true)) {
+    if ((gv_currentBuildOrderSteps[lp_currentStep].lv_stepType == gv_unitStepType)) {
         if (((PlayerRace(1) == "Zerg") && (gf_IsUnitTypeAStructure(gf_GetUnitTypeForPreviousUnitStep(lp_currentStep)) == true))) {
             lv_currentSupply = (lv_currentSupply+1);
         }
@@ -7105,7 +7201,7 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
     TextExpressionSetToken("Param/Expression/DE9D0EE9", "B", IntToText(lv_currentStep));
     TextExpressionSetToken("Param/Expression/DE9D0EE9", "C", IntToText(lv_benchmarkStep));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/DE9D0EE9"));
-    if ((((TimerGetElapsed(gv_currentBuildBuildTimer)-gv_lastCreatedUnitTimestamp) <= gv_multipleUnitTimeCutoffThreshold) && (gf_IsUnitTypeSameasPreviousUnitType(libNtve_gf_TriggeringProgressUnitType(), 0) == true))) {
+    if ((((TimerGetElapsed(gv_currentBuildBuildTimer)-gv_lastCreatedUnitTimestamp) <= gv_multipleUnitFailureThreshold) && (gf_IsUnitTypeSameasPreviousUnitType(libNtve_gf_TriggeringProgressUnitType(), 0) == true))) {
         TextExpressionSetToken("Param/Expression/5A4EE543", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
         TextExpressionSetToken("Param/Expression/5A4EE543", "B", UnitTypeGetName(gf_GetUnitTypeForPreviousUnitStep(lv_currentStep)));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/5A4EE543"));
@@ -7334,7 +7430,7 @@ bool gt_OnMultipleUnitFailureTimerExpires_Func (bool testConds, bool runActions)
 
     // Conditions
     if (testConds) {
-        if (!(((gv_practiceAgainstBenchmarkBuildOrder == true) && (gv_paused == false) && (gf_IsTimeraMultiUnitFailureTimer(EventTimer()) == true)))) {
+        if (!(((gv_paused == false) && (gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsTimeraMultiUnitFailureTimer(EventTimer()) == true)))) {
             return false;
         }
     }
@@ -7355,7 +7451,7 @@ bool gt_OnMultipleUnitFailureTimerExpires_Func (bool testConds, bool runActions)
 //--------------------------------------------------------------------------------------------------
 void gt_OnMultipleUnitFailureTimerExpires_Init () {
     gt_OnMultipleUnitFailureTimerExpires = TriggerCreate("gt_OnMultipleUnitFailureTimerExpires_Func");
-    TriggerAddEventTimer(gt_OnMultipleUnitFailureTimerExpires, gv_multipleUnitFailureTimer);
+    TriggerAddEventTimer(gt_OnMultipleUnitFailureTimerExpires, null);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -8051,7 +8147,7 @@ bool gt_ToggleDebugBuildOrder_Func (bool testConds, bool runActions) {
 
     if ((gv_debugBuildOrderEnabled == false)) {
         UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/6F56ECFB"));
-        gf_AddDebugTimerWindow(gv_multipleUnitFailureTimer, StringExternal("Param/Value/D2522762"));
+        gf_DisplayDebugTimerWindowsForExistingMultipleUnitFailureTimers();
         gv_debugBuildOrderEnabled = true;
     }
     else {
