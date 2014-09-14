@@ -823,7 +823,7 @@ void gf_HideBenchmarkSupplyObjectives ();
 void gf_StartBenchmarkTimers ();
 void gf_CreateBenchmarkBuildOrderObjectives ();
 void gf_CreateBenchmarkBuildOrderStepasSecondaryObjective (int lp_buildStep);
-void gf_CompleteObjectiveForBenchmarkBuildOrderStep (int lp_benchmarkBuildOrderStep);
+void gf_CompleteObjectiveForBenchmarkBuildOrderStep (int lp_currentStep, int lp_benchmarkStep);
 void gf_FailObjectiveForBenchmarkBuildOrderStep (int lp_currentStep, int lp_benchmarkStep, bool lp_timerExpired);
 void gf_CorrectObjectiveForFailedBenchmarkBuildOrderStep (int lp_benchmarkBuildOrderStep);
 void gf_CycleBenchmarkBuildOrderObjectives ();
@@ -837,7 +837,7 @@ void gf_AddAbilityBuildOrderStep (int lp_currentStep, abilcmd lp_triggerringAbil
 void gf_EvaluateUnitTypeForBenchmarkBuildOrderStep (string lp_unitType, int lp_currentStep, int lp_benchmarkStep);
 void gf_EvaluateUpgradeForBenchmarkBuildOrderStep (string lp_upgrade, int lp_currentStep, int lp_benchmarkStep);
 void gf_EvaluateAbilityForBenchmarkBuildOrderStep (string lp_ability, int lp_currentStep, int lp_benchmarkStep);
-void gf_CompleteBenchmarkStepObjectiveWithCurrentStepAndCycle (int lp_benchmarkStep, int lp_currentStep);
+void gf_CompleteBenchmarkStepObjectiveWithCurrentStepAndCycle (int lp_currentStep, int lp_benchmarkStep);
 void gf_FailBenchmarkStepObjectiveWithCurrentStepAndCycle (int lp_benchmarkStep, int lp_currentStep, bool lp_timerExpired);
 void gf_DisplayPerformanceFeedbackForCorrectStep (int lp_currentIndex, int lp_benchmarkIndex);
 void gf_DisplayPerformanceFeedbackForFailedStep (int lp_currentStep, bool lp_timerExpired);
@@ -1931,28 +1931,29 @@ void gf_CreateBenchmarkBuildOrderStepasSecondaryObjective (int lp_buildStep) {
     ObjectiveCreate(lv_stepObjectiveText, StringExternal("Param/Value/63BE4A54"), c_objectiveStateActive, false);
 }
 
-void gf_CompleteObjectiveForBenchmarkBuildOrderStep (int lp_benchmarkBuildOrderStep) {
+void gf_CompleteObjectiveForBenchmarkBuildOrderStep (int lp_currentStep, int lp_benchmarkStep) {
     // Variable Declarations
+    int lv_previousBenchmarkStep;
     text lv_objectiveText;
 
     // Variable Initialization
 
     // Implementation
-    if (((lp_benchmarkBuildOrderStep > 0) && (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep((lp_benchmarkBuildOrderStep - 1))]) == c_objectiveStateActive))) {
-        TextExpressionSetToken("Param/Expression/AA9B4DC6", "A", IntToText(lp_benchmarkBuildOrderStep));
-        TextExpressionSetToken("Param/Expression/AA9B4DC6", "B", IntToText(gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkBuildOrderStep)));
+    lv_previousBenchmarkStep = (lp_benchmarkStep - 1);
+    if (((lp_benchmarkStep > 0) && (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lv_previousBenchmarkStep)]) == c_objectiveStateActive))) {
+        TextExpressionSetToken("Param/Expression/AA9B4DC6", "A", IntToText(lv_previousBenchmarkStep));
+        TextExpressionSetToken("Param/Expression/AA9B4DC6", "B", IntToText(gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep)));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/AA9B4DC6"));
-        gf_FailObjectiveForBenchmarkBuildOrderStep(0, gf_GetObjectiveIndexforBenchmarkBuildOrderStep((lp_benchmarkBuildOrderStep - 1)), false);
+        gf_FailObjectiveForBenchmarkBuildOrderStep(lp_currentStep, lv_previousBenchmarkStep, false);
     }
     else {
     }
-    TextExpressionSetToken("Param/Expression/5CCA6BB6", "A", IntToText(lp_benchmarkBuildOrderStep));
-    TextExpressionSetToken("Param/Expression/5CCA6BB6", "B", IntToText(gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkBuildOrderStep)));
+    TextExpressionSetToken("Param/Expression/5CCA6BB6", "A", IntToText(lp_benchmarkStep));
+    TextExpressionSetToken("Param/Expression/5CCA6BB6", "B", IntToText(gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep)));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/5CCA6BB6"));
-    lv_objectiveText = gf_GetFormattedCompleteBenchmarkBuildOrderStepText(0, lp_benchmarkBuildOrderStep);
-    TextExpressionSetToken("Param/Expression/97DCFF5F", "A", gf_GetFormattedCompleteBenchmarkBuildOrderStepText(0, lp_benchmarkBuildOrderStep));
-    ObjectiveSetName(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkBuildOrderStep)], TextExpressionAssemble("Param/Expression/97DCFF5F"));
-    ObjectiveSetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkBuildOrderStep)], c_objectiveStateCompleted);
+    lv_objectiveText = gf_GetFormattedCompleteBenchmarkBuildOrderStepText(lp_currentStep, lp_benchmarkStep);
+    ObjectiveSetName(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep)], lv_objectiveText);
+    ObjectiveSetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep)], c_objectiveStateCompleted);
     gv_numCompletedBenchmarkBuildOrderSteps += 1;
 }
 
@@ -2150,7 +2151,7 @@ void gf_EvaluateUnitTypeForBenchmarkBuildOrderStep (string lp_unitType, int lp_c
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/B1051469"));
         if (((gf_IsAmountCorrectForBenchmarkBuildOrderStep(lv_currentAmountForStep, lp_benchmarkStep) == true))) {
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/69B6DB0E"));
-            gf_CompleteBenchmarkStepObjectiveWithCurrentStepAndCycle(lp_benchmarkStep, lp_currentStep);
+            gf_CompleteBenchmarkStepObjectiveWithCurrentStepAndCycle(lp_currentStep, lp_benchmarkStep);
             if (((TimerIsPaused(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer) == false) && ((TimerGetDuration(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer) >= 0) && (TimerGetDuration(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer) <= gv_multipleUnitFailureThreshold)))) {
                 gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/F6401EA7"));
                 TimerStart(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer, gv_neverexpires, false, c_timeGame);
@@ -2191,7 +2192,7 @@ void gf_EvaluateUpgradeForBenchmarkBuildOrderStep (string lp_upgrade, int lp_cur
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/AD04FA36"));
     if ((gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep(lp_upgrade, lp_benchmarkStep) == true)) {
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/8670BD48"));
-        gf_CompleteBenchmarkStepObjectiveWithCurrentStepAndCycle(lp_benchmarkStep, lp_currentStep);
+        gf_CompleteBenchmarkStepObjectiveWithCurrentStepAndCycle(lp_currentStep, lp_benchmarkStep);
     }
     else {
         TextExpressionSetToken("Param/Expression/6BCF5D11", "A", IntToText((lp_benchmarkStep-1)));
@@ -2206,7 +2207,7 @@ void gf_EvaluateAbilityForBenchmarkBuildOrderStep (string lp_ability, int lp_cur
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/78265908"));
     if ((gf_IsAbilityTypeCorrectForBenchmarkBuildOrderStep(lp_ability, lp_benchmarkStep) == true)) {
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/651DF3CD"));
-        gf_CompleteBenchmarkStepObjectiveWithCurrentStepAndCycle(lp_benchmarkStep, lp_currentStep);
+        gf_CompleteBenchmarkStepObjectiveWithCurrentStepAndCycle(lp_currentStep, lp_benchmarkStep);
     }
     else {
         TextExpressionSetToken("Param/Expression/7E18F04E", "A", IntToText((lp_benchmarkStep-1)));
@@ -2215,9 +2216,9 @@ void gf_EvaluateAbilityForBenchmarkBuildOrderStep (string lp_ability, int lp_cur
     }
 }
 
-void gf_CompleteBenchmarkStepObjectiveWithCurrentStepAndCycle (int lp_benchmarkStep, int lp_currentStep) {
+void gf_CompleteBenchmarkStepObjectiveWithCurrentStepAndCycle (int lp_currentStep, int lp_benchmarkStep) {
     // Implementation
-    gf_CompleteObjectiveForBenchmarkBuildOrderStep(lp_benchmarkStep);
+    gf_CompleteObjectiveForBenchmarkBuildOrderStep(lp_currentStep, lp_benchmarkStep);
     if ((gv_displayPerformanceFeedback == true)) {
         gf_DisplayPerformanceFeedbackForCorrectStep(lp_currentStep, lp_benchmarkStep);
     }
@@ -5439,6 +5440,9 @@ int gf_GetSupplyforCurrentBuildOrderStep (int lp_currentStep) {
     // Implementation
     lv_currentSupply = PlayerScoreValueGetAsInt(1, "FoodUsed");
     if ((gv_currentBuildOrderSteps[lp_currentStep].lv_stepType == gv_unitStepType)) {
+        TextExpressionSetToken("Param/Expression/72DBA06C", "A", IntToText(lp_currentStep));
+        TextExpressionSetToken("Param/Expression/72DBA06C", "B", UnitTypeGetName(gv_currentBuildOrderSteps[lp_currentStep].lv_unitType));
+        gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/72DBA06C"));
         if (((PlayerRace(1) == "Zerg") && (gf_IsUnitTypeAStructure(gv_currentBuildOrderSteps[lp_currentStep].lv_unitType) == true))) {
             lv_currentSupply = (lv_currentSupply+1);
         }
