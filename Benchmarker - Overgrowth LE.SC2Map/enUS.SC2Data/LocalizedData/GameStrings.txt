@@ -36,27 +36,27 @@ MapInfo/Player01/Name=Player 1
 MapInfo/Player02/Name=Yourself
 MapInfo/Player03/Name=Hostile
 Param/Expression/0021D979=<s val="BenchmarkerAlert">~A~ Idle Too Long!</s>
-Param/Expression/00348550=Unit Type is correct, but number of units:  ~A~ is less than the ~B~ units needed to complete step
+Param/Expression/00348550=Unit Type is correct, but current num units:  ~A~ < ~B~ benchmark num units
 Param/Expression/02DB92AF=~A~x 
 Param/Expression/03085794=<s val="BenchmarkerStatLabel">~A~</s>
 Param/Expression/04F20F4B=Adding Production Idle alert for unit type: ~A~
 Param/Expression/0684E3AA=<s val="BenchmarkerHelpMenuLabel">~A~</s>
 Param/Expression/07449D5C=Unpaused ~A~ stored alert timers
 Param/Expression/0892D77F=~A~ v T
-Param/Expression/08B35931=Adding [~A~]
+Param/Expression/08B35931=Adding [~A~] to the current build
 Param/Expression/09C7A8D5=-~A~
 Param/Expression/0A79CDD8=Loaded Benchmark Build
 Param/Expression/0B536D14=Restarting COOLDOWN timer for upgrade: ~A~
 Param/Expression/0E7777EB=200 supply @ ~B~
 Param/Expression/0F620834=<s val="BenchmarkerPostBuildReportDataLabel"><c val="C0C0C0">Benchmarks Met</c></s>
 Param/Expression/11DCA616=<s val="BuildStatValue">~A~</s>
+Param/Expression/148223DF=== Upgrade: ~A~ |  Current #: ~B~ | Benchmark #: ~C~ ==
 Param/Expression/14A9E66D=<s val="BenchmarkerHelpMenuLabel">~A~</s>
 Param/Expression/14C275AD=~A~
 Param/Expression/1734DB71=~A~ - ~D~~B~ (~C~)
 Param/Expression/186AFB36=~A~ [ ~B~ ]
-Param/Expression/1A81B682=Build Update Triggered for type ~A~
 Param/Expression/1B21CC80=<s val="BenchmarkerFeedbackStatusText">~A~ (~B~)</s>
-Param/Expression/1C68CA1F=Ignoring build objective cycle for step #~A~
+Param/Expression/1C68CA1F=Step #~A~ < cycle threshold OR no new step to add. Skipping cycle.
 Param/Expression/1D8F45C2=~A~%
 Param/Expression/1DC37812=Saved ~A~ as num steps
 Param/Expression/204E47CC=Unit Training Queue empty for ~A~ is ~B~
@@ -70,13 +70,14 @@ Param/Expression/25E9AAD7=~A~
 Param/Expression/282BE002=Current APM: ~A~, Counter @: ~B~
 Param/Expression/28EB8F86=<s val="BenchmarkMatchupSelectionButtonText">~A~</s>
 Param/Expression/2A19E61D=<s val="BuildStatValue">~A~</s>
-Param/Expression/2B969709=Adding ~A~
+Param/Expression/2B969709=Adding [~A~] to the current build
 Param/Expression/2D6CF9BC=<s val="BenchmarkerHelpMenuLabel">~A~</s>
 Param/Expression/2DA3C1EA=~B~x ~A~ Failure Timer
 Param/Expression/2DCFD2AA=~A~ Alert
 Param/Expression/2FEBDEE6=~A~ Cooldown
 Param/Expression/33B8FAEE=~A~ is using 1 or more of it's training queue slots
 Param/Expression/35C1E315=<s val="BenchmarkerDialogTitle">~A~</s>
+Param/Expression/39828E9D=Upgrade ~A~ for current step: ~B~ is CORRECT for benchmark step:  ~C~.  COMPLETING benchmark step.
 Param/Expression/39BDFB1A=~A~
 Param/Expression/3A1BC0E8=~A~<n/>~B~
 Param/Expression/3BCA4D33=<s val="BenchmarkerStatLabel">~A~</s>
@@ -107,18 +108,17 @@ Param/Expression/57AF9E6B=~A~%
 Param/Expression/57B49AF4=Unpaused ~A~ stored alert timers
 Param/Expression/58FC52E5=<s val="BuildStatValue">~A~</s>
 Param/Expression/58FC614E=<s val="BenchmarkerDialogTitle">~A~</s>
-Param/Expression/5A4EE543=current unit: ~A~ == most recent unit: ~B~ so increasing previous amount by 1
+Param/Expression/5A4EE543=Current: ~A~ = Previous: ~B~. PreviousStep: ~C~ amount++
 Param/Expression/5CCA6BB6=Completing objective for build step #: ~A~ and objective #: ~B~
 Param/Expression/60AFE4E0=<s val="BenchmarkerPostBuildReportDataLabel"><c val="FF8F20">~A~</c></s>
 Param/Expression/61255680=Current build order step ~B~ is more than the number of benchmark steps ~A~<n/>Skipping evaluation of benchmark step.
 Param/Expression/627D2026=~A~
-Param/Expression/63757028=benchmark ability: ~A~ == current ability: ~B~ is ~C~
+Param/Expression/63757028=Current ability: ~B~ == Benchmark ability: ~A~ is ~C~
 Param/Expression/63D0BF25=Current char = ~A~
 Param/Expression/651DF3CD=Correct Ability for build order step
 Param/Expression/69B6DB0E=Correct Build Order Unit Type and correct number of units for step.
 Param/Expression/6AE5DFF2=End Build at Max Supply: ~A~ | Supplies Used (~E~) >= 200: ~B~ | Paused: ~C~ | Result: ~D~
-Param/Expression/6BCF5D11=Upgrade is not correct for current step OR previously failed Benchmark Build Order Step:  ~A~.  Failing benchmark build order step.
-Param/Expression/6BECD4EF=Build Update Triggered for type ~A~
+Param/Expression/6BCF5D11=Upgrade ~A~ for current step: ~B~ is INCORRECT for benchmark step:  ~C~.  Failing benchmark step.
 Param/Expression/6E9BC307=~B~x ~A~ Failure Timer
 Param/Expression/6F158199=Upgrade: ~A~ timer expired. Firing alert and starting cooldown timer.
 Param/Expression/7023621D=Unit Type: ~A~ timer expired but training queue is researching... Restarting Cooldown timer.
@@ -126,17 +126,16 @@ Param/Expression/70C9E411=~A~
 Param/Expression/721980B5=Multi-Unit Timer Expired: Not enough of: ~A~ started to satisfy build step.  Failing step ~B~
 Param/Expression/72561A85=Income: ~A~ Unspent: ~B~ SQ: ~C~
 Param/Expression/72D8D8AB=~A~ Alert
-Param/Expression/736976D0=Adding ~A~
+Param/Expression/736976D0=Adding [~A~] to the current build
 Param/Expression/739A89F7=~A~ [ ~B~ ]
 Param/Expression/78265908=Evaluating ~A~ against benchmark build objective
 Param/Expression/7BCEB932=Supplies Used = ~A~ and Final Supply = ~B~
 Param/Expression/7E060849=<s val="BuildStatValue">~A~</s>
-Param/Expression/7E18F04E=Ability is not correct for current step OR previously failed Benchmark Build Order Step:  ~A~.  Failing benchmark build order step.
+Param/Expression/7E18F04E=Ability is not correct for current step: ~A~.  Failing benchmark build order step.
 Param/Expression/81102448=~A~ - ~D~~B~ (~C~)
 Param/Expression/81E51FF8=Unit Type ~A~ is under construction. Ignoring queue status.
 Param/Expression/830069E2=Cleared ~A~ stored alert timers
 Param/Expression/8534C2D6=<s val="BenchmarkerBuildHint">~A~</s>
-Param/Expression/8670BD48=Correct Upgrade for build order step
 Param/Expression/86EE8952=<s val="BenchmarkerMenuLabel">supply at ~A~</s>
 Param/Expression/8A069115=Starting a multi unit failure timer for this step that will expire in ~A~
 Param/Expression/8B19054D=Evaluating if ~A~ has too much energy
@@ -144,14 +143,15 @@ Param/Expression/8E290B4F=~A~ Cooldown
 Param/Expression/8E606D8E=<s val="BenchmarkerMenuLabel">at ~A~ minutes and ~B~ seconds</s>
 Param/Expression/8EF5124A=Current build order step ~B~ is more than the number of benchmark steps ~A~<n/>Skipping evaluation of benchmark step.
 Param/Expression/8F0B85E2=+~A~
-Param/Expression/9057FDA6=Updated previous unit step #~B~  to: ~A~
+Param/Expression/9057FDA6=Updated previous step #~B~ to: [~A~]
+Param/Expression/91218BC2=== Ability: ~A~ |  Current #: ~B~ | Benchmark #: ~C~ ==
 Param/Expression/91F3C79E=~A~ is not researching and will be considered idle.
 Param/Expression/92DD29CA=No Map Resource found for unit.  Returning index of -1.
 Param/Expression/96692ECC=Removed ~A~ gas structures on first pass
 Param/Expression/987CB6FA=~A~ is currently researching and cannot produce units.
 Param/Expression/98B1F6BB=<s val="BenchmarkerAlert">APM Too Low!</s>
 Param/Expression/9AC37339=~A~ v P
-Param/Expression/9B3854D6=benchmark upgrade: ~A~ == current upgrade: ~B~ is ~C~
+Param/Expression/9B3854D6=Current upgrade: ~B~ == Benchmark upgrade: ~A~ is ~C~
 Param/Expression/9E619A01=<s val="BuildStatLabel">~A~</s>
 Param/Expression/A1F4609D=Initializing Build Objectives
 Param/Expression/A3731B98=Adding upgrade gap alert for upgrade: ~A~
@@ -173,7 +173,7 @@ Param/Expression/B24E8ABD=~A~ Alert
 Param/Expression/B465A6FA=<s val="BuildStatLabel">~A~</s>
 Param/Expression/B4C4D038=Restarting ALERT timer for upgrade: ~A~
 Param/Expression/B53438FA=~A~ [ ~B~ ]
-Param/Expression/B8C0A347=Current build order step ~B~ is more than the number of benchmark steps ~A~<n/>Skipping evaluation of benchmark step.
+Param/Expression/B8C0A347=Current Step ~B~ > Num Benchmark Steps ~A~. Skipping benchmark eval.
 Param/Expression/B99F7846=+~A~
 Param/Expression/BB1E6CB1=<s val="BenchmarkerAlert">~A~ Energy Too High!</s>
 Param/Expression/BDB89428=~A~
@@ -190,14 +190,14 @@ Param/Expression/CC2AD512=<s val="BenchmarkerPostBuildReportDataLabel">Stats</s>
 Param/Expression/CD58AD2D=Unit Type: ~A~ timer expired. Firing alert and starting cooldown timer.
 Param/Expression/CD69F550=Restarting ALERT timer for unit type: ~A~
 Param/Expression/CD90F5E5=Blizzard's Income: ~A~ Blizzard's Unspent: ~B~ Blizzard SQ: ~C~
-Param/Expression/CDBA6F10=benchmark unit: ~A~ == current unit: ~B~ is ~C~
+Param/Expression/CDBA6F10=Current unit: ~B~ == Benchmark unit: ~A~ is ~C~
 Param/Expression/CF0AC666=Loaded entry: ~A~ from section: ~B~ as boolean: ~C~
 Param/Expression/D1487546=~A~ Cooldown
 Param/Expression/D173786C=Stored ~A~ active alert timers
 Param/Expression/D17BAC5D=-~A~
 Param/Expression/D2FEAD6E=<s val="BenchmarkerPostBuildReportDataLabel"><c val="FF8F20">~A~</c></s>
 Param/Expression/D3C9632E=~A~ [ ~B~ ]
-Param/Expression/D6A02471=Previous build order step ~B~ is more than the number of benchmark steps ~A~. Or previous objective not Active. Skipping evaluation.
+Param/Expression/D6A02471=Previous Step ~B~ > Num Benchmark Steps: ~A~ or previous objective not Active. Skipping evaluation.
 Param/Expression/D6AE440F=<s val="BenchmarkerHelpMenuLabel">~A~</s>
 Param/Expression/DA3A6761=~A~/~B~
 Param/Expression/DC7938B5=~A~ Cooldown
@@ -205,7 +205,7 @@ Param/Expression/DCA924E4=No Benchmark Build to Load...
 Param/Expression/DD4AB624=~A~
 Param/Expression/DDA3FDF3=<s val="BenchmarkerAlert">Upgrade Delayed! - ~A~</s>
 Param/Expression/DE1053B7=~A~ is researching already.
-Param/Expression/DE9D0EE9=Build update for: ~A~.  Current step: ~B~. Previous unit step: ~D~ Benchmark step: ~C~
+Param/Expression/DE9D0EE9=== Unit: ~A~ | Current #: ~B~ | Benchmark #: ~C~ ==
 Param/Expression/E3F2B274=Failing objective for benchmark build step #: ~A~ and benchmark objective #: ~B~
 Param/Expression/E4B95466=There are ~A~ total num benchmark build order steps in the ~B~ section of the benchmarker bank
 Param/Expression/E571E892=~A~ [ ~B~ ]
@@ -213,12 +213,12 @@ Param/Expression/E71E8721=<s val="BenchmarkerMenuLabel">at ~A~ minutes and ~B~ s
 Param/Expression/E84E69DA=Unit Type: ~A~ valid for build order = ~B~
 Param/Expression/E8781CC9=Current char ~A~ is not numeric. Setting is numeric to false
 Param/Expression/EA97869B=There were ~A~ resources saved to the Map Resources unit group
-Param/Expression/ECB77C2B=Maximum number of trackable build order steps reached.  Ignoring upgrade step
-Param/Expression/EF816D38=current: ~A~ != previous: ~B~ so proceeding with evaluation
+Param/Expression/ECB77C2B=Current ~A~ > Max Steps Tracked ~B~.  Ignoring upgrade step
+Param/Expression/EF816D38=Current: ~A~ != Previous: ~B~ or within multi unit window.
 Param/Expression/F0E2DCFF=<s val="BuildStatValue">~A~</s>
 Param/Expression/F2C7E9FD=<s val="BuildStatValue">~A~/~B~  (~C~)</s><n/>
 Param/Expression/F5D99818=<s val="BenchmarkerMenuLabel">Alert when ~A~ energy exceeds</s>
-Param/Expression/F6401EA7=Amount correct... Resetting the multiple unit failure timer.
+Param/Expression/F6401EA7=Amount correct... Stopping multiple unit failure timer for step #~A~
 Param/Expression/F6BAF499=<s val="BuildStatValue">~A~</s>
 Param/Expression/F715B5A3=<s val="BenchmarkerObjectiveHint">~A~</s>
 Param/Expression/F7F5AD3C=<s val="BuildStatValue">~A~</s>
