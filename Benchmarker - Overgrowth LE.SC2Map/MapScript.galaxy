@@ -217,6 +217,8 @@ bool gv_displayBuildHints;
 fixed gv_buildHintTimeThreshold;
 timer gv_displayBuildHintCooldownTimer;
 int gv_buildHintCursor;
+int gv_buildOrderToleranceWindowNumSteps;
+int gv_buildOrderToleranceWindowTime;
 text gv_performanceFeedbackMarvelousText;
 text gv_performanceFeedbackPerfectText;
 text gv_performanceFeedbackGreatText;
@@ -849,6 +851,7 @@ void gf_FailBenchmarkStepObjectiveAndCycle (int lp_currentStep, int lp_benchmark
 void gf_ResetObjectiveForBenchmarkBuildOrderStepAndUncycle (int lp_benchmarkStep);
 void gf_DisplayPerformanceFeedbackForCorrectStep (int lp_currentIndex, int lp_benchmarkIndex);
 void gf_DisplayPerformanceFeedbackForFailedStep (int lp_currentStep, bool lp_timerExpired);
+void gf_UpdateBenchmarkBuildOrderStepCursor ();
 void gf_CreateAlertMenuDialog ();
 void gf_CreateAlertMenuCheckbox (int lp_rowNumber);
 void gf_CreateAlertMenuLabel (text lp_labelText, int lp_rowNum);
@@ -1003,6 +1006,7 @@ text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber);
 bool gf_IsEndBuildatMaxSupplySelected ();
 bool gf_IsEndBuildatGameTimeSelected ();
 int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor);
+int gf_GetNextIncompleteBenchmarkBuildOrderStep (int lp_benchmarkStep);
 bool gf_IsUnitTypeValidForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkStep);
 bool gf_IsUnitTypeAStructure (string lp_unitType);
 bool gf_IsUnitTypeAnEligibleSupplyUnit (string lp_unitType, int lp_benchmarkStep);
@@ -1602,8 +1606,6 @@ void gf_SaveCurrentBuildAsBenchmarkBuildOrderForCurrentMatchup () {
 
     // Implementation
     gf_LogTextMessage(gv_debugBankEnabled, StringExternal("Param/Value/EE33C8C1"));
-    TextExpressionSetToken("Param/Expression/DA06D966", "A", IntToText(gv_currentBuildOrderStepCursor));
-    gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/DA06D966"));
     lv_numCurrentBuildSteps = gv_currentBuildOrderStepCursor;
     auto895F190E_ae = (lv_numCurrentBuildSteps-1);
     auto895F190E_ai = 1;
@@ -2200,51 +2202,57 @@ void gf_RemoveAbilityBuildOrderStep (int lp_step) {
 void gf_EvaluateUnitTypeForBenchmarkBuildOrderStep (string lp_unitType, int lp_currentStep, int lp_benchmarkStep) {
     // Variable Declarations
     int lv_currentAmountForStep;
+    int lv_evalStepCurrent;
+    int lv_evalStepBenchmark;
 
     // Variable Initialization
 
     // Implementation
-    lv_currentAmountForStep = gv_currentBuildOrderSteps[lp_currentStep].lv_amount;
-    if (((gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_stepType == gv_unitStepType) && (gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep(lp_unitType, lp_benchmarkStep) == true))) {
-        TextExpressionSetToken("Param/Expression/B1051469", "C", UnitTypeGetName(lp_unitType));
-        TextExpressionSetToken("Param/Expression/B1051469", "A", IntToText(lp_currentStep));
-        TextExpressionSetToken("Param/Expression/B1051469", "B", IntToText(lp_benchmarkStep));
-        gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/B1051469"));
-        if (((gf_IsAmountCorrectForBenchmarkBuildOrderStep(lv_currentAmountForStep, lp_benchmarkStep) == true))) {
-            gf_CompleteBenchmarkStepObjectiveStepAndCycle(lp_currentStep, lp_benchmarkStep);
-            if (((TimerIsPaused(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer) == false) && ((TimerGetDuration(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer) >= 0) && (TimerGetDuration(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer) <= gv_multipleUnitFailureThreshold)))) {
-                TextExpressionSetToken("Param/Expression/F6401EA7", "A", IntToText(lp_benchmarkStep));
-                gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/F6401EA7"));
-                TimerStart(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer, gv_neverexpires, false, c_timeGame);
-                TimerPause(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer, true);
+    lv_evalStepCurrent = lp_currentStep;
+    lv_evalStepBenchmark = lp_benchmarkStep;
+    while (true) {
+        lv_currentAmountForStep = gv_currentBuildOrderSteps[lv_evalStepCurrent].lv_amount;
+        if (((gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_stepType == gv_unitStepType) && (gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep(lp_unitType, lv_evalStepBenchmark) == true))) {
+            TextExpressionSetToken("Param/Expression/B1051469", "C", UnitTypeGetName(lp_unitType));
+            TextExpressionSetToken("Param/Expression/B1051469", "A", IntToText(lv_evalStepCurrent));
+            TextExpressionSetToken("Param/Expression/B1051469", "B", IntToText(lp_benchmarkStep));
+            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/B1051469"));
+            if (((gf_IsAmountCorrectForBenchmarkBuildOrderStep(lv_currentAmountForStep, lv_evalStepBenchmark) == true))) {
+                gf_CompleteBenchmarkStepObjectiveStepAndCycle(lv_evalStepCurrent, lv_evalStepBenchmark);
+                if (((TimerIsPaused(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer) == false) && ((TimerGetDuration(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer) >= 0) && (TimerGetDuration(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer) <= gv_multipleUnitFailureThreshold)))) {
+                    TextExpressionSetToken("Param/Expression/F6401EA7", "A", IntToText(lv_evalStepBenchmark));
+                    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/F6401EA7"));
+                    TimerStart(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer, gv_neverexpires, false, c_timeGame);
+                    TimerPause(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer, true);
+                }
+                else {
+                }
             }
             else {
+                TextExpressionSetToken("Param/Expression/00348550", "A", IntToText(lv_currentAmountForStep));
+                TextExpressionSetToken("Param/Expression/00348550", "B", IntToText(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_amount));
+                gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/00348550"));
+                if (((TimerIsPaused(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer) == true) && ((TimerGetRemaining(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer) == 0.0) || (TimerGetRemaining(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer) == gv_neverexpires)))) {
+                    if (((gv_debugBuildOrderEnabled == true) && (TimerGetRemaining(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer) == 0.0))) {
+                        TextExpressionSetToken("Param/Expression/2DA3C1EA", "B", IntToText(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_amount));
+                        TextExpressionSetToken("Param/Expression/2DA3C1EA", "A", UnitTypeGetName(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_unitType));
+                        gf_AddDebugTimerWindow(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer, TextExpressionAssemble("Param/Expression/2DA3C1EA"));
+                    }
+                    else {
+                        gf_LogTextMessage(gv_debugBuildOrderEnabled, StringExternal("Param/Value/3476367F"));
+                    }
+                    TextExpressionSetToken("Param/Expression/8A069115", "A", IntToText(gv_multipleUnitFailureThreshold));
+                    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/8A069115"));
+                    TimerStart(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer, IntToFixed(gv_multipleUnitFailureThreshold), false, c_timeGame);
+                }
+                else {
+                }
             }
         }
         else {
-            TextExpressionSetToken("Param/Expression/00348550", "A", IntToText(lv_currentAmountForStep));
-            TextExpressionSetToken("Param/Expression/00348550", "B", IntToText(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_amount));
-            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/00348550"));
-            if (((TimerIsPaused(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer) == true) && ((TimerGetRemaining(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer) == 0.0) || (TimerGetRemaining(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer) == gv_neverexpires)))) {
-                if (((gv_debugBuildOrderEnabled == true) && (TimerGetRemaining(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer) == 0.0))) {
-                    TextExpressionSetToken("Param/Expression/2DA3C1EA", "B", IntToText(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_amount));
-                    TextExpressionSetToken("Param/Expression/2DA3C1EA", "A", UnitTypeGetName(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType));
-                    gf_AddDebugTimerWindow(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer, TextExpressionAssemble("Param/Expression/2DA3C1EA"));
-                }
-                else {
-                    gf_LogTextMessage(gv_debugBuildOrderEnabled, StringExternal("Param/Value/3476367F"));
-                }
-                TextExpressionSetToken("Param/Expression/8A069115", "A", IntToText(gv_multipleUnitFailureThreshold));
-                gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/8A069115"));
-                TimerStart(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_multipleUnitFailureTimer, IntToFixed(gv_multipleUnitFailureThreshold), false, c_timeGame);
-            }
-            else {
-            }
         }
     }
-    else {
-        gf_FailBenchmarkStepObjectiveAndCycle(lp_currentStep, lp_benchmarkStep, false);
-    }
+    gf_FailBenchmarkStepObjectiveAndCycle(lp_currentStep, lp_benchmarkStep, false);
 }
 
 void gf_EvaluateUpgradeForBenchmarkBuildOrderStep (string lp_upgrade, int lp_currentStep, int lp_benchmarkStep) {
@@ -2291,8 +2299,7 @@ void gf_CompleteBenchmarkStepObjectiveStepAndCycle (int lp_currentStep, int lp_b
     else {
     }
     gf_CycleBenchmarkBuildOrderObjectives(lp_currentStep, lp_benchmarkStep);
-    gv_benchmarkBuildOrderStepCursor += 1;
-    gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
+    gf_UpdateBenchmarkBuildOrderStepCursor();
 }
 
 void gf_FailBenchmarkStepObjectiveAndCycle (int lp_currentStep, int lp_benchmarkStep, bool lp_timerExpired) {
@@ -2304,8 +2311,7 @@ void gf_FailBenchmarkStepObjectiveAndCycle (int lp_currentStep, int lp_benchmark
     else {
     }
     gf_CycleBenchmarkBuildOrderObjectives(lp_currentStep, lp_benchmarkStep);
-    gv_benchmarkBuildOrderStepCursor += 1;
-    gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
+    gf_UpdateBenchmarkBuildOrderStepCursor();
 }
 
 void gf_ResetObjectiveForBenchmarkBuildOrderStepAndUncycle (int lp_benchmarkStep) {
@@ -2445,6 +2451,12 @@ bool auto_gf_DisplayPerformanceFeedbackForFailedStep_TriggerFunc (bool testConds
     Wait(lv_waitTime, c_timeGame);
     UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
     return true;
+}
+
+void gf_UpdateBenchmarkBuildOrderStepCursor () {
+    // Implementation
+    gv_benchmarkBuildOrderStepCursor = gf_GetNextIncompleteBenchmarkBuildOrderStep(gv_currentBuildOrderStepCursor);
+    gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
 }
 
 void gf_CreateAlertMenuDialog () {
@@ -5589,6 +5601,32 @@ int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor) {
     return lv_result;
 }
 
+int gf_GetNextIncompleteBenchmarkBuildOrderStep (int lp_benchmarkStep) {
+    int autoC3961A2E_ae;
+    int autoC3961A2E_ai;
+
+    // Variable Declarations
+    int lv_benchmarkStep;
+    int lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_result = lp_benchmarkStep;
+    autoC3961A2E_ae = gv_totalNumBenchmarkBuildOrderSteps;
+    autoC3961A2E_ai = 1;
+    lv_benchmarkStep = lp_benchmarkStep;
+    for ( ; ( (autoC3961A2E_ai >= 0 && lv_benchmarkStep <= autoC3961A2E_ae) || (autoC3961A2E_ai <= 0 && lv_benchmarkStep >= autoC3961A2E_ae) ) ; lv_benchmarkStep += autoC3961A2E_ai ) {
+        if ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lv_benchmarkStep)]) == c_objectiveStateActive)) {
+            lv_result = lv_benchmarkStep;
+            break;
+        }
+        else {
+        }
+    }
+    return lv_result;
+}
+
 bool gf_IsUnitTypeValidForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkStep) {
     // Variable Declarations
     bool lv_result;
@@ -8325,8 +8363,6 @@ bool gt_EndBuildFromHotkey_Func (bool testConds, bool runActions) {
     }
 
     TriggerExecute(gt_OpenPostBuildReportDialog, false, false);
-    TextExpressionSetToken("Param/Expression/1918E428", "A", IntToText(gv_currentBuildOrderStepCursor));
-    gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/1918E428"));
     return true;
 }
 
