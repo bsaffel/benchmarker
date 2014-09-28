@@ -351,9 +351,14 @@ int gv_debugDialog;
 int gv_debugDialogWidth;
 int gv_debugDialogHeight;
 int gv_debugDialogXPadding;
+int gv_debugDialogLabel;
 int gv_debugListBox;
 int gv_debugListBoxPadding;
 int gv_debugListBoxOffset;
+int gv_debugPauseButton;
+int gv_debugClearButton;
+int gv_debugButtonWidth;
+int gv_debugButtonHeight;
 int gv_helpDialogTitleSpacer;
 int gv_helpDialogItemHeight;
 int gv_helpCommandLabelWidth;
@@ -695,9 +700,14 @@ void InitGlobals () {
     gv_debugDialogWidth = 800;
     gv_debugDialogHeight = 275;
     gv_debugDialogXPadding = 10;
+    gv_debugDialogLabel = c_invalidDialogControlId;
     gv_debugListBox = c_invalidDialogControlId;
     gv_debugListBoxPadding = 27;
     gv_debugListBoxOffset = 55;
+    gv_debugPauseButton = c_invalidDialogControlId;
+    gv_debugClearButton = c_invalidDialogControlId;
+    gv_debugButtonWidth = 80;
+    gv_debugButtonHeight = 32;
     gv_helpDialogTitleSpacer = 35;
     gv_helpDialogItemHeight = 35;
     gv_helpCommandLabelWidth = 120;
@@ -1140,6 +1150,8 @@ trigger gt_ToggleDebugBank;
 trigger gt_ToggleDebugBuildOrder;
 trigger gt_ToggleDebugMapMechanics;
 trigger gt_ToggleDebugMenus;
+trigger gt_ToggleDebugDialogPauseButton;
+trigger gt_DebugDialogClearButtonPressed;
 trigger gt_DebugBooleanConditionFromHotkey;
 trigger gt_MuteUnmuteAlerts;
 trigger gt_EnableDisableMineralAlert;
@@ -3162,6 +3174,12 @@ void gf_UpdateBuildOrderListBoxwithCurrentBuild (int lp_listBox) {
 }
 
 void gf_CreateDebugDialog () {
+    // Variable Declarations
+    int lv_debugButtonXPadding;
+
+    // Variable Initialization
+    lv_debugButtonXPadding = 30;
+
     // Implementation
     DialogCreate(gv_debugDialogWidth, gv_debugDialogHeight, c_anchorBottomLeft, gv_debugDialogXPadding, gf_GetWinButtonYPadding(), true);
     gv_debugDialog = DialogLastCreated();
@@ -3169,8 +3187,13 @@ void gf_CreateDebugDialog () {
     DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), (gv_debugDialogWidth - gv_debugListBoxOffset), (gv_debugDialogHeight - (gv_debugListBoxOffset - 5)));
     DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, gv_debugListBoxPadding, gv_debugListBoxPadding);
     gv_debugListBox = DialogControlLastCreated();
-    DialogSetTransparency(DialogLastCreated(), 45.0);
     libNtve_gf_SetDialogItemAcceptMouse(DialogControlLastCreated(), false, PlayerGroupAll());
+    DialogSetTransparency(DialogLastCreated(), 45.0);
+    libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_debugButtonWidth, gv_debugButtonHeight, c_anchorBottomLeft, lv_debugButtonXPadding, 0, StringExternal("Param/Value/DE1FAA88"), StringExternal("Param/Value/5DCFFDDF"), "");
+    libNtve_gf_SetDialogItemClickOnDown(DialogControlLastCreated(), true, PlayerGroupAll());
+    gv_debugPauseButton = DialogControlLastCreated();
+    libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_debugButtonWidth, gv_debugButtonHeight, c_anchorBottomLeft, (lv_debugButtonXPadding+gv_debugButtonWidth), 0, StringExternal("Param/Value/3BD24962"), StringExternal("Param/Value/1BF0D20E"), "");
+    gv_debugClearButton = DialogControlLastCreated();
     gf_HideDebugDialog();
 }
 
@@ -8695,6 +8718,65 @@ void gt_ToggleDebugMenus_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Toggle Debug Dialog Pause Button
+//--------------------------------------------------------------------------------------------------
+bool gt_ToggleDebugDialogPauseButton_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((EventDialogControl() == gv_debugPauseButton))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    if ((gv_paused == false)) {
+        libNtve_gf_SetDialogItemToggled(gv_debugPauseButton, true, PlayerGroupAll());
+        gf_PauseGame();
+    }
+    else {
+        libNtve_gf_SetDialogItemToggled(gv_debugPauseButton, false, PlayerGroupAll());
+        gf_UnpauseGame();
+    }
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_ToggleDebugDialogPauseButton_Init () {
+    gt_ToggleDebugDialogPauseButton = TriggerCreate("gt_ToggleDebugDialogPauseButton_Func");
+    TriggerAddEventDialogControl(gt_ToggleDebugDialogPauseButton, 1, c_invalidDialogControlId, c_triggerControlEventTypeClick);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Debug Dialog Clear Button Pressed
+//--------------------------------------------------------------------------------------------------
+bool gt_DebugDialogClearButtonPressed_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((EventDialogControl() == gv_debugClearButton))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    DialogControlRemoveAllItems(gv_debugListBox, PlayerGroupAll());
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_DebugDialogClearButtonPressed_Init () {
+    gt_DebugDialogClearButtonPressed = TriggerCreate("gt_DebugDialogClearButtonPressed_Func");
+    TriggerAddEventDialogControl(gt_DebugDialogClearButtonPressed, 1, c_invalidDialogControlId, c_triggerControlEventTypeClick);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Debug Boolean Condition From Hotkey
 //--------------------------------------------------------------------------------------------------
 bool gt_DebugBooleanConditionFromHotkey_Func (bool testConds, bool runActions) {
@@ -9879,6 +9961,8 @@ void InitTriggers () {
     gt_ToggleDebugBuildOrder_Init();
     gt_ToggleDebugMapMechanics_Init();
     gt_ToggleDebugMenus_Init();
+    gt_ToggleDebugDialogPauseButton_Init();
+    gt_DebugDialogClearButtonPressed_Init();
     gt_DebugBooleanConditionFromHotkey_Init();
     gt_MuteUnmuteAlerts_Init();
     gt_EnableDisableMineralAlert_Init();
