@@ -850,6 +850,12 @@ void gf_CreateHiddenBenchmarkSupplyObjectives ();
 void gf_ShowBenchmarkSupplyObjectives ();
 void gf_HideBenchmarkSupplyObjectives ();
 void gf_StartBenchmarkTimers ();
+void gf_AddUnitBuildOrderStep (int lp_currentStep, unit lp_triggeringUnit, string lp_triggeringUnitType);
+void gf_AddUpgradeBuildOrderStep (int lp_currentStep, string lp_buildStepUpgrade);
+void gf_AddAbilityBuildOrderStep (int lp_currentStep, abilcmd lp_triggerringAbilityCommand);
+void gf_RemoveUnitBuildOrderStep (int lp_step);
+void gf_RemoveUpgradeBuildOrderStep (int lp_step);
+void gf_RemoveAbilityBuildOrderStep (int lp_step);
 void gf_CreateBenchmarkBuildOrderObjectives ();
 void gf_CreateBenchmarkBuildOrderStepasSecondaryObjective (int lp_buildStep);
 void gf_CompleteObjectiveForBenchmarkBuildOrderStep (int lp_currentStep, int lp_benchmarkStep);
@@ -861,21 +867,15 @@ void gf_DestroyBenchmarkBuildOrderObjectives ();
 void gf_HighlightBenchmarkBuildOrderObjective (int lp_step);
 void gf_UnHighlightBenchmarkBuildOrderObjective (int lp_step);
 void gf_InitializeBenchmarkBuildOrder ();
-void gf_AddUnitBuildOrderStep (int lp_currentStep, unit lp_triggeringUnit, string lp_triggeringUnitType);
-void gf_AddUpgradeBuildOrderStep (int lp_currentStep, string lp_buildStepUpgrade);
-void gf_AddAbilityBuildOrderStep (int lp_currentStep, abilcmd lp_triggerringAbilityCommand);
-void gf_RemoveUnitBuildOrderStep (int lp_step);
-void gf_RemoveUpgradeBuildOrderStep (int lp_step);
-void gf_RemoveAbilityBuildOrderStep (int lp_step);
 void gf_EvaluateUnitTypeForBenchmarkBuildOrderStep (string lp_unitType, int lp_currentStep, int lp_benchmarkStep);
 void gf_EvaluateUpgradeForBenchmarkBuildOrderStep (string lp_upgrade, int lp_currentStep, int lp_benchmarkStep);
 void gf_EvaluateAbilityForBenchmarkBuildOrderStep (string lp_ability, int lp_currentStep, int lp_benchmarkStep);
 void gf_CompleteBenchmarkStepObjectiveStepAndCycle (int lp_currentStep, int lp_benchmarkStep);
 void gf_FailBenchmarkStepObjectiveAndCycle (int lp_currentStep, int lp_benchmarkStep, bool lp_timerExpired);
 void gf_ResetObjectiveForBenchmarkBuildOrderStepAndUncycle (int lp_benchmarkStep);
+void gf_UpdateBenchmarkBuildOrderStepCursor (int lp_currentStep);
 void gf_DisplayPerformanceFeedbackForCorrectStep (int lp_currentIndex, int lp_benchmarkIndex);
 void gf_DisplayPerformanceFeedbackForFailedStep (int lp_currentStep, bool lp_timerExpired);
-void gf_UpdateBenchmarkBuildOrderStepCursor (int lp_currentStep);
 void gf_CreateAlertMenuDialog ();
 void gf_CreateAlertMenuCheckbox (int lp_rowNumber);
 void gf_CreateAlertMenuLabel (text lp_labelText, int lp_rowNum);
@@ -1022,6 +1022,17 @@ int gf_GetProductionIdleAlertIndexForTimer (timer lp_timer);
 string gf_GetIconForBuildingType (string lp_unitType);
 string gf_GetCurrentlySelectedMatchupasBankSectionKey ();
 string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
+bool gf_IsEndBuildatMaxSupplySelected ();
+bool gf_IsEndBuildatGameTimeSelected ();
+bool gf_IsUpgradeTypeValidForBuildOrder (string lp_upgrade);
+bool gf_IsAbilityValidForBuildOrder (string lp_ability);
+bool gf_IsUnitTypeSameAsPreviousUnitType (int lp_previousUnitStepIndex, string lp_unitType);
+bool gf_IsUnitTypeAStructure (string lp_unitType);
+bool gf_IsUnitTypeAnEligibleSupplyUnit (string lp_unitType, int lp_benchmarkStep);
+bool gf_IsUnitTypeAnIneligibleGasCollectionUnit (string lp_unitType, int lp_benchmarkStep);
+bool gf_IsUnitTypeAnExplicitlyIgnoredStructureType (string lp_unitType);
+bool gf_IsUpgradeAnAttackDefenseUpgrade (string lp_upgrade);
+int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor);
 text gf_GetTypeTextForCurrentBuildOrderStep (int lp_stepNumber);
 text gf_GetTypeTextForBenchmarkBuildOrderStep (int lp_stepNumber);
 text gf_GetCurrentBuildOrderStepText (int lp_stepNumber);
@@ -1031,29 +1042,19 @@ color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber);
 text gf_GetSupplyforCurrentBuildOrderStepasText (int lp_currentStep);
 int gf_GetSupplyforCurrentBuildOrderStep (int lp_currentStep);
 text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber);
-bool gf_IsEndBuildatMaxSupplySelected ();
-bool gf_IsEndBuildatGameTimeSelected ();
-int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor);
-int gf_GetNextIncompleteBenchmarkBuildOrderStep (int lp_benchmarkStep);
 bool gf_IsUnitTypeValidForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkStep);
-bool gf_IsUnitTypeAStructure (string lp_unitType);
-bool gf_IsUnitTypeAnEligibleSupplyUnit (string lp_unitType, int lp_benchmarkStep);
-bool gf_IsUnitTypeAnIneligibleGasCollectionUnit (string lp_unitType, int lp_benchmarkStep);
-bool gf_IsUnitTypeAnExplicitlyIgnoredStructureType (string lp_unitType);
 bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkStep);
-bool gf_IsUpgradeTypeValidForBuildOrder (string lp_upgrade);
 bool gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep (string lp_upgrade, int lp_benchmarkStep);
-bool gf_IsUpgradeAnAttackDefenseUpgrade (string lp_upgrade);
-bool gf_IsAbilityValidForBuildOrder (string lp_ability);
 bool gf_IsAbilityTypeCorrectForBenchmarkBuildOrderStep (string lp_ability, int lp_benchmarkBuildOrderStepIndex);
 bool gf_IsSupplyCorrectForBenchmarkBuildOrderStep (int lp_supplyCount, int lp_benchmarkBuildOrderStepIndex);
 bool gf_IsAmountCorrectForBenchmarkBuildOrderStep (int lp_numUnits, int lp_benchmarkBuildOrderStepIndex);
-bool gf_IsUnitTypeSameAsPreviousUnitType (int lp_previousUnitStepIndex, string lp_unitType);
+int gf_GetNextIncompleteBenchmarkBuildOrderStep (int lp_benchmarkStep);
+int gf_GetPreviousIncompleteBenchmarkBuildOrderStep (int lp_benchmarkStep);
+bool gf_IsStepIndexPastEndOfBenchmarkBuild (int lp_step);
 int gf_GetStepIndexForPreviousUnitStep (int lp_previousStep);
 int gf_GetStepIndexForPreviousUpgradeStep (int lp_previousStep);
 int gf_GetStepIndexForPreviousAbilityStep (int lp_previousStep);
-bool gf_DoesBuildHaveAnotherStepToDisplay (int lp_currentStep);
-bool gf_IsStepIndexPastEndOfBenchmarkBuild (int lp_step);
+bool gf_DoesBenchmarkBuildHaveAnotherStepToDisplay (int lp_currentStep);
 bool gf_IsTimeraMultiUnitFailureTimer (timer lp_timer);
 int gf_GetBenchmarkStepForMultiUnitFailureTimer (timer lp_timer);
 bool gf_IsBenchmarkStepWithinToleranceWindow (int lp_evaluatedBenchmarkStep, int lp_currentBenchmarkStep);
@@ -1957,6 +1958,92 @@ void gf_StartBenchmarkTimers () {
     }
 }
 
+void gf_AddUnitBuildOrderStep (int lp_currentStep, unit lp_triggeringUnit, string lp_triggeringUnitType) {
+    // Variable Declarations
+    int lv_buildOrderStepSupplyCount;
+
+    // Variable Initialization
+
+    // Implementation
+    gv_currentBuildOrderSteps[lp_currentStep].lv_stepType = gv_unitStepType;
+    gv_currentBuildOrderSteps[lp_currentStep].lv_unitType = lp_triggeringUnitType;
+    gv_currentBuildOrderSteps[lp_currentStep].lv_amount = 1;
+    gv_currentBuildOrderSteps[lp_currentStep].lv_supply = gf_GetSupplyforCurrentBuildOrderStep(lp_currentStep);
+    gv_currentBuildOrderSteps[lp_currentStep].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer));
+    UnitGroupAdd(gv_currentBuildOrderSteps[lp_currentStep].lv_completingUnits, lp_triggeringUnit);
+    TextExpressionSetToken("Param/Expression/08B35931", "A", gf_GetCurrentBuildOrderStepText(lp_currentStep));
+    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/08B35931"));
+}
+
+void gf_AddUpgradeBuildOrderStep (int lp_currentStep, string lp_buildStepUpgrade) {
+    // Implementation
+    gv_currentBuildOrderSteps[lp_currentStep].lv_stepType = gv_upgradeStepType;
+    gv_currentBuildOrderSteps[lp_currentStep].lv_upgrade = lp_buildStepUpgrade;
+    gv_currentBuildOrderSteps[lp_currentStep].lv_amount = 1;
+    gv_currentBuildOrderSteps[lp_currentStep].lv_supply = PlayerScoreValueGetAsInt(1, "FoodUsed");
+    gv_currentBuildOrderSteps[lp_currentStep].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer));
+    gv_currentBuildOrderSteps[lp_currentStep].lv_completingUpgrade = lp_buildStepUpgrade;
+    TextExpressionSetToken("Param/Expression/2B969709", "A", gf_GetCurrentBuildOrderStepText(lp_currentStep));
+    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/2B969709"));
+}
+
+void gf_AddAbilityBuildOrderStep (int lp_currentStep, abilcmd lp_triggerringAbilityCommand) {
+    // Variable Declarations
+    string lv_triggeringAbilityType;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_triggeringAbilityType = AbilityCommandGetAbility(lp_triggerringAbilityCommand);
+    gv_currentBuildOrderSteps[lp_currentStep].lv_stepType = gv_abilityStepType;
+    gv_currentBuildOrderSteps[lp_currentStep].lv_ability = lv_triggeringAbilityType;
+    gv_currentBuildOrderSteps[lp_currentStep].lv_amount = 1;
+    gv_currentBuildOrderSteps[lp_currentStep].lv_supply = PlayerScoreValueGetAsInt(1, "FoodUsed");
+    gv_currentBuildOrderSteps[lp_currentStep].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer));
+    gv_currentBuildOrderSteps[lp_currentStep].lv_completingAbility = lp_triggerringAbilityCommand;
+    TextExpressionSetToken("Param/Expression/736976D0", "A", gf_GetCurrentBuildOrderStepText(lp_currentStep));
+    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/736976D0"));
+}
+
+void gf_RemoveUnitBuildOrderStep (int lp_step) {
+    // Implementation
+    TextExpressionSetToken("Param/Expression/4C41831F", "A", gf_GetCurrentBuildOrderStepText(lp_step));
+    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/4C41831F"));
+    gv_currentBuildOrderSteps[lp_step].lv_stepType = "";
+    gv_currentBuildOrderSteps[lp_step].lv_unitType = null;
+    gv_currentBuildOrderSteps[lp_step].lv_amount = 0;
+    gv_currentBuildOrderSteps[lp_step].lv_supply = 0;
+    gv_currentBuildOrderSteps[lp_step].lv_elapsedSeconds = 0;
+    UnitGroupClear(gv_currentBuildOrderSteps[lp_step].lv_completingUnits);
+    gv_currentBuildOrderSteps[lp_step].lv_finishedBenchmarkStepReference = -1;
+}
+
+void gf_RemoveUpgradeBuildOrderStep (int lp_step) {
+    // Implementation
+    TextExpressionSetToken("Param/Expression/BE4D1BC9", "A", gf_GetCurrentBuildOrderStepText(lp_step));
+    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/BE4D1BC9"));
+    gv_currentBuildOrderSteps[lp_step].lv_stepType = "";
+    gv_currentBuildOrderSteps[lp_step].lv_upgrade = null;
+    gv_currentBuildOrderSteps[lp_step].lv_amount = 0;
+    gv_currentBuildOrderSteps[lp_step].lv_supply = 0;
+    gv_currentBuildOrderSteps[lp_step].lv_elapsedSeconds = 0;
+    gv_currentBuildOrderSteps[lp_step].lv_completingUpgrade = null;
+    gv_currentBuildOrderSteps[lp_step].lv_finishedBenchmarkStepReference = -1;
+}
+
+void gf_RemoveAbilityBuildOrderStep (int lp_step) {
+    // Implementation
+    TextExpressionSetToken("Param/Expression/9029C20E", "A", gf_GetCurrentBuildOrderStepText(lp_step));
+    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/9029C20E"));
+    gv_currentBuildOrderSteps[lp_step].lv_stepType = "";
+    gv_currentBuildOrderSteps[lp_step].lv_ability = null;
+    gv_currentBuildOrderSteps[lp_step].lv_amount = 0;
+    gv_currentBuildOrderSteps[lp_step].lv_supply = 0;
+    gv_currentBuildOrderSteps[lp_step].lv_elapsedSeconds = 0;
+    gv_currentBuildOrderSteps[lp_step].lv_completingAbility = null;
+    gv_currentBuildOrderSteps[lp_step].lv_finishedBenchmarkStepReference = -1;
+}
+
 void gf_CreateBenchmarkBuildOrderObjectives () {
     int auto98326FC4_ae;
     int auto98326FC4_ai;
@@ -2058,8 +2145,8 @@ void gf_CycleBenchmarkBuildOrderObjectives (int lp_currentStep, int lp_benchmark
 
     // Implementation
     lv_nextDisplayedBuildStepIndex = (lp_benchmarkStep + gv_benchmarkBuildOrderObjectiveCycleThreshold);
-    gf_LogStringMessage(gv_debugBuildOrderEnabled, ("Current: " + IntToString(lp_currentStep) + " | Benchmark: " + IntToString(lp_benchmarkStep) + " | Threshold: " + IntToString(gv_benchmarkBuildOrderObjectiveCycleThreshold) + " | hasNext is = " + libNtve_gf_ConvertBooleanToString(gf_DoesBuildHaveAnotherStepToDisplay(lp_currentStep))));
-    if ((((lp_benchmarkStep) >= gv_benchmarkBuildOrderObjectiveCycleThreshold) && (gf_DoesBuildHaveAnotherStepToDisplay(lp_currentStep) == true) && (gf_AreCurrentAndPreviousStepsAllSatisfied(lp_currentStep) == true))) {
+    gf_LogStringMessage(gv_debugBuildOrderEnabled, ("Current: " + IntToString(lp_currentStep) + " | Benchmark: " + IntToString(lp_benchmarkStep) + " | Threshold: " + IntToString(gv_benchmarkBuildOrderObjectiveCycleThreshold) + " | hasNext is = " + libNtve_gf_ConvertBooleanToString(gf_DoesBenchmarkBuildHaveAnotherStepToDisplay(lp_currentStep))));
+    if ((((lp_benchmarkStep) >= gv_benchmarkBuildOrderObjectiveCycleThreshold) && (gf_DoesBenchmarkBuildHaveAnotherStepToDisplay(lp_currentStep) == true) && (gf_AreCurrentAndPreviousStepsAllSatisfied(lp_currentStep) == true))) {
         gf_CreateBenchmarkBuildOrderStepasSecondaryObjective(lv_nextDisplayedBuildStepIndex);
         TextExpressionSetToken("Param/Expression/B1D812BC", "A", IntToText(lv_nextDisplayedBuildStepIndex));
         TextExpressionSetToken("Param/Expression/B1D812BC", "B", gf_GetBenchmarkBuildOrderStepText(lv_nextDisplayedBuildStepIndex));
@@ -2150,92 +2237,6 @@ void gf_InitializeBenchmarkBuildOrder () {
     }
     else {
     }
-}
-
-void gf_AddUnitBuildOrderStep (int lp_currentStep, unit lp_triggeringUnit, string lp_triggeringUnitType) {
-    // Variable Declarations
-    int lv_buildOrderStepSupplyCount;
-
-    // Variable Initialization
-
-    // Implementation
-    gv_currentBuildOrderSteps[lp_currentStep].lv_stepType = gv_unitStepType;
-    gv_currentBuildOrderSteps[lp_currentStep].lv_unitType = lp_triggeringUnitType;
-    gv_currentBuildOrderSteps[lp_currentStep].lv_amount = 1;
-    gv_currentBuildOrderSteps[lp_currentStep].lv_supply = gf_GetSupplyforCurrentBuildOrderStep(lp_currentStep);
-    gv_currentBuildOrderSteps[lp_currentStep].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer));
-    UnitGroupAdd(gv_currentBuildOrderSteps[lp_currentStep].lv_completingUnits, lp_triggeringUnit);
-    TextExpressionSetToken("Param/Expression/08B35931", "A", gf_GetCurrentBuildOrderStepText(lp_currentStep));
-    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/08B35931"));
-}
-
-void gf_AddUpgradeBuildOrderStep (int lp_currentStep, string lp_buildStepUpgrade) {
-    // Implementation
-    gv_currentBuildOrderSteps[lp_currentStep].lv_stepType = gv_upgradeStepType;
-    gv_currentBuildOrderSteps[lp_currentStep].lv_upgrade = lp_buildStepUpgrade;
-    gv_currentBuildOrderSteps[lp_currentStep].lv_amount = 1;
-    gv_currentBuildOrderSteps[lp_currentStep].lv_supply = PlayerScoreValueGetAsInt(1, "FoodUsed");
-    gv_currentBuildOrderSteps[lp_currentStep].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer));
-    gv_currentBuildOrderSteps[lp_currentStep].lv_completingUpgrade = lp_buildStepUpgrade;
-    TextExpressionSetToken("Param/Expression/2B969709", "A", gf_GetCurrentBuildOrderStepText(lp_currentStep));
-    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/2B969709"));
-}
-
-void gf_AddAbilityBuildOrderStep (int lp_currentStep, abilcmd lp_triggerringAbilityCommand) {
-    // Variable Declarations
-    string lv_triggeringAbilityType;
-
-    // Variable Initialization
-
-    // Implementation
-    lv_triggeringAbilityType = AbilityCommandGetAbility(lp_triggerringAbilityCommand);
-    gv_currentBuildOrderSteps[lp_currentStep].lv_stepType = gv_abilityStepType;
-    gv_currentBuildOrderSteps[lp_currentStep].lv_ability = lv_triggeringAbilityType;
-    gv_currentBuildOrderSteps[lp_currentStep].lv_amount = 1;
-    gv_currentBuildOrderSteps[lp_currentStep].lv_supply = PlayerScoreValueGetAsInt(1, "FoodUsed");
-    gv_currentBuildOrderSteps[lp_currentStep].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer));
-    gv_currentBuildOrderSteps[lp_currentStep].lv_completingAbility = lp_triggerringAbilityCommand;
-    TextExpressionSetToken("Param/Expression/736976D0", "A", gf_GetCurrentBuildOrderStepText(lp_currentStep));
-    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/736976D0"));
-}
-
-void gf_RemoveUnitBuildOrderStep (int lp_step) {
-    // Implementation
-    TextExpressionSetToken("Param/Expression/4C41831F", "A", gf_GetCurrentBuildOrderStepText(lp_step));
-    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/4C41831F"));
-    gv_currentBuildOrderSteps[lp_step].lv_stepType = "";
-    gv_currentBuildOrderSteps[lp_step].lv_unitType = null;
-    gv_currentBuildOrderSteps[lp_step].lv_amount = 0;
-    gv_currentBuildOrderSteps[lp_step].lv_supply = 0;
-    gv_currentBuildOrderSteps[lp_step].lv_elapsedSeconds = 0;
-    UnitGroupClear(gv_currentBuildOrderSteps[lp_step].lv_completingUnits);
-    gv_currentBuildOrderSteps[lp_step].lv_finishedBenchmarkStepReference = -1;
-}
-
-void gf_RemoveUpgradeBuildOrderStep (int lp_step) {
-    // Implementation
-    TextExpressionSetToken("Param/Expression/BE4D1BC9", "A", gf_GetCurrentBuildOrderStepText(lp_step));
-    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/BE4D1BC9"));
-    gv_currentBuildOrderSteps[lp_step].lv_stepType = "";
-    gv_currentBuildOrderSteps[lp_step].lv_upgrade = null;
-    gv_currentBuildOrderSteps[lp_step].lv_amount = 0;
-    gv_currentBuildOrderSteps[lp_step].lv_supply = 0;
-    gv_currentBuildOrderSteps[lp_step].lv_elapsedSeconds = 0;
-    gv_currentBuildOrderSteps[lp_step].lv_completingUpgrade = null;
-    gv_currentBuildOrderSteps[lp_step].lv_finishedBenchmarkStepReference = -1;
-}
-
-void gf_RemoveAbilityBuildOrderStep (int lp_step) {
-    // Implementation
-    TextExpressionSetToken("Param/Expression/9029C20E", "A", gf_GetCurrentBuildOrderStepText(lp_step));
-    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/9029C20E"));
-    gv_currentBuildOrderSteps[lp_step].lv_stepType = "";
-    gv_currentBuildOrderSteps[lp_step].lv_ability = null;
-    gv_currentBuildOrderSteps[lp_step].lv_amount = 0;
-    gv_currentBuildOrderSteps[lp_step].lv_supply = 0;
-    gv_currentBuildOrderSteps[lp_step].lv_elapsedSeconds = 0;
-    gv_currentBuildOrderSteps[lp_step].lv_completingAbility = null;
-    gv_currentBuildOrderSteps[lp_step].lv_finishedBenchmarkStepReference = -1;
 }
 
 void gf_EvaluateUnitTypeForBenchmarkBuildOrderStep (string lp_unitType, int lp_currentStep, int lp_benchmarkStep) {
@@ -2407,16 +2408,28 @@ void gf_FailBenchmarkStepObjectiveAndCycle (int lp_currentStep, int lp_benchmark
 
 void gf_ResetObjectiveForBenchmarkBuildOrderStepAndUncycle (int lp_benchmarkStep) {
     // Implementation
-    TextExpressionSetToken("Param/Expression/F9AD5447", "A", IntToText(lp_benchmarkStep));
-    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/F9AD5447"));
     gf_ResetObjectiveForBenchmarkBuildOrderStep(lp_benchmarkStep);
     if ((gv_benchmarkBuildOrderStepCursor > 0)) {
         gf_UnHighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
         gv_benchmarkBuildOrderStepCursor -= 1;
+    }
+    else {
+    }
+    TextExpressionSetToken("Param/Expression/F9AD5447", "A", IntToText(lp_benchmarkStep));
+    TextExpressionSetToken("Param/Expression/F9AD5447", "B", IntToText(gv_benchmarkBuildOrderStepCursor));
+    TextExpressionSetToken("Param/Expression/F9AD5447", "C", gf_GetBenchmarkBuildOrderStepText(gv_benchmarkBuildOrderStepCursor));
+    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/F9AD5447"));
+    gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
+}
+
+void gf_UpdateBenchmarkBuildOrderStepCursor (int lp_currentStep) {
+    // Implementation
+    if ((gf_AreCurrentAndPreviousStepsAllSatisfied(lp_currentStep) == true)) {
+        gv_benchmarkBuildOrderStepCursor = gf_GetNextIncompleteBenchmarkBuildOrderStep(gv_currentBuildOrderStepCursor);
         gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
     }
     else {
-        gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
+        gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/DAADA450"));
     }
 }
 
@@ -2542,17 +2555,6 @@ bool auto_gf_DisplayPerformanceFeedbackForFailedStep_TriggerFunc (bool testConds
     Wait(lv_waitTime, c_timeGame);
     UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
     return true;
-}
-
-void gf_UpdateBenchmarkBuildOrderStepCursor (int lp_currentStep) {
-    // Implementation
-    if ((gf_AreCurrentAndPreviousStepsAllSatisfied(lp_currentStep) == true)) {
-        gv_benchmarkBuildOrderStepCursor = gf_GetNextIncompleteBenchmarkBuildOrderStep(gv_currentBuildOrderStepCursor);
-        gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
-    }
-    else {
-        gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/DAADA450"));
-    }
 }
 
 void gf_CreateAlertMenuDialog () {
@@ -5502,6 +5504,160 @@ string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEn
     return lv_stepKeyString;
 }
 
+bool gf_IsEndBuildatMaxSupplySelected () {
+    // Implementation
+    if ((DialogControlGetSelectedItem(gv_endBuildPulldown, 1) == 1)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool gf_IsEndBuildatGameTimeSelected () {
+    // Implementation
+    if ((DialogControlGetSelectedItem(gv_endBuildPulldown, 1) == 2)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool gf_IsUpgradeTypeValidForBuildOrder (string lp_upgrade) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((lp_upgrade == "WarpGateResearch") || (lp_upgrade == "BlinkTech") || (lp_upgrade == "Charge") || (lp_upgrade == "ExtendedThermalLance") || (lp_upgrade == "GraviticDrive") || (lp_upgrade == "ObserverGraviticBooster") || (lp_upgrade == "PsiStormTech") || (lp_upgrade == "AnionPulseCrystals") || (lp_upgrade == "AnionPulseCrystals") || (lp_upgrade == "Stimpack") || (lp_upgrade == "PunisherGrenades") || (lp_upgrade == "ShieldWall") || (lp_upgrade == "BansheeCloak") || (lp_upgrade == "HighCapacityBarrels") || (lp_upgrade == "HunterSeeker") || (lp_upgrade == "RavenCorvidReactor") || (lp_upgrade == "zerglingmovementspeed") || (lp_upgrade == "zerglingattackspeed") || (lp_upgrade == "CentrificalHooks") || (lp_upgrade == "TunnelingClaws") || (lp_upgrade == "GlialReconstitution") || (lp_upgrade == "hydraliskspeed") || (lp_upgrade == "HydraliskSpeedUpgrade") || (lp_upgrade == "InfestorEnergyUpgrade") || (lp_upgrade == "LocustLifetimeIncrease") || (lp_upgrade == "ChitinousPlating") || (lp_upgrade == "Burrow") || (lp_upgrade == "overlordtransport") || (lp_upgrade == "overlordspeed") || (gf_IsUpgradeAnAttackDefenseUpgrade(lp_upgrade) == true))) {
+        lv_result = true;
+    }
+    else {
+    }
+    TextExpressionSetToken("Param/Expression/C1700654", "A", gf_GetFormattedUpgradeNameasText(lp_upgrade));
+    TextExpressionSetToken("Param/Expression/C1700654", "B", libNtve_gf_ConvertBooleanToText(lv_result));
+    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/C1700654"));
+    return lv_result;
+}
+
+bool gf_IsAbilityValidForBuildOrder (string lp_ability) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((lp_ability == "UpgradeToPlanetaryFortress") || (lp_ability == "UpgradeToOrbital") || (lp_ability == "UpgradeToLair") || (lp_ability == "UpgradeToHive"))) {
+        lv_result = true;
+    }
+    else {
+    }
+    return lv_result;
+}
+
+bool gf_IsUnitTypeSameAsPreviousUnitType (int lp_previousUnitStepIndex, string lp_unitType) {
+    // Variable Declarations
+    int lv_previousStepUnitType;
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((lp_unitType == gv_currentBuildOrderSteps[lp_previousUnitStepIndex].lv_unitType)) {
+        lv_result = true;
+    }
+    else {
+    }
+    return lv_result;
+}
+
+bool gf_IsUnitTypeAStructure (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1)) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    return lv_result;
+}
+
+bool gf_IsUnitTypeAnEligibleSupplyUnit (string lp_unitType, int lp_benchmarkStep) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((gv_trackSupplyUnitsAsSteps == true) && ((gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType == "Overlord") || (gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType == "Pylon") || (gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType == "SupplyDepot") || (PlayerScoreValueGetAsInt(1, "FoodUsed") <= gv_trackSupplyUnitAsStepSupplyLimit)) && ((lp_unitType == "Overlord") || (lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon")))) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    return lv_result;
+}
+
+bool gf_IsUnitTypeAnIneligibleGasCollectionUnit (string lp_unitType, int lp_benchmarkStep) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery")) && (PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType != "Extractor") && (gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType != "Assimilator") && (gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType != "Refinery")))) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    return lv_result;
+}
+
+bool gf_IsUnitTypeAnExplicitlyIgnoredStructureType (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((lp_unitType == "CreepTumorQueen") || (lp_unitType == "CreepTumor") || (lp_unitType == "CreepTumorBurrowed"))) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    return lv_result;
+}
+
+bool gf_IsUpgradeAnAttackDefenseUpgrade (string lp_upgrade) {
+    // Implementation
+    if (((lp_upgrade == "ProtossAirArmorsLevel1") || (lp_upgrade == "ProtossAirArmorsLevel2") || (lp_upgrade == "ProtossAirArmorsLevel3") || (lp_upgrade == "ProtossGroundArmorsLevel1") || (lp_upgrade == "ProtossGroundArmorsLevel2") || (lp_upgrade == "ProtossGroundArmorsLevel3") || (lp_upgrade == "ProtossShieldsLevel1") || (lp_upgrade == "ProtossShieldsLevel2") || (lp_upgrade == "ProtossShieldsLevel3") || (lp_upgrade == "ProtossAirWeaponsLevel1") || (lp_upgrade == "ProtossAirWeaponsLevel2") || (lp_upgrade == "ProtossAirWeaponsLevel3") || (lp_upgrade == "ProtossGroundWeaponsLevel1") || (lp_upgrade == "ProtossGroundWeaponsLevel2") || (lp_upgrade == "ProtossGroundWeaponsLevel3") || (lp_upgrade == "TerranInfantryArmorsLevel1") || (lp_upgrade == "TerranInfantryArmorsLevel2") || (lp_upgrade == "TerranInfantryArmorsLevel3") || (lp_upgrade == "TerranShipArmorsLevel1") || (lp_upgrade == "TerranShipArmorsLevel2") || (lp_upgrade == "TerranShipArmorsLevel3") || (lp_upgrade == "TerranVehicleArmorsLevel1") || (lp_upgrade == "TerranVehicleArmorsLevel2") || (lp_upgrade == "TerranVehicleArmorsLevel3") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel1") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel2") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel3") || (lp_upgrade == "TerranInfantryWeaponsLevel1") || (lp_upgrade == "TerranInfantryWeaponsLevel2") || (lp_upgrade == "TerranInfantryWeaponsLevel3") || (lp_upgrade == "TerranShipWeaponsLevel1") || (lp_upgrade == "TerranShipWeaponsLevel2") || (lp_upgrade == "TerranShipWeaponsLevel3") || (lp_upgrade == "TerranVehicleWeaponsLevel1") || (lp_upgrade == "TerranVehicleWeaponsLevel2") || (lp_upgrade == "TerranVehicleWeaponsLevel3") || (lp_upgrade == "TerranVehicleAndShipWeaponsLevel1") || (lp_upgrade == "TerranVehicleAndShipWeaponsLevel2") || (lp_upgrade == "TerranVehicleAndShipWeaponsLevel3") || (lp_upgrade == "ZergFlyerArmorsLevel1") || (lp_upgrade == "ZergFlyerArmorsLevel2") || (lp_upgrade == "ZergFlyerArmorsLevel3") || (lp_upgrade == "ZergGroundArmorsLevel1") || (lp_upgrade == "ZergGroundArmorsLevel2") || (lp_upgrade == "ZergGroundArmorsLevel3") || (lp_upgrade == "ZergFlyerWeaponsLevel1") || (lp_upgrade == "ZergFlyerWeaponsLevel2") || (lp_upgrade == "ZergFlyerWeaponsLevel3") || (lp_upgrade == "ZergMeleeWeaponsLevel1") || (lp_upgrade == "ZergMeleeWeaponsLevel2") || (lp_upgrade == "ZergMeleeWeaponsLevel3") || (lp_upgrade == "ZergMissileWeaponsLevel1") || (lp_upgrade == "ZergMissileWeaponsLevel2") || (lp_upgrade == "ZergMissileWeaponsLevel3"))) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor) {
+    // Variable Declarations
+    int lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_result = (lp_cursor - gv_buildOrderCycleOffset);
+    return lv_result;
+}
+
 text gf_GetTypeTextForCurrentBuildOrderStep (int lp_stepNumber) {
     // Variable Declarations
     string lv_stepType;
@@ -5707,63 +5863,6 @@ text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber) {
     return lv_result;
 }
 
-bool gf_IsEndBuildatMaxSupplySelected () {
-    // Implementation
-    if ((DialogControlGetSelectedItem(gv_endBuildPulldown, 1) == 1)) {
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-bool gf_IsEndBuildatGameTimeSelected () {
-    // Implementation
-    if ((DialogControlGetSelectedItem(gv_endBuildPulldown, 1) == 2)) {
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor) {
-    // Variable Declarations
-    int lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    lv_result = (lp_cursor - gv_buildOrderCycleOffset);
-    return lv_result;
-}
-
-int gf_GetNextIncompleteBenchmarkBuildOrderStep (int lp_benchmarkStep) {
-    int autoC3961A2E_ae;
-    int autoC3961A2E_ai;
-
-    // Variable Declarations
-    int lv_benchmarkStep;
-    int lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    lv_result = lp_benchmarkStep;
-    autoC3961A2E_ae = (gv_totalNumBenchmarkBuildOrderSteps + 1);
-    autoC3961A2E_ai = 1;
-    lv_benchmarkStep = lp_benchmarkStep;
-    for ( ; ( (autoC3961A2E_ai >= 0 && lv_benchmarkStep <= autoC3961A2E_ae) || (autoC3961A2E_ai <= 0 && lv_benchmarkStep >= autoC3961A2E_ae) ) ; lv_benchmarkStep += autoC3961A2E_ai ) {
-        if ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lv_benchmarkStep)]) == c_objectiveStateActive)) {
-            lv_result = lv_benchmarkStep;
-            break;
-        }
-        else {
-        }
-    }
-    return lv_result;
-}
-
 bool gf_IsUnitTypeValidForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkStep) {
     // Variable Declarations
     bool lv_result;
@@ -5782,70 +5881,6 @@ bool gf_IsUnitTypeValidForBenchmarkBuildOrderStep (string lp_unitType, int lp_be
     }
     else if (((gf_IsUnitTypeAStructure(lp_unitType) == true) && (gf_IsUnitTypeAnExplicitlyIgnoredStructureType(lp_unitType) == false) && (gf_IsUnitTypeAnIneligibleGasCollectionUnit(lp_unitType, lp_benchmarkStep) == false) && (lp_unitType != "SupplyDepot") && (lp_unitType != "Pylon"))) {
         lv_result = true;
-    }
-    return lv_result;
-}
-
-bool gf_IsUnitTypeAStructure (string lp_unitType) {
-    // Variable Declarations
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if ((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1)) {
-        lv_result = true;
-    }
-    else {
-        lv_result = false;
-    }
-    return lv_result;
-}
-
-bool gf_IsUnitTypeAnEligibleSupplyUnit (string lp_unitType, int lp_benchmarkStep) {
-    // Variable Declarations
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if (((gv_trackSupplyUnitsAsSteps == true) && ((gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType == "Overlord") || (gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType == "Pylon") || (gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType == "SupplyDepot") || (PlayerScoreValueGetAsInt(1, "FoodUsed") <= gv_trackSupplyUnitAsStepSupplyLimit)) && ((lp_unitType == "Overlord") || (lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon")))) {
-        lv_result = true;
-    }
-    else {
-        lv_result = false;
-    }
-    return lv_result;
-}
-
-bool gf_IsUnitTypeAnIneligibleGasCollectionUnit (string lp_unitType, int lp_benchmarkStep) {
-    // Variable Declarations
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if ((((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery")) && (PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType != "Extractor") && (gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType != "Assimilator") && (gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType != "Refinery")))) {
-        lv_result = true;
-    }
-    else {
-        lv_result = false;
-    }
-    return lv_result;
-}
-
-bool gf_IsUnitTypeAnExplicitlyIgnoredStructureType (string lp_unitType) {
-    // Variable Declarations
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if (((lp_unitType == "CreepTumorQueen") || (lp_unitType == "CreepTumor") || (lp_unitType == "CreepTumorBurrowed"))) {
-        lv_result = true;
-    }
-    else {
-        lv_result = false;
     }
     return lv_result;
 }
@@ -5870,24 +5905,6 @@ bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_
     return lv_result;
 }
 
-bool gf_IsUpgradeTypeValidForBuildOrder (string lp_upgrade) {
-    // Variable Declarations
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if (((lp_upgrade == "WarpGateResearch") || (lp_upgrade == "BlinkTech") || (lp_upgrade == "Charge") || (lp_upgrade == "ExtendedThermalLance") || (lp_upgrade == "GraviticDrive") || (lp_upgrade == "ObserverGraviticBooster") || (lp_upgrade == "PsiStormTech") || (lp_upgrade == "AnionPulseCrystals") || (lp_upgrade == "AnionPulseCrystals") || (lp_upgrade == "Stimpack") || (lp_upgrade == "PunisherGrenades") || (lp_upgrade == "ShieldWall") || (lp_upgrade == "BansheeCloak") || (lp_upgrade == "HighCapacityBarrels") || (lp_upgrade == "HunterSeeker") || (lp_upgrade == "RavenCorvidReactor") || (lp_upgrade == "zerglingmovementspeed") || (lp_upgrade == "zerglingattackspeed") || (lp_upgrade == "CentrificalHooks") || (lp_upgrade == "TunnelingClaws") || (lp_upgrade == "GlialReconstitution") || (lp_upgrade == "hydraliskspeed") || (lp_upgrade == "HydraliskSpeedUpgrade") || (lp_upgrade == "InfestorEnergyUpgrade") || (lp_upgrade == "LocustLifetimeIncrease") || (lp_upgrade == "ChitinousPlating") || (lp_upgrade == "Burrow") || (lp_upgrade == "overlordtransport") || (lp_upgrade == "overlordspeed") || (gf_IsUpgradeAnAttackDefenseUpgrade(lp_upgrade) == true))) {
-        lv_result = true;
-    }
-    else {
-    }
-    TextExpressionSetToken("Param/Expression/C1700654", "A", gf_GetFormattedUpgradeNameasText(lp_upgrade));
-    TextExpressionSetToken("Param/Expression/C1700654", "B", libNtve_gf_ConvertBooleanToText(lv_result));
-    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/C1700654"));
-    return lv_result;
-}
-
 bool gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep (string lp_upgrade, int lp_benchmarkStep) {
     // Variable Declarations
     bool lv_result;
@@ -5905,31 +5922,6 @@ bool gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep (string lp_upgrade, int l
     TextExpressionSetToken("Param/Expression/9B3854D6", "A", gf_GetFormattedUpgradeNameasText(gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_upgrade));
     TextExpressionSetToken("Param/Expression/9B3854D6", "C", libNtve_gf_ConvertBooleanToText(lv_result));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/9B3854D6"));
-    return lv_result;
-}
-
-bool gf_IsUpgradeAnAttackDefenseUpgrade (string lp_upgrade) {
-    // Implementation
-    if (((lp_upgrade == "ProtossAirArmorsLevel1") || (lp_upgrade == "ProtossAirArmorsLevel2") || (lp_upgrade == "ProtossAirArmorsLevel3") || (lp_upgrade == "ProtossGroundArmorsLevel1") || (lp_upgrade == "ProtossGroundArmorsLevel2") || (lp_upgrade == "ProtossGroundArmorsLevel3") || (lp_upgrade == "ProtossShieldsLevel1") || (lp_upgrade == "ProtossShieldsLevel2") || (lp_upgrade == "ProtossShieldsLevel3") || (lp_upgrade == "ProtossAirWeaponsLevel1") || (lp_upgrade == "ProtossAirWeaponsLevel2") || (lp_upgrade == "ProtossAirWeaponsLevel3") || (lp_upgrade == "ProtossGroundWeaponsLevel1") || (lp_upgrade == "ProtossGroundWeaponsLevel2") || (lp_upgrade == "ProtossGroundWeaponsLevel3") || (lp_upgrade == "TerranInfantryArmorsLevel1") || (lp_upgrade == "TerranInfantryArmorsLevel2") || (lp_upgrade == "TerranInfantryArmorsLevel3") || (lp_upgrade == "TerranShipArmorsLevel1") || (lp_upgrade == "TerranShipArmorsLevel2") || (lp_upgrade == "TerranShipArmorsLevel3") || (lp_upgrade == "TerranVehicleArmorsLevel1") || (lp_upgrade == "TerranVehicleArmorsLevel2") || (lp_upgrade == "TerranVehicleArmorsLevel3") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel1") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel2") || (lp_upgrade == "TerranVehicleAndShipArmorsLevel3") || (lp_upgrade == "TerranInfantryWeaponsLevel1") || (lp_upgrade == "TerranInfantryWeaponsLevel2") || (lp_upgrade == "TerranInfantryWeaponsLevel3") || (lp_upgrade == "TerranShipWeaponsLevel1") || (lp_upgrade == "TerranShipWeaponsLevel2") || (lp_upgrade == "TerranShipWeaponsLevel3") || (lp_upgrade == "TerranVehicleWeaponsLevel1") || (lp_upgrade == "TerranVehicleWeaponsLevel2") || (lp_upgrade == "TerranVehicleWeaponsLevel3") || (lp_upgrade == "TerranVehicleAndShipWeaponsLevel1") || (lp_upgrade == "TerranVehicleAndShipWeaponsLevel2") || (lp_upgrade == "TerranVehicleAndShipWeaponsLevel3") || (lp_upgrade == "ZergFlyerArmorsLevel1") || (lp_upgrade == "ZergFlyerArmorsLevel2") || (lp_upgrade == "ZergFlyerArmorsLevel3") || (lp_upgrade == "ZergGroundArmorsLevel1") || (lp_upgrade == "ZergGroundArmorsLevel2") || (lp_upgrade == "ZergGroundArmorsLevel3") || (lp_upgrade == "ZergFlyerWeaponsLevel1") || (lp_upgrade == "ZergFlyerWeaponsLevel2") || (lp_upgrade == "ZergFlyerWeaponsLevel3") || (lp_upgrade == "ZergMeleeWeaponsLevel1") || (lp_upgrade == "ZergMeleeWeaponsLevel2") || (lp_upgrade == "ZergMeleeWeaponsLevel3") || (lp_upgrade == "ZergMissileWeaponsLevel1") || (lp_upgrade == "ZergMissileWeaponsLevel2") || (lp_upgrade == "ZergMissileWeaponsLevel3"))) {
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-bool gf_IsAbilityValidForBuildOrder (string lp_ability) {
-    // Variable Declarations
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if (((lp_ability == "UpgradeToPlanetaryFortress") || (lp_ability == "UpgradeToOrbital") || (lp_ability == "UpgradeToLair") || (lp_ability == "UpgradeToHive"))) {
-        lv_result = true;
-    }
-    else {
-    }
     return lv_result;
 }
 
@@ -5973,20 +5965,61 @@ bool gf_IsAmountCorrectForBenchmarkBuildOrderStep (int lp_numUnits, int lp_bench
     }
 }
 
-bool gf_IsUnitTypeSameAsPreviousUnitType (int lp_previousUnitStepIndex, string lp_unitType) {
+int gf_GetNextIncompleteBenchmarkBuildOrderStep (int lp_benchmarkStep) {
+    int autoC3961A2E_ae;
+    int autoC3961A2E_ai;
+
     // Variable Declarations
-    int lv_previousStepUnitType;
-    bool lv_result;
+    int lv_benchmarkStep;
+    int lv_result;
 
     // Variable Initialization
 
     // Implementation
-    if ((lp_unitType == gv_currentBuildOrderSteps[lp_previousUnitStepIndex].lv_unitType)) {
-        lv_result = true;
-    }
-    else {
+    lv_result = lp_benchmarkStep;
+    autoC3961A2E_ae = (gv_totalNumBenchmarkBuildOrderSteps + 1);
+    autoC3961A2E_ai = 1;
+    lv_benchmarkStep = lp_benchmarkStep;
+    for ( ; ( (autoC3961A2E_ai >= 0 && lv_benchmarkStep <= autoC3961A2E_ae) || (autoC3961A2E_ai <= 0 && lv_benchmarkStep >= autoC3961A2E_ae) ) ; lv_benchmarkStep += autoC3961A2E_ai ) {
+        if ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lv_benchmarkStep)]) == c_objectiveStateActive)) {
+            lv_result = lv_benchmarkStep;
+            break;
+        }
+        else {
+        }
     }
     return lv_result;
+}
+
+int gf_GetPreviousIncompleteBenchmarkBuildOrderStep (int lp_benchmarkStep) {
+    int autoB376B739_ae;
+    int autoB376B739_ai;
+
+    // Variable Declarations
+    int lv_benchmarkStep;
+    int lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_result = lp_benchmarkStep;
+    autoB376B739_ae = 0;
+    autoB376B739_ai = 1;
+    lv_benchmarkStep = lp_benchmarkStep;
+    for ( ; ( (autoB376B739_ai >= 0 && lv_benchmarkStep <= autoB376B739_ae) || (autoB376B739_ai <= 0 && lv_benchmarkStep >= autoB376B739_ae) ) ; lv_benchmarkStep += autoB376B739_ai ) {
+        if ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lv_benchmarkStep)]) == c_objectiveStateActive)) {
+            lv_result = lv_benchmarkStep;
+            break;
+        }
+        else {
+        }
+    }
+    return lv_result;
+}
+
+bool gf_IsStepIndexPastEndOfBenchmarkBuild (int lp_step) {
+    // Implementation
+    return (lp_step > gv_totalNumBenchmarkBuildOrderSteps);
 }
 
 int gf_GetStepIndexForPreviousUnitStep (int lp_previousStep) {
@@ -6064,7 +6097,7 @@ int gf_GetStepIndexForPreviousAbilityStep (int lp_previousStep) {
     return lv_mostRecentAbilityIndex;
 }
 
-bool gf_DoesBuildHaveAnotherStepToDisplay (int lp_currentStep) {
+bool gf_DoesBenchmarkBuildHaveAnotherStepToDisplay (int lp_currentStep) {
     // Implementation
     if (((lp_currentStep + (gv_maxDisplayedBuildOrderObjectivesIndex - gv_benchmarkBuildOrderObjectiveCycleThreshold)) <= gv_totalNumBenchmarkBuildOrderSteps)) {
         return true;
@@ -6072,11 +6105,6 @@ bool gf_DoesBuildHaveAnotherStepToDisplay (int lp_currentStep) {
     else {
         return false;
     }
-}
-
-bool gf_IsStepIndexPastEndOfBenchmarkBuild (int lp_step) {
-    // Implementation
-    return (lp_step > gv_totalNumBenchmarkBuildOrderSteps);
 }
 
 bool gf_IsTimeraMultiUnitFailureTimer (timer lp_timer) {
