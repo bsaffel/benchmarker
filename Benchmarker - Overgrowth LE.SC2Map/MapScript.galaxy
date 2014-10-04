@@ -2176,7 +2176,7 @@ void gf_CycleBenchmarkBuildOrderObjectives (int lp_currentStep, int lp_benchmark
     // Implementation
     lv_nextDisplayedBuildStepIndex = (lp_benchmarkStep + gv_benchmarkBuildOrderObjectiveCycleThreshold);
     gf_LogStringMessage(gv_debugBuildOrderEnabled, ("Current: " + IntToString(lp_currentStep) + " | Benchmark: " + IntToString(lp_benchmarkStep) + " | Threshold: " + IntToString(gv_benchmarkBuildOrderObjectiveCycleThreshold) + " | hasNext is = " + libNtve_gf_ConvertBooleanToString(gf_DoesBenchmarkBuildHaveAnotherStepToDisplay(lp_currentStep))));
-    if ((((lp_benchmarkStep) >= gv_benchmarkBuildOrderObjectiveCycleThreshold) && (gf_DoesBenchmarkBuildHaveAnotherStepToDisplay(lp_currentStep) == true) && (gf_AreCurrentAndPreviousStepsAllSatisfied(lp_currentStep) == true))) {
+    if (((gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep) >= gv_benchmarkBuildOrderObjectiveCycleThreshold) && (gf_DoesBenchmarkBuildHaveAnotherStepToDisplay(lp_currentStep) == true) && (gf_AreCurrentAndPreviousStepsAllSatisfied(lp_currentStep) == true))) {
         gf_CreateBenchmarkBuildOrderStepasSecondaryObjective(lv_nextDisplayedBuildStepIndex);
         TextExpressionSetToken("Param/Expression/B1D812BC", "A", IntToText(lv_nextDisplayedBuildStepIndex));
         TextExpressionSetToken("Param/Expression/B1D812BC", "B", gf_GetBenchmarkBuildOrderStepText(lv_nextDisplayedBuildStepIndex));
