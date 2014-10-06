@@ -338,9 +338,6 @@ int gv_finalSupplyAtGameTimeTimeTextLabel;
 int gv_practiceAgainstSavedBuildOrderLabelWidth;
 int gv_practiceAgainstSavedBuildOrderCheckbox;
 int gv_practiceAgainstSavedBuildOrderLabel;
-int gv_practiceAgainstSavedBuildOrderClearButton;
-int gv_practiceAgainstSavedBuildOrderClearButtonWidth;
-int gv_practiceAgainstSavedBuildOrderClearButtonHeight;
 int gv_displayBuildOrderHintsLabelWidth;
 int gv_displayBuildOrderHintsCheckbox;
 int gv_displayBuildOrderHintsLabel;
@@ -349,19 +346,29 @@ int gv_displayBuildOrderPerformanceFeedbackLabelWidth;
 int gv_displayBuildOrderPerformanceFeedbackLabel;
 int gv_buildOrderPreviewBox;
 int gv_buildOrderPreviewBoxHeight;
+int gv_practiceAgainstSavedBuildOrderClearButton;
+int gv_practiceAgainstSavedBuildOrderClearButtonWidth;
+int gv_practiceAgainstSavedBuildOrderClearButtonHeight;
 int gv_debugDialog;
-int gv_debugDialogWidth;
-int gv_debugDialogHeight;
+int gv_debugDialogMinWidth;
+int gv_debugDialogMinHeight;
+int gv_debugDialogMaxWidth;
+int gv_debugDialogMaxHeight;
 int gv_debugDialogXPadding;
 int gv_debugDialogLabel;
+int gv_debugDialogLabelWidth;
+int gv_debugDialogLabelHeight;
 int gv_debugListBox;
 int gv_debugListBoxPadding;
 int gv_debugListBoxOffset;
 int gv_debugPauseButton;
 int gv_debugClearButton;
-int gv_debugMaxMinButton;
 int gv_debugButtonWidth;
 int gv_debugButtonHeight;
+int gv_debugMaxMinButton;
+int gv_debugMaxMinButtonWidth;
+int gv_debugMaxMinButtonHeight;
+bool gv_debugWindowMaximized;
 int gv_helpDialogTitleSpacer;
 int gv_helpDialogItemHeight;
 int gv_helpCommandLabelWidth;
@@ -689,9 +696,6 @@ void InitGlobals () {
     gv_practiceAgainstSavedBuildOrderLabelWidth = 435;
     gv_practiceAgainstSavedBuildOrderCheckbox = c_invalidDialogControlId;
     gv_practiceAgainstSavedBuildOrderLabel = c_invalidDialogControlId;
-    gv_practiceAgainstSavedBuildOrderClearButton = c_invalidDialogControlId;
-    gv_practiceAgainstSavedBuildOrderClearButtonWidth = 100;
-    gv_practiceAgainstSavedBuildOrderClearButtonHeight = 40;
     gv_displayBuildOrderHintsLabelWidth = 300;
     gv_displayBuildOrderHintsCheckbox = c_invalidDialogControlId;
     gv_displayBuildOrderHintsLabel = c_invalidDialogControlId;
@@ -700,19 +704,28 @@ void InitGlobals () {
     gv_displayBuildOrderPerformanceFeedbackLabel = c_invalidDialogControlId;
     gv_buildOrderPreviewBox = c_invalidDialogControlId;
     gv_buildOrderPreviewBoxHeight = 250;
+    gv_practiceAgainstSavedBuildOrderClearButton = c_invalidDialogControlId;
+    gv_practiceAgainstSavedBuildOrderClearButtonWidth = 90;
+    gv_practiceAgainstSavedBuildOrderClearButtonHeight = 35;
     gv_debugDialog = c_invalidDialogId;
-    gv_debugDialogWidth = 800;
-    gv_debugDialogHeight = 275;
+    gv_debugDialogMinWidth = 600;
+    gv_debugDialogMinHeight = 250;
+    gv_debugDialogMaxWidth = 1300;
+    gv_debugDialogMaxHeight = 800;
     gv_debugDialogXPadding = 10;
     gv_debugDialogLabel = c_invalidDialogControlId;
+    gv_debugDialogLabelWidth = 300;
+    gv_debugDialogLabelHeight = 50;
     gv_debugListBox = c_invalidDialogControlId;
     gv_debugListBoxPadding = 27;
     gv_debugListBoxOffset = 55;
     gv_debugPauseButton = c_invalidDialogControlId;
     gv_debugClearButton = c_invalidDialogControlId;
-    gv_debugMaxMinButton = c_invalidDialogControlId;
     gv_debugButtonWidth = 80;
     gv_debugButtonHeight = 32;
+    gv_debugMaxMinButton = c_invalidDialogControlId;
+    gv_debugMaxMinButtonWidth = 35;
+    gv_debugMaxMinButtonHeight = 32;
     gv_helpDialogTitleSpacer = 35;
     gv_helpDialogItemHeight = 35;
     gv_helpCommandLabelWidth = 120;
@@ -924,6 +937,8 @@ void gf_CreateDebugDialog ();
 void gf_ShowDebugDialog ();
 void gf_HideDebugDialog ();
 void gf_AddMessageToDebugDialog (text lp_messageText);
+void gf_MaximizeDebugDialog ();
+void gf_MinimizeDebugDialog ();
 void gf_CreateHelpDialog ();
 void gf_CreateHelpDialogHeadingRow ();
 void gf_CreateHelpInfoRow (text lp_commandText, text lp_hotkeyText, text lp_descriptionText, int lp_rowNum);
@@ -1166,6 +1181,7 @@ trigger gt_ToggleDebugBank;
 trigger gt_ToggleDebugBuildOrder;
 trigger gt_ToggleDebugMapMechanics;
 trigger gt_ToggleDebugMenus;
+trigger gt_ToggleDebugDialogMaxMinButton;
 trigger gt_ToggleDebugDialogPauseButton;
 trigger gt_DebugDialogClearButtonPressed;
 trigger gt_DebugBooleanConditionFromHotkey;
@@ -3064,8 +3080,6 @@ void gf_CreatePracticeAgainstBuildOrderRow () {
     libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/7FDBA57B"), PlayerGroupAll());
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_practiceAgainstSavedBuildOrderLabelWidth, gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuItemRowIndent+gv_checkboxWidth), lv_benchmarkBuildOrderSectionLabelYPadding, StringExternal("Param/Value/C981768C"), ColorWithAlpha(0,0,0,0), false, 2.0);
     gv_practiceAgainstSavedBuildOrderLabel = DialogControlLastCreated();
-    libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_practiceAgainstSavedBuildOrderClearButtonWidth, gv_practiceAgainstSavedBuildOrderClearButtonHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuItemRowIndent+gv_checkboxWidth+gv_practiceAgainstSavedBuildOrderLabelWidth-5), (lv_benchmarkBuildOrderSectionEditBoxYPadding+6), StringExternal("Param/Value/F6915731"), StringExternal("Param/Value/36C3443F"), "");
-    gv_practiceAgainstSavedBuildOrderClearButton = DialogControlLastCreated();
 }
 
 void gf_CreateDisplayBuildOrderHintsRow () {
@@ -3115,6 +3129,9 @@ void gf_CreateBuildOrderPreviewBox () {
     DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv_buildOrderListBoxWidth, gv_buildOrderPreviewBoxHeight);
     DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopRight, lv_benchmarkPreviewBoxXPadding, lv_benchmarkPreviewBoxYPadding);
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_buildOrderListBoxWidth, 30, c_anchorTopRight, lv_benchmarkPreviewBoxXPadding, (lv_benchmarkPreviewBoxYPadding - 20), StringExternal("Param/Value/B690E769"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_practiceAgainstSavedBuildOrderClearButtonWidth, gv_practiceAgainstSavedBuildOrderClearButtonHeight, c_anchorTopRight, lv_benchmarkPreviewBoxXPadding, (lv_benchmarkPreviewBoxYPadding - gv_practiceAgainstSavedBuildOrderClearButtonHeight), StringExternal("Param/Value/F6915731"), StringExternal("Param/Value/36C3443F"), "");
+    DialogControlFadeTransparency(DialogControlLastCreated(), PlayerGroupAll(), 0.0, 15.0);
+    gv_practiceAgainstSavedBuildOrderClearButton = DialogControlLastCreated();
     gf_LoadBenchmarkBuildOrderforCurrentMatchup();
     gf_UpdateBuildOrderListBoxwithBenchmarkBuild(gv_buildOrderPreviewBox);
 }
@@ -3265,17 +3282,21 @@ void gf_CreateDebugDialog () {
     int lv_debugButtonXPadding;
 
     // Variable Initialization
-    lv_debugButtonXPadding = 30;
+    lv_debugButtonXPadding = 35;
 
     // Implementation
-    DialogCreate(gv_debugDialogWidth, gv_debugDialogHeight, c_anchorBottomLeft, gv_debugDialogXPadding, gf_GetWinButtonYPadding(), true);
+    DialogCreate(gv_debugDialogMinWidth, gv_debugDialogMinHeight, c_anchorBottomLeft, gv_debugDialogXPadding, gf_GetWinButtonYPadding(), true);
     gv_debugDialog = DialogLastCreated();
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_debugDialogLabelWidth, gv_debugDialogLabelHeight, c_anchorTopLeft, 25, 10, StringExternal("Param/Value/C4474E29"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_debugDialogLabel = DialogControlLastCreated();
     DialogControlCreate(DialogLastCreated(), c_triggerControlTypeListBox);
-    DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), (gv_debugDialogWidth - gv_debugListBoxOffset), (gv_debugDialogHeight - (gv_debugListBoxOffset - 5)));
+    DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), (gv_debugDialogMinWidth - gv_debugListBoxOffset), (gv_debugDialogMinHeight - (gv_debugListBoxOffset - 5)));
     DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, gv_debugListBoxPadding, gv_debugListBoxPadding);
     gv_debugListBox = DialogControlLastCreated();
     libNtve_gf_SetDialogItemAcceptMouse(DialogControlLastCreated(), false, PlayerGroupAll());
     DialogSetTransparency(DialogLastCreated(), 45.0);
+    libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_debugMaxMinButtonWidth, gv_debugMaxMinButtonHeight, c_anchorBottomLeft, 0, 0, StringExternal("Param/Value/217408D2"), StringExternal("Param/Value/23C98045"), "");
+    gv_debugMaxMinButton = DialogControlLastCreated();
     libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_debugButtonWidth, gv_debugButtonHeight, c_anchorBottomLeft, lv_debugButtonXPadding, 0, StringExternal("Param/Value/DE1FAA88"), StringExternal("Param/Value/5DCFFDDF"), "");
     libNtve_gf_SetDialogItemClickOnDown(DialogControlLastCreated(), true, PlayerGroupAll());
     gv_debugPauseButton = DialogControlLastCreated();
@@ -3297,6 +3318,32 @@ void gf_HideDebugDialog () {
 void gf_AddMessageToDebugDialog (text lp_messageText) {
     // Implementation
     DialogControlAddItem(gv_debugListBox, PlayerGroupAll(), lp_messageText);
+}
+
+void gf_MaximizeDebugDialog () {
+    // Variable Declarations
+    int lv_yOffset;
+
+    // Variable Initialization
+    lv_yOffset = -200;
+
+    // Implementation
+    DialogSetSize(gv_debugDialog, gv_debugDialogMaxWidth, gv_debugDialogMaxHeight);
+    DialogSetPosition(gv_debugDialog, c_anchorCenter, 0, lv_yOffset);
+    DialogControlSetSize(gv_debugListBox, PlayerGroupAll(), (gv_debugDialogMaxWidth - gv_debugListBoxOffset), (gv_debugDialogMaxHeight - (gv_debugListBoxOffset - 5)));
+    libNtve_gf_SetDialogItemText(gv_debugMaxMinButton, StringExternal("Param/Value/D470BD96"), PlayerGroupAll());
+    libNtve_gf_SetDialogItemTooltip(gv_debugMaxMinButton, StringExternal("Param/Value/5DF39A34"), PlayerGroupAll());
+    gv_debugWindowMaximized = true;
+}
+
+void gf_MinimizeDebugDialog () {
+    // Implementation
+    DialogSetSize(gv_debugDialog, gv_debugDialogMinWidth, gv_debugDialogMinHeight);
+    DialogSetPosition(gv_debugDialog, c_anchorBottomLeft, gv_debugDialogXPadding, gf_GetWinButtonYPadding());
+    DialogControlSetSize(gv_debugListBox, PlayerGroupAll(), (gv_debugDialogMinWidth - gv_debugListBoxOffset), (gv_debugDialogMinHeight - (gv_debugListBoxOffset - 5)));
+    libNtve_gf_SetDialogItemText(gv_debugMaxMinButton, StringExternal("Param/Value/85979283"), PlayerGroupAll());
+    libNtve_gf_SetDialogItemTooltip(gv_debugMaxMinButton, StringExternal("Param/Value/E3FD0E3E"), PlayerGroupAll());
+    gv_debugWindowMaximized = false;
 }
 
 void gf_CreateHelpDialog () {
@@ -8770,13 +8817,12 @@ bool gt_ToggleDebugAlerts_Func (bool testConds, bool runActions) {
     }
 
     if ((gv_debugAlertsEnabled == false)) {
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/96D9C4FC"));
+        libNtve_gf_SetDialogItemText(gv_debugDialogLabel, StringExternal("Param/Value/4B06FCA1"), PlayerGroupAll());
         gf_DisplayDebugTimerWindowsForExistingAlertTimers();
         gv_debugAlertsEnabled = true;
         gf_ShowDebugDialog();
     }
     else {
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/26B62EAA"));
         gf_ClearDebugTimerWindows();
         gv_debugAlertsEnabled = false;
         gf_HideDebugDialog();
@@ -8828,12 +8874,11 @@ bool gt_ToggleDebugBank_Func (bool testConds, bool runActions) {
     }
 
     if ((gv_debugBankEnabled == false)) {
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/BC3400B2"));
+        libNtve_gf_SetDialogItemText(gv_debugDialogLabel, StringExternal("Param/Value/8DAD56C1"), PlayerGroupAll());
         gv_debugBankEnabled = true;
         gf_ShowDebugDialog();
     }
     else {
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/BF2265EA"));
         gv_debugBankEnabled = false;
         gf_HideDebugDialog();
     }
@@ -8856,13 +8901,12 @@ bool gt_ToggleDebugBuildOrder_Func (bool testConds, bool runActions) {
     }
 
     if ((gv_debugBuildOrderEnabled == false)) {
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/6F56ECFB"));
+        libNtve_gf_SetDialogItemText(gv_debugDialogLabel, StringExternal("Param/Value/BD65A2A4"), PlayerGroupAll());
         gf_DisplayDebugTimerWindowsForExistingMultipleUnitFailureTimers();
         gv_debugBuildOrderEnabled = true;
         gf_ShowDebugDialog();
     }
     else {
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/A4733019"));
         gf_ClearDebugTimerWindows();
         gv_debugBuildOrderEnabled = false;
         gf_HideDebugDialog();
@@ -8886,12 +8930,11 @@ bool gt_ToggleDebugMapMechanics_Func (bool testConds, bool runActions) {
     }
 
     if ((gv_debugMapMechanicsEnabled == false)) {
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/E2D8077D"));
+        libNtve_gf_SetDialogItemText(gv_debugDialogLabel, StringExternal("Param/Value/B705A631"), PlayerGroupAll());
         gv_debugMapMechanicsEnabled = true;
         gf_ShowDebugDialog();
     }
     else {
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/9F1603AB"));
         gv_debugMapMechanicsEnabled = false;
         gf_HideDebugDialog();
     }
@@ -8914,12 +8957,11 @@ bool gt_ToggleDebugMenus_Func (bool testConds, bool runActions) {
     }
 
     if ((gv_debugMenusEnabled == false)) {
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/6FA425FC"));
+        libNtve_gf_SetDialogItemText(gv_debugDialogLabel, StringExternal("Param/Value/7CAF8AF1"), PlayerGroupAll());
         gv_debugMenusEnabled = true;
         gf_ShowDebugDialog();
     }
     else {
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/67A19189"));
         gv_debugMenusEnabled = false;
         gf_HideDebugDialog();
     }
@@ -8930,6 +8972,37 @@ bool gt_ToggleDebugMenus_Func (bool testConds, bool runActions) {
 void gt_ToggleDebugMenus_Init () {
     gt_ToggleDebugMenus = TriggerCreate("gt_ToggleDebugMenus_Func");
     TriggerAddEventChatMessage(gt_ToggleDebugMenus, c_playerAny, "-debug menus", true);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Toggle Debug Dialog Max/Min Button
+//--------------------------------------------------------------------------------------------------
+bool gt_ToggleDebugDialogMaxMinButton_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((EventDialogControl() == gv_debugMaxMinButton))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    if ((gv_debugWindowMaximized == false)) {
+        gf_MaximizeDebugDialog();
+    }
+    else {
+        gf_MinimizeDebugDialog();
+    }
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_ToggleDebugDialogMaxMinButton_Init () {
+    gt_ToggleDebugDialogMaxMinButton = TriggerCreate("gt_ToggleDebugDialogMaxMinButton_Func");
+    TriggerAddEventDialogControl(gt_ToggleDebugDialogMaxMinButton, 1, c_invalidDialogControlId, c_triggerControlEventTypeClick);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -10176,6 +10249,7 @@ void InitTriggers () {
     gt_ToggleDebugBuildOrder_Init();
     gt_ToggleDebugMapMechanics_Init();
     gt_ToggleDebugMenus_Init();
+    gt_ToggleDebugDialogMaxMinButton_Init();
     gt_ToggleDebugDialogPauseButton_Init();
     gt_DebugDialogClearButtonPressed_Init();
     gt_DebugBooleanConditionFromHotkey_Init();
