@@ -271,6 +271,9 @@ int gv__3DigitEditBoxWidth;
 int gv__4DigitEditBoxWidth;
 int gv_benchmarkEditBoxHeight;
 int gv_alertThresholdEditBoxHeight;
+int gv_timeBoxColonLabelWidth;
+int gv_timeBoxColonOffset;
+int gv_timeBoxColonSpacer;
 int gv_buildOrderListBoxWidth;
 int gv_buildOrderListBoxHeight;
 int gv_menuSelectButtonWidth;
@@ -322,15 +325,13 @@ int gv_endBuildPulldown;
 int gv_endBuildPulldownSelection;
 int gv_endBuildPulldownWidth;
 int gv_endBuildMinutesEditBox;
-int gv_endBuildMinutesLabel;
+int gv_endBuildTimeBoxColonLabel;
 int gv_endBuildSecondsEditBox;
-int gv_endBuildSecondsLabel;
 int gv_maxTimeEndBuildLabel;
 int gv_maxTimeLabelWidth;
 int gv_maxTimeMinutesEditBox;
-int gv_maxTimeMinutesLabel;
+int gv_maxTimeMinutesTimeBoxColonLabel;
 int gv_maxTimeSecondsEditBox;
-int gv_maxTimeSecondsLabel;
 int gv_finalSupplyAtGameTimeLabel;
 int gv_finalSupplyAtGameTimeLabelWidth;
 int gv_finalSupplyAtGameTimeEditBox;
@@ -618,6 +619,9 @@ void InitGlobals () {
     gv__4DigitEditBoxWidth = 90;
     gv_benchmarkEditBoxHeight = 50;
     gv_alertThresholdEditBoxHeight = 50;
+    gv_timeBoxColonLabelWidth = 10;
+    gv_timeBoxColonOffset = 3;
+    gv_timeBoxColonSpacer = 2;
     gv_buildOrderListBoxWidth = 325;
     gv_buildOrderListBoxHeight = 450;
     gv_menuSelectButtonWidth = 200;
@@ -680,15 +684,13 @@ void InitGlobals () {
     gv_endBuildPulldownSelection = 1;
     gv_endBuildPulldownWidth = 190;
     gv_endBuildMinutesEditBox = c_invalidDialogControlId;
-    gv_endBuildMinutesLabel = c_invalidDialogControlId;
+    gv_endBuildTimeBoxColonLabel = c_invalidDialogControlId;
     gv_endBuildSecondsEditBox = c_invalidDialogControlId;
-    gv_endBuildSecondsLabel = c_invalidDialogControlId;
     gv_maxTimeEndBuildLabel = c_invalidDialogControlId;
     gv_maxTimeLabelWidth = 170;
     gv_maxTimeMinutesEditBox = c_invalidDialogControlId;
-    gv_maxTimeMinutesLabel = c_invalidDialogControlId;
+    gv_maxTimeMinutesTimeBoxColonLabel = c_invalidDialogControlId;
     gv_maxTimeSecondsEditBox = c_invalidDialogControlId;
-    gv_maxTimeSecondsLabel = c_invalidDialogControlId;
     gv_finalSupplyAtGameTimeLabel = c_invalidDialogControlId;
     gv_finalSupplyAtGameTimeLabelWidth = 170;
     gv_finalSupplyAtGameTimeEditBox = c_invalidDialogControlId;
@@ -703,7 +705,7 @@ void InitGlobals () {
     gv_displayBuildOrderPerformanceFeedbackLabelWidth = 450;
     gv_displayBuildOrderPerformanceFeedbackLabel = c_invalidDialogControlId;
     gv_buildOrderPreviewBox = c_invalidDialogControlId;
-    gv_buildOrderPreviewBoxHeight = 250;
+    gv_buildOrderPreviewBoxHeight = 425;
     gv_practiceAgainstSavedBuildOrderClearButton = c_invalidDialogControlId;
     gv_practiceAgainstSavedBuildOrderClearButtonWidth = 90;
     gv_practiceAgainstSavedBuildOrderClearButtonHeight = 35;
@@ -711,7 +713,7 @@ void InitGlobals () {
     gv_debugDialogMinWidth = 600;
     gv_debugDialogMinHeight = 250;
     gv_debugDialogMaxWidth = 1300;
-    gv_debugDialogMaxHeight = 800;
+    gv_debugDialogMaxHeight = 700;
     gv_debugDialogXPadding = 10;
     gv_debugDialogLabel = c_invalidDialogControlId;
     gv_debugDialogLabelWidth = 300;
@@ -903,22 +905,23 @@ void gf_CreateAlertMenuThresholdEditBox (int lp_editBoxWidth, int lp_rowNum);
 void gf_SetAlertCheckboxState (bool lp_markChecked, int lp_checkbox);
 void gf_EnableDisableAlertRow (bool lp_checked, int lp_rowNum, int lp_numRowItems);
 void gf_InitializeBenchmarkDialog ();
+void gf_CreateBenchmarkDialog ();
 void gf_ShowBenchmarkDialog ();
 void gf_HideBenchmarkDialog ();
 void gf_UpdateFinalSupplyatGameTime ();
 void gf_OpenBenchmarkDialogMainMenu ();
-void gf_BenchmarkDialogCreateDialogFrame ();
-void gf_BenchmarkDialogCreateStartButton ();
+void gf_CreateBenchmarkDialogStartButton ();
 void gf_BenchmarkDialogInitializeMatchupSelectionRow ();
 void gf_CreateMatchupSelectionButton (text lp_buttonText, int lp_offsetPositionVariable);
 void gf_UpdateCurrentlySelectedMatchup ();
 void gf_BenchmarkDialogInitializeBenchmarkSupplySection ();
 void gf_CreateSupplyValueEditBox (text lp_labelText, int lp_rowNumber, int lp_defaultValue);
-void gf_BenchmarkDialogInitializeBuildCompletionOptionsSection ();
-void gf_BenchmarkDialogCreateMaxSupplyatTimeRow ();
-void gf_BenchmarkDialogCreateFinalSupplyatGameTimeRow ();
-void gf_BenchmarkDialogToggleMaxSupplyatTimeRowVisible ();
-void gf_BenchmarkDialogToggleFinalSupplyatGameTimeRowVisible ();
+void gf_InitializeBuildCompletionOptionsSection ();
+void gf_CreateEndBuildTimeBox ();
+void gf_CreateMaxSupplyatTimeRow ();
+void gf_CreateFinalSupplyatGameTimeRow ();
+void gf_ToggleMaxSupplyatTimeRowVisible ();
+void gf_ToggleFinalSupplyatGameTimeRowVisible ();
 void gf_InitializeBenchmarkBuildOrderSection ();
 void gf_CreatePracticeAgainstBuildOrderRow ();
 void gf_CreateDisplayBuildOrderHintsRow ();
@@ -2743,13 +2746,21 @@ void gf_InitializeBenchmarkDialog () {
     // Variable Initialization
 
     // Implementation
-    gf_BenchmarkDialogCreateDialogFrame();
+    gf_CreateBenchmarkDialog();
     gf_CreateMenuSelectButtons(lv_mainMenuIndex);
     gf_BenchmarkDialogInitializeMatchupSelectionRow();
     gf_BenchmarkDialogInitializeBenchmarkSupplySection();
-    gf_BenchmarkDialogInitializeBuildCompletionOptionsSection();
+    gf_InitializeBuildCompletionOptionsSection();
     gf_InitializeBenchmarkBuildOrderSection();
-    gf_BenchmarkDialogCreateStartButton();
+    gf_CreateBenchmarkDialogStartButton();
+}
+
+void gf_CreateBenchmarkDialog () {
+    // Implementation
+    DialogCreate(gv_benchmarkDialogWidth, gv_benchmarkDialogHeight, c_anchorCenter, 0, -150, true);
+    gv_benchmarkDialog = DialogLastCreated();
+    DialogSetTitle(DialogLastCreated(), gv_benchmarkDialogTitle);
+    DialogSetTransparency(DialogLastCreated(), 0.0);
 }
 
 void gf_ShowBenchmarkDialog () {
@@ -2807,15 +2818,7 @@ void gf_OpenBenchmarkDialogMainMenu () {
     gf_PauseGame();
 }
 
-void gf_BenchmarkDialogCreateDialogFrame () {
-    // Implementation
-    DialogCreate(gv_benchmarkDialogWidth, gv_benchmarkDialogHeight, c_anchorCenter, 0, -150, true);
-    gv_benchmarkDialog = DialogLastCreated();
-    DialogSetTitle(DialogLastCreated(), gv_benchmarkDialogTitle);
-    DialogSetTransparency(DialogLastCreated(), 0.0);
-}
-
-void gf_BenchmarkDialogCreateStartButton () {
+void gf_CreateBenchmarkDialogStartButton () {
     // Implementation
     libNtve_gf_CreateDialogItemButton(gv_benchmarkDialog, gv_startButtonWidth, gv_startButtonHeight, c_anchorBottom, 0, gv_menuPadding, StringExternal("Param/Value/84760B8B"), StringExternal("Param/Value/49A63E54"), "");
     gv_startButton[0] = DialogControlLastCreated();
@@ -2924,7 +2927,7 @@ void gf_CreateSupplyValueEditBox (text lp_labelText, int lp_rowNumber, int lp_de
     libNtve_gf_CreateDialogItemLabel(gv_benchmarkDialog, gv_benchmarkSupplyValueLabelWidth, gv_benchmarkSupplyValueLabelHeight, c_anchorTopLeft, (gv_menuPadding+gv__3DigitEditBoxWidth+gv_benchmarkSupplyValueSpacing+gv_menuItemRowIndent), (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionLabelHeight+gv_matchupButtonHeight+gv_labelAlignmentSpacer+(1+lp_rowNumber)*gv_benchmarkSupplyValueLabelHeight), lp_labelText, ColorWithAlpha(0,0,0,0), false, 2.0);
 }
 
-void gf_BenchmarkDialogInitializeBuildCompletionOptionsSection () {
+void gf_InitializeBuildCompletionOptionsSection () {
     // Variable Declarations
     int lv_endBuildAtSectionLabelYPadding;
     int lv_endBuildAtPulldownYPadding;
@@ -2943,55 +2946,73 @@ void gf_BenchmarkDialogInitializeBuildCompletionOptionsSection () {
     DialogControlAddItem(DialogControlLastCreated(), PlayerGroupAll(), StringExternal("Param/Value/F1EFDEA1"));
     DialogControlAddItem(DialogControlLastCreated(), PlayerGroupAll(), StringExternal("Param/Value/AD584A2F"));
     DialogControlSelectItem(DialogControlLastCreated(), PlayerGroupAll(), 1);
+    gf_CreateEndBuildTimeBox();
+    gf_CreateMaxSupplyatTimeRow();
+    gf_CreateFinalSupplyatGameTimeRow();
+}
+
+void gf_CreateEndBuildTimeBox () {
+    // Variable Declarations
+    int lv_endBuildAtSectionLabelYPadding;
+    int lv_endBuildAtPulldownYPadding;
+
+    // Variable Initialization
+    lv_endBuildAtSectionLabelYPadding = (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionLabelHeight+gv_matchupButtonHeight+gv_sectionLabelHeight+gv_benchmarkMenuSectionLabelNudge+gv_labelAlignmentSpacer+3*gv_benchmarkSupplyValueLabelHeight);
+    lv_endBuildAtPulldownYPadding = (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionLabelHeight+gv_matchupButtonHeight+4*gv_benchmarkEditBoxHeight+gv_sectionLabelHeight);
+
+    // Implementation
     DialogControlCreate(DialogLastCreated(), c_triggerControlTypeEditBox);
+    gv_endBuildMinutesEditBox = DialogControlLastCreated();
     DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv__2DigitEditBoxWidth, gv_benchmarkEditBoxHeight);
     DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_menuItemRowIndent+gv_endBuildLabelWidth+gv_endBuildPulldownWidth), lv_endBuildAtPulldownYPadding);
     libNtve_gf_SetDialogItemEditorValue(DialogControlLastCreated(), IntToString(gv_benchmarkEndBuildatGameTimeMinutes), PlayerGroupAll());
-    gv_endBuildMinutesEditBox = DialogControlLastCreated();
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/3F527ED2"), PlayerGroupAll());
     DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), false);
-    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_minutesLabelWidth, gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuItemRowIndent+gv_endBuildLabelWidth+gv_endBuildPulldownWidth+gv__2DigitEditBoxWidth), (lv_endBuildAtPulldownYPadding+gv_labelAlignmentSpacer), StringExternal("Param/Value/36CC771D"), ColorWithAlpha(0,0,0,0), false, 2.0);
-    gv_endBuildMinutesLabel = DialogControlLastCreated();
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_timeBoxColonLabelWidth, gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuItemRowIndent+gv_endBuildLabelWidth+gv_endBuildPulldownWidth+gv__2DigitEditBoxWidth-gv_timeBoxColonOffset), (lv_endBuildAtPulldownYPadding+gv_labelAlignmentSpacer), StringExternal("Param/Value/36CC771D"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_endBuildTimeBoxColonLabel = DialogControlLastCreated();
     DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), false);
     DialogControlCreate(DialogLastCreated(), c_triggerControlTypeEditBox);
-    DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv__2DigitEditBoxWidth, gv_benchmarkEditBoxHeight);
-    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_menuItemRowIndent+gv_endBuildLabelWidth+gv_endBuildPulldownWidth+gv__2DigitEditBoxWidth+gv_minutesLabelWidth), lv_endBuildAtPulldownYPadding);
-    libNtve_gf_SetDialogItemEditorValue(DialogControlLastCreated(), IntToString(gv_benchmarkEndBuildatGameTimeSeconds), PlayerGroupAll());
     gv_endBuildSecondsEditBox = DialogControlLastCreated();
+    DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv__2DigitEditBoxWidth, gv_benchmarkEditBoxHeight);
+    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_menuItemRowIndent+gv_endBuildLabelWidth+gv_endBuildPulldownWidth+gv__2DigitEditBoxWidth+gv_timeBoxColonSpacer), lv_endBuildAtPulldownYPadding);
+    libNtve_gf_SetDialogItemEditorValue(DialogControlLastCreated(), IntToString(gv_benchmarkEndBuildatGameTimeSeconds), PlayerGroupAll());
+    libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/78D21490"), PlayerGroupAll());
     DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), false);
-    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_secondsLabelWidth, gv_menuItemHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuItemRowIndent+gv_endBuildLabelWidth+gv_endBuildPulldownWidth+gv__2DigitEditBoxWidth+gv_minutesLabelWidth+gv__2DigitEditBoxWidth), (lv_endBuildAtPulldownYPadding+gv_labelAlignmentSpacer), StringExternal("Param/Value/3513F291"), ColorWithAlpha(0,0,0,0), false, 2.0);
-    gv_endBuildSecondsLabel = DialogControlLastCreated();
-    DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), false);
-    gf_BenchmarkDialogCreateMaxSupplyatTimeRow();
-    gf_BenchmarkDialogCreateFinalSupplyatGameTimeRow();
 }
 
-void gf_BenchmarkDialogCreateMaxSupplyatTimeRow () {
+void gf_CreateMaxSupplyatTimeRow () {
     // Variable Declarations
     int lv_maxTimeRowYPadding;
+    int lv_timeBoxColonLabelWidth;
+    int lv_timeBoxColonOffset;
+    int lv_timeBoxColonSpacer;
 
     // Variable Initialization
     lv_maxTimeRowYPadding = (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionLabelHeight+gv_matchupButtonHeight+gv_sectionLabelHeight+5*gv_benchmarkEditBoxHeight);
+    lv_timeBoxColonLabelWidth = 10;
+    lv_timeBoxColonOffset = 3;
+    lv_timeBoxColonSpacer = 3;
 
     // Implementation
-    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_maxTimeLabelWidth, gv_benchmarkSupplyValueLabelHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuItemRowIndent), (lv_maxTimeRowYPadding+gv_labelAlignmentSpacer), StringExternal("Param/Value/6B6F2419"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    libNtve_gf_CreateDialogItemLabel(gv_benchmarkDialog, gv_maxTimeLabelWidth, gv_benchmarkSupplyValueLabelHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuItemRowIndent), (lv_maxTimeRowYPadding+gv_labelAlignmentSpacer), StringExternal("Param/Value/6B6F2419"), ColorWithAlpha(0,0,0,0), false, 2.0);
     gv_maxTimeEndBuildLabel = DialogControlLastCreated();
-    DialogControlCreate(DialogLastCreated(), c_triggerControlTypeEditBox);
-    DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv__2DigitEditBoxWidth, gv_benchmarkEditBoxHeight);
-    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_menuItemRowIndent+gv_maxTimeLabelWidth), lv_maxTimeRowYPadding);
-    libNtve_gf_SetDialogItemEditorValue(DialogControlLastCreated(), IntToString(gv_benchmarkMaxSupplyMinutes), PlayerGroupAll());
+    DialogControlCreate(gv_benchmarkDialog, c_triggerControlTypeEditBox);
     gv_maxTimeMinutesEditBox = DialogControlLastCreated();
-    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_minutesLabelWidth, gv_benchmarkSupplyValueLabelHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuItemRowIndent+gv_maxTimeLabelWidth+gv__2DigitEditBoxWidth), (lv_maxTimeRowYPadding+gv_labelAlignmentSpacer), StringExternal("Param/Value/B80AD986"), ColorWithAlpha(0,0,0,0), false, 2.0);
-    gv_maxTimeMinutesLabel = DialogControlLastCreated();
-    DialogControlCreate(DialogLastCreated(), c_triggerControlTypeEditBox);
-    DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv__2DigitEditBoxWidth, gv_benchmarkEditBoxHeight);
-    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_menuItemRowIndent+gv_maxTimeLabelWidth+gv__2DigitEditBoxWidth+gv_minutesLabelWidth), lv_maxTimeRowYPadding);
-    libNtve_gf_SetDialogItemEditorValue(DialogControlLastCreated(), IntToString(gv_benchmarkMaxSupplySeconds), PlayerGroupAll());
+    DialogControlSetSize(gv_maxTimeMinutesEditBox, PlayerGroupAll(), gv__2DigitEditBoxWidth, gv_benchmarkEditBoxHeight);
+    DialogControlSetPosition(gv_maxTimeMinutesEditBox, PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_menuItemRowIndent+gv_maxTimeLabelWidth), lv_maxTimeRowYPadding);
+    libNtve_gf_SetDialogItemEditorValue(gv_maxTimeMinutesEditBox, IntToString(gv_benchmarkMaxSupplyMinutes), PlayerGroupAll());
+    libNtve_gf_SetDialogItemTooltip(gv_maxTimeMinutesEditBox, StringExternal("Param/Value/E8E99EE8"), PlayerGroupAll());
+    libNtve_gf_CreateDialogItemLabel(gv_benchmarkDialog, gv_timeBoxColonLabelWidth, gv_benchmarkSupplyValueLabelHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuItemRowIndent+gv_maxTimeLabelWidth+gv__2DigitEditBoxWidth-gv_timeBoxColonOffset), lv_maxTimeRowYPadding, StringExternal("Param/Value/B80AD986"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_maxTimeMinutesTimeBoxColonLabel = DialogControlLastCreated();
+    DialogControlCreate(gv_benchmarkDialog, c_triggerControlTypeEditBox);
     gv_maxTimeSecondsEditBox = DialogControlLastCreated();
-    libNtve_gf_CreateDialogItemLabel(gv_benchmarkDialog, gv_secondsLabelWidth, gv_benchmarkSupplyValueLabelHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuItemRowIndent+gv_maxTimeLabelWidth+gv__2DigitEditBoxWidth+gv_minutesLabelWidth+gv__2DigitEditBoxWidth), (lv_maxTimeRowYPadding+gv_labelAlignmentSpacer), StringExternal("Param/Value/76739197"), ColorWithAlpha(0,0,0,0), false, 2.0);
-    gv_maxTimeSecondsLabel = DialogControlLastCreated();
+    DialogControlSetSize(gv_maxTimeSecondsEditBox, PlayerGroupAll(), gv__2DigitEditBoxWidth, gv_benchmarkEditBoxHeight);
+    DialogControlSetPosition(gv_maxTimeSecondsEditBox, PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_menuItemRowIndent+gv_maxTimeLabelWidth+gv__2DigitEditBoxWidth+gv_timeBoxColonSpacer), lv_maxTimeRowYPadding);
+    libNtve_gf_SetDialogItemEditorValue(gv_maxTimeSecondsEditBox, IntToString(gv_benchmarkMaxSupplySeconds), PlayerGroupAll());
+    libNtve_gf_SetDialogItemTooltip(gv_maxTimeSecondsEditBox, StringExternal("Param/Value/FBA43D52"), PlayerGroupAll());
 }
 
-void gf_BenchmarkDialogCreateFinalSupplyatGameTimeRow () {
+void gf_CreateFinalSupplyatGameTimeRow () {
     // Variable Declarations
     int lv_supplyAtTimeRowYPadding;
 
@@ -3012,25 +3033,23 @@ void gf_BenchmarkDialogCreateFinalSupplyatGameTimeRow () {
     gv_finalSupplyAtGameTimeTimeTextLabel = DialogControlLastCreated();
 }
 
-void gf_BenchmarkDialogToggleMaxSupplyatTimeRowVisible () {
+void gf_ToggleMaxSupplyatTimeRowVisible () {
     // Implementation
     DialogControlSetVisible(gv_finalSupplyAtGameTimeLabel, PlayerGroupAll(), false);
     DialogControlSetVisible(gv_finalSupplyAtGameTimeEditBox, PlayerGroupAll(), false);
     DialogControlSetVisible(gv_finalSupplyAtGameTimeTimeTextLabel, PlayerGroupAll(), false);
     DialogControlSetVisible(gv_maxTimeEndBuildLabel, PlayerGroupAll(), true);
     DialogControlSetVisible(gv_maxTimeMinutesEditBox, PlayerGroupAll(), true);
-    DialogControlSetVisible(gv_maxTimeMinutesLabel, PlayerGroupAll(), true);
+    DialogControlSetVisible(gv_maxTimeMinutesTimeBoxColonLabel, PlayerGroupAll(), true);
     DialogControlSetVisible(gv_maxTimeSecondsEditBox, PlayerGroupAll(), true);
-    DialogControlSetVisible(gv_maxTimeSecondsLabel, PlayerGroupAll(), true);
 }
 
-void gf_BenchmarkDialogToggleFinalSupplyatGameTimeRowVisible () {
+void gf_ToggleFinalSupplyatGameTimeRowVisible () {
     // Implementation
     DialogControlSetVisible(gv_maxTimeEndBuildLabel, PlayerGroupAll(), false);
     DialogControlSetVisible(gv_maxTimeMinutesEditBox, PlayerGroupAll(), false);
-    DialogControlSetVisible(gv_maxTimeMinutesLabel, PlayerGroupAll(), false);
+    DialogControlSetVisible(gv_maxTimeMinutesTimeBoxColonLabel, PlayerGroupAll(), false);
     DialogControlSetVisible(gv_maxTimeSecondsEditBox, PlayerGroupAll(), false);
-    DialogControlSetVisible(gv_maxTimeSecondsLabel, PlayerGroupAll(), false);
     DialogControlSetVisible(gv_finalSupplyAtGameTimeLabel, PlayerGroupAll(), true);
     DialogControlSetVisible(gv_finalSupplyAtGameTimeEditBox, PlayerGroupAll(), true);
     DialogControlSetVisible(gv_finalSupplyAtGameTimeTimeTextLabel, PlayerGroupAll(), true);
@@ -3119,8 +3138,8 @@ void gf_CreateBuildOrderPreviewBox () {
     int lv_benchmarkPreviewBoxXPadding;
 
     // Variable Initialization
-    lv_rowNum = 4;
-    lv_benchmarkPreviewBoxYPadding = (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionLabelHeight+gv_matchupButtonHeight+lv_rowNum*gv_benchmarkEditBoxHeight+gv_sectionLabelHeight);
+    lv_rowNum = 1;
+    lv_benchmarkPreviewBoxYPadding = (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionLabelHeight+gv_matchupButtonHeight+lv_rowNum*gv_benchmarkEditBoxHeight);
     lv_benchmarkPreviewBoxXPadding = 50;
 
     // Implementation
@@ -3280,14 +3299,18 @@ void gf_UpdateBuildOrderListBoxwithBenchmarkBuild (int lp_listBox) {
 void gf_CreateDebugDialog () {
     // Variable Declarations
     int lv_debugButtonXPadding;
+    int lv_debugLabelXPadding;
+    int lv_debugLabelYPadding;
 
     // Variable Initialization
     lv_debugButtonXPadding = 35;
+    lv_debugLabelXPadding = 25;
+    lv_debugLabelYPadding = 7;
 
     // Implementation
     DialogCreate(gv_debugDialogMinWidth, gv_debugDialogMinHeight, c_anchorBottomLeft, gv_debugDialogXPadding, gf_GetWinButtonYPadding(), true);
     gv_debugDialog = DialogLastCreated();
-    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_debugDialogLabelWidth, gv_debugDialogLabelHeight, c_anchorTopLeft, 25, 10, StringExternal("Param/Value/C4474E29"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_debugDialogLabelWidth, gv_debugDialogLabelHeight, c_anchorTopLeft, lv_debugLabelXPadding, lv_debugLabelYPadding, StringExternal("Param/Value/C4474E29"), ColorWithAlpha(0,0,0,0), false, 2.0);
     gv_debugDialogLabel = DialogControlLastCreated();
     DialogControlCreate(DialogLastCreated(), c_triggerControlTypeListBox);
     DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), (gv_debugDialogMinWidth - gv_debugListBoxOffset), (gv_debugDialogMinHeight - (gv_debugListBoxOffset - 5)));
@@ -3325,7 +3348,7 @@ void gf_MaximizeDebugDialog () {
     int lv_yOffset;
 
     // Variable Initialization
-    lv_yOffset = -200;
+    lv_yOffset = -125;
 
     // Implementation
     DialogSetSize(gv_debugDialog, gv_debugDialogMaxWidth, gv_debugDialogMaxHeight);
@@ -9491,10 +9514,9 @@ bool gt_SelectEndBuildAtMaxSupply_Func (bool testConds, bool runActions) {
     }
 
     DialogControlSetVisible(gv_endBuildMinutesEditBox, PlayerGroupAll(), false);
-    DialogControlSetVisible(gv_endBuildMinutesLabel, PlayerGroupAll(), false);
+    DialogControlSetVisible(gv_endBuildTimeBoxColonLabel, PlayerGroupAll(), false);
     DialogControlSetVisible(gv_endBuildSecondsEditBox, PlayerGroupAll(), false);
-    DialogControlSetVisible(gv_endBuildSecondsLabel, PlayerGroupAll(), false);
-    gf_BenchmarkDialogToggleMaxSupplyatTimeRowVisible();
+    gf_ToggleMaxSupplyatTimeRowVisible();
     return true;
 }
 
@@ -9521,10 +9543,9 @@ bool gt_SelectEndBuildAtGameTime_Func (bool testConds, bool runActions) {
     }
 
     DialogControlSetVisible(gv_endBuildMinutesEditBox, PlayerGroupAll(), true);
-    DialogControlSetVisible(gv_endBuildMinutesLabel, PlayerGroupAll(), true);
+    DialogControlSetVisible(gv_endBuildTimeBoxColonLabel, PlayerGroupAll(), true);
     DialogControlSetVisible(gv_endBuildSecondsEditBox, PlayerGroupAll(), true);
-    DialogControlSetVisible(gv_endBuildSecondsLabel, PlayerGroupAll(), true);
-    gf_BenchmarkDialogToggleFinalSupplyatGameTimeRowVisible();
+    gf_ToggleFinalSupplyatGameTimeRowVisible();
     TextExpressionSetToken("Param/Expression/8E606D8E", "A", IntToText(gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox)));
     TextExpressionSetToken("Param/Expression/8E606D8E", "B", IntToText(gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox)));
     libNtve_gf_SetDialogItemText(gv_finalSupplyAtGameTimeTimeTextLabel, TextExpressionAssemble("Param/Expression/8E606D8E"), PlayerGroupAll());
