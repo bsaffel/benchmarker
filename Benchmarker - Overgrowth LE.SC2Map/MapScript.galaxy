@@ -733,8 +733,8 @@ void InitGlobals () {
     gv_debugMaxMinButtonHeight = 32;
     gv_helpDialogTitleSpacer = 35;
     gv_helpDialogItemHeight = 35;
-    gv_helpCommandLabelWidth = 120;
-    gv_helpHotkeyLabelWidth = 165;
+    gv_helpCommandLabelWidth = 175;
+    gv_helpHotkeyLabelWidth = 185;
     gv_helpDescriptionLabelWidth = 550;
     gv_helpDialogTitle = StringExternal("Param/Value/91DF6EE7");
     gv_helpDialog = c_invalidDialogId;
@@ -1169,6 +1169,7 @@ trigger gt_OnMultipleUnitFailureTimerExpires;
 trigger gt_ForkBuildOrder;
 trigger gt_EverySecondCheckforBuildHints;
 trigger gt_EnableDisableBuildHints;
+trigger gt_EnableDisablePerformanceFeedback;
 trigger gt_DebugSpendingQuotient;
 trigger gt_UpdateGasTaken;
 trigger gt_UpdateProductionIdleTime;
@@ -3406,6 +3407,8 @@ void gf_CreateHelpDialog () {
     gf_CreateHelpInfoRow(StringExternal("Param/Value/732FD0CC"), StringExternal("Param/Value/E709BC6E"), StringExternal("Param/Value/7A5AB46F"), lv_rowNum);
     lv_rowNum += 1;
     gf_CreateHelpInfoRow(StringExternal("Param/Value/CAABB127"), StringExternal("Param/Value/DF04A6CB"), StringExternal("Param/Value/E45AD521"), lv_rowNum);
+    lv_rowNum += 1;
+    gf_CreateHelpInfoRow(StringExternal("Param/Value/8A8EDC90"), StringExternal("Param/Value/7CEBB427"), StringExternal("Param/Value/FE7F289C"), lv_rowNum);
     lv_rowNum += 1;
     gf_CreateHelpInfoRow(StringExternal("Param/Value/5C5B6190"), StringExternal("Param/Value/3E7A53DD"), StringExternal("Param/Value/9CD7E854"), lv_rowNum);
     lv_rowNum += 1;
@@ -8483,6 +8486,41 @@ void gt_EnableDisableBuildHints_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Enable/Disable Performance Feedback
+//--------------------------------------------------------------------------------------------------
+bool gt_EnableDisablePerformanceFeedback_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_practiceAgainstBenchmarkBuildOrder == true))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    if ((gv_displayPerformanceFeedback == true)) {
+        gv_displayPerformanceFeedback = false;
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/35875021"));
+    }
+    else {
+        gv_displayPerformanceFeedback = true;
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/E362246C"));
+    }
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_EnableDisablePerformanceFeedback_Init () {
+    gt_EnableDisablePerformanceFeedback = TriggerCreate("gt_EnableDisablePerformanceFeedback_Func");
+    TriggerAddEventChatMessage(gt_EnableDisablePerformanceFeedback, c_playerAny, "-p", true);
+    TriggerAddEventChatMessage(gt_EnableDisablePerformanceFeedback, c_playerAny, "-performance", true);
+    TriggerAddEventKeyPressed(gt_EnableDisablePerformanceFeedback, 1, c_keyP, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Debug Spending Quotient
 //--------------------------------------------------------------------------------------------------
 bool gt_DebugSpendingQuotient_Func (bool testConds, bool runActions) {
@@ -10367,6 +10405,7 @@ void InitTriggers () {
     gt_ForkBuildOrder_Init();
     gt_EverySecondCheckforBuildHints_Init();
     gt_EnableDisableBuildHints_Init();
+    gt_EnableDisablePerformanceFeedback_Init();
     gt_DebugSpendingQuotient_Init();
     gt_UpdateGasTaken_Init();
     gt_UpdateProductionIdleTime_Init();
