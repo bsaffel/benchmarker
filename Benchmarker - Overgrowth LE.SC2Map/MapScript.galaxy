@@ -199,6 +199,7 @@ int gv_benchmarkFinalSupplyatGameTimeValue;
 int gv_numBenchmarksMetThisBuild;
 bool gv_buildOrderStepLock;
 bool gv_practiceAgainstBenchmarkBuildOrder;
+int gv_townHallPrefixFloor;
 gs_BuildOrderStep[gv_buildOrderStepLimit + 1] gv_currentBuildOrderSteps;
 int gv_currentBuildOrderStepCursor;
 int gv_maxNumCurrentBuildOrderStepsTracked;
@@ -1005,8 +1006,8 @@ void gf_ResetCreep ();
 void gf_ResetCamera ();
 void gf_ResetGameVariables ();
 void gf_ResetBenchmarkSupplyObjectives ();
-void gf_ResetCurrentBuildOrderStepsVariables ();
-void gf_ResetBenchmarkBuildOrderStepsVariables ();
+void gf_ResetCurrentBuildOrderVariables ();
+void gf_ResetBenchmarkBuildOrderVariables ();
 void gf_ResetBenchmarkBuildOrderObjectives ();
 void gf_ResetAlertTimers ();
 void gf_ResetBenchmarkTimers ();
@@ -1053,6 +1054,7 @@ string gf_GetCurrentlySelectedMatchupasBankSectionKey ();
 string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
 bool gf_IsUnitTypeAStructure (string lp_unitType);
 bool gf_IsUpgradeAnAttackDefenseUpgrade (string lp_upgrade);
+bool gf_IsUnitTypeATownHall (string lp_unitType);
 bool gf_IsEndBuildatMaxSupplySelected ();
 bool gf_IsEndBuildatGameTimeSelected ();
 bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType, int lp_benchmarkStep);
@@ -1066,6 +1068,8 @@ int gf_GetCancelledStepForUnit (unit lp_unit, string lp_unitType);
 int gf_GetCancelledStepForUpgrade (string lp_upgrade);
 int gf_GetCancelledStepForAbilityCommand (abilcmd lp_abilityCommand);
 bool gf_DoesCurrentBuildStepExistForStepIndex (int lp_stepIndex);
+int gf_GetNumTownHallUnitsInCurrentBuild (int lp_step);
+int gf_GetNumTownHallUnitsInBenchmarkBuild (int lp_step);
 int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor);
 text gf_GetTypeTextForCurrentBuildOrderStep (int lp_stepNumber);
 text gf_GetTypeTextForBenchmarkBuildOrderStep (int lp_stepNumber);
@@ -1076,6 +1080,7 @@ color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber);
 text gf_GetSupplyforCurrentBuildOrderStepasText (int lp_currentStep);
 int gf_GetSupplyforCurrentBuildOrderStep (int lp_currentStep);
 text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber);
+text gf_GetPrefixNumberText (int lp_number);
 bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkStep);
 bool gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep (string lp_upgrade, int lp_benchmarkStep);
 bool gf_IsAbilityTypeCorrectForBenchmarkBuildOrderStep (string lp_ability, int lp_benchmarkBuildOrderStepIndex);
@@ -2105,6 +2110,7 @@ void gf_OverwriteBuildStepWithPassedStep (int lp_overwrittenStep, int lp_passedS
     gv_currentBuildOrderSteps[lp_overwrittenStep].lv_completingAbility = gv_currentBuildOrderSteps[lp_passedStep].lv_completingAbility;
     gv_currentBuildOrderSteps[lp_overwrittenStep].lv_multipleUnitFailureTimer = gv_currentBuildOrderSteps[lp_passedStep].lv_multipleUnitFailureTimer;
     gv_currentBuildOrderSteps[lp_overwrittenStep].lv_finishedBenchmarkStepReference = gv_currentBuildOrderSteps[lp_passedStep].lv_finishedBenchmarkStepReference;
+    UnitGroupClear(gv_currentBuildOrderSteps[lp_passedStep].lv_completingUnits);
     UnitGroupAddUnitGroup(gv_currentBuildOrderSteps[lp_overwrittenStep].lv_completingUnits, gv_currentBuildOrderSteps[lp_passedStep].lv_completingUnits);
 }
 
@@ -4124,6 +4130,7 @@ void gf_InitializeGameDefaults () {
     gv_benchmarkBuildOrderObjectiveCycleThreshold = 5;
     gv_buildOrderToleranceWindowNumSteps = 2;
     gv_buildOrderToleranceWindowTime = 20;
+    gv_townHallPrefixFloor = 2;
     gv_benchmarkSupplyDefaults[0] = 30;
     gv_benchmarkSupplyDefaults[1] = 55;
     gv_benchmarkSupplyDefaults[2] = 80;
@@ -4293,10 +4300,10 @@ void gf_ResetGameState () {
     gf_ResetUnitsForPlayer(2);
     gf_ResetMapResources();
     gf_ResetCreep();
-    gf_ResetCurrentBuildOrderStepsVariables();
+    gf_ResetCurrentBuildOrderVariables();
     gf_ResetBenchmarkSupplyObjectives();
     gf_ResetBenchmarkBuildOrderObjectives();
-    gf_ResetBenchmarkBuildOrderStepsVariables();
+    gf_ResetBenchmarkBuildOrderVariables();
     gf_ResetAlertTimers();
     gf_ResetBenchmarkTimers();
     TimerRestart(gv_currentBuildBuildTimer);
@@ -4552,7 +4559,7 @@ void gf_ResetBenchmarkSupplyObjectives () {
     gv_supplyBenchmarks[3].lv_actualSupplyatBenchmarkTime = 0;
 }
 
-void gf_ResetCurrentBuildOrderStepsVariables () {
+void gf_ResetCurrentBuildOrderVariables () {
     int autoA13422C8_ae;
     int autoA13422C8_ai;
 
@@ -4583,7 +4590,7 @@ void gf_ResetCurrentBuildOrderStepsVariables () {
     gv_currentBuildWasForked = false;
 }
 
-void gf_ResetBenchmarkBuildOrderStepsVariables () {
+void gf_ResetBenchmarkBuildOrderVariables () {
     int auto488B3271_ae;
     int auto488B3271_ai;
 
@@ -5672,6 +5679,21 @@ bool gf_IsUpgradeAnAttackDefenseUpgrade (string lp_upgrade) {
     }
 }
 
+bool gf_IsUnitTypeATownHall (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((lp_unitType == "CommandCenter") || (lp_unitType == "OrbitalCommand") || (lp_unitType == "PlanetaryFortress") || (lp_unitType == "Hatchery") || (lp_unitType == "Lair") || (lp_unitType == "Hive") || (lp_unitType == "Nexus"))) {
+        lv_result = true;
+    }
+    else {
+    }
+    return lv_result;
+}
+
 bool gf_IsEndBuildatMaxSupplySelected () {
     // Implementation
     if ((DialogControlGetSelectedItem(gv_endBuildPulldown, 1) == 1)) {
@@ -5911,6 +5933,56 @@ bool gf_DoesCurrentBuildStepExistForStepIndex (int lp_stepIndex) {
     return lv_result;
 }
 
+int gf_GetNumTownHallUnitsInCurrentBuild (int lp_step) {
+    int auto600883DB_ae;
+    int auto600883DB_ai;
+
+    // Variable Declarations
+    int lv_step;
+    int lv_result;
+
+    // Variable Initialization
+    lv_result = 1;
+
+    // Implementation
+    auto600883DB_ae = lp_step;
+    auto600883DB_ai = 1;
+    lv_step = 0;
+    for ( ; ( (auto600883DB_ai >= 0 && lv_step <= auto600883DB_ae) || (auto600883DB_ai <= 0 && lv_step >= auto600883DB_ae) ) ; lv_step += auto600883DB_ai ) {
+        if ((gf_IsUnitTypeATownHall(gv_currentBuildOrderSteps[lv_step].lv_unitType) == true)) {
+            lv_result += 1;
+        }
+        else {
+        }
+    }
+    return lv_result;
+}
+
+int gf_GetNumTownHallUnitsInBenchmarkBuild (int lp_step) {
+    int autoD5A292D0_ae;
+    int autoD5A292D0_ai;
+
+    // Variable Declarations
+    int lv_step;
+    int lv_result;
+
+    // Variable Initialization
+    lv_result = 1;
+
+    // Implementation
+    autoD5A292D0_ae = lp_step;
+    autoD5A292D0_ai = 1;
+    lv_step = 0;
+    for ( ; ( (autoD5A292D0_ai >= 0 && lv_step <= autoD5A292D0_ae) || (autoD5A292D0_ai <= 0 && lv_step >= autoD5A292D0_ae) ) ; lv_step += autoD5A292D0_ai ) {
+        if ((gf_IsUnitTypeATownHall(gv_benchmarkBuildOrderSteps[lv_step].lv_unitType) == true)) {
+            lv_result += 1;
+        }
+        else {
+        }
+    }
+    return lv_result;
+}
+
 int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor) {
     // Variable Declarations
     int lv_result;
@@ -5941,6 +6013,11 @@ text gf_GetTypeTextForCurrentBuildOrderStep (int lp_stepNumber) {
     else if ((lv_stepType == gv_abilityStepType)) {
         lv_result = gf_GetFormattedAbilityNameasText(gv_currentBuildOrderSteps[lp_stepNumber].lv_ability);
     }
+    if (((gf_IsUnitTypeATownHall(gv_currentBuildOrderSteps[lp_stepNumber].lv_unitType) == true) && (gf_GetNumTownHallUnitsInCurrentBuild(lp_stepNumber) >= gv_townHallPrefixFloor))) {
+        lv_result = (gf_GetPrefixNumberText(gf_GetNumTownHallUnitsInCurrentBuild(lp_stepNumber)) + lv_result);
+    }
+    else {
+    }
     return lv_result;
 }
 
@@ -5962,6 +6039,11 @@ text gf_GetTypeTextForBenchmarkBuildOrderStep (int lp_stepNumber) {
     }
     else if ((lv_stepType == gv_abilityStepType)) {
         lv_result = gf_GetFormattedAbilityNameasText(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_ability);
+    }
+    if (((gf_IsUnitTypeATownHall(gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_unitType) == true) && (gf_GetNumTownHallUnitsInBenchmarkBuild(lp_stepNumber) >= gv_townHallPrefixFloor))) {
+        lv_result = (gf_GetPrefixNumberText(gf_GetNumTownHallUnitsInBenchmarkBuild(lp_stepNumber)) + lv_result);
+    }
+    else {
     }
     return lv_result;
 }
@@ -6123,6 +6205,32 @@ text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber) {
     else {
         TextExpressionSetToken("Param/Expression/8F0B85E2", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff));
         lv_result = TextExpressionAssemble("Param/Expression/8F0B85E2");
+    }
+    return lv_result;
+}
+
+text gf_GetPrefixNumberText (int lp_number) {
+    int autoA3440F0B_val;
+
+    // Variable Declarations
+    text lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    autoA3440F0B_val = lp_number;
+    if (autoA3440F0B_val == 1) {
+        lv_result = StringExternal("Param/Value/65F41A95");
+    }
+    else if (autoA3440F0B_val == 2) {
+        lv_result = StringExternal("Param/Value/AC08130B");
+    }
+    else if (autoA3440F0B_val == 3) {
+        lv_result = StringExternal("Param/Value/B0ADA9E6");
+    }
+    else {
+        TextExpressionSetToken("Param/Expression/BEE36255", "A", IntToText(lp_number));
+        lv_result = TextExpressionAssemble("Param/Expression/BEE36255");
     }
     return lv_result;
 }
