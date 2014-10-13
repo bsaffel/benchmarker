@@ -6364,7 +6364,7 @@ int gf_GetPreviousIncompleteBenchmarkBuildOrderStep (int lp_benchmarkStep) {
 
 bool gf_IsStepIndexPastEndOfBenchmarkBuild (int lp_step) {
     // Implementation
-    return (lp_step > gv_numBenchmarkBuildOrderSteps);
+    return (lp_step >= gv_numBenchmarkBuildOrderSteps);
 }
 
 int gf_GetStepIndexForPreviousUnitStep (int lp_previousStep) {
@@ -6443,8 +6443,14 @@ int gf_GetStepIndexForPreviousAbilityStep (int lp_previousStep) {
 }
 
 bool gf_DoesBenchmarkBuildHaveAnotherStepToDisplay (int lp_currentStep) {
+    // Variable Declarations
+    int lv_nextVisibleStep;
+
+    // Variable Initialization
+
     // Implementation
-    if (((lp_currentStep + (gv_maxDisplayedBuildOrderObjectivesIndex - gv_benchmarkBuildOrderObjectiveCycleThreshold)) <= gv_numBenchmarkBuildOrderSteps)) {
+    lv_nextVisibleStep = (lp_currentStep + (gv_maxDisplayedBuildOrderObjectivesIndex - gv_benchmarkBuildOrderObjectiveCycleThreshold));
+    if ((lv_nextVisibleStep < gv_numBenchmarkBuildOrderSteps)) {
         return true;
     }
     else {
