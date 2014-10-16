@@ -2473,8 +2473,12 @@ void gf_FailBenchmarkStepObjectiveAndCycle (int lp_currentStep, int lp_benchmark
     }
     else {
     }
-    gf_CycleBenchmarkBuildOrderObjectives(lp_currentStep, lp_benchmarkStep);
-    gf_UpdateBenchmarkBuildOrderStepCursor(lp_currentStep);
+    if ((gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == true)) {
+        gf_CycleBenchmarkBuildOrderObjectives(lp_currentStep, lp_benchmarkStep);
+        gf_UpdateBenchmarkBuildOrderStepCursor(lp_currentStep);
+    }
+    else {
+    }
 }
 
 void gf_ResetObjectiveForBenchmarkBuildOrderStepAndUncycle (int lp_benchmarkStep) {
