@@ -719,7 +719,7 @@ void InitGlobals () {
     gv_debugDialogMaxHeight = 700;
     gv_debugDialogXPadding = 10;
     gv_debugDialogLabel = c_invalidDialogControlId;
-    gv_debugDialogLabelWidth = 300;
+    gv_debugDialogLabelWidth = 500;
     gv_debugDialogLabelHeight = 50;
     gv_debugListBox = c_invalidDialogControlId;
     gv_debugListBoxPadding = 27;
@@ -1053,6 +1053,7 @@ string gf_GetIconForBuildingType (string lp_unitType);
 string gf_GetCurrentlySelectedMatchupasBankSectionKey ();
 string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
 bool gf_IsUnitTypeAStructure (string lp_unitType);
+bool gf_IsUnitTypeDestructible (string lp_unitType);
 bool gf_IsUpgradeAnAttackDefenseUpgrade (string lp_upgrade);
 bool gf_IsUnitTypeATownHall (string lp_unitType);
 bool gf_IsEndBuildatMaxSupplySelected ();
@@ -4153,13 +4154,18 @@ void gf_InitializeMapResources () {
     int auto59129081_u;
     unitgroup autoAECA9D28_g;
     int autoAECA9D28_u;
+    unitgroup autoAFB8B96D_g;
+    int autoAFB8B96D_u;
 
     // Variable Declarations
     unit lv_currentResource;
+    unit lv_currentDestructible;
+    int lv_harvestableResourceOnlyCount;
 
     // Variable Initialization
 
     // Implementation
+    TriggerExecute(gt_ToggleDebugMapMechanics, false, true);
     auto59129081_g = UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter((1 << c_targetFilterHarvestableResource), 0, 0, 0), 0);
     auto59129081_u = 1;
     for ( ; auto59129081_u <= UnitGroupCount(auto59129081_g, c_unitCountAll) ; auto59129081_u += BoolToInt(lv_currentResource == UnitGroupUnit(auto59129081_g, auto59129081_u)) ) {
@@ -4174,6 +4180,19 @@ void gf_InitializeMapResources () {
     }
     TextExpressionSetToken("Param/Expression/EA97869B", "A", IntToText(gv_numMapResources));
     gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/EA97869B"));
+    lv_harvestableResourceOnlyCount = gv_numMapResources;
+    autoAFB8B96D_g = UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter((1 << c_targetFilterStructure), 0, 0, 0), 0);
+    autoAFB8B96D_u = 1;
+    for ( ; autoAFB8B96D_u <= UnitGroupCount(autoAFB8B96D_g, c_unitCountAll) ; autoAFB8B96D_u += BoolToInt(lv_currentDestructible == UnitGroupUnit(autoAFB8B96D_g, autoAFB8B96D_u)) ) {
+        lv_currentDestructible = UnitGroupUnit(autoAFB8B96D_g, autoAFB8B96D_u);
+        if ((gf_IsUnitTypeDestructible(UnitGetType(lv_currentDestructible)) == true)) {
+            gf_AddResourceToMapResources(lv_currentDestructible);
+        }
+        else {
+        }
+    }
+    TextExpressionSetToken("Param/Expression/5AB3626A", "A", IntToText((gv_numMapResources - lv_harvestableResourceOnlyCount)));
+    gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/5AB3626A"));
 }
 
 void gf_InitializeUnitsAndStartingResources (bool lp_skipPlayer1) {
@@ -4369,17 +4388,18 @@ void gf_ResetMapResources () {
         lv_currentResource = gv_mapResources[lv_i].lv_unit;
         lv_currentResourceType = gv_mapResources[lv_i].lv_type;
         lv_currentPosition = gv_mapResources[lv_i].lv_position;
-        if (((((lv_currentResourceType == "VespeneGeyser") || (lv_currentResourceType == "RichVespeneGeyser") || (lv_currentResourceType == "ProtossVespeneGeyser") || (lv_currentResourceType == "SpacePlatformGeyser")) && (libNtve_gf_UnitGetPropertyResources(lv_currentResource, c_unitPropCurrent) < 2500)) || (((lv_currentResourceType == "MineralField") || (lv_currentResourceType == "RichMineralField")) && (libNtve_gf_UnitGetPropertyResources(lv_currentResource, c_unitPropCurrent) < 1500)))) {
+        if (((((lv_currentResourceType == "VespeneGeyser") || (lv_currentResourceType == "RichVespeneGeyser") || (lv_currentResourceType == "ProtossVespeneGeyser") || (lv_currentResourceType == "SpacePlatformGeyser")) && (libNtve_gf_UnitGetPropertyResources(lv_currentResource, c_unitPropCurrent) < 2500)) || (((lv_currentResourceType == "MineralField") || (lv_currentResourceType == "RichMineralField")) && (libNtve_gf_UnitGetPropertyResources(lv_currentResource, c_unitPropCurrent) < 1500)) || ((gf_IsUnitTypeDestructible(lv_currentResourceType) == true) && (UnitGetPropertyFixed(lv_currentResource, c_unitPropLifePercent, c_unitPropCurrent) < 100.0)))) {
             UnitRemove(lv_currentResource);
-            libNtve_gf_CreateUnitsWithDefaultFacing(1, lv_currentResourceType, 0, 0, lv_currentPosition);
+            libNtve_gf_CreateUnitsWithDefaultFacing(1, lv_currentResourceType, c_unitCreateIgnorePlacement, 0, lv_currentPosition);
             gv_mapResources[lv_i].lv_unit = UnitLastCreated();
             lv_resourcesReplaced += 1;
+            TextExpressionSetToken("Param/Expression/D797AC9F", "A", UnitTypeGetName(lv_currentResourceType));
+            gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/D797AC9F"));
         }
         else {
         }
     }
     TextExpressionSetToken("Param/Expression/44F472C2", "A", IntToText(lv_resourcesReplaced));
-    TextExpressionSetToken("Param/Expression/44F472C2", "B", IntToText(lv_resourcesCreated));
     gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/44F472C2"));
 }
 
@@ -5663,6 +5683,22 @@ bool gf_IsUnitTypeAStructure (string lp_unitType) {
 
     // Implementation
     if ((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Attributes[" + IntToString(7) + "]", c_playerAny) == 1)) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    return lv_result;
+}
+
+bool gf_IsUnitTypeDestructible (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((lp_unitType == "UnbuildablePlatesDestructible") || (lp_unitType == "UnbuildablePlatesUnit") || (lp_unitType == "UnbuildablePlatesSmallUnit") || (lp_unitType == "UnbuildableBricksDestructible") || (lp_unitType == "UnbuildableBricksUnit") || (lp_unitType == "UnbuildableBricksSmallUnit") || (lp_unitType == "CollapsibleTerranTowerDebris") || (lp_unitType == "DebrisRampLeft") || (lp_unitType == "DebrisRampRight") || (lp_unitType == "DestructibleDebrisRampDiagonalHugeBLUR") || (lp_unitType == "DestructibleDebrisRampDiagonalHugeULBR") || (lp_unitType == "DestructibleCityDebrisHugeDiagonalBLUR") || (lp_unitType == "DestructibleCityDebrisHugeDiagonalULBR") || (lp_unitType == "Rocks2x2NonConjoined") || (lp_unitType == "UnbuildableRocksDestructible") || (lp_unitType == "UnbuildableRocksUnit") || (lp_unitType == "UnbuildableRocksSmallUnit"))) {
         lv_result = true;
     }
     else {
@@ -8083,9 +8119,7 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
             gf_EvaluateUnitTypeForBenchmarkBuildOrderStep(libNtve_gf_TriggeringProgressUnitType(), lv_previousUnitStep, lv_benchmarkStep);
         }
         else {
-            TextExpressionSetToken("Param/Expression/D6A02471", "B", IntToText(lv_previousUnitStep));
-            TextExpressionSetToken("Param/Expression/D6A02471", "A", IntToText(gv_numBenchmarkBuildOrderSteps));
-            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/D6A02471"));
+            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/E3EB41A9"));
         }
     }
     else {
@@ -8102,9 +8136,7 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
                 gf_EvaluateUnitTypeForBenchmarkBuildOrderStep(libNtve_gf_TriggeringProgressUnitType(), lv_currentStep, lv_benchmarkStep);
             }
             else {
-                TextExpressionSetToken("Param/Expression/8EF5124A", "B", IntToText(lv_currentStep));
-                TextExpressionSetToken("Param/Expression/8EF5124A", "A", IntToText(gv_numBenchmarkBuildOrderSteps));
-                gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/8EF5124A"));
+                gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/DE5D625B"));
             }
             gv_currentBuildOrderStepCursor += 1;
         }
@@ -8157,13 +8189,11 @@ bool gt_OnUpgradeStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActi
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/148223DF"));
     if (((lv_currentStep) < gv_maxNumCurrentBuildOrderStepsTracked)) {
         gf_AddUpgradeBuildOrderStep(lv_currentStep, libNtve_gf_TriggeringProgressUpgrade());
-        if (((gv_numBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == false))) {
+        if (((gv_numBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == true))) {
             gf_EvaluateUpgradeForBenchmarkBuildOrderStep(libNtve_gf_TriggeringProgressUpgrade(), lv_currentStep, lv_benchmarkStep);
         }
         else {
-            TextExpressionSetToken("Param/Expression/61255680", "B", IntToText(lv_currentStep));
-            TextExpressionSetToken("Param/Expression/61255680", "A", IntToText(gv_numBenchmarkBuildOrderSteps));
-            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/61255680"));
+            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/7FC007BA"));
         }
         gv_currentBuildOrderStepCursor += 1;
     }
@@ -8216,12 +8246,10 @@ bool gt_OnAbilityStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActi
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/91218BC2"));
     if (((lv_currentStep) < gv_maxNumCurrentBuildOrderStepsTracked)) {
         gf_AddAbilityBuildOrderStep(lv_currentStep, EventUnitAbility());
-        if (((gv_numBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == false))) {
+        if (((gv_numBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == true))) {
             gf_EvaluateAbilityForBenchmarkBuildOrderStep(lv_triggeringAbilityType, lv_currentStep, lv_benchmarkStep);
         }
         else {
-            TextExpressionSetToken("Param/Expression/B8C0A347", "B", IntToText(lv_currentStep));
-            TextExpressionSetToken("Param/Expression/B8C0A347", "A", IntToText(gv_numBenchmarkBuildOrderSteps));
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/B8C0A347"));
         }
         gv_currentBuildOrderStepCursor += 1;
@@ -10238,6 +10266,7 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     GameSetSpeedValue(c_gameSpeedFaster);
     CameraSave(1);
     CinematicFade(false, 0.0, c_fadeStyleNormal, Color(0.00, 0.00, 0.00), 0.0, true);
+    gf_CreateDebugDialog();
     gf_InitializeGameDefaults();
     gf_InitializeDialogDefaults();
     gf_InitializeBankDefaults();
@@ -10252,7 +10281,6 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_CreateHelpDialog();
     gf_InitializePostBuildReportDialog();
     gf_CreateScreenButtons();
-    gf_CreateDebugDialog();
     TimerWindowCreate(gv_currentBuildBuildTimer, StringExternal("Param/Value/EAED3202"), true, true);
     TimerWindowSetAnchor(TimerWindowLastCreated(), c_anchorTopRight, 0, 0);
     gf_LoadBenchmarkMenuConfiguration(gf_GetCurrentlySelectedMatchupasBankSectionKey());
