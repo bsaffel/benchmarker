@@ -842,6 +842,10 @@ void gf_StopProductionIdleTimer (string lp_unitType);
 void gf_FireProductionIdleAlert (timer lp_timer);
 void gf_RestartProductionIdleAlertTimer (string lp_unitType);
 void gf_RestartProductionIdleCooldownTimer (string lp_unitType);
+void gf_SaveIntForCurrentMatchup (int lp_value, string lp_entryKey);
+void gf_LoadIntFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_entryKey, string lp_sectionKey, int lp_defaultValue, int lp_leadingZeros);
+void gf_LoadBooleanFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_entryKey, string lp_sectionKey, bool lp_defaultValue);
+void gf_SaveRealAsBuildBenchmark (fixed lp_value, string lp_entryKey);
 void gf_SaveCurrentBuildAsBenchmarkBuildOrderForCurrentMatchup ();
 void gf_LoadBenchmarkBuildOrderforCurrentMatchup ();
 void gf_ClearBenchmarkBuildOrderforCurrentMatchup ();
@@ -864,10 +868,6 @@ void gf_LoadAlertMenuConfiguration ();
 void gf_LoadAlertRowConfiguration (string lp_alertEnabledKey, string lp_alertThresholdKey, int lp_alertCheckbox, int lp_alertEditBox, int lp_defaultThresholdValue, int lp_rowNumber);
 void gf_SaveCurrentBuildStatsAsBenchmarkBuildStats ();
 void gf_ClearBenchmarkBuildStatsForCurrentMatchup ();
-void gf_SaveIntForCurrentMatchup (int lp_value, string lp_entryKey);
-void gf_LoadIntFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_entryKey, string lp_sectionKey, int lp_defaultValue);
-void gf_LoadBooleanFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_entryKey, string lp_sectionKey, bool lp_defaultValue);
-void gf_SaveRealAsBuildBenchmark (fixed lp_value, string lp_entryKey);
 void gf_CompleteFinalBenchmarkObjective ();
 void gf_FailFinalBenchmarkObjective ();
 void gf_CreateHiddenBenchmarkSupplyObjectives ();
@@ -1071,6 +1071,7 @@ int gf_GetCancelledStepForAbilityCommand (abilcmd lp_abilityCommand);
 bool gf_DoesCurrentBuildStepExistForStepIndex (int lp_stepIndex);
 int gf_GetNumTownHallUnitsInCurrentBuild (int lp_step);
 int gf_GetNumTownHallUnitsInBenchmarkBuild (int lp_step);
+bool gf_DoesUnitUseSupply (string lp_unitType);
 int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor);
 text gf_GetTypeTextForCurrentBuildOrderStep (int lp_stepNumber);
 text gf_GetTypeTextForBenchmarkBuildOrderStep (int lp_stepNumber);
@@ -1131,6 +1132,7 @@ bool gf_IsNumeric (string lp_input);
 bool gf_IsCapitalLetterOrDigit (string lp_letter);
 string gf_FormatCatalogStringwithSpaces (string lp_string);
 string gf_TrimSOffArmorsUpgradeName (string lp_string);
+string gf_GetLeadingZerosStringForIntValue (int lp_integer, int lp_leadingZeros);
 text gf_GetIntDifferenceasText (int lp_value, int lp_previousBest, bool lp_higherisBetter, bool lp_displayasPercentage);
 text gf_GetRealDifferenceasText (fixed lp_value, fixed lp_previousBest, bool lp_higherisBetter);
 text gf_GetTimeDifferenceasText (int lp_value, int lp_previousBest, bool lp_higherisBetter, bool lp_displayasPercentage);
@@ -1211,6 +1213,7 @@ trigger gt_SelectEndBuildAtGameTime;
 trigger gt_TogglePracticeAgainstSavedBuild;
 trigger gt_UpdateFinalSupplyAtGameTimeText;
 trigger gt_ClearSavedBenchmarkBuildforMatchuponButtonPress;
+trigger gt_UpdateTimeBoxTextWithLeadingZeros;
 trigger gt_ToggleDebugDialogMaxMinButton;
 trigger gt_ToggleDebugDialogPauseButton;
 trigger gt_DebugDialogClearButtonPressed;
@@ -1404,6 +1407,68 @@ void gf_RestartProductionIdleCooldownTimer (string lp_unitType) {
     TimerStart(gv_productionIdleAlerts[lv_alertIndex].lv_alertTimer, gv_neverexpires, false, c_timeGame);
     TimerPause(gv_productionIdleAlerts[lv_alertIndex].lv_alertTimer, true);
     TimerStart(gv_productionIdleAlerts[lv_alertIndex].lv_cooldownTimer, gv_alertCooldownSeconds, false, c_timeGame);
+}
+
+void gf_SaveIntForCurrentMatchup (int lp_value, string lp_entryKey) {
+    // Implementation
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_entryKey, lp_value);
+}
+
+void gf_LoadIntFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_entryKey, string lp_sectionKey, int lp_defaultValue, int lp_leadingZeros) {
+    // Variable Declarations
+    int lv_editValue;
+    string lv_formattedDisplayValue;
+
+    // Variable Initialization
+    lv_formattedDisplayValue = "";
+
+    // Implementation
+    if (((BankKeyExists(gv_benchmarkerBank, lp_sectionKey, lp_entryKey) == true) && (BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, lp_entryKey) > -1))) {
+        lv_editValue = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_entryKey);
+    }
+    else {
+        lv_editValue = lp_defaultValue;
+    }
+    lv_formattedDisplayValue = gf_GetLeadingZerosStringForIntValue(lv_editValue, lp_leadingZeros);
+    libNtve_gf_SetDialogItemEditorValue(lp_dialogItem, lv_formattedDisplayValue, PlayerGroupAll());
+}
+
+void gf_LoadBooleanFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_entryKey, string lp_sectionKey, bool lp_defaultValue) {
+    // Variable Declarations
+    bool lv_loadedValue;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((BankKeyExists(gv_benchmarkerBank, lp_sectionKey, lp_entryKey) == true)) {
+        lv_loadedValue = BankValueGetAsFlag(gv_benchmarkerBank, lp_sectionKey, lp_entryKey);
+    }
+    else {
+    }
+    if ((lv_loadedValue == true)) {
+        libNtve_gf_SetDialogItemChecked(lp_dialogItem, true, PlayerGroupAll());
+    }
+    else {
+        if ((lp_defaultValue == true)) {
+            libNtve_gf_SetDialogItemChecked(lp_dialogItem, true, PlayerGroupAll());
+        }
+        else {
+            libNtve_gf_SetDialogItemChecked(lp_dialogItem, false, PlayerGroupAll());
+        }
+    }
+    if ((gv_debugBankEnabled == true)) {
+        TextExpressionSetToken("Param/Expression/CF0AC666", "A", StringToText(lp_entryKey));
+        TextExpressionSetToken("Param/Expression/CF0AC666", "B", StringToText(lp_sectionKey));
+        TextExpressionSetToken("Param/Expression/CF0AC666", "C", libNtve_gf_ConvertBooleanToText(lv_loadedValue));
+        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/CF0AC666"));
+    }
+    else {
+    }
+}
+
+void gf_SaveRealAsBuildBenchmark (fixed lp_value, string lp_entryKey) {
+    // Implementation
+    BankValueSetFromFixed(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_entryKey, lp_value);
 }
 
 void gf_SaveCurrentBuildAsBenchmarkBuildOrderForCurrentMatchup () {
@@ -1664,23 +1729,23 @@ void gf_LoadSupplyBenchmarkMenuConfiguration (string lp_sectionKey) {
     autoB80F7580_ai = 1;
     lv_i = 0;
     for ( ; ( (autoB80F7580_ai >= 0 && lv_i <= autoB80F7580_ae) || (autoB80F7580_ai <= 0 && lv_i >= autoB80F7580_ae) ) ; lv_i += autoB80F7580_ai ) {
-        gf_LoadIntFromBankIfKeyisSetElseDefault(gv_benchmarkSupplyEditBoxes[lv_i], gv_benchmarkSupplyEntryKeys[lv_i], lp_sectionKey, gv_benchmarkSupplyDefaults[lv_i]);
+        gf_LoadIntFromBankIfKeyisSetElseDefault(gv_benchmarkSupplyEditBoxes[lv_i], gv_benchmarkSupplyEntryKeys[lv_i], lp_sectionKey, gv_benchmarkSupplyDefaults[lv_i], 0);
     }
 }
 
 void gf_LoadBuildCompletionMenuConfiguraiton (string lp_sectionKey) {
     // Implementation
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeMinutesEditBox, gv_benchmarkMaxSupplyatTimeMinutesKey, lp_sectionKey, gv_benchmarkMaxSupplyMinutes);
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeSecondsEditBox, gv_benchmarkMaxSupplyatTimeSecondsKey, lp_sectionKey, gv_benchmarkMaxSupplySeconds);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeMinutesEditBox, gv_benchmarkMaxSupplyatTimeMinutesKey, lp_sectionKey, gv_benchmarkMaxSupplyMinutes, 1);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeSecondsEditBox, gv_benchmarkMaxSupplyatTimeSecondsKey, lp_sectionKey, gv_benchmarkMaxSupplySeconds, 1);
     if ((BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSelectionKey) > 0)) {
         DialogControlSelectItem(gv_endBuildPulldown, PlayerGroupAll(), BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSelectionKey));
     }
     else {
         DialogControlSelectItem(gv_endBuildPulldown, PlayerGroupAll(), gv_endBuildPulldownSelection);
     }
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildMinutesEditBox, gv_benchmarkEndBuildMinutesKey, lp_sectionKey, gv_benchmarkEndBuildatGameTimeMinutes);
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildSecondsEditBox, gv_benchmarkEndBuildSecondsKey, lp_sectionKey, gv_benchmarkEndBuildatGameTimeSeconds);
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_finalSupplyAtGameTimeEditBox, gv_benchmarkFinalSupplyatGameTimeKey, lp_sectionKey, gv_benchmarkFinalSupplyatGameTimeValue);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildMinutesEditBox, gv_benchmarkEndBuildMinutesKey, lp_sectionKey, gv_benchmarkEndBuildatGameTimeMinutes, 1);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildSecondsEditBox, gv_benchmarkEndBuildSecondsKey, lp_sectionKey, gv_benchmarkEndBuildatGameTimeSeconds, 1);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_finalSupplyAtGameTimeEditBox, gv_benchmarkFinalSupplyatGameTimeKey, lp_sectionKey, gv_benchmarkFinalSupplyatGameTimeValue, 0);
 }
 
 void gf_LoadBenchmarkBuildMenuConfiguration (string lp_sectionKey) {
@@ -1851,59 +1916,6 @@ void gf_ClearBenchmarkBuildStatsForCurrentMatchup () {
     gf_SaveIntForCurrentMatchup(0, gv_bestAverageUnspentMineralsEntryKey);
     gf_SaveIntForCurrentMatchup(0, gv_bestAverageUnspentGasEntryKey);
     gf_SaveRealAsBuildBenchmark(0.0, gv_bestAverageAPMEntryKey);
-}
-
-void gf_SaveIntForCurrentMatchup (int lp_value, string lp_entryKey) {
-    // Implementation
-    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_entryKey, lp_value);
-}
-
-void gf_LoadIntFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_entryKey, string lp_sectionKey, int lp_defaultValue) {
-    // Implementation
-    if (((BankKeyExists(gv_benchmarkerBank, lp_sectionKey, lp_entryKey) == true) && (BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, lp_entryKey) > -1))) {
-        libNtve_gf_SetDialogItemEditorValue(lp_dialogItem, IntToString(BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, lp_entryKey)), PlayerGroupAll());
-    }
-    else {
-        libNtve_gf_SetDialogItemEditorValue(lp_dialogItem, IntToString(lp_defaultValue), PlayerGroupAll());
-    }
-}
-
-void gf_LoadBooleanFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_entryKey, string lp_sectionKey, bool lp_defaultValue) {
-    // Variable Declarations
-    bool lv_loadedValue;
-
-    // Variable Initialization
-
-    // Implementation
-    if ((BankKeyExists(gv_benchmarkerBank, lp_sectionKey, lp_entryKey) == true)) {
-        lv_loadedValue = BankValueGetAsFlag(gv_benchmarkerBank, lp_sectionKey, lp_entryKey);
-    }
-    else {
-    }
-    if ((lv_loadedValue == true)) {
-        libNtve_gf_SetDialogItemChecked(lp_dialogItem, true, PlayerGroupAll());
-    }
-    else {
-        if ((lp_defaultValue == true)) {
-            libNtve_gf_SetDialogItemChecked(lp_dialogItem, true, PlayerGroupAll());
-        }
-        else {
-            libNtve_gf_SetDialogItemChecked(lp_dialogItem, false, PlayerGroupAll());
-        }
-    }
-    if ((gv_debugBankEnabled == true)) {
-        TextExpressionSetToken("Param/Expression/CF0AC666", "A", StringToText(lp_entryKey));
-        TextExpressionSetToken("Param/Expression/CF0AC666", "B", StringToText(lp_sectionKey));
-        TextExpressionSetToken("Param/Expression/CF0AC666", "C", libNtve_gf_ConvertBooleanToText(lv_loadedValue));
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, TextExpressionAssemble("Param/Expression/CF0AC666"));
-    }
-    else {
-    }
-}
-
-void gf_SaveRealAsBuildBenchmark (fixed lp_value, string lp_entryKey) {
-    // Implementation
-    BankValueSetFromFixed(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_entryKey, lp_value);
 }
 
 void gf_CompleteFinalBenchmarkObjective () {
@@ -4165,7 +4177,6 @@ void gf_InitializeMapResources () {
     // Variable Initialization
 
     // Implementation
-    TriggerExecute(gt_ToggleDebugMapMechanics, false, true);
     auto59129081_g = UnitGroup(null, c_playerAny, RegionEntireMap(), UnitFilter((1 << c_targetFilterHarvestableResource), 0, 0, 0), 0);
     auto59129081_u = 1;
     for ( ; auto59129081_u <= UnitGroupCount(auto59129081_g, c_unitCountAll) ; auto59129081_u += BoolToInt(lv_currentResource == UnitGroupUnit(auto59129081_g, auto59129081_u)) ) {
@@ -6021,6 +6032,21 @@ int gf_GetNumTownHallUnitsInBenchmarkBuild (int lp_step) {
     return lv_result;
 }
 
+bool gf_DoesUnitUseSupply (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((CatalogFieldValueGetAsInt(c_gameCatalogUnit, lp_unitType, "Food", c_playerAny) < 0)) {
+        lv_result = true;
+    }
+    else {
+    }
+    return lv_result;
+}
+
 int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor) {
     // Variable Declarations
     int lv_result;
@@ -6215,8 +6241,8 @@ int gf_GetSupplyforCurrentBuildOrderStep (int lp_currentStep) {
         }
         else {
         }
-        if ((gv_currentBuildOrderSteps[lp_currentStep].lv_unitType == "Queen")) {
-            lv_currentSupply = (lv_currentSupply-2);
+        if ((gf_DoesUnitUseSupply(gv_currentBuildOrderSteps[lp_currentStep].lv_unitType) == true)) {
+            lv_currentSupply = (lv_currentSupply+(CatalogFieldValueGetAsInt(c_gameCatalogUnit, gv_currentBuildOrderSteps[lp_currentStep].lv_unitType, "Food", c_playerAny)*gv_currentBuildOrderSteps[lp_currentStep].lv_amount));
         }
         else {
         }
@@ -7059,6 +7085,34 @@ string gf_TrimSOffArmorsUpgradeName (string lp_string) {
     else {
         return lp_string;
     }
+}
+
+string gf_GetLeadingZerosStringForIntValue (int lp_integer, int lp_leadingZeros) {
+    // Variable Declarations
+    string lv_intString;
+    string lv_zerosString;
+    int lv_numZerosToShow;
+    string lv_result;
+
+    // Variable Initialization
+    lv_intString = "";
+    lv_zerosString = "";
+    lv_result = "";
+
+    // Implementation
+    lv_intString = IntToString(lp_integer);
+    if ((lp_leadingZeros > 0)) {
+        lv_numZerosToShow = ((lp_leadingZeros + 1) - StringLength(lv_intString));
+        if ((lv_numZerosToShow > 0)) {
+            lv_zerosString = StringSub(IntToString((10 * lp_leadingZeros)), 2, (2 + lv_numZerosToShow));
+        }
+        else {
+        }
+    }
+    else {
+    }
+    lv_result = (lv_zerosString + lv_intString);
+    return lv_result;
 }
 
 text gf_GetIntDifferenceasText (int lp_value, int lp_previousBest, bool lp_higherisBetter, bool lp_displayasPercentage) {
@@ -9764,6 +9818,45 @@ void gt_ClearSavedBenchmarkBuildforMatchuponButtonPress_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Update Time Box Text With Leading Zeros
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateTimeBoxTextWithLeadingZeros_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((((EventDialogControl() == gv_endBuildMinutesEditBox) || (EventDialogControl() == gv_endBuildSecondsEditBox) || (EventDialogControl() == gv_maxTimeMinutesEditBox) || (EventDialogControl() == gv_maxTimeSecondsEditBox))))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    if ((gf_IsNumeric(libNtve_gf_DialogItemEditValue(EventDialogControl(), 1)) == true)) {
+        if ((gf_GetEditBoxValueasInt(EventDialogControl()) < 10)) {
+            libNtve_gf_SetDialogItemEditorValue(EventDialogControl(), gf_GetLeadingZerosStringForIntValue(gf_GetEditBoxValueasInt(EventDialogControl()), 1), PlayerGroupAll());
+        }
+        else {
+            if ((StringSub(libNtve_gf_DialogItemEditValue(EventDialogControl(), 1), 1, 1) == "0")) {
+                libNtve_gf_SetDialogItemEditorValue(EventDialogControl(), IntToString(gf_GetEditBoxValueasInt(EventDialogControl())), PlayerGroupAll());
+            }
+            else {
+            }
+        }
+    }
+    else {
+    }
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateTimeBoxTextWithLeadingZeros_Init () {
+    gt_UpdateTimeBoxTextWithLeadingZeros = TriggerCreate("gt_UpdateTimeBoxTextWithLeadingZeros_Func");
+    TriggerAddEventDialogControl(gt_UpdateTimeBoxTextWithLeadingZeros, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeTextChanged);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Toggle Debug Dialog Max/Min Button
 //--------------------------------------------------------------------------------------------------
 bool gt_ToggleDebugDialogMaxMinButton_Func (bool testConds, bool runActions) {
@@ -10498,6 +10591,7 @@ void InitTriggers () {
     gt_TogglePracticeAgainstSavedBuild_Init();
     gt_UpdateFinalSupplyAtGameTimeText_Init();
     gt_ClearSavedBenchmarkBuildforMatchuponButtonPress_Init();
+    gt_UpdateTimeBoxTextWithLeadingZeros_Init();
     gt_ToggleDebugDialogMaxMinButton_Init();
     gt_ToggleDebugDialogPauseButton_Init();
     gt_DebugDialogClearButtonPressed_Init();
