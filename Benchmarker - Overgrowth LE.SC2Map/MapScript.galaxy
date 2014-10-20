@@ -889,6 +889,7 @@ void gf_ResetObjectiveForBenchmarkBuildOrderStep (int lp_benchmarkStep);
 void gf_CycleBenchmarkBuildOrderObjectives (int lp_currentStep, int lp_benchmarkStep);
 void gf_AdjustAllBenchmarkBuildOrderObjectivePositionsUpby1 ();
 void gf_DestroyBenchmarkBuildOrderObjectives ();
+void gf_UpdateBenchmarkBuildOrderStepCursor (int lp_currentStep);
 void gf_HighlightBenchmarkBuildOrderObjective (int lp_step);
 void gf_UnHighlightBenchmarkBuildOrderObjective (int lp_step);
 void gf_InitializeBenchmarkBuildOrder ();
@@ -898,7 +899,6 @@ void gf_EvaluateAbilityForBenchmarkBuildOrderStep (string lp_ability, int lp_cur
 void gf_CompleteBenchmarkStepObjectiveStepAndCycle (int lp_currentStep, int lp_benchmarkStep);
 void gf_FailBenchmarkStepObjectiveAndCycle (int lp_currentStep, int lp_benchmarkStep, bool lp_timerExpired);
 void gf_ResetObjectiveForBenchmarkBuildOrderStepAndUncycle (int lp_benchmarkStep);
-void gf_UpdateBenchmarkBuildOrderStepCursor (int lp_currentStep);
 void gf_DisplayPerformanceFeedbackForCorrectStep (int lp_currentIndex, int lp_benchmarkIndex);
 void gf_DisplayPerformanceFeedbackForFailedStep (int lp_currentStep, bool lp_timerExpired);
 void gf_CreateAlertMenuDialog ();
@@ -2283,6 +2283,17 @@ void gf_DestroyBenchmarkBuildOrderObjectives () {
     libNtve_gf_HideScreenButton(false, gv_forkScreenButtonID);
 }
 
+void gf_UpdateBenchmarkBuildOrderStepCursor (int lp_currentStep) {
+    // Implementation
+    if ((gf_AreCurrentAndPreviousStepsAllSatisfied(lp_currentStep) == true)) {
+        gv_benchmarkBuildOrderStepCursor = gf_GetNextIncompleteBenchmarkBuildOrderStep(gv_currentBuildOrderStepCursor);
+        gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
+    }
+    else {
+        gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/DAADA450"));
+    }
+}
+
 void gf_HighlightBenchmarkBuildOrderObjective (int lp_step) {
     // Variable Declarations
     int lv_objectiveIndex;
@@ -2488,7 +2499,7 @@ void gf_FailBenchmarkStepObjectiveAndCycle (int lp_currentStep, int lp_benchmark
     }
     if ((gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == true)) {
         gf_CycleBenchmarkBuildOrderObjectives(lp_currentStep, lp_benchmarkStep);
-        gf_UpdateBenchmarkBuildOrderStepCursor(lp_currentStep);
+        gf_UpdateBenchmarkBuildOrderStepCursor((lp_currentStep - 1));
     }
     else {
     }
@@ -2508,17 +2519,6 @@ void gf_ResetObjectiveForBenchmarkBuildOrderStepAndUncycle (int lp_benchmarkStep
     TextExpressionSetToken("Param/Expression/F9AD5447", "C", gf_GetBenchmarkBuildOrderStepText(gv_benchmarkBuildOrderStepCursor));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/F9AD5447"));
     gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
-}
-
-void gf_UpdateBenchmarkBuildOrderStepCursor (int lp_currentStep) {
-    // Implementation
-    if ((gf_AreCurrentAndPreviousStepsAllSatisfied(lp_currentStep) == true)) {
-        gv_benchmarkBuildOrderStepCursor = gf_GetNextIncompleteBenchmarkBuildOrderStep(gv_currentBuildOrderStepCursor);
-        gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
-    }
-    else {
-        gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/DAADA450"));
-    }
 }
 
 trigger auto_gf_DisplayPerformanceFeedbackForCorrectStep_Trigger = null;
