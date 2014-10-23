@@ -170,17 +170,20 @@ string gv_tvPMatchupSectionKey;
 string gv_pvTMatchupSectionKey;
 string gv_pvZMatchupSectionKey;
 string gv_pvPMatchupSectionKey;
+bool gv_enableGasTracking;
+int gv_gasTrackingThresholdSteps;
+bool gv_enableSupplyUnitTracking;
+int gv_supplyUnitTrackingThresholdSteps;
+bool gv_enableQueenTracking;
+int gv_queenTrackingThresholdSteps;
+bool gv_enableArmyUnitTracking;
+int gv_armyUnitTrackingThresholdSteps;
+bool gv_enableDetectorTracking;
+int gv_detectorTrackingThresholdSteps;
 int[4] gv_benchmarkTimesInSeconds;
 int gv_numBenchmarkBuildOrderStepsTracked;
-bool gv_trackSupplyUnitsAsSteps;
-int gv_trackSupplyUnitAsStepSupplyLimit;
-int gv_buildOrderMaxGasSupply;
+int gv_multipleUnitFailureThresholdSeconds;
 timer gv_multipleUnitFailureTimer;
-int gv_trackQueensAsStepSupplyLimit;
-bool gv_trackInitialArmyUnitsAsSteps;
-int gv_trackInitialArmyUnitsStepLimit;
-bool gv_trackInitialDetectorsAsSteps;
-int gv_trackInitialDetectorsStepLimit;
 gs_SupplyBenchmark[5] gv_supplyBenchmarks;
 int[4] gv_benchmarkSupplyObjectives;
 int gv_benchmarkFinalBenchmarkObjective;
@@ -203,7 +206,6 @@ int gv_townHallPrefixTextStartThreshold;
 gs_BuildOrderStep[gv_buildOrderStepLimit + 1] gv_currentBuildOrderSteps;
 int gv_currentBuildOrderStepCursor;
 int gv_maxNumCurrentBuildOrderStepsTracked;
-int gv_multipleUnitFailureThreshold;
 gs_BuildOrderStep[gv_buildOrderStepLimit + 1] gv_benchmarkBuildOrderSteps;
 int gv_benchmarkBuildOrderStepCursor;
 int[11] gv_benchmarkBuildOrderStepObjectives;
@@ -1053,22 +1055,26 @@ string gf_GetIconForBuildingType (string lp_unitType);
 string gf_GetCurrentlySelectedMatchupasBankSectionKey ();
 string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
 bool gf_IsUnitTypeAStructure (string lp_unitType);
+bool gf_IsUnitTypeATrackedArmyUnit (string lp_unitType);
 bool gf_IsUnitTypeDestructible (string lp_unitType);
 bool gf_IsUpgradeAnAttackDefenseUpgrade (string lp_upgrade);
 bool gf_IsUnitTypeATownHall (string lp_unitType);
-bool gf_IsEndBuildatMaxSupplySelected ();
-bool gf_IsEndBuildatGameTimeSelected ();
+int gf_GetNumCurrentStepsForUnitType (string lp_unitType);
+int gf_GetNumCurrentTrackedArmyUnitSteps ();
+bool gf_IsLatestCurrentStepForUnitTypeStillActive (string lp_unitType);
+bool gf_IsUnitTypeAGasUnitWithinThreshold (string lp_unitType);
+bool gf_IsUnitTypeASupplyUnitWithinThreshold (string lp_unitType);
+bool gf_IsUnitTypeAQueenWithinThreshold (string lp_unitType);
+bool gf_IsUnitTypeATrackedArmyUnitWithinThreshold (string lp_unitType);
+bool gf_IsUnitTypeADetectorWithinThreshold (string lp_unitType);
 bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType, int lp_benchmarkStep);
 bool gf_IsUpgradeTypeValidForBuildOrder (string lp_upgrade);
 bool gf_IsAbilityValidForBuildOrder (string lp_ability);
 bool gf_IsUnitTypeSameAsPreviousUnitType (int lp_previousUnitStepIndex, string lp_unitType);
 bool gf_IsUnitTypeAnExplicitlyIgnoredStructureType (string lp_unitType);
-bool gf_IsUnitTypeAnEligibleSupplyUnitAndWithinThreshold (string lp_unitType, int lp_benchmarkStep);
-bool gf_IsUnitTypeAnIneligibleGasCollectionUnit (string lp_unitType, int lp_benchmarkStep);
 int gf_GetCancelledStepForUnit (unit lp_unit, string lp_unitType);
 int gf_GetCancelledStepForUpgrade (string lp_upgrade);
 int gf_GetCancelledStepForAbilityCommand (abilcmd lp_abilityCommand);
-bool gf_IsBenchmarkStepStillAnObjective (int lp_benchmarkStep);
 bool gf_DoesCurrentBuildStepExistForStepIndex (int lp_stepIndex);
 int gf_GetNumTownHallUnitsInCurrentBuild (int lp_step);
 int gf_GetNumTownHallUnitsInBenchmarkBuild (int lp_step);
@@ -1084,6 +1090,7 @@ text gf_GetSupplyforCurrentBuildOrderStepasText (int lp_currentStep);
 int gf_GetSupplyforCurrentBuildOrderStep (int lp_currentStep);
 text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber);
 text gf_GetPrefixNumberText (int lp_number);
+bool gf_IsBenchmarkStepStillAnObjective (int lp_benchmarkStep);
 bool gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep (string lp_unitType, int lp_benchmarkStep);
 bool gf_IsUpgradeTypeCorrectForBenchmarkBuildOrderStep (string lp_upgrade, int lp_benchmarkStep);
 bool gf_IsAbilityTypeCorrectForBenchmarkBuildOrderStep (string lp_ability, int lp_benchmarkBuildOrderStepIndex);
@@ -1123,6 +1130,8 @@ int gf_GetEditBoxValueasInt (int lp_editBox);
 bool gf_DoesSavedBuildOrderExistForCurrentMatchup ();
 string gf_GetCurrentlySelectedMatchupOpponentRace ();
 color gf_GetColorForRealStatValue (fixed lp_percentage, bool lp_higherIsBetter);
+bool gf_IsEndBuildatMaxSupplySelected ();
+bool gf_IsEndBuildatGameTimeSelected ();
 int gf_GetMapResourceIndexForUnit (unit lp_unit);
 fixed gf_ln (fixed lp_x);
 fixed gf_log10 (fixed lp_x);
@@ -2359,7 +2368,7 @@ void gf_EvaluateUnitTypeForBenchmarkBuildOrderStep (string lp_unitType, int lp_c
             lv_stepSatisfied = true;
             if (((gf_IsAmountCorrectForBenchmarkBuildOrderStep(lv_currentAmountForStep, lv_evalStepBenchmark) == true))) {
                 gf_CompleteBenchmarkStepObjectiveStepAndCycle(lp_currentStep, lv_evalStepBenchmark);
-                if (((TimerIsPaused(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer) == false) && ((TimerGetDuration(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer) >= 0) && (TimerGetDuration(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer) <= gv_multipleUnitFailureThreshold)))) {
+                if (((TimerIsPaused(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer) == false) && ((TimerGetDuration(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer) >= 0) && (TimerGetDuration(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer) <= gv_multipleUnitFailureThresholdSeconds)))) {
                     TextExpressionSetToken("Param/Expression/F6401EA7", "A", IntToText(lv_evalStepBenchmark));
                     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/F6401EA7"));
                     TimerStart(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer, gv_neverexpires, false, c_timeGame);
@@ -2382,9 +2391,9 @@ void gf_EvaluateUnitTypeForBenchmarkBuildOrderStep (string lp_unitType, int lp_c
                     else {
                         gf_LogTextMessage(gv_debugBuildOrderEnabled, StringExternal("Param/Value/3476367F"));
                     }
-                    TextExpressionSetToken("Param/Expression/8A069115", "A", IntToText(gv_multipleUnitFailureThreshold));
+                    TextExpressionSetToken("Param/Expression/8A069115", "A", IntToText(gv_multipleUnitFailureThresholdSeconds));
                     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/8A069115"));
-                    TimerStart(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer, IntToFixed(gv_multipleUnitFailureThreshold), false, c_timeGame);
+                    TimerStart(gv_benchmarkBuildOrderSteps[lv_evalStepBenchmark].lv_multipleUnitFailureTimer, IntToFixed(gv_multipleUnitFailureThresholdSeconds), false, c_timeGame);
                 }
                 else {
                 }
@@ -4139,11 +4148,11 @@ void gf_InitializeGameDefaults () {
     gv_supplyBenchmarks[1].lv_benchmarkTimeSeconds = 0;
     gv_supplyBenchmarks[2].lv_benchmarkTimeMin = 10;
     gv_supplyBenchmarks[2].lv_benchmarkTimeSeconds = 0;
-    gv_trackSupplyUnitsAsSteps = true;
-    gv_multipleUnitFailureThreshold = 15;
-    gv_trackSupplyUnitAsStepSupplyLimit = 40;
-    gv_trackQueensAsStepSupplyLimit = 40;
-    gv_buildOrderMaxGasSupply = 60;
+    gv_enableSupplyUnitTracking = true;
+    gv_multipleUnitFailureThresholdSeconds = 15;
+    gv_supplyUnitTrackingThresholdSteps = 40;
+    gv_queenTrackingThresholdSteps = 6;
+    gv_gasTrackingThresholdSteps = 60;
     gv_buildHintTimeThreshold = 10.0;
     gv_maxDisplayedBuildOrderObjectivesIndex = 9;
     gv_maxNumCurrentBuildOrderStepsTracked = 40;
@@ -5707,6 +5716,22 @@ bool gf_IsUnitTypeAStructure (string lp_unitType) {
     return lv_result;
 }
 
+bool gf_IsUnitTypeATrackedArmyUnit (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((lp_unitType == "Zergling") || (lp_unitType == "Roach") || (lp_unitType == "Marine") || (lp_unitType == "Marauder") || (lp_unitType == "Reaper") || (lp_unitType == "Zealot") || (lp_unitType == "Stalker") || (lp_unitType == "Sentry"))) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    return lv_result;
+}
+
 bool gf_IsUnitTypeDestructible (string lp_unitType) {
     // Variable Declarations
     bool lv_result;
@@ -5748,24 +5773,114 @@ bool gf_IsUnitTypeATownHall (string lp_unitType) {
     return lv_result;
 }
 
-bool gf_IsEndBuildatMaxSupplySelected () {
+int gf_GetNumCurrentStepsForUnitType (string lp_unitType) {
+    // Variable Declarations
+    int lv_result;
+
+    // Variable Initialization
+
     // Implementation
-    if ((DialogControlGetSelectedItem(gv_endBuildPulldown, 1) == 1)) {
-        return true;
-    }
-    else {
-        return false;
-    }
+    return lv_result;
 }
 
-bool gf_IsEndBuildatGameTimeSelected () {
+int gf_GetNumCurrentTrackedArmyUnitSteps () {
+    // Variable Declarations
+    int lv_result;
+
+    // Variable Initialization
+
     // Implementation
-    if ((DialogControlGetSelectedItem(gv_endBuildPulldown, 1) == 2)) {
-        return true;
+    return lv_result;
+}
+
+bool gf_IsLatestCurrentStepForUnitTypeStillActive (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    return lv_result;
+}
+
+bool gf_IsUnitTypeAGasUnitWithinThreshold (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((gv_enableGasTracking == true) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery")) && ((gf_GetNumCurrentStepsForUnitType(lp_unitType) <= gv_gasTrackingThresholdSteps) || (gf_IsLatestCurrentStepForUnitTypeStillActive(lp_unitType) == true)))) {
+        lv_result = true;
     }
     else {
-        return false;
+        lv_result = false;
     }
+    return lv_result;
+}
+
+bool gf_IsUnitTypeASupplyUnitWithinThreshold (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((gv_enableSupplyUnitTracking == true) && ((lp_unitType == "Overlord") || (lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon")) && ((gf_GetNumCurrentStepsForUnitType(lp_unitType) <= gv_supplyUnitTrackingThresholdSteps) || (gf_IsLatestCurrentStepForUnitTypeStillActive(lp_unitType) == true)))) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    return lv_result;
+}
+
+bool gf_IsUnitTypeAQueenWithinThreshold (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((gv_enableQueenTracking == true) && (lp_unitType == "Queen") && ((gf_GetNumCurrentStepsForUnitType(lp_unitType) <= gv_queenTrackingThresholdSteps) || (gf_IsLatestCurrentStepForUnitTypeStillActive(lp_unitType) == true)))) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    return lv_result;
+}
+
+bool gf_IsUnitTypeATrackedArmyUnitWithinThreshold (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((gv_enableArmyUnitTracking == true) && (gf_IsUnitTypeATrackedArmyUnit(lp_unitType) == true) && ((gf_GetNumCurrentTrackedArmyUnitSteps() <= gv_armyUnitTrackingThresholdSteps) || (gf_IsLatestCurrentStepForUnitTypeStillActive(lp_unitType) == true)))) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    return lv_result;
+}
+
+bool gf_IsUnitTypeADetectorWithinThreshold (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((gv_enableDetectorTracking == true) && ((lp_unitType == "Observer") || (lp_unitType == "Overseer") || (lp_unitType == "Raven")) && ((gf_GetNumCurrentStepsForUnitType(lp_unitType) <= gv_detectorTrackingThresholdSteps) || (gf_IsLatestCurrentStepForUnitTypeStillActive(lp_unitType) == true)))) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
+    }
+    return lv_result;
 }
 
 bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType, int lp_benchmarkStep) {
@@ -5775,18 +5890,15 @@ bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType, int lp_benchmarkStep) 
     // Variable Initialization
 
     // Implementation
-    if (((PlayerScoreValueGetAsInt(1, "FoodUsed") <= gv_trackQueensAsStepSupplyLimit) && ((lp_unitType == "Queen")))) {
+    if (((lp_unitType == "MothershipCore") || (lp_unitType == "Mothership") || (gf_IsUnitTypeAGasUnitWithinThreshold(lp_unitType) == true) || (gf_IsUnitTypeASupplyUnitWithinThreshold(lp_unitType) == true) || (gf_IsUnitTypeAQueenWithinThreshold(lp_unitType) == true) || (gf_IsUnitTypeATrackedArmyUnitWithinThreshold(lp_unitType) == true) || (gf_IsUnitTypeADetectorWithinThreshold(lp_unitType) == true))) {
         lv_result = true;
     }
-    else if ((lp_unitType == "MothershipCore")) {
+    else if (((gf_IsUnitTypeAStructure(lp_unitType) == true) && (gf_IsUnitTypeAnExplicitlyIgnoredStructureType(lp_unitType) == false) && (lp_unitType != "Extractor") && (lp_unitType != "Assimilator") && (lp_unitType != "Refinery") && (lp_unitType != "SupplyDepot") && (lp_unitType != "Pylon"))) {
         lv_result = true;
     }
-    else if ((gf_IsUnitTypeAnEligibleSupplyUnitAndWithinThreshold(lp_unitType, lp_benchmarkStep) == true)) {
-        lv_result = true;
-    }
-    else if (((gf_IsUnitTypeAStructure(lp_unitType) == true) && (gf_IsUnitTypeAnExplicitlyIgnoredStructureType(lp_unitType) == false) && (gf_IsUnitTypeAnIneligibleGasCollectionUnit(lp_unitType, lp_benchmarkStep) == false) && (lp_unitType != "SupplyDepot") && (lp_unitType != "Pylon"))) {
-        lv_result = true;
-    }
+    TextExpressionSetToken("Param/Expression/E84E69DA", "A", UnitTypeGetName(lp_unitType));
+    TextExpressionSetToken("Param/Expression/E84E69DA", "B", libNtve_gf_ConvertBooleanToText(lv_result));
+    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/E84E69DA"));
     return lv_result;
 }
 
@@ -5847,38 +5959,6 @@ bool gf_IsUnitTypeAnExplicitlyIgnoredStructureType (string lp_unitType) {
 
     // Implementation
     if (((lp_unitType == "CreepTumorQueen") || (lp_unitType == "CreepTumor") || (lp_unitType == "CreepTumorBurrowed"))) {
-        lv_result = true;
-    }
-    else {
-        lv_result = false;
-    }
-    return lv_result;
-}
-
-bool gf_IsUnitTypeAnEligibleSupplyUnitAndWithinThreshold (string lp_unitType, int lp_benchmarkStep) {
-    // Variable Declarations
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if (((gv_trackSupplyUnitsAsSteps == true) && ((gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType == "Overlord") || (gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType == "Pylon") || (gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType == "SupplyDepot") || (PlayerScoreValueGetAsInt(1, "FoodUsed") <= gv_trackSupplyUnitAsStepSupplyLimit)) && ((lp_unitType == "Overlord") || (lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon")))) {
-        lv_result = true;
-    }
-    else {
-        lv_result = false;
-    }
-    return lv_result;
-}
-
-bool gf_IsUnitTypeAnIneligibleGasCollectionUnit (string lp_unitType, int lp_benchmarkStep) {
-    // Variable Declarations
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if ((((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery")) && (PlayerScoreValueGetAsInt(1, "FoodUsed") > gv_buildOrderMaxGasSupply) && ((gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType != "Extractor") && (gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType != "Assimilator") && (gv_benchmarkBuildOrderSteps[lp_benchmarkStep].lv_unitType != "Refinery")))) {
         lv_result = true;
     }
     else {
@@ -5968,22 +6048,6 @@ int gf_GetCancelledStepForAbilityCommand (abilcmd lp_abilityCommand) {
         }
         else {
         }
-    }
-    return lv_result;
-}
-
-bool gf_IsBenchmarkStepStillAnObjective (int lp_benchmarkStep) {
-    // Variable Declarations
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    if ((gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep) > 0)) {
-        lv_result = true;
-    }
-    else {
-        lv_result = false;
     }
     return lv_result;
 }
@@ -6316,6 +6380,22 @@ text gf_GetPrefixNumberText (int lp_number) {
     else {
         TextExpressionSetToken("Param/Expression/BEE36255", "A", IntToText(lp_number));
         lv_result = TextExpressionAssemble("Param/Expression/BEE36255");
+    }
+    return lv_result;
+}
+
+bool gf_IsBenchmarkStepStillAnObjective (int lp_benchmarkStep) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep) >= 0)) {
+        lv_result = true;
+    }
+    else {
+        lv_result = false;
     }
     return lv_result;
 }
@@ -6913,6 +6993,26 @@ color gf_GetColorForRealStatValue (fixed lp_percentage, bool lp_higherIsBetter) 
         lv_result = Color(100.00, 0.00, 0.00);
     }
     return lv_result;
+}
+
+bool gf_IsEndBuildatMaxSupplySelected () {
+    // Implementation
+    if ((DialogControlGetSelectedItem(gv_endBuildPulldown, 1) == 1)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool gf_IsEndBuildatGameTimeSelected () {
+    // Implementation
+    if ((DialogControlGetSelectedItem(gv_endBuildPulldown, 1) == 2)) {
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 int gf_GetMapResourceIndexForUnit (unit lp_unit) {
@@ -8200,7 +8300,7 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
     TextExpressionSetToken("Param/Expression/DE9D0EE9", "B", IntToText(lv_currentStep));
     TextExpressionSetToken("Param/Expression/DE9D0EE9", "C", IntToText(lv_benchmarkStep));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/DE9D0EE9"));
-    if ((((TimerGetElapsed(gv_currentBuildBuildTimer)-gv_currentBuildOrderSteps[lv_previousUnitStep].lv_elapsedSeconds) <= gv_multipleUnitFailureThreshold) && (gf_IsUnitTypeSameAsPreviousUnitType(lv_previousUnitStep, libNtve_gf_TriggeringProgressUnitType()) == true))) {
+    if ((((TimerGetElapsed(gv_currentBuildBuildTimer)-gv_currentBuildOrderSteps[lv_previousUnitStep].lv_elapsedSeconds) <= gv_multipleUnitFailureThresholdSeconds) && (gf_IsUnitTypeSameAsPreviousUnitType(lv_previousUnitStep, libNtve_gf_TriggeringProgressUnitType()) == true))) {
         TextExpressionSetToken("Param/Expression/5A4EE543", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
         TextExpressionSetToken("Param/Expression/5A4EE543", "B", UnitTypeGetName(gv_currentBuildOrderSteps[lv_previousUnitStep].lv_unitType));
         TextExpressionSetToken("Param/Expression/5A4EE543", "C", IntToText(lv_previousUnitStep));
