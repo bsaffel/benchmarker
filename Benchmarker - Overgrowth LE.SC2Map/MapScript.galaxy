@@ -6455,17 +6455,16 @@ bool gf_IsPreviousObjectiveForUnitTypeSatisfied (string lp_unitType) {
 
     // Implementation
     auto9854ABBF_ae = 0;
-    auto9854ABBF_ai = 1;
+    auto9854ABBF_ai = -1;
     lv_step = gv_benchmarkBuildOrderStepCursor;
     for ( ; ( (auto9854ABBF_ai >= 0 && lv_step <= auto9854ABBF_ae) || (auto9854ABBF_ai <= 0 && lv_step >= auto9854ABBF_ae) ) ; lv_step += auto9854ABBF_ai ) {
-        if (((gf_IsBenchmarkStepStillAnObjective(lv_step) == true) && (gv_benchmarkBuildOrderSteps[lv_step].lv_stepType == gv_unitStepType) && (gv_benchmarkBuildOrderSteps[lv_step].lv_unitType == lp_unitType) && ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lv_step)]) == c_objectiveStateCompleted) || (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lv_step)]) == c_objectiveStateFailed)))) {
+        TextExpressionSetToken("Param/Expression/6F7DBC3A", "A", IntToText(lv_step));
+        gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/6F7DBC3A"));
+        if ((((gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_elapsedSeconds - gv_benchmarkBuildOrderSteps[lv_step].lv_elapsedSeconds) < gv_multipleUnitFailureThresholdSeconds) && (gf_IsBenchmarkStepStillAnObjective(lv_step) == true) && (gv_benchmarkBuildOrderSteps[lv_step].lv_stepType == gv_unitStepType) && (gv_benchmarkBuildOrderSteps[lv_step].lv_unitType == lp_unitType) && ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lv_step)]) == c_objectiveStateCompleted) || (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lv_step)]) == c_objectiveStateFailed)))) {
             lv_result = true;
             break;
         }
         else {
-            TextExpressionSetToken("Param/Expression/6F7DBC3A", "A", UnitTypeGetName(lp_unitType));
-            TextExpressionSetToken("Param/Expression/6F7DBC3A", "B", libNtve_gf_ConvertBooleanToText(lv_result));
-            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/6F7DBC3A"));
         }
     }
     TextExpressionSetToken("Param/Expression/74409098", "A", UnitTypeGetName(lp_unitType));
