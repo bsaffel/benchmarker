@@ -1061,6 +1061,8 @@ bool gf_IsUpgradeAnAttackDefenseUpgrade (string lp_upgrade);
 bool gf_IsUnitTypeATownHall (string lp_unitType);
 int gf_GetNumCurrentStepsForUnitType (string lp_unitType);
 int gf_GetNumCurrentTrackedArmyUnitSteps ();
+bool gf_DoesUnitUseSupply (string lp_unitType);
+fixed gf_GetSupplyCostForUnit (string lp_unitType);
 bool gf_IsUnitTypeAGasUnitWithinThreshold (string lp_unitType);
 bool gf_IsUnitTypeASupplyUnitWithinThreshold (string lp_unitType);
 bool gf_IsUnitTypeAQueenWithinThreshold (string lp_unitType);
@@ -1077,8 +1079,8 @@ int gf_GetCancelledStepForAbilityCommand (abilcmd lp_abilityCommand);
 bool gf_DoesCurrentBuildStepExistForStepIndex (int lp_stepIndex);
 int gf_GetNumTownHallUnitsInCurrentBuild (int lp_step);
 int gf_GetNumTownHallUnitsInBenchmarkBuild (int lp_step);
-bool gf_DoesUnitUseSupply (string lp_unitType);
 bool gf_ShouldPreviousStepIncrementAndEvalBeSkipped (string lp_unitType, int lp_benchmarkStep);
+bool gf_IsCancelledUnitOverItsTrackingThreshold (string lp_unitType);
 int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor);
 text gf_GetTypeTextForCurrentBuildOrderStep (int lp_stepNumber);
 text gf_GetTypeTextForBenchmarkBuildOrderStep (int lp_stepNumber);
@@ -5829,6 +5831,37 @@ int gf_GetNumCurrentTrackedArmyUnitSteps () {
     return lv_result;
 }
 
+bool gf_DoesUnitUseSupply (string lp_unitType) {
+    // Variable Declarations
+    fixed lv_supplyCost;
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_supplyCost = gf_GetSupplyCostForUnit(lp_unitType);
+    TextExpressionSetToken("Param/Expression/4CD9E3D0", "A", UnitTypeGetName(lp_unitType));
+    TextExpressionSetToken("Param/Expression/4CD9E3D0", "B", FixedToText(lv_supplyCost, 1));
+    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/4CD9E3D0"));
+    if ((lv_supplyCost < 0.0)) {
+        lv_result = true;
+    }
+    else {
+    }
+    return lv_result;
+}
+
+fixed gf_GetSupplyCostForUnit (string lp_unitType) {
+    // Variable Declarations
+    fixed lv_supplyCost;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_supplyCost = StringToFixed(CatalogFieldValueGet(c_gameCatalogUnit, lp_unitType, "Food", c_playerAny));
+    return lv_supplyCost;
+}
+
 bool gf_IsUnitTypeAGasUnitWithinThreshold (string lp_unitType) {
     // Variable Declarations
     bool lv_result;
@@ -6005,21 +6038,27 @@ int gf_GetCancelledStepForUnit (unit lp_unit, string lp_unitType) {
     lv_result = -1;
 
     // Implementation
-    auto5B3A7230_ae = 0;
-    auto5B3A7230_ai = -1;
-    lv_step = gv_maxNumCurrentBuildOrderStepsTracked;
-    for ( ; ( (auto5B3A7230_ai >= 0 && lv_step <= auto5B3A7230_ae) || (auto5B3A7230_ai <= 0 && lv_step >= auto5B3A7230_ae) ) ; lv_step += auto5B3A7230_ai ) {
-        if (((gv_currentBuildOrderSteps[lv_step].lv_stepType == gv_unitStepType) && (gv_currentBuildOrderSteps[lv_step].lv_unitType == lp_unitType) && ((UnitGroupHasUnit(gv_currentBuildOrderSteps[lv_step].lv_completingUnits, lp_unit) == true) || (gf_IsUnitTypeAStructure(lp_unitType) == false)))) {
-            lv_result = lv_step;
-            TextExpressionSetToken("Param/Expression/115CC305", "A", IntToText(lv_step));
-            TextExpressionSetToken("Param/Expression/115CC305", "B", gf_GetCurrentBuildOrderStepText(lv_step));
-            TextExpressionSetToken("Param/Expression/115CC305", "C", UnitTypeGetName(UnitGetType(EventUnit())));
-            TextExpressionSetToken("Param/Expression/115CC305", "D", libNtve_gf_ConvertBooleanToText(UnitGroupHasUnit(gv_currentBuildOrderSteps[lv_step].lv_completingUnits, lp_unit)));
-            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/115CC305"));
-            break;
+    if ((gf_IsCancelledUnitOverItsTrackingThreshold(lp_unitType) == false)) {
+        auto5B3A7230_ae = 0;
+        auto5B3A7230_ai = -1;
+        lv_step = gv_maxNumCurrentBuildOrderStepsTracked;
+        for ( ; ( (auto5B3A7230_ai >= 0 && lv_step <= auto5B3A7230_ae) || (auto5B3A7230_ai <= 0 && lv_step >= auto5B3A7230_ae) ) ; lv_step += auto5B3A7230_ai ) {
+            if (((gv_currentBuildOrderSteps[lv_step].lv_stepType == gv_unitStepType) && (gv_currentBuildOrderSteps[lv_step].lv_unitType == lp_unitType) && ((UnitGroupHasUnit(gv_currentBuildOrderSteps[lv_step].lv_completingUnits, lp_unit) == true) || (gf_IsUnitTypeAStructure(lp_unitType) == false)))) {
+                lv_result = lv_step;
+                TextExpressionSetToken("Param/Expression/115CC305", "A", IntToText(lv_step));
+                TextExpressionSetToken("Param/Expression/115CC305", "B", gf_GetCurrentBuildOrderStepText(lv_step));
+                TextExpressionSetToken("Param/Expression/115CC305", "C", UnitTypeGetName(UnitGetType(EventUnit())));
+                TextExpressionSetToken("Param/Expression/115CC305", "D", libNtve_gf_ConvertBooleanToText(UnitGroupHasUnit(gv_currentBuildOrderSteps[lv_step].lv_completingUnits, lp_unit)));
+                gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/115CC305"));
+                break;
+            }
+            else {
+            }
         }
-        else {
-        }
+    }
+    else {
+        TextExpressionSetToken("Param/Expression/72A8F03E", "A", UnitTypeGetName(UnitGetType(EventUnit())));
+        gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/72A8F03E"));
     }
     TextExpressionSetToken("Param/Expression/80923DE8", "A", IntToText(lv_result));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/80923DE8"));
@@ -6143,26 +6182,6 @@ int gf_GetNumTownHallUnitsInBenchmarkBuild (int lp_step) {
     return lv_result;
 }
 
-bool gf_DoesUnitUseSupply (string lp_unitType) {
-    // Variable Declarations
-    fixed lv_supply;
-    bool lv_result;
-
-    // Variable Initialization
-
-    // Implementation
-    lv_supply = StringToFixed(CatalogFieldValueGet(c_gameCatalogUnit, lp_unitType, "Food", c_playerAny));
-    TextExpressionSetToken("Param/Expression/4CD9E3D0", "A", UnitTypeGetName(lp_unitType));
-    TextExpressionSetToken("Param/Expression/4CD9E3D0", "B", FixedToText(lv_supply, 1));
-    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/4CD9E3D0"));
-    if ((lv_supply < 0.0)) {
-        lv_result = true;
-    }
-    else {
-    }
-    return lv_result;
-}
-
 bool gf_ShouldPreviousStepIncrementAndEvalBeSkipped (string lp_unitType, int lp_benchmarkStep) {
     // Variable Declarations
     bool lv_result;
@@ -6178,6 +6197,22 @@ bool gf_ShouldPreviousStepIncrementAndEvalBeSkipped (string lp_unitType, int lp_
     }
     TextExpressionSetToken("Param/Expression/F27A979D", "A", libNtve_gf_ConvertBooleanToText(lv_result));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/F27A979D"));
+    return lv_result;
+}
+
+bool gf_IsCancelledUnitOverItsTrackingThreshold (string lp_unitType) {
+    // Variable Declarations
+    string lv_unitType;
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((gf_IsUnitTypeAGasUnitWithinThreshold(lp_unitType) == false) && (gf_IsUnitTypeASupplyUnitWithinThreshold(lp_unitType) == false) && (gf_IsUnitTypeAQueenWithinThreshold(lp_unitType) == false) && (gf_IsUnitTypeATrackedArmyUnitWithinThreshold(lp_unitType) == false) && (gf_IsUnitTypeADetectorWithinThreshold(lp_unitType) == false))) {
+        lv_result = true;
+    }
+    else {
+    }
     return lv_result;
 }
 
@@ -8164,6 +8199,13 @@ void gt_APMBelowThreshold_Init () {
 // Trigger: Benchmark 1 Timer Expires
 //--------------------------------------------------------------------------------------------------
 bool gt_Benchmark1TimerExpires_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_paused == false))) {
+            return false;
+        }
+    }
+
     // Actions
     if (!runActions) {
         return true;
@@ -8193,6 +8235,13 @@ void gt_Benchmark1TimerExpires_Init () {
 // Trigger: Benchmark 2 Timer Expires
 //--------------------------------------------------------------------------------------------------
 bool gt_Benchmark2TimerExpires_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_paused == false))) {
+            return false;
+        }
+    }
+
     // Actions
     if (!runActions) {
         return true;
@@ -8222,6 +8271,13 @@ void gt_Benchmark2TimerExpires_Init () {
 // Trigger: Benchmark 3 Timer Expires
 //--------------------------------------------------------------------------------------------------
 bool gt_Benchmark3TimerExpires_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_paused == false))) {
+            return false;
+        }
+    }
+
     // Actions
     if (!runActions) {
         return true;
@@ -8253,7 +8309,7 @@ void gt_Benchmark3TimerExpires_Init () {
 bool gt_MaxTimeTimerElapsed_Func (bool testConds, bool runActions) {
     // Conditions
     if (testConds) {
-        if (!((gf_IsEndBuildatMaxSupplySelected() == true))) {
+        if (!(((gv_paused == false) && (gf_IsEndBuildatMaxSupplySelected() == true)))) {
             return false;
         }
     }
