@@ -817,10 +817,10 @@ void InitGlobals () {
     gv_statsOkButton = c_invalidDialogControlId;
     gv_statsDialogBuildOrderListBox = c_invalidDialogControlId;
     gv_welcomeMessageDialog = c_invalidDialogId;
-    gv_welcomeMessageDialogWidth = 500;
-    gv_welcomeMessageDialogHeight = 400;
+    gv_welcomeMessageDialogWidth = 800;
+    gv_welcomeMessageDialogHeight = 550;
     gv_welcomeMessageDialogOkButton = c_invalidDialogControlId;
-    gv_welcomeMessageDialogOkButtonWidth = 100;
+    gv_welcomeMessageDialogOkButtonWidth = 200;
     gv_welcomeMessageDialogOkButtonHeight = 50;
     gv_zergColorLight = Color(96.86, 64.31, 62.35);
     gv_terramColorLight = Color(65.88, 62.35, 84.31);
@@ -3991,9 +3991,9 @@ void gf_CloseStatsDialogandUnpause () {
 
 void gf_CreateWelcomeMessageDialog () {
     // Implementation
-    DialogCreate(gv_welcomeMessageDialogWidth, gv_welcomeMessageDialogHeight, c_anchorCenter, 0, 0, true);
+    DialogCreate(gv_welcomeMessageDialogWidth, gv_welcomeMessageDialogHeight, c_anchorCenter, 0, -200, true);
     gv_welcomeMessageDialog = DialogLastCreated();
-    libNtve_gf_CreateDialogItemButton(gv_welcomeMessageDialog, gv_welcomeMessageDialogOkButtonWidth, gv_welcomeMessageDialogOkButtonHeight, c_anchorBottom, 50, 50, StringExternal("Param/Value/D0B83A10"), StringExternal("Param/Value/F22C6BA1"), "");
+    libNtve_gf_CreateDialogItemButton(gv_welcomeMessageDialog, gv_welcomeMessageDialogOkButtonWidth, gv_welcomeMessageDialogOkButtonHeight, c_anchorBottom, 0, 50, StringExternal("Param/Value/D0B83A10"), StringExternal("Param/Value/F22C6BA1"), "");
     gv_welcomeMessageDialogOkButton = DialogControlLastCreated();
     DialogSetTitle(gv_welcomeMessageDialog, StringExternal("Param/Value/FE7D1DB6"));
     DialogSetVisible(gv_welcomeMessageDialog, PlayerGroupAll(), true);
@@ -10790,7 +10790,7 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_CreateAlertMenuDialog();
     gf_CreateStatsDialog();
     gf_CreateHelpDialog();
-    if ((gf_IsUserBankVersionCurrentWithRelease() == false)) {
+    if (true) {
         gf_CreateWelcomeMessageDialog();
         TriggerWaitForTrigger(gt_CloseWelcomeMessageDialog, true);
     }
