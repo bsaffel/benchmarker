@@ -107,6 +107,8 @@ int gv_productionIdleAlertSecondsThreshold;
 gs_ProductionIdleAlert[31] gv_productionIdleAlerts;
 int gv_productionIdleNumProductionUnitTypes;
 bank gv_benchmarkerBank;
+int gv_bankVersion;
+string gv_bankVersionKey;
 string gv_configurationOptionsSectionKey;
 string gv_alertConfigurationSectionKey;
 string gv_alertMineralsCheckEnabledEntryKey;
@@ -438,6 +440,7 @@ int gv_statsDialogTitleSpacer;
 int gv_statsDialog;
 int gv_statsOkButton;
 int gv_statsDialogBuildOrderListBox;
+int gv_welcomeMessageDialog;
 color gv_zergColorLight;
 color gv_terramColorLight;
 color gv_protossColorLight;
@@ -500,6 +503,7 @@ void InitGlobals () {
         gv_productionIdleAlerts[init_i].lv_alertTimer = TimerCreate();
         gv_productionIdleAlerts[init_i].lv_cooldownTimer = TimerCreate();
     }
+    gv_bankVersionKey = "bankVersion";
     gv_configurationOptionsSectionKey = "options";
     gv_alertConfigurationSectionKey = "";
     gv_alertMineralsCheckEnabledEntryKey = "alertMineralsEnabled";
@@ -1071,7 +1075,8 @@ bool gf_IsUnitTypeADetectorWithinThreshold (string lp_unitType);
 bool gf_IsUnitTypeValidForBuildOrder (string lp_unitType);
 bool gf_IsUpgradeTypeValidForBuildOrder (string lp_upgrade);
 bool gf_IsAbilityValidForBuildOrder (string lp_ability);
-bool gf_IsUnitTypeSameAsPreviousUnitType (int lp_previousUnitStepIndex, string lp_unitType);
+bool gf_IsCurrentUnitTypeSameAsPreviousAndWithinMultiUnitThreshold (string lp_unitType, int lp_previousStep);
+bool gf_IsUnitTypeSameAsPreviousUnitType (string lp_unitType, int lp_previousUnitStepIndex);
 bool gf_IsUnitTypeAnExplicitlyIgnoredStructureType (string lp_unitType);
 int gf_GetCancelledStepForUnit (unit lp_unit, string lp_unitType);
 int gf_GetCancelledStepForUpgrade (string lp_upgrade);
@@ -4141,19 +4146,19 @@ void gf_InitializeGameDefaults () {
     gv_alertProtossDefaultMacroEnergyThreshold = 55;
     gv_aPMThreshold = 100;
     gv_aPMThresholdDuration = 10;
-    gv_benchmarkMaxSupplyMinutes = 15;
-    gv_benchmarkMaxSupplySeconds = 0;
-    gv_benchmarkEndBuildatGameTimeMinutes = 12;
-    gv_benchmarkEndBuildatGameTimeSeconds = 30;
-    gv_benchmarkFinalSupplyatGameTimeValue = 130;
     gv_supplyBenchmarks[0].lv_benchmarkTimeMin = 6;
     gv_supplyBenchmarks[0].lv_benchmarkTimeSeconds = 0;
     gv_supplyBenchmarks[1].lv_benchmarkTimeMin = 8;
     gv_supplyBenchmarks[1].lv_benchmarkTimeSeconds = 0;
     gv_supplyBenchmarks[2].lv_benchmarkTimeMin = 10;
     gv_supplyBenchmarks[2].lv_benchmarkTimeSeconds = 0;
+    gv_benchmarkMaxSupplyMinutes = 15;
+    gv_benchmarkMaxSupplySeconds = 0;
+    gv_benchmarkEndBuildatGameTimeMinutes = 12;
+    gv_benchmarkEndBuildatGameTimeSeconds = 30;
+    gv_benchmarkFinalSupplyatGameTimeValue = 130;
     gv_enableGasTracking = true;
-    gv_gasTrackingThresholdSteps = 6;
+    gv_gasTrackingThresholdSteps = 4;
     gv_enableSupplyUnitTracking = true;
     gv_supplyUnitTrackingThresholdSteps = 5;
     gv_enableQueenTracking = true;
@@ -5869,7 +5874,7 @@ bool gf_IsUnitTypeAGasUnitWithinThreshold (string lp_unitType) {
     // Variable Initialization
 
     // Implementation
-    if (((gv_enableGasTracking == true) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery")) && ((gf_GetNumCurrentStepsForUnitType(lp_unitType) < gv_gasTrackingThresholdSteps) || (gf_IsPreviousBenchmarkStepObjectiveForUnitTypeStillActive(lp_unitType) == false)))) {
+    if (((gv_enableGasTracking == true) && ((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery")) && ((gf_GetNumCurrentStepsForUnitType(lp_unitType) < gv_gasTrackingThresholdSteps) || (gf_IsCurrentUnitTypeSameAsPreviousAndWithinMultiUnitThreshold(lp_unitType, (gv_currentBuildOrderStepCursor - 1)) == true) || ((gf_IsPreviousBenchmarkStepObjectiveForUnitTypeStillActive(lp_unitType) == true) && (gv_practiceAgainstBenchmarkBuildOrder == true))))) {
         lv_result = true;
     }
     else {
@@ -5885,7 +5890,7 @@ bool gf_IsUnitTypeASupplyUnitWithinThreshold (string lp_unitType) {
     // Variable Initialization
 
     // Implementation
-    if (((gv_enableSupplyUnitTracking == true) && ((lp_unitType == "Overlord") || (lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon")) && ((gf_GetNumCurrentStepsForUnitType(lp_unitType) < gv_supplyUnitTrackingThresholdSteps) || (gf_IsPreviousBenchmarkStepObjectiveForUnitTypeStillActive(lp_unitType) == true)))) {
+    if (((gv_enableSupplyUnitTracking == true) && ((lp_unitType == "Overlord") || (lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon")) && ((gf_GetNumCurrentStepsForUnitType(lp_unitType) < gv_supplyUnitTrackingThresholdSteps) || (gf_IsCurrentUnitTypeSameAsPreviousAndWithinMultiUnitThreshold(lp_unitType, (gv_currentBuildOrderStepCursor - 1)) == true) || ((gf_IsPreviousBenchmarkStepObjectiveForUnitTypeStillActive(lp_unitType) == true) && (gv_practiceAgainstBenchmarkBuildOrder == true))))) {
         lv_result = true;
     }
     else {
@@ -5901,7 +5906,7 @@ bool gf_IsUnitTypeAQueenWithinThreshold (string lp_unitType) {
     // Variable Initialization
 
     // Implementation
-    if (((gv_enableQueenTracking == true) && (lp_unitType == "Queen") && ((gf_GetNumCurrentStepsForUnitType(lp_unitType) < gv_queenTrackingThresholdSteps) || (gf_IsPreviousBenchmarkStepObjectiveForUnitTypeStillActive(lp_unitType) == true)))) {
+    if (((gv_enableQueenTracking == true) && (lp_unitType == "Queen") && ((gf_GetNumCurrentStepsForUnitType(lp_unitType) < gv_queenTrackingThresholdSteps) || (gf_IsCurrentUnitTypeSameAsPreviousAndWithinMultiUnitThreshold(lp_unitType, (gv_currentBuildOrderStepCursor - 1)) == true) || ((gf_IsPreviousBenchmarkStepObjectiveForUnitTypeStillActive(lp_unitType) == true) && (gv_practiceAgainstBenchmarkBuildOrder == true))))) {
         lv_result = true;
     }
     else {
@@ -5917,7 +5922,7 @@ bool gf_IsUnitTypeATrackedArmyUnitWithinThreshold (string lp_unitType) {
     // Variable Initialization
 
     // Implementation
-    if (((gv_enableArmyUnitTracking == true) && (gf_IsUnitTypeATrackedArmyUnit(lp_unitType) == true) && ((gf_GetNumCurrentTrackedArmyUnitSteps() < gv_armyUnitTrackingThresholdSteps) || (gf_IsPreviousBenchmarkStepObjectiveForUnitTypeStillActive(lp_unitType) == true) || ((gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor - 1)].lv_stepType == gv_unitStepType) && (gv_currentBuildOrderSteps[(gv_currentBuildOrderStepCursor - 1)].lv_unitType == lp_unitType))))) {
+    if (((gv_enableArmyUnitTracking == true) && (gf_IsUnitTypeATrackedArmyUnit(lp_unitType) == true) && ((gf_GetNumCurrentTrackedArmyUnitSteps() < gv_armyUnitTrackingThresholdSteps) || (gf_IsCurrentUnitTypeSameAsPreviousAndWithinMultiUnitThreshold(lp_unitType, (gv_currentBuildOrderStepCursor - 1)) == true) || ((gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsPreviousBenchmarkStepObjectiveForUnitTypeStillActive(lp_unitType) == true))))) {
         lv_result = true;
     }
     else {
@@ -5933,7 +5938,7 @@ bool gf_IsUnitTypeADetectorWithinThreshold (string lp_unitType) {
     // Variable Initialization
 
     // Implementation
-    if (((gv_enableDetectorTracking == true) && ((lp_unitType == "Observer") || (lp_unitType == "Overseer") || (lp_unitType == "Raven")) && ((gf_GetNumCurrentStepsForUnitType(lp_unitType) < gv_detectorTrackingThresholdSteps) || (gf_IsPreviousBenchmarkStepObjectiveForUnitTypeStillActive(lp_unitType) == true)))) {
+    if (((gv_enableDetectorTracking == true) && ((lp_unitType == "Observer") || (lp_unitType == "Overseer") || (lp_unitType == "Raven")) && ((gf_GetNumCurrentStepsForUnitType(lp_unitType) < gv_detectorTrackingThresholdSteps) || (gf_IsCurrentUnitTypeSameAsPreviousAndWithinMultiUnitThreshold(lp_unitType, (gv_currentBuildOrderStepCursor - 1)) == true) || ((gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsPreviousBenchmarkStepObjectiveForUnitTypeStillActive(lp_unitType) == true))))) {
         lv_result = true;
     }
     else {
@@ -5986,7 +5991,7 @@ bool gf_IsAbilityValidForBuildOrder (string lp_ability) {
     // Variable Initialization
 
     // Implementation
-    if (((lp_ability == "UpgradeToPlanetaryFortress") || (lp_ability == "UpgradeToOrbital") || (lp_ability == "UpgradeToLair") || (lp_ability == "UpgradeToHive"))) {
+    if (((lp_ability == "NexusTrainMothership") || (lp_ability == "UpgradeToPlanetaryFortress") || (lp_ability == "UpgradeToOrbital") || (lp_ability == "UpgradeToLair") || (lp_ability == "UpgradeToHive") || (lp_ability == "MorphToOverseer"))) {
         lv_result = true;
     }
     else {
@@ -5994,7 +5999,22 @@ bool gf_IsAbilityValidForBuildOrder (string lp_ability) {
     return lv_result;
 }
 
-bool gf_IsUnitTypeSameAsPreviousUnitType (int lp_previousUnitStepIndex, string lp_unitType) {
+bool gf_IsCurrentUnitTypeSameAsPreviousAndWithinMultiUnitThreshold (string lp_unitType, int lp_previousStep) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if ((((TimerGetElapsed(gv_currentBuildBuildTimer)-gv_currentBuildOrderSteps[lp_previousStep].lv_elapsedSeconds) <= gv_multipleUnitFailureThresholdSeconds) && (gf_IsUnitTypeSameAsPreviousUnitType(lp_unitType, lp_previousStep) == true))) {
+        lv_result = true;
+    }
+    else {
+    }
+    return lv_result;
+}
+
+bool gf_IsUnitTypeSameAsPreviousUnitType (string lp_unitType, int lp_previousUnitStepIndex) {
     // Variable Declarations
     int lv_previousStepUnitType;
     bool lv_result;
@@ -6002,7 +6022,7 @@ bool gf_IsUnitTypeSameAsPreviousUnitType (int lp_previousUnitStepIndex, string l
     // Variable Initialization
 
     // Implementation
-    if ((lp_unitType == gv_currentBuildOrderSteps[lp_previousUnitStepIndex].lv_unitType)) {
+    if (((gv_currentBuildOrderSteps[lp_previousUnitStepIndex].lv_stepType == gv_unitStepType) && (gv_currentBuildOrderSteps[lp_previousUnitStepIndex].lv_unitType == lp_unitType))) {
         lv_result = true;
     }
     else {
@@ -6189,7 +6209,7 @@ bool gf_ShouldPreviousStepIncrementAndEvalBeSkipped (string lp_unitType, int lp_
     // Variable Initialization
 
     // Implementation
-    if ((((gf_IsPreviousObjectiveForUnitTypeWithinMultiUnitThresholdSatisfied(lp_unitType) == true) && (gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep(lp_unitType, lp_benchmarkStep) == true)))) {
+    if ((((gf_IsPreviousObjectiveForUnitTypeWithinMultiUnitThresholdSatisfied(lp_unitType) == true) && (gf_IsUnitTypeCorrectForBenchmarkBuildOrderStep(lp_unitType, lp_benchmarkStep) == true)) || (lp_unitType == "CommandCenter") || (lp_unitType == "Hatchery") || (lp_unitType == "Nexus"))) {
         lv_result = true;
     }
     else {
@@ -7645,6 +7665,9 @@ text gf_GetFormattedAbilityNameasText (string lp_ability) {
     else if ((StringContains(lv_formattedAbilityCatalogString, "Upgrade To Hive", c_stringAnywhere, c_stringCase) == true)) {
         lv_result = "Hive";
     }
+    else if ((StringContains(lv_formattedAbilityCatalogString, "Morph To Overseer", c_stringAnywhere, c_stringCase) == true)) {
+        lv_result = "Overseer";
+    }
     else if ((StringContains(lv_formattedAbilityCatalogString, "Upgrade To Orbital", c_stringAnywhere, c_stringCase) == true)) {
         lv_result = "Orbital Command";
     }
@@ -8465,7 +8488,7 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
     TextExpressionSetToken("Param/Expression/DE9D0EE9", "B", IntToText(lv_currentStep));
     TextExpressionSetToken("Param/Expression/DE9D0EE9", "C", IntToText(lv_benchmarkStep));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/DE9D0EE9"));
-    if ((((TimerGetElapsed(gv_currentBuildBuildTimer)-gv_currentBuildOrderSteps[lv_previousUnitStep].lv_elapsedSeconds) <= gv_multipleUnitFailureThresholdSeconds) && (gf_IsUnitTypeSameAsPreviousUnitType(lv_previousUnitStep, libNtve_gf_TriggeringProgressUnitType()) == true) && (gf_ShouldPreviousStepIncrementAndEvalBeSkipped(libNtve_gf_TriggeringProgressUnitType(), lv_benchmarkStep) == false))) {
+    if (((gf_IsCurrentUnitTypeSameAsPreviousAndWithinMultiUnitThreshold(libNtve_gf_TriggeringProgressUnitType(), lv_previousUnitStep) == true) && (gf_ShouldPreviousStepIncrementAndEvalBeSkipped(libNtve_gf_TriggeringProgressUnitType(), lv_benchmarkStep) == false))) {
         TextExpressionSetToken("Param/Expression/5A4EE543", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
         TextExpressionSetToken("Param/Expression/5A4EE543", "B", UnitTypeGetName(gv_currentBuildOrderSteps[lv_previousUnitStep].lv_unitType));
         TextExpressionSetToken("Param/Expression/5A4EE543", "C", IntToText(lv_previousUnitStep));
