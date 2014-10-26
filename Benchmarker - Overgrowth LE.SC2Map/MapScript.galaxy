@@ -19,6 +19,7 @@ void InitLibs () {
 //--------------------------------------------------------------------------------------------------
 // Constants
 //--------------------------------------------------------------------------------------------------
+const int gv_benchmarkerCurrentReleaseBankVersion = 1;
 const int gv_buildOrderStepLimit = 40;
 const string gv_unitStepType = "unit";
 const string gv_upgradeStepType = "upgrade";
@@ -107,7 +108,7 @@ int gv_productionIdleAlertSecondsThreshold;
 gs_ProductionIdleAlert[31] gv_productionIdleAlerts;
 int gv_productionIdleNumProductionUnitTypes;
 bank gv_benchmarkerBank;
-int gv_bankVersion;
+string gv_globalSectionKey;
 string gv_bankVersionKey;
 string gv_configurationOptionsSectionKey;
 string gv_alertConfigurationSectionKey;
@@ -441,6 +442,11 @@ int gv_statsDialog;
 int gv_statsOkButton;
 int gv_statsDialogBuildOrderListBox;
 int gv_welcomeMessageDialog;
+int gv_welcomeMessageDialogWidth;
+int gv_welcomeMessageDialogHeight;
+int gv_welcomeMessageDialogOkButton;
+int gv_welcomeMessageDialogOkButtonWidth;
+int gv_welcomeMessageDialogOkButtonHeight;
 color gv_zergColorLight;
 color gv_terramColorLight;
 color gv_protossColorLight;
@@ -503,6 +509,7 @@ void InitGlobals () {
         gv_productionIdleAlerts[init_i].lv_alertTimer = TimerCreate();
         gv_productionIdleAlerts[init_i].lv_cooldownTimer = TimerCreate();
     }
+    gv_globalSectionKey = "global";
     gv_bankVersionKey = "bankVersion";
     gv_configurationOptionsSectionKey = "options";
     gv_alertConfigurationSectionKey = "";
@@ -809,6 +816,12 @@ void InitGlobals () {
     gv_statsDialog = c_invalidDialogId;
     gv_statsOkButton = c_invalidDialogControlId;
     gv_statsDialogBuildOrderListBox = c_invalidDialogControlId;
+    gv_welcomeMessageDialog = c_invalidDialogId;
+    gv_welcomeMessageDialogWidth = 500;
+    gv_welcomeMessageDialogHeight = 400;
+    gv_welcomeMessageDialogOkButton = c_invalidDialogControlId;
+    gv_welcomeMessageDialogOkButtonWidth = 100;
+    gv_welcomeMessageDialogOkButtonHeight = 50;
     gv_zergColorLight = Color(96.86, 64.31, 62.35);
     gv_terramColorLight = Color(65.88, 62.35, 84.31);
     gv_protossColorLight = Color(72.55, 93.33, 74.90);
@@ -872,6 +885,7 @@ void gf_LoadBenchmarkPreviewBoxConfiguration ();
 void gf_SaveAlertMenuConfiguration ();
 void gf_LoadAlertMenuConfiguration ();
 void gf_LoadAlertRowConfiguration (string lp_alertEnabledKey, string lp_alertThresholdKey, int lp_alertCheckbox, int lp_alertEditBox, int lp_defaultThresholdValue, int lp_rowNumber);
+void gf_UpdateBankVersion ();
 void gf_SaveCurrentBuildStatsAsBenchmarkBuildStats ();
 void gf_ClearBenchmarkBuildStatsForCurrentMatchup ();
 void gf_CompleteFinalBenchmarkObjective ();
@@ -983,6 +997,7 @@ void gf_CreateStatsBuildOrderListBox ();
 void gf_RefreshStatsDialog ();
 void gf_RefreshStatsDialogRow (int lp_rowOffset, text lp_labelText, text lp_statValueText);
 void gf_CloseStatsDialogandUnpause ();
+void gf_CreateWelcomeMessageDialog ();
 void gf_LogStringMessage (bool lp_typeFlag, string lp_message);
 void gf_LogTextMessage (bool lp_alertTypeFlag, text lp_message);
 void gf_DisplayDebugTimerWindowsForExistingAlertTimers ();
@@ -1058,6 +1073,7 @@ int gf_GetProductionIdleAlertIndexForTimer (timer lp_timer);
 string gf_GetIconForBuildingType (string lp_unitType);
 string gf_GetCurrentlySelectedMatchupasBankSectionKey ();
 string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
+bool gf_IsUserBankVersionCurrentWithRelease ();
 bool gf_IsUnitTypeAStructure (string lp_unitType);
 bool gf_IsUnitTypeATrackedArmyUnit (string lp_unitType);
 bool gf_IsUnitTypeDestructible (string lp_unitType);
@@ -1249,6 +1265,7 @@ trigger gt_MuteVictoryFanfare;
 trigger gt_CloseStatsandResumeBuildfromOkButton;
 trigger gt_CloseStatsandResumeBuildfromHotkey;
 trigger gt_OpenStatsDialog;
+trigger gt_CloseWelcomeMessageDialog;
 trigger gt_MapInitialization;
 trigger gt_EndGame;
 trigger gt_WorkerInGasDuringResetFix;
@@ -1901,6 +1918,12 @@ void gf_LoadAlertRowConfiguration (string lp_alertEnabledKey, string lp_alertThr
     gf_SetAlertCheckboxState(lv_checkEnabled, lp_alertCheckbox);
     gf_EnableDisableAlertRow(lv_checkEnabled, lp_rowNumber, 0);
     libNtve_gf_SetDialogItemEditorValue(lp_alertEditBox, IntToString(lv_threshold), PlayerGroupAll());
+}
+
+void gf_UpdateBankVersion () {
+    // Implementation
+    BankValueSetFromInt(gv_benchmarkerBank, gv_globalSectionKey, gv_bankVersionKey, gv_benchmarkerCurrentReleaseBankVersion);
+    BankSave(gv_benchmarkerBank);
 }
 
 void gf_SaveCurrentBuildStatsAsBenchmarkBuildStats () {
@@ -3966,6 +3989,16 @@ void gf_CloseStatsDialogandUnpause () {
     gv_isStatsDialogOpen = false;
 }
 
+void gf_CreateWelcomeMessageDialog () {
+    // Implementation
+    DialogCreate(gv_welcomeMessageDialogWidth, gv_welcomeMessageDialogHeight, c_anchorCenter, 0, 0, true);
+    gv_welcomeMessageDialog = DialogLastCreated();
+    libNtve_gf_CreateDialogItemButton(gv_welcomeMessageDialog, gv_welcomeMessageDialogOkButtonWidth, gv_welcomeMessageDialogOkButtonHeight, c_anchorBottom, 50, 50, StringExternal("Param/Value/D0B83A10"), StringExternal("Param/Value/F22C6BA1"), "");
+    gv_welcomeMessageDialogOkButton = DialogControlLastCreated();
+    DialogSetTitle(gv_welcomeMessageDialog, StringExternal("Param/Value/FE7D1DB6"));
+    DialogSetVisible(gv_welcomeMessageDialog, PlayerGroupAll(), true);
+}
+
 void gf_LogStringMessage (bool lp_typeFlag, string lp_message) {
     // Implementation
     gf_LogTextMessage(lp_typeFlag, StringToText(lp_message));
@@ -5713,6 +5746,23 @@ string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEn
     // Implementation
     lv_stepKeyString = (gv_benchmarkBuildStepEntryKeyPrefix + "_" + IntToString(lp_stepNumber) + "_" + lp_stepEntryKeySuffix);
     return lv_stepKeyString;
+}
+
+bool gf_IsUserBankVersionCurrentWithRelease () {
+    // Variable Declarations
+    int lv_userBankVersion;
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_userBankVersion = BankValueGetAsInt(gv_benchmarkerBank, gv_globalSectionKey, gv_bankVersionKey);
+    if ((lv_userBankVersion == gv_benchmarkerCurrentReleaseBankVersion)) {
+        return true;
+    }
+    else {
+    }
+    return lv_result;
 }
 
 bool gf_IsUnitTypeAStructure (string lp_unitType) {
@@ -10685,6 +10735,33 @@ void gt_OpenStatsDialog_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Close Welcome Message Dialog
+//--------------------------------------------------------------------------------------------------
+bool gt_CloseWelcomeMessageDialog_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((EventDialogControl() == gv_welcomeMessageDialogOkButton))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gf_UpdateBankVersion();
+    DialogSetVisible(gv_welcomeMessageDialog, PlayerGroupAll(), false);
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_CloseWelcomeMessageDialog_Init () {
+    gt_CloseWelcomeMessageDialog = TriggerCreate("gt_CloseWelcomeMessageDialog_Func");
+    TriggerAddEventDialogControl(gt_CloseWelcomeMessageDialog, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeClick);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Map Initialization
 //--------------------------------------------------------------------------------------------------
 bool gt_MapInitialization_Func (bool testConds, bool runActions) {
@@ -10710,16 +10787,22 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_InitializeUnitsAndStartingResources(false);
     gf_PauseGame();
     gf_InitializeBenchmarkDialog();
-    gf_ShowBenchmarkDialog();
     gf_CreateAlertMenuDialog();
     gf_CreateStatsDialog();
     gf_CreateHelpDialog();
+    if (true) {
+        gf_CreateWelcomeMessageDialog();
+        TriggerWaitForTrigger(gt_CloseWelcomeMessageDialog, true);
+    }
+    else {
+    }
     gf_InitializePostBuildReportDialog();
     gf_CreateScreenButtons();
     TimerWindowCreate(gv_currentBuildBuildTimer, StringExternal("Param/Value/EAED3202"), true, true);
     TimerWindowSetAnchor(TimerWindowLastCreated(), c_anchorTopRight, 0, 0);
     gf_LoadBenchmarkMenuConfiguration(gf_GetCurrentlySelectedMatchupasBankSectionKey());
     gf_LoadAlertMenuConfiguration();
+    gf_ShowBenchmarkDialog();
     gf_CreateHiddenBenchmarkSupplyObjectives();
     return true;
 }
@@ -10949,6 +11032,7 @@ void InitTriggers () {
     gt_CloseStatsandResumeBuildfromOkButton_Init();
     gt_CloseStatsandResumeBuildfromHotkey_Init();
     gt_OpenStatsDialog_Init();
+    gt_CloseWelcomeMessageDialog_Init();
     gt_MapInitialization_Init();
     gt_EndGame_Init();
     gt_WorkerInGasDuringResetFix_Init();
