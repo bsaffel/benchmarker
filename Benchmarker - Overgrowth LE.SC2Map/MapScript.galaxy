@@ -910,7 +910,7 @@ void gf_CycleBenchmarkBuildOrderObjectives (int lp_currentStep, int lp_benchmark
 void gf_AdjustAllBenchmarkBuildOrderObjectivePositionsUpby1 ();
 void gf_DestroyBenchmarkBuildOrderObjectives ();
 void gf_UpdateBenchmarkBuildOrderStepCursor (int lp_benchmarkStep);
-void gf_HighlightBenchmarkBuildOrderObjective (int lp_step);
+void gf_HighlightBenchmarkBuildOrderObjective (int lp_benchmarkStep);
 void gf_UnHighlightBenchmarkBuildOrderObjective (int lp_step);
 void gf_InitializeBenchmarkBuildOrder ();
 void gf_EvaluateUnitTypeForBenchmarkBuildOrderStep (string lp_unitType, int lp_currentStep, int lp_benchmarkStep);
@@ -1102,6 +1102,7 @@ bool gf_DoesCurrentBuildStepExistForStepIndex (int lp_stepIndex);
 int gf_GetNumTownHallUnitsInCurrentBuild (int lp_step);
 int gf_GetNumTownHallUnitsInBenchmarkBuild (int lp_step);
 bool gf_ShouldPreviousStepIncrementAndEvalBeSkipped (string lp_unitType, int lp_benchmarkStep);
+bool gf_IsUnitTypeSubjectToTrackingThreshold (string lp_unitType);
 bool gf_IsCancelledUnitOverItsTrackingThreshold (string lp_unitType);
 int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor);
 text gf_GetTypeTextForCurrentBuildOrderStep (int lp_stepNumber);
@@ -2332,7 +2333,7 @@ void gf_DestroyBenchmarkBuildOrderObjectives () {
 
 void gf_UpdateBenchmarkBuildOrderStepCursor (int lp_benchmarkStep) {
     // Implementation
-    if ((gf_AreCurrentAndPreviousStepsAllSatisfied(lp_benchmarkStep) == true)) {
+    if (((gf_DoesBenchmarkBuildHaveAnotherStepToDisplay(lp_benchmarkStep) == true) && (gf_AreCurrentAndPreviousStepsAllSatisfied(lp_benchmarkStep) == true))) {
         gv_benchmarkBuildOrderStepCursor = gf_GetNextIncompleteBenchmarkBuildOrderStep(gv_currentBuildOrderStepCursor);
         gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
     }
@@ -2341,18 +2342,18 @@ void gf_UpdateBenchmarkBuildOrderStepCursor (int lp_benchmarkStep) {
     }
 }
 
-void gf_HighlightBenchmarkBuildOrderObjective (int lp_step) {
+void gf_HighlightBenchmarkBuildOrderObjective (int lp_benchmarkStep) {
     // Variable Declarations
     int lv_objectiveIndex;
 
     // Variable Initialization
 
     // Implementation
-    lv_objectiveIndex = gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_step);
-    TextExpressionSetToken("Param/Expression/4FF3063D", "A", null);
-    TextExpressionSetToken("Param/Expression/4FF3063D", "B", IntToText(lp_step));
-    gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/4FF3063D"));
-    TextExpressionSetToken("Param/Expression/F715B5A3", "A", ObjectiveGetName(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_step)]));
+    lv_objectiveIndex = gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep);
+    TextExpressionSetToken("Param/Expression/4FF3063D", "A", gf_GetBenchmarkBuildOrderStepText(lp_benchmarkStep));
+    TextExpressionSetToken("Param/Expression/4FF3063D", "B", IntToText(lp_benchmarkStep));
+    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/4FF3063D"));
+    TextExpressionSetToken("Param/Expression/F715B5A3", "A", ObjectiveGetName(gv_benchmarkBuildOrderStepObjectives[lv_objectiveIndex]));
     ObjectiveSetName(gv_benchmarkBuildOrderStepObjectives[lv_objectiveIndex], TextExpressionAssemble("Param/Expression/F715B5A3"));
 }
 
@@ -6124,7 +6125,7 @@ int gf_GetCancelledStepForUnit (unit lp_unit, string lp_unitType) {
     lv_result = -1;
 
     // Implementation
-    if ((gf_IsCancelledUnitOverItsTrackingThreshold(lp_unitType) == false)) {
+    if (((gf_IsUnitTypeSubjectToTrackingThreshold(lp_unitType) == false) || ((gf_IsUnitTypeSubjectToTrackingThreshold(lp_unitType) == true) && (gf_IsCancelledUnitOverItsTrackingThreshold(lp_unitType) == false)))) {
         auto5B3A7230_ae = 0;
         auto5B3A7230_ai = -1;
         lv_step = gv_maxNumCurrentBuildOrderStepsTracked;
@@ -6283,6 +6284,21 @@ bool gf_ShouldPreviousStepIncrementAndEvalBeSkipped (string lp_unitType, int lp_
     }
     TextExpressionSetToken("Param/Expression/F27A979D", "A", libNtve_gf_ConvertBooleanToText(lv_result));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/F27A979D"));
+    return lv_result;
+}
+
+bool gf_IsUnitTypeSubjectToTrackingThreshold (string lp_unitType) {
+    // Variable Declarations
+    bool lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    if (((lp_unitType == "Extractor") || (lp_unitType == "Assimilator") || (lp_unitType == "Refinery") || (lp_unitType == "Overlord") || (lp_unitType == "SupplyDepot") || (lp_unitType == "Pylon") || (lp_unitType == "Queen") || (gf_IsUnitTypeATrackedArmyUnit(lp_unitType) == true) || (lp_unitType == "Observer") || (lp_unitType == "Overseer") || (lp_unitType == "Raven"))) {
+        lv_result = true;
+    }
+    else {
+    }
     return lv_result;
 }
 
