@@ -2332,10 +2332,23 @@ void gf_DestroyBenchmarkBuildOrderObjectives () {
 }
 
 void gf_UpdateBenchmarkBuildOrderStepCursor (int lp_benchmarkStep) {
+    // Variable Declarations
+    int lv_nextBenchmarkStep;
+
+    // Variable Initialization
+
     // Implementation
-    if (((gf_DoesBenchmarkBuildHaveAnotherStepToDisplay(lp_benchmarkStep) == true) && (gf_AreCurrentAndPreviousStepsAllSatisfied(lp_benchmarkStep) == true))) {
-        gv_benchmarkBuildOrderStepCursor = gf_GetNextIncompleteBenchmarkBuildOrderStep(gv_currentBuildOrderStepCursor);
-        gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
+    if (((gf_BenchmarkBuildHasNextObjectiveForStep(lp_benchmarkStep) == true) && (gf_AreCurrentAndPreviousStepsAllSatisfied(lp_benchmarkStep) == true))) {
+        lv_nextBenchmarkStep = gf_GetNextIncompleteBenchmarkBuildOrderStep(gv_currentBuildOrderStepCursor);
+        if ((lv_nextBenchmarkStep >= 0)) {
+            gv_benchmarkBuildOrderStepCursor = lv_nextBenchmarkStep;
+            TextExpressionSetToken("Param/Expression/0807C09A", "A", IntToText(gv_benchmarkBuildOrderStepCursor));
+            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/0807C09A"));
+            gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
+        }
+        else {
+            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/2AC47707"));
+        }
     }
     else {
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/DAADA450"));
@@ -6732,6 +6745,7 @@ int gf_GetNextIncompleteBenchmarkBuildOrderStep (int lp_benchmarkStep) {
     int lv_result;
 
     // Variable Initialization
+    lv_result = -1;
 
     // Implementation
     lv_benchmarkStep = lp_benchmarkStep;
