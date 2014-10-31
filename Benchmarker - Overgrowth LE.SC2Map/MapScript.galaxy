@@ -867,10 +867,11 @@ void gf_LoadBooleanFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_e
 void gf_SaveRealAsBuildBenchmark (fixed lp_value, string lp_entryKey);
 void gf_SaveCurrentBuildAsBenchmarkBuildOrderForCurrentMatchup ();
 void gf_LoadBenchmarkBuildOrderforCurrentMatchup ();
-void gf_ClearBenchmarkBuild (string lp_build);
+void gf_ClearAllBenchmarkBuildOrders ();
+void gf_ClearBenchmarkBuildOrder (string lp_buildKey);
 void gf_SaveBenchmarkBuildStep (int lp_stepNumber);
 void gf_LoadBenchmarkBuildStep (int lp_stepNumber);
-void gf_ClearBenchmarkBuildStep (int lp_stepNumber);
+void gf_ClearBenchmarkBuildStep (int lp_stepNumber, string lp_buildKey);
 void gf_SaveBenchmarkMenuConfiguration (string lp_sectionKey);
 void gf_RefreshSupplyBenchmarksConfigurationValuesFromDialog ();
 void gf_RefreshBuildCompletionConfigurationValuesFromDialog ();
@@ -999,7 +1000,6 @@ void gf_RefreshStatsDialogRow (int lp_rowOffset, text lp_labelText, text lp_stat
 void gf_CloseStatsDialogandUnpause ();
 void gf_CreateWelcomeMessageDialog ();
 void gf_PopulateWelcomeMessageDialogBetaPatch3 ();
-void gf_ClearAllBuilds ();
 void gf_LogStringMessage (bool lp_typeFlag, string lp_message);
 void gf_LogTextMessage (bool lp_alertTypeFlag, text lp_message);
 void gf_DisplayDebugTimerWindowsForExistingAlertTimers ();
@@ -1262,7 +1262,7 @@ trigger gt_CloseHelpandResumeBuildfromHotkey;
 trigger gt_OpenHelpDialog;
 trigger gt_OpenPostBuildReportDialog;
 trigger gt_SaveBenchmarkBuildStats;
-trigger gt_ResetBenchmarkBuildStats;
+trigger gt_ClearBenchmarkBuildStats;
 trigger gt_ReturntoMainMenufromReport;
 trigger gt_UpdateSupplyBenchmarksonButtonClick;
 trigger gt_MuteVictoryFanfare;
@@ -1577,7 +1577,21 @@ void gf_LoadBenchmarkBuildOrderforCurrentMatchup () {
     }
 }
 
-void gf_ClearBenchmarkBuild (string lp_build) {
+void gf_ClearAllBenchmarkBuildOrders () {
+    // Implementation
+    gf_ClearBenchmarkBuildOrder(gv_pvPMatchupSectionKey);
+    gf_ClearBenchmarkBuildOrder(gv_pvTMatchupSectionKey);
+    gf_ClearBenchmarkBuildOrder(gv_pvZMatchupSectionKey);
+    gf_ClearBenchmarkBuildOrder(gv_tvPMatchupSectionKey);
+    gf_ClearBenchmarkBuildOrder(gv_tvTMatchupSectionKey);
+    gf_ClearBenchmarkBuildOrder(gv_tvZMatchupSectionKey);
+    gf_ClearBenchmarkBuildOrder(gv_zvPMatchupSectionKey);
+    gf_ClearBenchmarkBuildOrder(gv_zvTMatchupSectionKey);
+    gf_ClearBenchmarkBuildOrder(gv_zvZMatchupSectionKey);
+    BankSave(gv_benchmarkerBank);
+}
+
+void gf_ClearBenchmarkBuildOrder (string lp_buildKey) {
     int autoD5F67844_ae;
     int autoD5F67844_ai;
 
@@ -1587,17 +1601,18 @@ void gf_ClearBenchmarkBuild (string lp_build) {
     // Variable Initialization
 
     // Implementation
-    TextExpressionSetToken("Param/Expression/1FC7C52A", "A", StringToText(lp_build));
+    TextExpressionSetToken("Param/Expression/1FC7C52A", "A", StringToText(lp_buildKey));
     gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/1FC7C52A"));
     autoD5F67844_ae = gv_numBenchmarkBuildOrderSteps;
     autoD5F67844_ai = 1;
     lv_currentStepNum = 0;
     for ( ; ( (autoD5F67844_ai >= 0 && lv_currentStepNum <= autoD5F67844_ae) || (autoD5F67844_ai <= 0 && lv_currentStepNum >= autoD5F67844_ae) ) ; lv_currentStepNum += autoD5F67844_ai ) {
-        gf_ClearBenchmarkBuildStep(lv_currentStepNum);
+        gf_ClearBenchmarkBuildStep(lv_currentStepNum, lp_buildKey);
     }
-    BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey);
-    BankValueSetFromFlag(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_practiceAgainstBenchmarkBuildOrderKey, false);
-    BankValueSetFromFlag(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_displayBuildHintsKey, false);
+    BankKeyRemove(gv_benchmarkerBank, lp_buildKey, gv_numBenchmarkBuildOrderStepsEntryKey);
+    BankValueSetFromFlag(gv_benchmarkerBank, lp_buildKey, gv_practiceAgainstBenchmarkBuildOrderKey, false);
+    BankValueSetFromFlag(gv_benchmarkerBank, lp_buildKey, gv_displayBuildHintsKey, false);
+    BankValueSetFromFlag(gv_benchmarkerBank, lp_buildKey, gv_displayPerformanceFeedbackKey, false);
     BankSave(gv_benchmarkerBank);
 }
 
@@ -1640,14 +1655,15 @@ void gf_LoadBenchmarkBuildStep (int lp_stepNumber) {
     gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_elapsedSecondsBuildOrderStepEntryKey));
 }
 
-void gf_ClearBenchmarkBuildStep (int lp_stepNumber) {
+void gf_ClearBenchmarkBuildStep (int lp_stepNumber, string lp_buildKey) {
     // Implementation
-    BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_stepTypeBuildOrderStepEntryKey));
-    BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_unitTypeBuildOrderStepEntryKey));
-    BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_upgradeBuildOrderStepEntryKey));
-    BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_supplyBuildOrderStepEntryKey));
-    BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_amountBuildOrderStepEntryKey));
-    BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_elapsedSecondsBuildOrderStepEntryKey));
+    BankKeyRemove(gv_benchmarkerBank, lp_buildKey, gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_stepTypeBuildOrderStepEntryKey));
+    BankKeyRemove(gv_benchmarkerBank, lp_buildKey, gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_unitTypeBuildOrderStepEntryKey));
+    BankKeyRemove(gv_benchmarkerBank, lp_buildKey, gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_upgradeBuildOrderStepEntryKey));
+    BankKeyRemove(gv_benchmarkerBank, lp_buildKey, gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_abilityBuildOrderStepEntryKey));
+    BankKeyRemove(gv_benchmarkerBank, lp_buildKey, gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_supplyBuildOrderStepEntryKey));
+    BankKeyRemove(gv_benchmarkerBank, lp_buildKey, gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_amountBuildOrderStepEntryKey));
+    BankKeyRemove(gv_benchmarkerBank, lp_buildKey, gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_elapsedSecondsBuildOrderStepEntryKey));
 }
 
 void gf_SaveBenchmarkMenuConfiguration (string lp_sectionKey) {
@@ -4036,9 +4052,6 @@ void gf_PopulateWelcomeMessageDialogBetaPatch3 () {
 
     // Implementation
     libNtve_gf_CreateDialogItemLabel(gv_welcomeMessageDialog, lv_labelWidth, lv_labelHeight, c_anchorTopLeft, 50, 25, StringExternal("Param/Value/AC176055"), ColorWithAlpha(0,0,0,0), false, 2.0);
-}
-
-void gf_ClearAllBuilds () {
 }
 
 void gf_LogStringMessage (bool lp_typeFlag, string lp_message) {
@@ -10274,6 +10287,7 @@ bool gt_ClearSavedBenchmarkBuildforMatchuponButtonPress_Func (bool testConds, bo
         return true;
     }
 
+    gf_ClearBenchmarkBuildOrder(gf_GetCurrentlySelectedMatchupasBankSectionKey());
     gf_ClearBenchmarkBuildStatsForCurrentMatchup();
     libNtve_gf_SetDialogItemChecked(gv_practiceAgainstSavedBuildOrderCheckbox, false, PlayerGroupAll());
     DialogControlSetEnabled(gv_practiceAgainstSavedBuildOrderCheckbox, PlayerGroupAll(), false);
@@ -10578,9 +10592,9 @@ void gt_SaveBenchmarkBuildStats_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Reset Benchmark Build Stats
+// Trigger: Clear Benchmark Build Stats
 //--------------------------------------------------------------------------------------------------
-bool gt_ResetBenchmarkBuildStats_Func (bool testConds, bool runActions) {
+bool gt_ClearBenchmarkBuildStats_Func (bool testConds, bool runActions) {
     // Conditions
     if (testConds) {
         if (!((EventDialogControl() == gv_postBuildReportClearBuildButton))) {
@@ -10595,13 +10609,14 @@ bool gt_ResetBenchmarkBuildStats_Func (bool testConds, bool runActions) {
 
     gf_ClearBenchmarkBuildStatsForCurrentMatchup();
     gf_UpdatePostBuildReportDialogValues(false);
+    gf_ClearBenchmarkBuildOrder(gf_GetCurrentlySelectedMatchupasBankSectionKey());
     return true;
 }
 
 //--------------------------------------------------------------------------------------------------
-void gt_ResetBenchmarkBuildStats_Init () {
-    gt_ResetBenchmarkBuildStats = TriggerCreate("gt_ResetBenchmarkBuildStats_Func");
-    TriggerAddEventDialogControl(gt_ResetBenchmarkBuildStats, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeClick);
+void gt_ClearBenchmarkBuildStats_Init () {
+    gt_ClearBenchmarkBuildStats = TriggerCreate("gt_ClearBenchmarkBuildStats_Func");
+    TriggerAddEventDialogControl(gt_ClearBenchmarkBuildStats, c_playerAny, c_invalidDialogControlId, c_triggerControlEventTypeClick);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -10833,7 +10848,7 @@ bool gt_CloseWelcomeMessageDialog_Func (bool testConds, bool runActions) {
     }
 
     gf_UpdateBankVersion();
-    gf_ClearAllBuilds();
+    gf_ClearAllBenchmarkBuildOrders();
     DialogSetVisible(gv_welcomeMessageDialog, PlayerGroupAll(), false);
     return true;
 }
@@ -10873,7 +10888,7 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_CreateAlertMenuDialog();
     gf_CreateStatsDialog();
     gf_CreateHelpDialog();
-    if (true) {
+    if ((gf_IsUserBankVersionCurrentWithRelease() == false)) {
         gf_CreateWelcomeMessageDialog();
         TriggerWaitForTrigger(gt_CloseWelcomeMessageDialog, true);
     }
@@ -11108,7 +11123,7 @@ void InitTriggers () {
     gt_OpenHelpDialog_Init();
     gt_OpenPostBuildReportDialog_Init();
     gt_SaveBenchmarkBuildStats_Init();
-    gt_ResetBenchmarkBuildStats_Init();
+    gt_ClearBenchmarkBuildStats_Init();
     gt_ReturntoMainMenufromReport_Init();
     gt_UpdateSupplyBenchmarksonButtonClick_Init();
     gt_MuteVictoryFanfare_Init();
