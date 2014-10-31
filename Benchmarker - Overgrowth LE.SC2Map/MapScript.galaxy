@@ -818,7 +818,7 @@ void InitGlobals () {
     gv_statsDialogBuildOrderListBox = c_invalidDialogControlId;
     gv_welcomeMessageDialog = c_invalidDialogId;
     gv_welcomeMessageDialogWidth = 1000;
-    gv_welcomeMessageDialogHeight = 750;
+    gv_welcomeMessageDialogHeight = 625;
     gv_welcomeMessageDialogOkButton = c_invalidDialogControlId;
     gv_welcomeMessageDialogOkButtonWidth = 200;
     gv_welcomeMessageDialogOkButtonHeight = 60;
@@ -867,7 +867,7 @@ void gf_LoadBooleanFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_e
 void gf_SaveRealAsBuildBenchmark (fixed lp_value, string lp_entryKey);
 void gf_SaveCurrentBuildAsBenchmarkBuildOrderForCurrentMatchup ();
 void gf_LoadBenchmarkBuildOrderforCurrentMatchup ();
-void gf_ClearBenchmarkBuildOrderforCurrentMatchup ();
+void gf_ClearBenchmarkBuild (string lp_build);
 void gf_SaveBenchmarkBuildStep (int lp_stepNumber);
 void gf_LoadBenchmarkBuildStep (int lp_stepNumber);
 void gf_ClearBenchmarkBuildStep (int lp_stepNumber);
@@ -999,6 +999,7 @@ void gf_RefreshStatsDialogRow (int lp_rowOffset, text lp_labelText, text lp_stat
 void gf_CloseStatsDialogandUnpause ();
 void gf_CreateWelcomeMessageDialog ();
 void gf_PopulateWelcomeMessageDialogBetaPatch3 ();
+void gf_ClearAllBuilds ();
 void gf_LogStringMessage (bool lp_typeFlag, string lp_message);
 void gf_LogTextMessage (bool lp_alertTypeFlag, text lp_message);
 void gf_DisplayDebugTimerWindowsForExistingAlertTimers ();
@@ -1104,12 +1105,12 @@ int gf_GetNumTownHallUnitsInBenchmarkBuild (int lp_step);
 bool gf_ShouldPreviousStepIncrementAndEvalBeSkipped (string lp_unitType, int lp_benchmarkStep);
 bool gf_IsUnitTypeSubjectToTrackingThreshold (string lp_unitType);
 bool gf_IsCancelledUnitOverItsTrackingThreshold (string lp_unitType);
-int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor);
-text gf_GetTypeTextForCurrentBuildOrderStep (int lp_stepNumber);
-text gf_GetTypeTextForBenchmarkBuildOrderStep (int lp_stepNumber);
+int gf_GetObjectiveIndexforBenchmarkStep (int lp_cursor);
+text gf_GetTypeTextForCurrentStep (int lp_stepNumber);
+text gf_GetTypeTextForBenchmarkStep (int lp_stepNumber);
 text gf_GetCurrentBuildOrderStepText (int lp_stepNumber);
 text gf_GetBenchmarkBuildOrderStepText (int lp_stepNumber);
-text gf_GetFormattedCompleteBenchmarkBuildOrderStepText (int lp_currentStep, int lp_benchmarkStep);
+text gf_GetFormattedCompleteBenchmarkStepText (int lp_currentStep, int lp_benchmarkStep);
 color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber);
 text gf_GetSupplyforCurrentBuildOrderStepasText (int lp_currentStep);
 int gf_GetSupplyforCurrentBuildOrderStep (int lp_currentStep);
@@ -1129,14 +1130,15 @@ bool gf_IsThereAnUnsatisfiedBenchmarkBuildObjective ();
 int gf_GetStepIndexForPreviousUnitStep (int lp_previousStep);
 int gf_GetStepIndexForPreviousUpgradeStep (int lp_previousStep);
 int gf_GetStepIndexForPreviousAbilityStep (int lp_previousStep);
+bool gf_DoesBenchmarkBuildHaveAnotherStepToLoad (int lp_benchmarkStep);
 bool gf_DoesBenchmarkBuildHaveAnotherStepToDisplay (int lp_benchmarkStep);
-int gf_GetNextDisplayedBenchmarkStep (int lp_benchmarkStep);
+int gf_GetNextLoadedBenchmarkStep (int lp_benchmarkStep);
 bool gf_IsTimeraMultiUnitFailureTimer (timer lp_timer);
 int gf_GetBenchmarkStepForMultiUnitFailureTimer (timer lp_timer);
 bool gf_IsBenchmarkStepWithinToleranceWindow (int lp_evaluatedBenchmarkStep, int lp_currentBenchmarkStep);
 bool gf_AreCurrentAndPreviousStepsAllSatisfied (int lp_benchmarkStep);
 bool gf_BenchmarkBuildHasPreviousObjectiveForStep (int lp_benchmarkStep);
-bool gf_BenchmarkBuildHasNextObjectiveForStep (int lp_benchmarkStep);
+bool gf_BenchmarkBuildHasObjectiveForStep (int lp_benchmarkStep);
 fixed gf_GetAverageResourceCollectionRate ();
 fixed gf_GetAverageUnspentResources ();
 int gf_GetAverageUnspentMinerals ();
@@ -1575,7 +1577,7 @@ void gf_LoadBenchmarkBuildOrderforCurrentMatchup () {
     }
 }
 
-void gf_ClearBenchmarkBuildOrderforCurrentMatchup () {
+void gf_ClearBenchmarkBuild (string lp_build) {
     int autoD5F67844_ae;
     int autoD5F67844_ai;
 
@@ -1585,12 +1587,9 @@ void gf_ClearBenchmarkBuildOrderforCurrentMatchup () {
     // Variable Initialization
 
     // Implementation
-    if ((gv_debugBankEnabled == true)) {
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/F1506C2B"));
-    }
-    else {
-    }
-    autoD5F67844_ae = (gv_currentBuildOrderStepCursor-1);
+    TextExpressionSetToken("Param/Expression/1FC7C52A", "A", StringToText(lp_build));
+    gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/1FC7C52A"));
+    autoD5F67844_ae = gv_numBenchmarkBuildOrderSteps;
     autoD5F67844_ai = 1;
     lv_currentStepNum = 0;
     for ( ; ( (autoD5F67844_ai >= 0 && lv_currentStepNum <= autoD5F67844_ae) || (autoD5F67844_ai <= 0 && lv_currentStepNum >= autoD5F67844_ae) ) ; lv_currentStepNum += autoD5F67844_ai ) {
@@ -2220,11 +2219,11 @@ void gf_CompleteObjectiveForBenchmarkBuildOrderStep (int lp_currentStep, int lp_
 
     // Implementation
     TextExpressionSetToken("Param/Expression/5CCA6BB6", "A", IntToText(lp_benchmarkStep));
-    TextExpressionSetToken("Param/Expression/5CCA6BB6", "B", IntToText(gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep)));
+    TextExpressionSetToken("Param/Expression/5CCA6BB6", "B", IntToText(gf_GetObjectiveIndexforBenchmarkStep(lp_benchmarkStep)));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/5CCA6BB6"));
-    lv_objectiveText = gf_GetFormattedCompleteBenchmarkBuildOrderStepText(lp_currentStep, lp_benchmarkStep);
-    ObjectiveSetName(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep)], lv_objectiveText);
-    ObjectiveSetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep)], c_objectiveStateCompleted);
+    lv_objectiveText = gf_GetFormattedCompleteBenchmarkStepText(lp_currentStep, lp_benchmarkStep);
+    ObjectiveSetName(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkStep(lp_benchmarkStep)], lv_objectiveText);
+    ObjectiveSetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkStep(lp_benchmarkStep)], c_objectiveStateCompleted);
     gv_numCompletedBenchmarkBuildOrderSteps += 1;
     gv_currentBuildOrderSteps[lp_currentStep].lv_finishedBenchmarkStepReference = lp_benchmarkStep;
 }
@@ -2240,15 +2239,15 @@ void gf_FailObjectiveForBenchmarkBuildOrderStep (int lp_currentStep, int lp_benc
         lv_incorrectUnitText = StringExternal("Param/Value/26EB1C7A");
     }
     else {
-        lv_incorrectUnitText = gf_GetTypeTextForCurrentBuildOrderStep(lp_currentStep);
+        lv_incorrectUnitText = gf_GetTypeTextForCurrentStep(lp_currentStep);
     }
     TextExpressionSetToken("Param/Expression/E3F2B274", "A", IntToText(lp_benchmarkStep));
-    TextExpressionSetToken("Param/Expression/E3F2B274", "B", IntToText(gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep)));
+    TextExpressionSetToken("Param/Expression/E3F2B274", "B", IntToText(gf_GetObjectiveIndexforBenchmarkStep(lp_benchmarkStep)));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/E3F2B274"));
     TextExpressionSetToken("Param/Expression/C89BB602", "A", gf_GetBenchmarkBuildOrderStepText(lp_benchmarkStep));
     TextExpressionSetToken("Param/Expression/C89BB602", "B", lv_incorrectUnitText);
-    ObjectiveSetName(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep)], TextExpressionAssemble("Param/Expression/C89BB602"));
-    ObjectiveSetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep)], c_objectiveStateFailed);
+    ObjectiveSetName(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkStep(lp_benchmarkStep)], TextExpressionAssemble("Param/Expression/C89BB602"));
+    ObjectiveSetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkStep(lp_benchmarkStep)], c_objectiveStateFailed);
     gv_numFailedBenchmarkBuildOrderSteps += 1;
     gv_currentBuildOrderSteps[lp_currentStep].lv_finishedBenchmarkStepReference = lp_benchmarkStep;
 }
@@ -2260,7 +2259,7 @@ void gf_ResetObjectiveForBenchmarkBuildOrderStep (int lp_benchmarkStep) {
     // Variable Initialization
 
     // Implementation
-    lv_objectiveIndex = gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep);
+    lv_objectiveIndex = gf_GetObjectiveIndexforBenchmarkStep(lp_benchmarkStep);
     ObjectiveSetState(gv_benchmarkBuildOrderStepObjectives[lv_objectiveIndex], c_objectiveStateActive);
     ObjectiveSetName(gv_benchmarkBuildOrderStepObjectives[lv_objectiveIndex], gf_GetBenchmarkBuildOrderStepText(lp_benchmarkStep));
 }
@@ -2268,21 +2267,25 @@ void gf_ResetObjectiveForBenchmarkBuildOrderStep (int lp_benchmarkStep) {
 void gf_CycleBenchmarkBuildOrderObjectives (int lp_currentStep, int lp_benchmarkStep) {
     // Variable Declarations
     int lv_firstObjective;
-    int lv_nextDisplayedBenchmarkStep;
+    int lv_nextLoadedBenchmarkStep;
 
     // Variable Initialization
 
     // Implementation
-    lv_nextDisplayedBenchmarkStep = gf_GetNextDisplayedBenchmarkStep(lp_benchmarkStep);
-    gf_LogStringMessage(gv_debugBuildOrderEnabled, ("Current: " + IntToString(lp_currentStep) + " | Benchmark: " + IntToString(lp_benchmarkStep) + " | Threshold: " + IntToString(gv_benchmarkBuildOrderObjectiveCycleThreshold) + " | hasNext is = " + libNtve_gf_ConvertBooleanToString(gf_DoesBenchmarkBuildHaveAnotherStepToDisplay(lp_currentStep)) + " | Next: " + IntToString(lv_nextDisplayedBenchmarkStep)));
-    if (((gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep) >= gv_benchmarkBuildOrderObjectiveCycleThreshold) && (gf_DoesBenchmarkBuildHaveAnotherStepToDisplay(lp_benchmarkStep) == true) && (gf_AreCurrentAndPreviousStepsAllSatisfied(lp_benchmarkStep) == true))) {
-        gf_CreateBenchmarkBuildOrderStepasSecondaryObjective(lv_nextDisplayedBenchmarkStep);
-        TextExpressionSetToken("Param/Expression/B1D812BC", "A", IntToText(lv_nextDisplayedBenchmarkStep));
-        TextExpressionSetToken("Param/Expression/B1D812BC", "B", gf_GetBenchmarkBuildOrderStepText(lv_nextDisplayedBenchmarkStep));
-        gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/B1D812BC"));
+    lv_nextLoadedBenchmarkStep = gf_GetNextLoadedBenchmarkStep(lp_benchmarkStep);
+    gf_LogStringMessage(gv_debugBuildOrderEnabled, ("Current: " + IntToString(lp_currentStep) + " | Benchmark: " + IntToString(lp_benchmarkStep) + " | Threshold: " + IntToString(gv_benchmarkBuildOrderObjectiveCycleThreshold) + " | hasNext is = " + libNtve_gf_ConvertBooleanToString(gf_DoesBenchmarkBuildHaveAnotherStepToDisplay(lp_benchmarkStep)) + " | Next: " + IntToString(lv_nextLoadedBenchmarkStep)));
+    if (((gf_GetObjectiveIndexforBenchmarkStep(lp_benchmarkStep) >= gv_benchmarkBuildOrderObjectiveCycleThreshold) && (gf_DoesBenchmarkBuildHaveAnotherStepToDisplay(lp_benchmarkStep) == true) && (gf_AreCurrentAndPreviousStepsAllSatisfied(lp_benchmarkStep) == true))) {
         ObjectiveDestroy(gv_benchmarkBuildOrderStepObjectives[lv_firstObjective]);
         gf_AdjustAllBenchmarkBuildOrderObjectivePositionsUpby1();
-        gv_benchmarkBuildOrderStepObjectives[gv_maxDisplayedBuildOrderObjectivesIndex] = ObjectiveLastCreated();
+        if ((gf_DoesBenchmarkBuildHaveAnotherStepToLoad(lp_benchmarkStep) == true)) {
+            gf_CreateBenchmarkBuildOrderStepasSecondaryObjective(lv_nextLoadedBenchmarkStep);
+            TextExpressionSetToken("Param/Expression/B1D812BC", "A", IntToText(lv_nextLoadedBenchmarkStep));
+            TextExpressionSetToken("Param/Expression/B1D812BC", "B", gf_GetBenchmarkBuildOrderStepText(lv_nextLoadedBenchmarkStep));
+            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/B1D812BC"));
+            gv_benchmarkBuildOrderStepObjectives[gv_maxDisplayedBuildOrderObjectivesIndex] = ObjectiveLastCreated();
+        }
+        else {
+        }
         gv_buildOrderCycleOffset += 1;
     }
     else {
@@ -2310,6 +2313,7 @@ void gf_AdjustAllBenchmarkBuildOrderObjectivePositionsUpby1 () {
     for ( ; ( (autoA714F11A_ai >= 0 && lv_i <= autoA714F11A_ae) || (autoA714F11A_ai <= 0 && lv_i >= autoA714F11A_ae) ) ; lv_i += autoA714F11A_ai ) {
         gv_benchmarkBuildOrderStepObjectives[lv_i] = gv_benchmarkBuildOrderStepObjectives[(lv_i+1)];
     }
+    gv_benchmarkBuildOrderStepObjectives[gv_maxDisplayedBuildOrderObjectivesIndex] = c_invalidObjectiveId;
 }
 
 void gf_DestroyBenchmarkBuildOrderObjectives () {
@@ -2338,16 +2342,21 @@ void gf_UpdateBenchmarkBuildOrderStepCursor (int lp_benchmarkStep) {
     // Variable Initialization
 
     // Implementation
-    if (((gf_BenchmarkBuildHasNextObjectiveForStep(lp_benchmarkStep) == true) && (gf_AreCurrentAndPreviousStepsAllSatisfied(lp_benchmarkStep) == true))) {
-        lv_nextBenchmarkStep = gf_GetNextIncompleteBenchmarkBuildOrderStep(gv_currentBuildOrderStepCursor);
-        if ((lv_nextBenchmarkStep >= 0)) {
-            gv_benchmarkBuildOrderStepCursor = lv_nextBenchmarkStep;
-            TextExpressionSetToken("Param/Expression/0807C09A", "A", IntToText(gv_benchmarkBuildOrderStepCursor));
-            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/0807C09A"));
-            gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
+    if ((gf_AreCurrentAndPreviousStepsAllSatisfied(lp_benchmarkStep) == true)) {
+        if ((gf_BenchmarkBuildHasObjectiveForStep((lp_benchmarkStep + 1)) == true)) {
+            lv_nextBenchmarkStep = gf_GetNextIncompleteBenchmarkBuildOrderStep(lp_benchmarkStep);
+            if ((lv_nextBenchmarkStep >= 0)) {
+                gv_benchmarkBuildOrderStepCursor = lv_nextBenchmarkStep;
+                TextExpressionSetToken("Param/Expression/0807C09A", "A", IntToText(gv_benchmarkBuildOrderStepCursor));
+                gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/0807C09A"));
+                gf_HighlightBenchmarkBuildOrderObjective(gv_benchmarkBuildOrderStepCursor);
+            }
+            else {
+                gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/2AC47707"));
+            }
         }
         else {
-            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/2AC47707"));
+            gv_benchmarkBuildOrderStepCursor += 1;
         }
     }
     else {
@@ -2362,7 +2371,7 @@ void gf_HighlightBenchmarkBuildOrderObjective (int lp_benchmarkStep) {
     // Variable Initialization
 
     // Implementation
-    lv_objectiveIndex = gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep);
+    lv_objectiveIndex = gf_GetObjectiveIndexforBenchmarkStep(lp_benchmarkStep);
     TextExpressionSetToken("Param/Expression/4FF3063D", "A", gf_GetBenchmarkBuildOrderStepText(lp_benchmarkStep));
     TextExpressionSetToken("Param/Expression/4FF3063D", "B", IntToText(lp_benchmarkStep));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/4FF3063D"));
@@ -2377,7 +2386,7 @@ void gf_UnHighlightBenchmarkBuildOrderObjective (int lp_step) {
     // Variable Initialization
 
     // Implementation
-    lv_objectiveIndex = gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_step);
+    lv_objectiveIndex = gf_GetObjectiveIndexforBenchmarkStep(lp_step);
     ObjectiveSetName(gv_benchmarkBuildOrderStepObjectives[lv_objectiveIndex], gf_GetBenchmarkBuildOrderStepText(lp_step));
 }
 
@@ -2694,7 +2703,7 @@ bool auto_gf_DisplayPerformanceFeedbackForFailedStep_TriggerFunc (bool testConds
         lv_failureText = StringExternal("Param/Value/43FA7647");
     }
     else {
-        TextExpressionSetToken("Param/Expression/484F7C30", "A", gf_GetTypeTextForCurrentBuildOrderStep(lp_currentStep));
+        TextExpressionSetToken("Param/Expression/484F7C30", "A", gf_GetTypeTextForCurrentStep(lp_currentStep));
         lv_failureText = TextExpressionAssemble("Param/Expression/484F7C30");
     }
     TextExpressionSetToken("Param/Expression/A76B73DD", "A", lv_judgementText);
@@ -4026,7 +4035,10 @@ void gf_PopulateWelcomeMessageDialogBetaPatch3 () {
     lv_labelWidth = (gv_welcomeMessageDialogWidth - 100);
 
     // Implementation
-    libNtve_gf_CreateDialogItemLabel(gv_welcomeMessageDialog, lv_labelWidth, lv_labelHeight, c_anchorTopLeft, 50, 100, StringExternal("Param/Value/AC176055"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    libNtve_gf_CreateDialogItemLabel(gv_welcomeMessageDialog, lv_labelWidth, lv_labelHeight, c_anchorTopLeft, 50, 25, StringExternal("Param/Value/AC176055"), ColorWithAlpha(0,0,0,0), false, 2.0);
+}
+
+void gf_ClearAllBuilds () {
 }
 
 void gf_LogStringMessage (bool lp_typeFlag, string lp_message) {
@@ -6331,7 +6343,7 @@ bool gf_IsCancelledUnitOverItsTrackingThreshold (string lp_unitType) {
     return lv_result;
 }
 
-int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor) {
+int gf_GetObjectiveIndexforBenchmarkStep (int lp_cursor) {
     // Variable Declarations
     int lv_result;
 
@@ -6342,7 +6354,7 @@ int gf_GetObjectiveIndexforBenchmarkBuildOrderStep (int lp_cursor) {
     return lv_result;
 }
 
-text gf_GetTypeTextForCurrentBuildOrderStep (int lp_stepNumber) {
+text gf_GetTypeTextForCurrentStep (int lp_stepNumber) {
     // Variable Declarations
     string lv_stepType;
     text lv_result;
@@ -6369,7 +6381,7 @@ text gf_GetTypeTextForCurrentBuildOrderStep (int lp_stepNumber) {
     return lv_result;
 }
 
-text gf_GetTypeTextForBenchmarkBuildOrderStep (int lp_stepNumber) {
+text gf_GetTypeTextForBenchmarkStep (int lp_stepNumber) {
     // Variable Declarations
     string lv_stepType;
     text lv_result;
@@ -6415,7 +6427,7 @@ text gf_GetCurrentBuildOrderStepText (int lp_stepNumber) {
     }
     else {
     }
-    lv_typeText = gf_GetTypeTextForCurrentBuildOrderStep(lp_stepNumber);
+    lv_typeText = gf_GetTypeTextForCurrentStep(lp_stepNumber);
     lv_elapsedTimeText = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_currentBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
     TextExpressionSetToken("Param/Expression/81102448", "A", lv_supplyText);
     TextExpressionSetToken("Param/Expression/81102448", "D", lv_amountText);
@@ -6444,7 +6456,7 @@ text gf_GetBenchmarkBuildOrderStepText (int lp_stepNumber) {
     }
     else {
     }
-    lv_typeText = gf_GetTypeTextForBenchmarkBuildOrderStep(lp_stepNumber);
+    lv_typeText = gf_GetTypeTextForBenchmarkStep(lp_stepNumber);
     lv_elapsedTimeText = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
     TextExpressionSetToken("Param/Expression/1734DB71", "A", lv_supplyText);
     TextExpressionSetToken("Param/Expression/1734DB71", "D", lv_amountText);
@@ -6454,7 +6466,7 @@ text gf_GetBenchmarkBuildOrderStepText (int lp_stepNumber) {
     return lv_resultText;
 }
 
-text gf_GetFormattedCompleteBenchmarkBuildOrderStepText (int lp_currentStep, int lp_benchmarkStep) {
+text gf_GetFormattedCompleteBenchmarkStepText (int lp_currentStep, int lp_benchmarkStep) {
     // Variable Declarations
     text lv_result;
 
@@ -6592,7 +6604,7 @@ bool gf_IsBenchmarkStepStillAnObjective (int lp_benchmarkStep) {
     // Variable Initialization
 
     // Implementation
-    if ((gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep) >= 0)) {
+    if ((gf_GetObjectiveIndexforBenchmarkStep(lp_benchmarkStep) >= 0)) {
         lv_result = true;
     }
     else {
@@ -6618,7 +6630,7 @@ bool gf_IsPreviousObjectiveForUnitTypeWithinMultiUnitThresholdSatisfied (string 
     for ( ; ( (auto9854ABBF_ai >= 0 && lv_step <= auto9854ABBF_ae) || (auto9854ABBF_ai <= 0 && lv_step >= auto9854ABBF_ae) ) ; lv_step += auto9854ABBF_ai ) {
         TextExpressionSetToken("Param/Expression/6F7DBC3A", "A", IntToText(lv_step));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/6F7DBC3A"));
-        if ((((gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_elapsedSeconds - gv_benchmarkBuildOrderSteps[lv_step].lv_elapsedSeconds) < gv_multipleUnitFailureThresholdSeconds) && (gf_IsBenchmarkStepStillAnObjective(lv_step) == true) && (gv_benchmarkBuildOrderSteps[lv_step].lv_stepType == gv_unitStepType) && (gv_benchmarkBuildOrderSteps[lv_step].lv_unitType == lp_unitType) && ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lv_step)]) == c_objectiveStateCompleted) || (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lv_step)]) == c_objectiveStateFailed)))) {
+        if ((((gv_benchmarkBuildOrderSteps[gv_benchmarkBuildOrderStepCursor].lv_elapsedSeconds - gv_benchmarkBuildOrderSteps[lv_step].lv_elapsedSeconds) < gv_multipleUnitFailureThresholdSeconds) && (gf_IsBenchmarkStepStillAnObjective(lv_step) == true) && (gv_benchmarkBuildOrderSteps[lv_step].lv_stepType == gv_unitStepType) && (gv_benchmarkBuildOrderSteps[lv_step].lv_unitType == lp_unitType) && ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkStep(lv_step)]) == c_objectiveStateCompleted) || (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkStep(lv_step)]) == c_objectiveStateFailed)))) {
             lv_result = true;
             break;
         }
@@ -6646,7 +6658,7 @@ bool gf_IsPreviousBenchmarkStepObjectiveForUnitTypeStillActive (string lp_unitTy
     auto3D3BBB53_ai = -1;
     lv_step = gv_benchmarkBuildOrderStepCursor;
     for ( ; ( (auto3D3BBB53_ai >= 0 && lv_step <= auto3D3BBB53_ae) || (auto3D3BBB53_ai <= 0 && lv_step >= auto3D3BBB53_ae) ) ; lv_step += auto3D3BBB53_ai ) {
-        if (((gf_IsBenchmarkStepStillAnObjective(lv_step) == true) && (gv_benchmarkBuildOrderSteps[lv_step].lv_stepType == gv_unitStepType) && (gv_benchmarkBuildOrderSteps[lv_step].lv_unitType == lp_unitType) && (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lv_step)]) == c_objectiveStateActive))) {
+        if (((gf_IsBenchmarkStepStillAnObjective(lv_step) == true) && (gv_benchmarkBuildOrderSteps[lv_step].lv_stepType == gv_unitStepType) && (gv_benchmarkBuildOrderSteps[lv_step].lv_unitType == lp_unitType) && (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkStep(lv_step)]) == c_objectiveStateActive))) {
             lv_result = true;
             break;
         }
@@ -6749,8 +6761,8 @@ int gf_GetNextIncompleteBenchmarkBuildOrderStep (int lp_benchmarkStep) {
 
     // Implementation
     lv_benchmarkStep = lp_benchmarkStep;
-    while ((gf_BenchmarkBuildHasNextObjectiveForStep(lv_benchmarkStep) == true)) {
-        if ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lv_benchmarkStep)]) == c_objectiveStateActive)) {
+    while ((gf_BenchmarkBuildHasObjectiveForStep(lv_benchmarkStep) == true)) {
+        if ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkStep(lv_benchmarkStep)]) == c_objectiveStateActive)) {
             lv_result = lv_benchmarkStep;
             break;
         }
@@ -6758,6 +6770,8 @@ int gf_GetNextIncompleteBenchmarkBuildOrderStep (int lp_benchmarkStep) {
         }
         lv_benchmarkStep += 1;
     }
+    TextExpressionSetToken("Param/Expression/EDB85204", "A", IntToText(lv_result));
+    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/EDB85204"));
     return lv_result;
 }
 
@@ -6778,7 +6792,7 @@ int gf_GetFirstIncompleteBenchmarkBuildOrderStep (int lp_benchmarkStep) {
     lv_benchmarkStep = 0;
     for ( ; ( (auto030AEF93_ai >= 0 && lv_benchmarkStep <= auto030AEF93_ae) || (auto030AEF93_ai <= 0 && lv_benchmarkStep >= auto030AEF93_ae) ) ; lv_benchmarkStep += auto030AEF93_ai ) {
         if ((gf_IsBenchmarkStepStillAnObjective(lv_benchmarkStep) == true)) {
-            if ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lv_benchmarkStep)]) == c_objectiveStateActive)) {
+            if ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkStep(lv_benchmarkStep)]) == c_objectiveStateActive)) {
                 lv_result = lv_benchmarkStep;
                 break;
             }
@@ -6809,11 +6823,17 @@ bool gf_IsThereAnUnsatisfiedBenchmarkBuildObjective () {
     lv_objective = 0;
     for ( ; ( (auto3779B647_ai >= 0 && lv_objective <= auto3779B647_ae) || (auto3779B647_ai <= 0 && lv_objective >= auto3779B647_ae) ) ; lv_objective += auto3779B647_ai ) {
         if ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[lv_objective]) == c_objectiveStateActive)) {
+            TextExpressionSetToken("Param/Expression/8C641E5A", "A", IntToText(lv_objective));
+            TextExpressionSetToken("Param/Expression/8C641E5A", "B", ObjectiveGetName(gv_benchmarkBuildOrderStepObjectives[lv_objective]));
+            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/8C641E5A"));
             lv_result = true;
+            break;
         }
         else {
         }
     }
+    TextExpressionSetToken("Param/Expression/747B134B", "A", libNtve_gf_ConvertBooleanToText(lv_result));
+    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/747B134B"));
     return lv_result;
 }
 
@@ -6892,6 +6912,22 @@ int gf_GetStepIndexForPreviousAbilityStep (int lp_previousStep) {
     return lv_mostRecentAbilityIndex;
 }
 
+bool gf_DoesBenchmarkBuildHaveAnotherStepToLoad (int lp_benchmarkStep) {
+    // Variable Declarations
+    int lv_nextLoadedStep;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_nextLoadedStep = (gf_GetNextLoadedBenchmarkStep(lp_benchmarkStep));
+    if ((lv_nextLoadedStep < gv_numBenchmarkBuildOrderSteps)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 bool gf_DoesBenchmarkBuildHaveAnotherStepToDisplay (int lp_benchmarkStep) {
     // Variable Declarations
     int lv_nextVisibleStep;
@@ -6899,7 +6935,7 @@ bool gf_DoesBenchmarkBuildHaveAnotherStepToDisplay (int lp_benchmarkStep) {
     // Variable Initialization
 
     // Implementation
-    lv_nextVisibleStep = gf_GetNextDisplayedBenchmarkStep(lp_benchmarkStep);
+    lv_nextVisibleStep = (gf_GetNextLoadedBenchmarkStep(lp_benchmarkStep) - 1);
     if ((lv_nextVisibleStep < gv_numBenchmarkBuildOrderSteps)) {
         return true;
     }
@@ -6908,7 +6944,7 @@ bool gf_DoesBenchmarkBuildHaveAnotherStepToDisplay (int lp_benchmarkStep) {
     }
 }
 
-int gf_GetNextDisplayedBenchmarkStep (int lp_benchmarkStep) {
+int gf_GetNextLoadedBenchmarkStep (int lp_benchmarkStep) {
     // Variable Declarations
     int lv_result;
 
@@ -6998,7 +7034,7 @@ bool gf_AreCurrentAndPreviousStepsAllSatisfied (int lp_benchmarkStep) {
     lv_result = true;
 
     // Implementation
-    auto7038C3D7_ae = gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lp_benchmarkStep);
+    auto7038C3D7_ae = gf_GetObjectiveIndexforBenchmarkStep(lp_benchmarkStep);
     auto7038C3D7_ai = 1;
     lv_objectiveIndex = 0;
     for ( ; ( (auto7038C3D7_ai >= 0 && lv_objectiveIndex <= auto7038C3D7_ae) || (auto7038C3D7_ai <= 0 && lv_objectiveIndex >= auto7038C3D7_ae) ) ; lv_objectiveIndex += auto7038C3D7_ai ) {
@@ -7019,7 +7055,7 @@ bool gf_BenchmarkBuildHasPreviousObjectiveForStep (int lp_benchmarkStep) {
     // Variable Initialization
 
     // Implementation
-    if (((gf_GetObjectiveIndexforBenchmarkBuildOrderStep((lp_benchmarkStep - 1)) >= 0) && (gf_GetObjectiveIndexforBenchmarkBuildOrderStep((lp_benchmarkStep - 1)) <= gv_maxDisplayedBuildOrderObjectivesIndex))) {
+    if (((gf_GetObjectiveIndexforBenchmarkStep((lp_benchmarkStep - 1)) >= 0) && (gf_GetObjectiveIndexforBenchmarkStep((lp_benchmarkStep - 1)) <= gv_maxDisplayedBuildOrderObjectivesIndex))) {
         lv_result = true;
     }
     else {
@@ -7027,14 +7063,16 @@ bool gf_BenchmarkBuildHasPreviousObjectiveForStep (int lp_benchmarkStep) {
     return lv_result;
 }
 
-bool gf_BenchmarkBuildHasNextObjectiveForStep (int lp_benchmarkStep) {
+bool gf_BenchmarkBuildHasObjectiveForStep (int lp_benchmarkStep) {
     // Variable Declarations
+    int lv_nextBenchmarkObjectiveIndex;
     bool lv_result;
 
     // Variable Initialization
+    lv_nextBenchmarkObjectiveIndex = gf_GetObjectiveIndexforBenchmarkStep(lp_benchmarkStep);
 
     // Implementation
-    if (((gf_GetObjectiveIndexforBenchmarkBuildOrderStep((lp_benchmarkStep + 1)) >= 0) && (gf_GetObjectiveIndexforBenchmarkBuildOrderStep((lp_benchmarkStep + 1)) <= gv_maxDisplayedBuildOrderObjectivesIndex))) {
+    if ((((lv_nextBenchmarkObjectiveIndex >= 0) && (lv_nextBenchmarkObjectiveIndex <= gv_maxDisplayedBuildOrderObjectivesIndex)) && (gv_benchmarkBuildOrderStepObjectives[lv_nextBenchmarkObjectiveIndex] != c_invalidObjectiveId))) {
         lv_result = true;
     }
     else {
@@ -8594,7 +8632,7 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
         TextExpressionSetToken("Param/Expression/9057FDA6", "B", IntToText(lv_previousUnitStep));
         TextExpressionSetToken("Param/Expression/9057FDA6", "A", gf_GetCurrentBuildOrderStepText(lv_previousUnitStep));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/9057FDA6"));
-        if (((gv_practiceAgainstBenchmarkBuildOrder == true) && (gv_numBenchmarkBuildOrderSteps > 0) && (gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == true) && (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lv_benchmarkStep)]) == c_objectiveStateActive) && (gv_currentBuildOrderSteps[lv_previousUnitStep].lv_finishedBenchmarkStepReference == -1))) {
+        if (((gv_practiceAgainstBenchmarkBuildOrder == true) && (gv_numBenchmarkBuildOrderSteps > 0) && (gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == true) && (ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkStep(lv_benchmarkStep)]) == c_objectiveStateActive) && (gv_currentBuildOrderSteps[lv_previousUnitStep].lv_finishedBenchmarkStepReference == -1))) {
             gf_EvaluateUnitTypeForBenchmarkBuildOrderStep(libNtve_gf_TriggeringProgressUnitType(), lv_previousUnitStep, lv_benchmarkStep);
         }
         else {
@@ -8965,14 +9003,14 @@ bool gt_OnMultipleUnitFailureTimerExpires_Func (bool testConds, bool runActions)
     }
     gv_buildOrderStepLock = true;
     lv_timerStepNumber = gf_GetBenchmarkStepForMultiUnitFailureTimer(EventTimer());
-    if ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lv_timerStepNumber)]) == c_objectiveStateActive)) {
+    if ((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkStep(lv_timerStepNumber)]) == c_objectiveStateActive)) {
         TextExpressionSetToken("Param/Expression/721980B5", "A", UnitTypeGetName(gv_benchmarkBuildOrderSteps[lv_timerStepNumber].lv_unitType));
         TextExpressionSetToken("Param/Expression/721980B5", "B", IntToText(lv_timerStepNumber));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/721980B5"));
         gf_FailBenchmarkStepObjectiveAndCycle(gv_currentBuildOrderStepCursor, lv_timerStepNumber, true);
     }
     else {
-        TextExpressionSetToken("Param/Expression/B6C363B5", "B", IntToText(gf_GetObjectiveIndexforBenchmarkBuildOrderStep(lv_timerStepNumber)));
+        TextExpressionSetToken("Param/Expression/B6C363B5", "B", IntToText(gf_GetObjectiveIndexforBenchmarkStep(lv_timerStepNumber)));
         TextExpressionSetToken("Param/Expression/B6C363B5", "A", IntToText(lv_timerStepNumber));
         gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/B6C363B5"));
     }
@@ -9014,7 +9052,7 @@ bool gt_ForkBuildOrder_Func (bool testConds, bool runActions) {
     gv_practiceAgainstBenchmarkBuildOrder = false;
     auto991C8C82_ae = gv_maxDisplayedBuildOrderObjectivesIndex;
     auto991C8C82_ai = 1;
-    lv_i = gf_GetObjectiveIndexforBenchmarkBuildOrderStep(gv_benchmarkBuildOrderStepCursor);
+    lv_i = gf_GetObjectiveIndexforBenchmarkStep(gv_benchmarkBuildOrderStepCursor);
     for ( ; ( (auto991C8C82_ai >= 0 && lv_i <= auto991C8C82_ae) || (auto991C8C82_ai <= 0 && lv_i >= auto991C8C82_ae) ) ; lv_i += auto991C8C82_ai ) {
         ObjectiveDestroy(gv_benchmarkBuildOrderStepObjectives[lv_i]);
         Wait(0.1, c_timeGame);
@@ -10236,7 +10274,6 @@ bool gt_ClearSavedBenchmarkBuildforMatchuponButtonPress_Func (bool testConds, bo
         return true;
     }
 
-    gf_ClearBenchmarkBuildOrderforCurrentMatchup();
     gf_ClearBenchmarkBuildStatsForCurrentMatchup();
     libNtve_gf_SetDialogItemChecked(gv_practiceAgainstSavedBuildOrderCheckbox, false, PlayerGroupAll());
     DialogControlSetEnabled(gv_practiceAgainstSavedBuildOrderCheckbox, PlayerGroupAll(), false);
@@ -10558,7 +10595,6 @@ bool gt_ResetBenchmarkBuildStats_Func (bool testConds, bool runActions) {
 
     gf_ClearBenchmarkBuildStatsForCurrentMatchup();
     gf_UpdatePostBuildReportDialogValues(false);
-    gf_ClearBenchmarkBuildOrderforCurrentMatchup();
     return true;
 }
 
@@ -10797,6 +10833,7 @@ bool gt_CloseWelcomeMessageDialog_Func (bool testConds, bool runActions) {
     }
 
     gf_UpdateBankVersion();
+    gf_ClearAllBuilds();
     DialogSetVisible(gv_welcomeMessageDialog, PlayerGroupAll(), false);
     return true;
 }
