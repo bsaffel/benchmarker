@@ -342,12 +342,17 @@ int gv_removeBuildDialogListBoxWidth;
 int gv_removeBuildDialogListBoxHeight;
 int gv_removeBuildDialogOkButton;
 int gv_removeBuildDialogCancelButton;
-int gv_selectBuildSectionLabel;
-int gv_buildSelectionPulldown;
-int gv_buildSelectionPulldownWidth;
+int gv_configureBuildDialog;
+int gv_configureBuildDialogWidth;
+int gv_configureBuildDialogHeight;
 int gv_buildSelectionConfigureButton;
 int gv_buildSelectionConfigureButtonWidth;
 int gv_buildSelectionConfigureButtonHeight;
+int gv_configureBuildDialogOkButton;
+int gv_configureBuildDialogCancelButton;
+int gv_selectBuildSectionLabel;
+int gv_buildSelectionPulldown;
+int gv_buildSelectionPulldownWidth;
 int gv_buildSelectionAddButton;
 int gv_buildSelectionRemoveButton;
 int gv_buildSelectionSectionHeight;
@@ -743,12 +748,17 @@ void InitGlobals () {
     gv_removeBuildDialogListBoxHeight = (gv_removeBuildDialogHeight-170);
     gv_removeBuildDialogOkButton = c_invalidDialogControlId;
     gv_removeBuildDialogCancelButton = c_invalidDialogControlId;
-    gv_selectBuildSectionLabel = c_invalidDialogControlId;
-    gv_buildSelectionPulldown = c_invalidDialogControlId;
-    gv_buildSelectionPulldownWidth = 615;
+    gv_configureBuildDialog = c_invalidDialogId;
+    gv_configureBuildDialogWidth = 950;
+    gv_configureBuildDialogHeight = 700;
     gv_buildSelectionConfigureButton = c_invalidDialogControlId;
     gv_buildSelectionConfigureButtonWidth = 150;
     gv_buildSelectionConfigureButtonHeight = 35;
+    gv_configureBuildDialogOkButton = c_invalidDialogControlId;
+    gv_configureBuildDialogCancelButton = c_invalidDialogControlId;
+    gv_selectBuildSectionLabel = c_invalidDialogControlId;
+    gv_buildSelectionPulldown = c_invalidDialogControlId;
+    gv_buildSelectionPulldownWidth = 615;
     gv_buildSelectionAddButton = c_invalidDialogControlId;
     gv_buildSelectionRemoveButton = c_invalidDialogControlId;
     gv_buildSelectionSectionHeight = (gv_sectionLabelHeight+gv_menuRowHeight+gv_menuSectionSpacer);
@@ -1021,6 +1031,7 @@ void gf_InitializeBuildSelectionRow ();
 void gf_CreateBuildSelectionPulldown ();
 void gf_CreateAddBuildDialog ();
 void gf_CreateRemoveBuildDialog ();
+void gf_CreateConfigureBuildDialog ();
 void gf_InitializeBuildOrderPreviewSection ();
 void gf_InitializeBenchmarkSupplySection ();
 void gf_CreateSupplyValueEditBox (text lp_labelText, int lp_rowNumber, int lp_defaultValue);
@@ -1331,6 +1342,9 @@ trigger gt_AddBuildDialogCancelButtonClicked;
 trigger gt_RemoveBuildButtonClicked;
 trigger gt_RemoveBuildDialogOkButtonClicked;
 trigger gt_RemoveBuildDialogCancelButtonClicked;
+trigger gt_ConfigureBuildButtonClicked;
+trigger gt_ConfigureBuildDialogOkButtonClicked;
+trigger gt_ConfigureBuildDialogCancelButtonClicked;
 trigger gt_BuildSelectionChanged;
 trigger gt_EndBuildAtMaxSupplySelected;
 trigger gt_EndBuildAtGameTimeSelected;
@@ -3357,6 +3371,30 @@ void gf_CreateRemoveBuildDialog () {
     gv_removeBuildDialogCancelButton = DialogControlLastCreated();
     libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_buildDialogButtonWidth, gv_buildDialogButtonHeight, c_anchorBottom, lv_buttonXOffset, lv_buttonYOffset, StringExternal("Param/Value/94F4FE94"), StringExternal("Param/Value/B22870B2"), "");
     gv_removeBuildDialogOkButton = DialogControlLastCreated();
+    DialogSetVisible(DialogLastCreated(), PlayerGroupAll(), false);
+}
+
+void gf_CreateConfigureBuildDialog () {
+    // Variable Declarations
+    int lv_dialogYOffset;
+    int lv_titleOffset;
+    int lv_buttonXOffset;
+    int lv_buttonYOffset;
+
+    // Variable Initialization
+    lv_dialogYOffset = -150;
+    lv_titleOffset = 15;
+    lv_buttonXOffset = ((gv_buildDialogButtonWidth/2) + 5);
+    lv_buttonYOffset = 35;
+
+    // Implementation
+    DialogCreate(gv_configureBuildDialogWidth, gv_configureBuildDialogHeight, c_anchorCenter, 0, lv_dialogYOffset, true);
+    gv_configureBuildDialog = DialogLastCreated();
+    DialogSetTitle(DialogLastCreated(), StringExternal("Param/Value/213B59BF"));
+    libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_buildDialogButtonWidth, gv_buildDialogButtonHeight, c_anchorBottom, (-lv_buttonXOffset), lv_buttonYOffset, StringExternal("Param/Value/741A896A"), StringExternal("Param/Value/00B2096C"), "");
+    gv_configureBuildDialogCancelButton = DialogControlLastCreated();
+    libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_buildDialogButtonWidth, gv_buildDialogButtonHeight, c_anchorBottom, lv_buttonXOffset, lv_buttonYOffset, StringExternal("Param/Value/5BB21B34"), StringExternal("Param/Value/EC9BA9F0"), "");
+    gv_configureBuildDialogOkButton = DialogControlLastCreated();
     DialogSetVisible(DialogLastCreated(), PlayerGroupAll(), false);
 }
 
@@ -10567,6 +10605,87 @@ void gt_RemoveBuildDialogCancelButtonClicked_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Configure Build Button Clicked
+//--------------------------------------------------------------------------------------------------
+bool gt_ConfigureBuildButtonClicked_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((EventDialogControl() == gv_buildSelectionConfigureButton))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gf_DisableEnableBenchmarkDialog(false);
+    DialogSetVisible(gv_configureBuildDialog, PlayerGroupAll(), true);
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_ConfigureBuildButtonClicked_Init () {
+    gt_ConfigureBuildButtonClicked = TriggerCreate("gt_ConfigureBuildButtonClicked_Func");
+    TriggerAddEventDialogControl(gt_ConfigureBuildButtonClicked, 1, c_invalidDialogControlId, c_triggerControlEventTypeClick);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Configure Build Dialog Ok Button Clicked
+//--------------------------------------------------------------------------------------------------
+bool gt_ConfigureBuildDialogOkButtonClicked_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((EventDialogControl() == gv_configureBuildDialogOkButton))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    DialogSetVisible(gv_configureBuildDialog, PlayerGroupAll(), false);
+    gf_DisableEnableBenchmarkDialog(true);
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_ConfigureBuildDialogOkButtonClicked_Init () {
+    gt_ConfigureBuildDialogOkButtonClicked = TriggerCreate("gt_ConfigureBuildDialogOkButtonClicked_Func");
+    TriggerAddEventDialogControl(gt_ConfigureBuildDialogOkButtonClicked, 1, c_invalidDialogControlId, c_triggerControlEventTypeClick);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Configure Build Dialog Cancel Button Clicked
+//--------------------------------------------------------------------------------------------------
+bool gt_ConfigureBuildDialogCancelButtonClicked_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((EventDialogControl() == gv_configureBuildDialogCancelButton))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    DialogSetVisible(gv_configureBuildDialog, PlayerGroupAll(), false);
+    gf_DisableEnableBenchmarkDialog(true);
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_ConfigureBuildDialogCancelButtonClicked_Init () {
+    gt_ConfigureBuildDialogCancelButtonClicked = TriggerCreate("gt_ConfigureBuildDialogCancelButtonClicked_Func");
+    TriggerAddEventDialogControl(gt_ConfigureBuildDialogCancelButtonClicked, 1, c_invalidDialogControlId, c_triggerControlEventTypeClick);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Build Selection Changed
 //--------------------------------------------------------------------------------------------------
 bool gt_BuildSelectionChanged_Func (bool testConds, bool runActions) {
@@ -11320,6 +11439,7 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_CreateHelpDialog();
     gf_CreateAddBuildDialog();
     gf_CreateRemoveBuildDialog();
+    gf_CreateConfigureBuildDialog();
     if ((gf_IsUserBankVersionCurrentWithRelease() == false)) {
         gf_CreateWelcomeMessageDialog();
         TriggerWaitForTrigger(gt_CloseWelcomeMessageDialog, true);
@@ -11547,6 +11667,9 @@ void InitTriggers () {
     gt_RemoveBuildButtonClicked_Init();
     gt_RemoveBuildDialogOkButtonClicked_Init();
     gt_RemoveBuildDialogCancelButtonClicked_Init();
+    gt_ConfigureBuildButtonClicked_Init();
+    gt_ConfigureBuildDialogOkButtonClicked_Init();
+    gt_ConfigureBuildDialogCancelButtonClicked_Init();
     gt_BuildSelectionChanged_Init();
     gt_EndBuildAtMaxSupplySelected_Init();
     gt_EndBuildAtGameTimeSelected_Init();
