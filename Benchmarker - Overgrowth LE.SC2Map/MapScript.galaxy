@@ -318,6 +318,7 @@ int gv_currentlySelectedMatchupIndex;
 int gv_currentlySelectedMatchupButton;
 string gv_currentlySelectedMatchupBankKey;
 int[4] gv_matchupSelectionButtons;
+int gv_selectMatchupSectionLabel;
 int gv_matchupSelectionLabelHeight;
 int gv_matchupButtonWidth;
 int gv_matchupButtonHeight;
@@ -341,6 +342,7 @@ int gv_removeBuildDialogListBoxWidth;
 int gv_removeBuildDialogListBoxHeight;
 int gv_removeBuildDialogOkButton;
 int gv_removeBuildDialogCancelButton;
+int gv_selectBuildSectionLabel;
 int gv_buildSelectionPulldown;
 int gv_buildSelectionPulldownWidth;
 int gv_buildSelectionConfigureButton;
@@ -349,12 +351,16 @@ int gv_buildSelectionConfigureButtonHeight;
 int gv_buildSelectionAddButton;
 int gv_buildSelectionRemoveButton;
 int gv_buildSelectionSectionHeight;
+int gv_selectBenchmarksSectionLabel;
 int gv_benchmarkSupplySectionYOffset;
 int[4] gv_benchmarkSupplyEditBoxes;
+int[4] gv_benchmarkSupplyLabels;
 int gv_benchmarkSupplyValueLabelWidth;
 int gv_benchmarkSupplyValueLabelHeight;
 int gv_benchmarkSupplyValueSpacing;
 int gv_benchmarkSupplySectionHeight;
+int gv_buildOptionsSectionLabel;
+int gv_endBuildAtLabel;
 int gv_endBuildLabelWidth;
 int gv_endBuildPulldown;
 int gv_endBuildPulldownSelection;
@@ -380,10 +386,10 @@ int gv_displayBuildOrderHintsLabel;
 int gv_displayBuildOrderPerformanceFeedbackCheckbox;
 int gv_displayBuildOrderPerformanceFeedbackLabelWidth;
 int gv_displayBuildOrderPerformanceFeedbackLabel;
-int gv_buildOrderPreviewBox;
+int gv_buildOrderPreviewSectionLabel;
+int gv_buildOrderPreviewListBox;
 int gv_buildOrderPreviewBoxHeight;
-int gv_buildOrderPreviewBoxLabel;
-int gv_practiceAgainstSavedBuildOrderClearButton;
+int gv_buildOrderPreviewClearButton;
 int gv_practiceAgainstSavedBuildOrderClearButtonWidth;
 int gv_practiceAgainstSavedBuildOrderClearButtonHeight;
 int gv_debugDialog;
@@ -713,6 +719,7 @@ void InitGlobals () {
     for (init_i = 0; init_i <= 3; init_i += 1) {
         gv_matchupSelectionButtons[init_i] = c_invalidDialogControlId;
     }
+    gv_selectMatchupSectionLabel = c_invalidDialogControlId;
     gv_matchupSelectionLabelHeight = 35;
     gv_matchupButtonWidth = 200;
     gv_matchupButtonHeight = 75;
@@ -736,6 +743,7 @@ void InitGlobals () {
     gv_removeBuildDialogListBoxHeight = (gv_removeBuildDialogHeight-170);
     gv_removeBuildDialogOkButton = c_invalidDialogControlId;
     gv_removeBuildDialogCancelButton = c_invalidDialogControlId;
+    gv_selectBuildSectionLabel = c_invalidDialogControlId;
     gv_buildSelectionPulldown = c_invalidDialogControlId;
     gv_buildSelectionPulldownWidth = 615;
     gv_buildSelectionConfigureButton = c_invalidDialogControlId;
@@ -744,14 +752,20 @@ void InitGlobals () {
     gv_buildSelectionAddButton = c_invalidDialogControlId;
     gv_buildSelectionRemoveButton = c_invalidDialogControlId;
     gv_buildSelectionSectionHeight = (gv_sectionLabelHeight+gv_menuRowHeight+gv_menuSectionSpacer);
+    gv_selectBenchmarksSectionLabel = c_invalidDialogControlId;
     gv_benchmarkSupplySectionYOffset = (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionSectionHeight+gv_buildSelectionSectionHeight);
     for (init_i = 0; init_i <= 3; init_i += 1) {
         gv_benchmarkSupplyEditBoxes[init_i] = c_invalidDialogControlId;
+    }
+    for (init_i = 0; init_i <= 3; init_i += 1) {
+        gv_benchmarkSupplyLabels[init_i] = c_invalidDialogControlId;
     }
     gv_benchmarkSupplyValueLabelWidth = 350;
     gv_benchmarkSupplyValueLabelHeight = 50;
     gv_benchmarkSupplyValueSpacing = 10;
     gv_benchmarkSupplySectionHeight = (gv_sectionLabelHeight+3*gv_menuRowHeight+gv_menuSectionSpacer);
+    gv_buildOptionsSectionLabel = c_invalidDialogControlId;
+    gv_endBuildAtLabel = c_invalidDialogControlId;
     gv_endBuildLabelWidth = 144;
     gv_endBuildPulldown = c_invalidDialogControlId;
     gv_endBuildPulldownSelection = 1;
@@ -777,10 +791,10 @@ void InitGlobals () {
     gv_displayBuildOrderPerformanceFeedbackCheckbox = c_invalidDialogControlId;
     gv_displayBuildOrderPerformanceFeedbackLabelWidth = 450;
     gv_displayBuildOrderPerformanceFeedbackLabel = c_invalidDialogControlId;
-    gv_buildOrderPreviewBox = c_invalidDialogControlId;
+    gv_buildOrderPreviewSectionLabel = c_invalidDialogControlId;
+    gv_buildOrderPreviewListBox = c_invalidDialogControlId;
     gv_buildOrderPreviewBoxHeight = 490;
-    gv_buildOrderPreviewBoxLabel = c_invalidDialogControlId;
-    gv_practiceAgainstSavedBuildOrderClearButton = c_invalidDialogControlId;
+    gv_buildOrderPreviewClearButton = c_invalidDialogControlId;
     gv_practiceAgainstSavedBuildOrderClearButtonWidth = 90;
     gv_practiceAgainstSavedBuildOrderClearButtonHeight = 35;
     gv_debugDialog = c_invalidDialogId;
@@ -1875,11 +1889,11 @@ void gf_LoadBuildCompletionMenuConfiguraiton (string lp_sectionKey) {
 void gf_LoadBenchmarkBuildMenuConfiguration (string lp_sectionKey) {
     // Implementation
     if ((gf_DoesSavedBuildOrderExistForCurrentMatchup() == true)) {
-        DialogControlSetEnabled(gv_practiceAgainstSavedBuildOrderClearButton, PlayerGroupAll(), true);
+        DialogControlSetEnabled(gv_buildOrderPreviewClearButton, PlayerGroupAll(), true);
         gf_EnablePracticeAgainstBenchmarkBuildOrderOptions();
     }
     else {
-        DialogControlSetEnabled(gv_practiceAgainstSavedBuildOrderClearButton, PlayerGroupAll(), false);
+        DialogControlSetEnabled(gv_buildOrderPreviewClearButton, PlayerGroupAll(), false);
         gf_DisablePracticeAgainstBenchmarkBuildOrderOptions();
     }
     gf_LoadBooleanFromBankIfKeyisSetElseDefault(gv_practiceAgainstSavedBuildOrderCheckbox, gv_practiceAgainstBenchmarkBuildOrderKey, lp_sectionKey, false);
@@ -1890,15 +1904,15 @@ void gf_LoadBenchmarkBuildMenuConfiguration (string lp_sectionKey) {
 void gf_LoadBenchmarkPreviewBoxConfiguration () {
     // Implementation
     if ((gf_DoesSavedBuildOrderExistForCurrentMatchup() == true)) {
-        DialogControlSetEnabled(gv_buildOrderPreviewBoxLabel, PlayerGroupAll(), true);
-        DialogControlSetEnabled(gv_buildOrderPreviewBox, PlayerGroupAll(), true);
+        DialogControlSetEnabled(gv_buildOrderPreviewSectionLabel, PlayerGroupAll(), true);
+        DialogControlSetEnabled(gv_buildOrderPreviewListBox, PlayerGroupAll(), true);
         gf_LoadBenchmarkBuildOrderforCurrentMatchup();
-        gf_UpdateBuildOrderListBoxwithBenchmarkBuild(gv_buildOrderPreviewBox);
+        gf_UpdateBuildOrderListBoxwithBenchmarkBuild(gv_buildOrderPreviewListBox);
     }
     else {
-        DialogControlRemoveAllItems(gv_buildOrderPreviewBox, PlayerGroupAll());
-        DialogControlSetEnabled(gv_buildOrderPreviewBoxLabel, PlayerGroupAll(), false);
-        DialogControlSetEnabled(gv_buildOrderPreviewBox, PlayerGroupAll(), false);
+        DialogControlRemoveAllItems(gv_buildOrderPreviewListBox, PlayerGroupAll());
+        DialogControlSetEnabled(gv_buildOrderPreviewSectionLabel, PlayerGroupAll(), false);
+        DialogControlSetEnabled(gv_buildOrderPreviewListBox, PlayerGroupAll(), false);
     }
 }
 
@@ -2879,7 +2893,7 @@ void gf_UpdateBuildOrderListBoxwithBenchmarkBuild (int lp_listBox) {
     // Variable Initialization
 
     // Implementation
-    DialogControlRemoveAllItems(gv_buildOrderPreviewBox, PlayerGroupAll());
+    DialogControlRemoveAllItems(gv_buildOrderPreviewListBox, PlayerGroupAll());
     if ((gv_numBenchmarkBuildOrderSteps > 0)) {
         lv_lastBenchmarkBuildIndex = (gv_numBenchmarkBuildOrderSteps - 1);
         autoECB7B766_ae = lv_lastBenchmarkBuildIndex;
@@ -3118,6 +3132,64 @@ void gf_CreateBenchmarkDialogStartButton () {
 
 void gf_DisableEnableBenchmarkDialog (bool lp_enableDisable) {
     // Implementation
+    DialogControlSetEnabled(gv_benchmarksMenuButton[0], PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_alertMenuButton[0], PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_selectMatchupSectionLabel, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_matchupSelectionButtons[0], PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_matchupSelectionButtons[1], PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_matchupSelectionButtons[2], PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_selectBuildSectionLabel, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_buildSelectionAddButton, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_buildSelectionRemoveButton, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_buildSelectionConfigureButton, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_buildSelectionPulldown, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_buildOrderPreviewSectionLabel, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_buildOrderPreviewListBox, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_buildOrderPreviewClearButton, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_selectBenchmarksSectionLabel, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_benchmarkSupplyEditBoxes[0], PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_benchmarkSupplyEditBoxes[1], PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_benchmarkSupplyEditBoxes[2], PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_benchmarkSupplyLabels[0], PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_benchmarkSupplyLabels[1], PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_benchmarkSupplyLabels[2], PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_buildOptionsSectionLabel, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_endBuildAtLabel, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_endBuildPulldown, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_endBuildMinutesEditBox, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_endBuildTimeBoxColonLabel, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_endBuildSecondsEditBox, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_maxTimeEndBuildLabel, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_maxTimeMinutesEditBox, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_maxTimeMinutesTimeBoxColonLabel, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_maxTimeSecondsEditBox, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_finalSupplyAtGameTimeLabel, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_finalSupplyAtGameTimeEditBox, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_finalSupplyAtGameTimeTimeTextLabel, PlayerGroupAll(), lp_enableDisable);
+    if ((lp_enableDisable == true)) {
+        if ((gf_DoesSavedBuildOrderExistForCurrentMatchup() == true)) {
+            DialogControlSetEnabled(gv_buildOrderPreviewClearButton, PlayerGroupAll(), true);
+            gf_EnablePracticeAgainstBenchmarkBuildOrderOptions();
+        }
+        else {
+            DialogControlSetEnabled(gv_buildOrderPreviewClearButton, PlayerGroupAll(), false);
+            gf_DisablePracticeAgainstBenchmarkBuildOrderOptions();
+        }
+    }
+    else {
+        DialogControlSetEnabled(gv_practiceAgainstSavedBuildOrderCheckbox, PlayerGroupAll(), lp_enableDisable);
+        DialogControlSetEnabled(gv_practiceAgainstSavedBuildOrderLabel, PlayerGroupAll(), lp_enableDisable);
+        DialogControlSetEnabled(gv_displayBuildOrderHintsCheckbox, PlayerGroupAll(), lp_enableDisable);
+        DialogControlSetEnabled(gv_displayBuildOrderHintsLabel, PlayerGroupAll(), lp_enableDisable);
+        DialogControlSetEnabled(gv_displayBuildOrderPerformanceFeedbackCheckbox, PlayerGroupAll(), lp_enableDisable);
+        DialogControlSetEnabled(gv_displayBuildOrderPerformanceFeedbackLabel, PlayerGroupAll(), lp_enableDisable);
+    }
+    if ((lp_enableDisable == true)) {
+        DialogSetTransparency(gv_benchmarkDialog, 0.0);
+    }
+    else {
+        DialogSetTransparency(gv_benchmarkDialog, 60.0);
+    }
     DialogControlSetEnabled(gv_startButton[0], PlayerGroupAll(), lp_enableDisable);
 }
 
@@ -3131,6 +3203,7 @@ void gf_InitializeMatchupSelectionRow () {
 
     // Implementation
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_sectionLabelWidth, gv_sectionLabelHeight, c_anchorTopLeft, gv_menuPadding, (gv_menuPadding+gv_benchmarkDialogTitleSpacer), StringExternal("Param/Value/2D3C7DC9"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_selectMatchupSectionLabel = DialogControlLastCreated();
     auto524A68DE_val = PlayerRace(1);
     if (auto524A68DE_val == "Zerg") {
         lv_x = StringExternal("Param/Value/99F5183D");
@@ -3205,6 +3278,7 @@ void gf_InitializeBuildSelectionRow () {
 
     // Implementation
     libNtve_gf_CreateDialogItemLabel(gv_benchmarkDialog, gv_sectionLabelWidth, gv_sectionLabelHeight, c_anchorTopLeft, gv_menuPadding, lv_yOffset, StringExternal("Param/Value/99362DBB"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_selectBuildSectionLabel = DialogControlLastCreated();
     libNtve_gf_CreateDialogItemButton(gv_benchmarkDialog, lv_buttonWidth, gv_buildSelectionConfigureButtonHeight, c_anchorTopLeft, lv_xOffsetAfterLabel, lv_yOffset, StringExternal("Param/Value/32C40E4B"), StringExternal("Param/Value/98752A73"), "");
     gv_buildSelectionAddButton = DialogControlLastCreated();
     libNtve_gf_CreateDialogItemButton(gv_benchmarkDialog, lv_buttonWidth, gv_buildSelectionConfigureButtonHeight, c_anchorTopLeft, (lv_xOffsetAfterLabel+lv_buttonWidth), lv_yOffset, StringExternal("Param/Value/A81FB44B"), StringExternal("Param/Value/F10A96D8"), "");
@@ -3288,23 +3362,23 @@ void gf_CreateRemoveBuildDialog () {
 
 void gf_InitializeBuildOrderPreviewSection () {
     // Variable Declarations
-    int lv_benchmarkPreviewBoxYOffset;
+    int lv_benchmarkSectionYOffset;
 
     // Variable Initialization
-    lv_benchmarkPreviewBoxYOffset = (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionSectionHeight);
+    lv_benchmarkSectionYOffset = (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_matchupSelectionSectionHeight+0);
 
     // Implementation
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_buildOrderListBoxWidth, gv_sectionLabelHeight, c_anchorTopRight, gv_menuPadding, lv_benchmarkSectionYOffset, StringExternal("Param/Value/B690E769"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_buildOrderPreviewSectionLabel = DialogControlLastCreated();
     DialogControlCreate(DialogLastCreated(), c_triggerControlTypeListBox);
-    gv_buildOrderPreviewBox = DialogControlLastCreated();
+    gv_buildOrderPreviewListBox = DialogControlLastCreated();
     DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv_buildOrderListBoxWidth, gv_buildOrderPreviewBoxHeight);
-    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopRight, gv_menuPadding, (lv_benchmarkPreviewBoxYOffset+gv_sectionLabelHeight));
-    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_buildOrderListBoxWidth, 30, c_anchorTopRight, gv_menuPadding, lv_benchmarkPreviewBoxYOffset, StringExternal("Param/Value/B690E769"), ColorWithAlpha(0,0,0,0), false, 2.0);
-    gv_buildOrderPreviewBoxLabel = DialogControlLastCreated();
-    libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_practiceAgainstSavedBuildOrderClearButtonWidth, gv_practiceAgainstSavedBuildOrderClearButtonHeight, c_anchorTopRight, gv_menuPadding, lv_benchmarkPreviewBoxYOffset, StringExternal("Param/Value/F6915731"), StringExternal("Param/Value/36C3443F"), "");
+    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopRight, gv_menuPadding, (lv_benchmarkSectionYOffset+gv_sectionLabelHeight));
+    libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_practiceAgainstSavedBuildOrderClearButtonWidth, gv_practiceAgainstSavedBuildOrderClearButtonHeight, c_anchorTopRight, gv_menuPadding, lv_benchmarkSectionYOffset, StringExternal("Param/Value/F6915731"), StringExternal("Param/Value/36C3443F"), "");
     DialogControlFadeTransparency(DialogControlLastCreated(), PlayerGroupAll(), 0.0, 15.0);
-    gv_practiceAgainstSavedBuildOrderClearButton = DialogControlLastCreated();
+    gv_buildOrderPreviewClearButton = DialogControlLastCreated();
     gf_LoadBenchmarkBuildOrderforCurrentMatchup();
-    gf_UpdateBuildOrderListBoxwithBenchmarkBuild(gv_buildOrderPreviewBox);
+    gf_UpdateBuildOrderListBoxwithBenchmarkBuild(gv_buildOrderPreviewListBox);
 }
 
 void gf_InitializeBenchmarkSupplySection () {
@@ -3320,6 +3394,7 @@ void gf_InitializeBenchmarkSupplySection () {
 
     // Implementation
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_sectionLabelWidth, gv_sectionLabelHeight, c_anchorTopLeft, gv_menuPadding, gv_benchmarkSupplySectionYOffset, StringExternal("Param/Value/507082F5"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_selectBenchmarksSectionLabel = DialogControlLastCreated();
     autoE8B15B54_ae = 2;
     autoE8B15B54_ai = 1;
     lv_i = 0;
@@ -3345,6 +3420,7 @@ void gf_CreateSupplyValueEditBox (text lp_labelText, int lp_rowNumber, int lp_de
     libNtve_gf_SetDialogItemMaximumValue(DialogControlLastCreated(), 200.0, PlayerGroupAll());
     gv_benchmarkSupplyEditBoxes[lp_rowNumber] = DialogControlLastCreated();
     libNtve_gf_CreateDialogItemLabel(gv_benchmarkDialog, gv_benchmarkSupplyValueLabelWidth, gv_benchmarkSupplyValueLabelHeight, c_anchorTopLeft, (gv_menuPadding+gv__3DigitEditBoxWidth+gv_benchmarkSupplyValueSpacing+gv_menuOptionIndent), (lv_yOffset+gv_labelAlignmentSpacer), lp_labelText, ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_benchmarkSupplyLabels[lp_rowNumber] = DialogControlLastCreated();
 }
 
 void gf_InitializeBuildCompletionOptionsSection () {
@@ -3356,7 +3432,9 @@ void gf_InitializeBuildCompletionOptionsSection () {
 
     // Implementation
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_sectionLabelWidth, gv_sectionLabelHeight, c_anchorTopLeft, gv_menuPadding, lv_yOffset, StringExternal("Param/Value/E23A8A3F"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_buildOptionsSectionLabel = DialogControlLastCreated();
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_endBuildLabelWidth, gv_benchmarkSupplyValueLabelHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent), (lv_yOffset+gv_sectionLabelHeight+gv_labelAlignmentSpacer), StringExternal("Param/Value/0F376BB5"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_endBuildAtLabel = DialogControlLastCreated();
     DialogControlCreate(DialogLastCreated(), c_triggerControlTypePulldown);
     gv_endBuildPulldown = DialogControlLastCreated();
     DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv_endBuildPulldownWidth, gv_menuRowHeight);
@@ -10342,6 +10420,7 @@ bool gt_AddBuildButtonClicked_Func (bool testConds, bool runActions) {
         return true;
     }
 
+    gf_DisableEnableBenchmarkDialog(false);
     DialogSetVisible(gv_addBuildDialog, PlayerGroupAll(), true);
     return true;
 }
@@ -10369,6 +10448,7 @@ bool gt_AddBuildDialogOkButtonClicked_Func (bool testConds, bool runActions) {
     }
 
     DialogSetVisible(gv_addBuildDialog, PlayerGroupAll(), false);
+    gf_DisableEnableBenchmarkDialog(true);
     return true;
 }
 
@@ -10395,6 +10475,7 @@ bool gt_AddBuildDialogCancelButtonClicked_Func (bool testConds, bool runActions)
     }
 
     DialogSetVisible(gv_addBuildDialog, PlayerGroupAll(), false);
+    gf_DisableEnableBenchmarkDialog(true);
     return true;
 }
 
@@ -10420,6 +10501,7 @@ bool gt_RemoveBuildButtonClicked_Func (bool testConds, bool runActions) {
         return true;
     }
 
+    gf_DisableEnableBenchmarkDialog(false);
     DialogSetVisible(gv_removeBuildDialog, PlayerGroupAll(), true);
     return true;
 }
@@ -10447,6 +10529,7 @@ bool gt_RemoveBuildDialogOkButtonClicked_Func (bool testConds, bool runActions) 
     }
 
     DialogSetVisible(gv_removeBuildDialog, PlayerGroupAll(), false);
+    gf_DisableEnableBenchmarkDialog(true);
     return true;
 }
 
@@ -10473,6 +10556,7 @@ bool gt_RemoveBuildDialogCancelButtonClicked_Func (bool testConds, bool runActio
     }
 
     DialogSetVisible(gv_removeBuildDialog, PlayerGroupAll(), false);
+    gf_DisableEnableBenchmarkDialog(true);
     return true;
 }
 
@@ -10623,7 +10707,7 @@ void gt_UpdateFinalSupplyAtGameTimeText_Init () {
 bool gt_ClearSavedBenchmarkBuildforMatchuponButtonPress_Func (bool testConds, bool runActions) {
     // Conditions
     if (testConds) {
-        if (!((EventDialogControl() == gv_practiceAgainstSavedBuildOrderClearButton))) {
+        if (!((EventDialogControl() == gv_buildOrderPreviewClearButton))) {
             return false;
         }
     }
@@ -10638,10 +10722,10 @@ bool gt_ClearSavedBenchmarkBuildforMatchuponButtonPress_Func (bool testConds, bo
     libNtve_gf_SetDialogItemChecked(gv_practiceAgainstSavedBuildOrderCheckbox, false, PlayerGroupAll());
     DialogControlSetEnabled(gv_practiceAgainstSavedBuildOrderCheckbox, PlayerGroupAll(), false);
     DialogControlSetEnabled(gv_practiceAgainstSavedBuildOrderLabel, PlayerGroupAll(), false);
-    DialogControlSetEnabled(gv_practiceAgainstSavedBuildOrderClearButton, PlayerGroupAll(), false);
-    DialogControlRemoveAllItems(gv_buildOrderPreviewBox, PlayerGroupAll());
-    DialogControlSetEnabled(gv_buildOrderPreviewBox, PlayerGroupAll(), false);
-    DialogControlSetEnabled(gv_buildOrderPreviewBoxLabel, PlayerGroupAll(), false);
+    DialogControlSetEnabled(gv_buildOrderPreviewClearButton, PlayerGroupAll(), false);
+    DialogControlRemoveAllItems(gv_buildOrderPreviewListBox, PlayerGroupAll());
+    DialogControlSetEnabled(gv_buildOrderPreviewListBox, PlayerGroupAll(), false);
+    DialogControlSetEnabled(gv_buildOrderPreviewSectionLabel, PlayerGroupAll(), false);
     gf_EvaluateAndDisableEnableBuildHintsOptions();
     return true;
 }
