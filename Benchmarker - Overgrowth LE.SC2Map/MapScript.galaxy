@@ -40,6 +40,11 @@ struct gs_ProductionIdleAlert {
     timer lv_cooldownTimer;
 };
 
+struct gs_BuildEntry {
+    string lv_bankSectionKey;
+    text lv_buildName;
+};
+
 struct gs_SupplyBenchmark {
     int lv_benchmarkSupply;
     int lv_benchmarkTimeMin;
@@ -128,6 +133,7 @@ string gv_alertProductionIdleThresholdKey;
 string gv_alertAPMBelowThresholdCheckEnabledEntryKey;
 string gv_alertAPMThresholdKey;
 string gv_alertAPMThresholdDurationKey;
+string gv_selectedBuildEntryIndexKey;
 string gv_benchmarkMaxSupplyatTimeMinutesKey;
 string gv_benchmarkMaxSupplyatTimeSecondsKey;
 string[4] gv_benchmarkSupplyEntryKeys;
@@ -152,6 +158,9 @@ string gv_bestAverageUnspentMineralsEntryKey;
 string gv_bestAverageUnspentGasEntryKey;
 string gv_bestAverageAPMEntryKey;
 string gv_postBuildReportMuteButtonKey;
+string[11] gv_currentMatchupBuildKeys;
+string gv_currentMatchupNumBuildsKey;
+string gv_buildNameKey;
 string gv_benchmarkBuildStepEntryKeyPrefix;
 string gv_numBenchmarkBuildOrderStepsEntryKey;
 string gv_stepTypeBuildOrderStepEntryKey;
@@ -173,6 +182,9 @@ string gv_tvPMatchupSectionKey;
 string gv_pvTMatchupSectionKey;
 string gv_pvZMatchupSectionKey;
 string gv_pvPMatchupSectionKey;
+int gv_currentlySelectedBuildEntryIndex;
+gs_BuildEntry[11] gv_currentMatchupBuildEntries;
+int gv_currentMatchupNumBuilds;
 bool gv_enableGasTracking;
 int gv_gasTrackingThresholdSteps;
 bool gv_enableSupplyUnitTracking;
@@ -569,6 +581,7 @@ void InitGlobals () {
     gv_alertAPMBelowThresholdCheckEnabledEntryKey = "alertAPMBelowThresholdEnabled";
     gv_alertAPMThresholdKey = "alertAPMThreshold";
     gv_alertAPMThresholdDurationKey = "alertAPMThresholdDuration";
+    gv_selectedBuildEntryIndexKey = "selectedBuildEntryIndex";
     gv_benchmarkMaxSupplyatTimeMinutesKey = "maxTimeMin";
     gv_benchmarkMaxSupplyatTimeSecondsKey = "maxTimeSec";
     for (init_i = 0; init_i <= 3; init_i += 1) {
@@ -595,6 +608,11 @@ void InitGlobals () {
     gv_bestAverageUnspentGasEntryKey = "bestAverageUnspentGas";
     gv_bestAverageAPMEntryKey = "bestAverageAPM";
     gv_postBuildReportMuteButtonKey = "muteVictoryFanfare";
+    for (init_i = 0; init_i <= 10; init_i += 1) {
+        gv_currentMatchupBuildKeys[init_i] = "";
+    }
+    gv_currentMatchupNumBuildsKey = "currentMatchupNumBuilds";
+    gv_buildNameKey = "buildName";
     gv_benchmarkBuildStepEntryKeyPrefix = "benchmarkBuildStep";
     gv_numBenchmarkBuildOrderStepsEntryKey = "numBenchmarkBuildOrderSteps";
     gv_stepTypeBuildOrderStepEntryKey = "stepType";
@@ -618,6 +636,9 @@ void InitGlobals () {
     gv_pvTMatchupSectionKey = "PvT";
     gv_pvZMatchupSectionKey = "PvZ";
     gv_pvPMatchupSectionKey = "PvP";
+    for (init_i = 0; init_i <= 10; init_i += 1) {
+        gv_currentMatchupBuildEntries[init_i].lv_bankSectionKey = "";
+    }
     gv_multipleUnitFailureTimer = TimerCreate();
     for (init_i = 0; init_i <= 3; init_i += 1) {
         gv_benchmarkSupplyObjectives[init_i] = c_invalidObjectiveId;
@@ -947,16 +968,20 @@ void gf_SaveIntForCurrentMatchup (int lp_value, string lp_entryKey);
 void gf_LoadIntFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_entryKey, string lp_sectionKey, int lp_defaultValue, int lp_leadingZeros);
 void gf_LoadBooleanFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_entryKey, string lp_sectionKey, bool lp_defaultValue);
 void gf_SaveRealAsBuildBenchmark (fixed lp_value, string lp_entryKey);
-void gf_SaveCurrentBuildAsBenchmarkBuildOrderForCurrentMatchup ();
+void gf_SaveCurrentBuildOrderAsBenchmarkBuildOrderForCurrentBuild ();
 void gf_LoadBenchmarkBuildOrderforCurrentMatchup ();
 void gf_ClearAllBenchmarkBuildOrders ();
 void gf_ClearBenchmarkBuildOrder (string lp_buildKey);
 void gf_SaveBenchmarkBuildStep (int lp_stepNumber);
 void gf_LoadBenchmarkBuildStep (int lp_stepNumber);
 void gf_ClearBenchmarkBuildStep (int lp_stepNumber, string lp_buildKey);
-void gf_SaveBenchmarkMenuConfiguration (string lp_sectionKey);
-void gf_RefreshSupplyBenchmarksConfigurationValuesFromDialog ();
-void gf_RefreshBuildCompletionConfigurationValuesFromDialog ();
+void gf_LoadBuildEntriesforCurrentlySelectedMatchup (string lp_currentMatchupSectionKey);
+void gf_PopulateBuildSelectionDialogItem (int lp_dialogItem, int lp_selectedItem);
+void gf_AddBuildEntry ();
+void gf_RemoveBuildEntry ();
+void gf_SaveBenchmarkMenuConfigurationForBuild (string lp_sectionKey);
+void gf_SetSupplyBenchmarksConfigurationValuesFromDialog ();
+void gf_SetBuildCompletionConfigurationValuesFromDialog ();
 void gf_SaveMatchupBenchmarksConfiguration (string lp_sectionKey);
 void gf_SaveBuildCompletionConfiguration (string lp_sectionKey);
 void gf_SaveBenchmarkBuildMenuConfiguration (string lp_sectionKey);
@@ -1032,6 +1057,7 @@ void gf_CreateBuildSelectionPulldown ();
 void gf_CreateAddBuildDialog ();
 void gf_CreateRemoveBuildDialog ();
 void gf_CreateConfigureBuildDialog ();
+void gf_PopulateRemoveBuildDialog ();
 void gf_InitializeBuildOrderPreviewSection ();
 void gf_InitializeBenchmarkSupplySection ();
 void gf_CreateSupplyValueEditBox (text lp_labelText, int lp_rowNumber, int lp_defaultValue);
@@ -1161,7 +1187,9 @@ bool gf_DoesZergHaveLarvaToSpendAndNoUnitsMorphing ();
 int gf_GetProductionIdleAlertIndexForUnitType (string lp_unitType);
 int gf_GetProductionIdleAlertIndexForTimer (timer lp_timer);
 string gf_GetIconForBuildingType (string lp_unitType);
-string gf_GetCurrentlySelectedMatchupasBankSectionKey ();
+string gf_GenerateBuildKeyReferenceforBuildNumber (int lp_buildNumber);
+string gf_GetCurrentlySelectedBuildAsBankSectionKey ();
+string gf_GetCurrentlySelectedMatchupAsBankSectionKey ();
 string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
 bool gf_IsUserBankVersionCurrentWithRelease ();
 bool gf_IsUnitTypeAStructure (string lp_unitType);
@@ -1242,7 +1270,8 @@ int gf_GetTotalMineralsCollected ();
 int gf_GetTotalGasCollected ();
 fixed gf_CalculateSpendingQuotient ();
 unitgroup gf_GetUnitGroupofAllPlayer1WithoutThisUnit ();
-text gf_GetCurrentlySelectedMatchupasText ();
+text gf_GetCurrentlyMatchupasText ();
+text gf_GetCurrentlySelectedBuildasText ();
 int gf_GetEditBoxValueasInt (int lp_editBox);
 bool gf_DoesSavedBuildOrderExistForCurrentMatchup ();
 string gf_GetCurrentlySelectedMatchupOpponentRace ();
@@ -1550,7 +1579,7 @@ void gf_RestartProductionIdleCooldownTimer (string lp_unitType) {
 
 void gf_SaveIntForCurrentMatchup (int lp_value, string lp_entryKey) {
     // Implementation
-    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_entryKey, lp_value);
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), lp_entryKey, lp_value);
 }
 
 void gf_LoadIntFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_entryKey, string lp_sectionKey, int lp_defaultValue, int lp_leadingZeros) {
@@ -1563,7 +1592,7 @@ void gf_LoadIntFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_entry
 
     // Implementation
     if (((BankKeyExists(gv_benchmarkerBank, lp_sectionKey, lp_entryKey) == true) && (BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, lp_entryKey) > -1))) {
-        lv_editValue = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_entryKey);
+        lv_editValue = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), lp_entryKey);
     }
     else {
         lv_editValue = lp_defaultValue;
@@ -1607,10 +1636,10 @@ void gf_LoadBooleanFromBankIfKeyisSetElseDefault (int lp_dialogItem, string lp_e
 
 void gf_SaveRealAsBuildBenchmark (fixed lp_value, string lp_entryKey) {
     // Implementation
-    BankValueSetFromFixed(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_entryKey, lp_value);
+    BankValueSetFromFixed(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), lp_entryKey, lp_value);
 }
 
-void gf_SaveCurrentBuildAsBenchmarkBuildOrderForCurrentMatchup () {
+void gf_SaveCurrentBuildOrderAsBenchmarkBuildOrderForCurrentBuild () {
     int auto895F190E_ae;
     int auto895F190E_ai;
 
@@ -1632,13 +1661,13 @@ void gf_SaveCurrentBuildAsBenchmarkBuildOrderForCurrentMatchup () {
         TextExpressionSetToken("Param/Expression/ABAFD438", "B", IntToText(lv_currentStepNum));
         gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/ABAFD438"));
     }
-    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey, lv_numCurrentBuildSteps);
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey, lv_numCurrentBuildSteps);
     TextExpressionSetToken("Param/Expression/1DC37812", "A", IntToText(gv_currentBuildOrderStepCursor));
     gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/1DC37812"));
-    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_benchmarkBuildOrderTimeKey, FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer)));
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gv_benchmarkBuildOrderTimeKey, FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer)));
     TextExpressionSetToken("Param/Expression/49DC8CAF", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))));
     gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/49DC8CAF"));
-    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_benchmarkBuildOrderSupplyBenchmarksMetKey, gv_numBenchmarksMetThisBuild);
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gv_benchmarkBuildOrderSupplyBenchmarksMetKey, gv_numBenchmarksMetThisBuild);
     TextExpressionSetToken("Param/Expression/49EB79CE", "A", IntToText(gv_numBenchmarksMetThisBuild));
     gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/49EB79CE"));
     BankSave(gv_benchmarkerBank);
@@ -1655,9 +1684,9 @@ void gf_LoadBenchmarkBuildOrderforCurrentMatchup () {
     // Variable Initialization
 
     // Implementation
-    gv_numBenchmarkBuildOrderSteps = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey);
+    gv_numBenchmarkBuildOrderSteps = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey);
     TextExpressionSetToken("Param/Expression/E4B95466", "A", IntToText(gv_numBenchmarkBuildOrderSteps));
-    TextExpressionSetToken("Param/Expression/E4B95466", "B", gf_GetCurrentlySelectedMatchupasText());
+    TextExpressionSetToken("Param/Expression/E4B95466", "B", gf_GetCurrentlyMatchupasText());
     gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/E4B95466"));
     if ((gv_numBenchmarkBuildOrderSteps > 0)) {
         auto8F962F3E_ae = (gv_numBenchmarkBuildOrderSteps-1);
@@ -1667,8 +1696,8 @@ void gf_LoadBenchmarkBuildOrderforCurrentMatchup () {
             gf_LoadBenchmarkBuildStep(lv_currentStepNum);
         }
         gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/0A79CDD8"));
-        gv_benchmarkBuildOrderTimeSeconds = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_benchmarkBuildOrderTimeKey);
-        gv_benchmarkBuildOrderSupplyBenchmarksMet = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_benchmarkBuildOrderSupplyBenchmarksMetKey);
+        gv_benchmarkBuildOrderTimeSeconds = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gv_benchmarkBuildOrderTimeKey);
+        gv_benchmarkBuildOrderSupplyBenchmarksMet = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gv_benchmarkBuildOrderSupplyBenchmarksMetKey);
     }
     else {
         gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/DCA924E4"));
@@ -1718,25 +1747,25 @@ void gf_SaveBenchmarkBuildStep (int lp_stepNumber) {
     string auto88FA6AD6_val;
 
     // Implementation
-    BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_stepTypeBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lp_stepNumber].lv_stepType);
-    BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_unitTypeBuildOrderStepEntryKey), (gv_currentBuildOrderSteps[lp_stepNumber].lv_unitType));
-    BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_upgradeBuildOrderStepEntryKey), (gv_currentBuildOrderSteps[lp_stepNumber].lv_upgrade));
-    BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_abilityBuildOrderStepEntryKey), (gv_currentBuildOrderSteps[lp_stepNumber].lv_ability));
-    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_supplyBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lp_stepNumber].lv_supply);
-    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_amountBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lp_stepNumber].lv_amount);
-    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_elapsedSecondsBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
+    BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_stepTypeBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lp_stepNumber].lv_stepType);
+    BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_unitTypeBuildOrderStepEntryKey), (gv_currentBuildOrderSteps[lp_stepNumber].lv_unitType));
+    BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_upgradeBuildOrderStepEntryKey), (gv_currentBuildOrderSteps[lp_stepNumber].lv_upgrade));
+    BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_abilityBuildOrderStepEntryKey), (gv_currentBuildOrderSteps[lp_stepNumber].lv_ability));
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_supplyBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lp_stepNumber].lv_supply);
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_amountBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lp_stepNumber].lv_amount);
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_elapsedSecondsBuildOrderStepEntryKey), gv_currentBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
     auto88FA6AD6_val = gv_currentBuildOrderSteps[lp_stepNumber].lv_stepType;
     if (auto88FA6AD6_val == gv_unitStepType) {
-        BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_upgradeBuildOrderStepEntryKey));
-        BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_abilityBuildOrderStepEntryKey));
+        BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_upgradeBuildOrderStepEntryKey));
+        BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_abilityBuildOrderStepEntryKey));
     }
     else if (auto88FA6AD6_val == gv_upgradeStepType) {
-        BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_unitTypeBuildOrderStepEntryKey));
-        BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_abilityBuildOrderStepEntryKey));
+        BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_unitTypeBuildOrderStepEntryKey));
+        BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_abilityBuildOrderStepEntryKey));
     }
     else if (auto88FA6AD6_val == gv_abilityStepType) {
-        BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_unitTypeBuildOrderStepEntryKey));
-        BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_upgradeBuildOrderStepEntryKey));
+        BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_unitTypeBuildOrderStepEntryKey));
+        BankKeyRemove(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_upgradeBuildOrderStepEntryKey));
     }
     else {
     }
@@ -1744,13 +1773,13 @@ void gf_SaveBenchmarkBuildStep (int lp_stepNumber) {
 
 void gf_LoadBenchmarkBuildStep (int lp_stepNumber) {
     // Implementation
-    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_stepType = BankValueGetAsString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_stepTypeBuildOrderStepEntryKey));
-    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_unitType = (BankValueGetAsString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_unitTypeBuildOrderStepEntryKey)));
-    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_upgrade = (BankValueGetAsString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_upgradeBuildOrderStepEntryKey)));
-    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_ability = (BankValueGetAsString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_abilityBuildOrderStepEntryKey)));
-    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supply = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_supplyBuildOrderStepEntryKey));
-    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_amount = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_amountBuildOrderStepEntryKey));
-    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_elapsedSecondsBuildOrderStepEntryKey));
+    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_stepType = BankValueGetAsString(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_stepTypeBuildOrderStepEntryKey));
+    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_unitType = (BankValueGetAsString(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_unitTypeBuildOrderStepEntryKey)));
+    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_upgrade = (BankValueGetAsString(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_upgradeBuildOrderStepEntryKey)));
+    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_ability = (BankValueGetAsString(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_abilityBuildOrderStepEntryKey)));
+    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supply = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_supplyBuildOrderStepEntryKey));
+    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_amount = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_amountBuildOrderStepEntryKey));
+    gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_elapsedSecondsBuildOrderStepEntryKey));
 }
 
 void gf_ClearBenchmarkBuildStep (int lp_stepNumber, string lp_buildKey) {
@@ -1764,22 +1793,105 @@ void gf_ClearBenchmarkBuildStep (int lp_stepNumber, string lp_buildKey) {
     BankKeyRemove(gv_benchmarkerBank, lp_buildKey, gf_GetBenchmarkBuildOrderStepBankKey(lp_stepNumber, gv_elapsedSecondsBuildOrderStepEntryKey));
 }
 
-void gf_SaveBenchmarkMenuConfiguration (string lp_sectionKey) {
+void gf_LoadBuildEntriesforCurrentlySelectedMatchup (string lp_currentMatchupSectionKey) {
+    int auto67CB8760_ae;
+    int auto67CB8760_ai;
+
     // Variable Declarations
-    int lv_i;
+    string lv_currentBuildKey;
+    int lv_buildNumber;
+    int lv_previouslySelectedBuildNum;
+    int lv_sectionKey;
+
+    // Variable Initialization
+    lv_currentBuildKey = "";
+    lv_buildNumber = 1;
+
+    // Implementation
+    gv_currentMatchupNumBuilds = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupAsBankSectionKey(), gv_currentMatchupNumBuildsKey);
+    if ((gv_currentMatchupNumBuilds > 0)) {
+        auto67CB8760_ae = gv_currentMatchupNumBuilds;
+        auto67CB8760_ai = 1;
+        lv_buildNumber = 1;
+        for ( ; ( (auto67CB8760_ai >= 0 && lv_buildNumber <= auto67CB8760_ae) || (auto67CB8760_ai <= 0 && lv_buildNumber >= auto67CB8760_ae) ) ; lv_buildNumber += auto67CB8760_ai ) {
+            lv_currentBuildKey = gf_GenerateBuildKeyReferenceforBuildNumber(lv_buildNumber);
+            gv_currentMatchupBuildEntries[lv_buildNumber].lv_bankSectionKey = BankValueGetAsString(gv_benchmarkerBank, lp_currentMatchupSectionKey, lv_currentBuildKey);
+            gv_currentMatchupBuildEntries[lv_buildNumber].lv_buildName = BankValueGetAsText(gv_benchmarkerBank, gv_currentMatchupBuildEntries[lv_buildNumber].lv_bankSectionKey, gv_buildNameKey);
+            TextExpressionSetToken("Param/Expression/799A830D", "A", StringToText(lv_currentBuildKey));
+            TextExpressionSetToken("Param/Expression/799A830D", "B", StringToText(gv_currentMatchupBuildEntries[lv_buildNumber].lv_bankSectionKey));
+            TextExpressionSetToken("Param/Expression/799A830D", "C", gv_currentMatchupBuildEntries[lv_buildNumber].lv_buildName);
+            gf_LogTextMessage(gv_debugMenusEnabled, TextExpressionAssemble("Param/Expression/799A830D"));
+        }
+    }
+    else {
+        gv_currentMatchupBuildEntries[lv_buildNumber].lv_bankSectionKey = (lp_currentMatchupSectionKey);
+        TextExpressionSetToken("Param/Expression/743311E7", "A", StringToText(gf_GetCurrentlySelectedMatchupAsBankSectionKey()));
+        gv_currentMatchupBuildEntries[lv_buildNumber].lv_buildName = TextExpressionAssemble("Param/Expression/743311E7");
+        gv_currentMatchupNumBuilds = 1;
+    }
+    gf_PopulateBuildSelectionDialogItem(gv_buildSelectionPulldown, 1);
+}
+
+void gf_PopulateBuildSelectionDialogItem (int lp_dialogItem, int lp_selectedItem) {
+    int autoAA45A6C9_ae;
+    int autoAA45A6C9_ai;
+
+    // Variable Declarations
+    int lv_buildEntry;
 
     // Variable Initialization
 
     // Implementation
-    gf_RefreshSupplyBenchmarksConfigurationValuesFromDialog();
-    gf_RefreshBuildCompletionConfigurationValuesFromDialog();
+    DialogControlRemoveAllItems(lp_dialogItem, PlayerGroupAll());
+    autoAA45A6C9_ae = gv_currentMatchupNumBuilds;
+    autoAA45A6C9_ai = 1;
+    lv_buildEntry = 1;
+    for ( ; ( (autoAA45A6C9_ai >= 0 && lv_buildEntry <= autoAA45A6C9_ae) || (autoAA45A6C9_ai <= 0 && lv_buildEntry >= autoAA45A6C9_ae) ) ; lv_buildEntry += autoAA45A6C9_ai ) {
+        DialogControlAddItem(lp_dialogItem, PlayerGroupAll(), gv_currentMatchupBuildEntries[lv_buildEntry].lv_buildName);
+    }
+    DialogControlSelectItem(lp_dialogItem, PlayerGroupAll(), lp_selectedItem);
+}
+
+void gf_AddBuildEntry () {
+    // Variable Declarations
+    string lv_buildBankSectionKey;
+    text lv_buildName;
+
+    // Variable Initialization
+    lv_buildBankSectionKey = "";
+
+    // Implementation
+    lv_buildName = StringToText(libNtve_gf_DialogItemEditValue(gv_addBuildDialogNameEditBox, 1));
+    gv_currentMatchupNumBuilds += 1;
+    gv_currentMatchupBuildEntries[gv_currentMatchupNumBuilds].lv_bankSectionKey = lv_buildBankSectionKey;
+    gv_currentMatchupBuildEntries[gv_currentMatchupNumBuilds].lv_buildName = lv_buildName;
+    DialogControlAddItem(gv_buildSelectionPulldown, PlayerGroupAll(), lv_buildName);
+    DialogControlSelectItem(gv_buildSelectionPulldown, PlayerGroupAll(), gv_currentMatchupNumBuilds);
+    BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupAsBankSectionKey(), (gf_GetCurrentlySelectedMatchupAsBankSectionKey() + "_build_" + IntToString(gv_currentMatchupNumBuilds)), lv_buildBankSectionKey);
+    BankValueSetFromText(gv_benchmarkerBank, lv_buildBankSectionKey, gv_buildNameKey, lv_buildName);
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupAsBankSectionKey(), gv_currentMatchupNumBuildsKey, gv_currentMatchupNumBuilds);
+}
+
+void gf_RemoveBuildEntry () {
+}
+
+void gf_SaveBenchmarkMenuConfigurationForBuild (string lp_sectionKey) {
+    // Implementation
+    TextExpressionSetToken("Param/Expression/2C04BEFB", "A", gf_GetCurrentlySelectedBuildasText());
+    TextExpressionSetToken("Param/Expression/2C04BEFB", "B", StringToText(lp_sectionKey));
+    gf_LogTextMessage(gv_debugMenusEnabled, TextExpressionAssemble("Param/Expression/2C04BEFB"));
+    BankValueSetFromString(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupAsBankSectionKey(), gf_GenerateBuildKeyReferenceforBuildNumber(DialogControlGetSelectedItem(gv_buildSelectionPulldown, 1)), lp_sectionKey);
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupAsBankSectionKey(), gv_selectedBuildEntryIndexKey, DialogControlGetSelectedItem(gv_buildSelectionPulldown, 1));
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupAsBankSectionKey(), gv_currentMatchupNumBuildsKey, gv_currentMatchupNumBuilds);
+    gf_SetSupplyBenchmarksConfigurationValuesFromDialog();
+    gf_SetBuildCompletionConfigurationValuesFromDialog();
     gf_SaveMatchupBenchmarksConfiguration(lp_sectionKey);
     gf_SaveBuildCompletionConfiguration(lp_sectionKey);
     gf_SaveBenchmarkBuildMenuConfiguration(lp_sectionKey);
     BankSave(gv_benchmarkerBank);
 }
 
-void gf_RefreshSupplyBenchmarksConfigurationValuesFromDialog () {
+void gf_SetSupplyBenchmarksConfigurationValuesFromDialog () {
     int autoE860F6C8_ae;
     int autoE860F6C8_ai;
 
@@ -1797,7 +1909,7 @@ void gf_RefreshSupplyBenchmarksConfigurationValuesFromDialog () {
     }
 }
 
-void gf_RefreshBuildCompletionConfigurationValuesFromDialog () {
+void gf_SetBuildCompletionConfigurationValuesFromDialog () {
     // Implementation
     gv_benchmarkMaxSupplyMinutes = gf_GetEditBoxValueasInt(gv_maxTimeMinutesEditBox);
     gv_benchmarkMaxSupplySeconds = gf_GetEditBoxValueasInt(gv_maxTimeSecondsEditBox);
@@ -3118,7 +3230,7 @@ void gf_OpenBenchmarkDialogMainMenu () {
     gv_isStatsDialogOpen = false;
     DialogSetVisible(gv_postBuildReportDialog, PlayerGroupAll(), false);
     Wait(0.25, c_timeGame);
-    gf_LoadBenchmarkMenuConfiguration(gf_GetCurrentlySelectedMatchupasBankSectionKey());
+    gf_LoadBenchmarkMenuConfiguration(gf_GetCurrentlySelectedBuildAsBankSectionKey());
     gf_LoadAlertMenuConfiguration();
     if ((gf_DoesSavedBuildOrderExistForCurrentMatchup() == true)) {
         gf_EnablePracticeAgainstBenchmarkBuildOrderOptions();
@@ -3297,8 +3409,6 @@ void gf_InitializeBuildSelectionRow () {
     gv_buildSelectionAddButton = DialogControlLastCreated();
     libNtve_gf_CreateDialogItemButton(gv_benchmarkDialog, lv_buttonWidth, gv_buildSelectionConfigureButtonHeight, c_anchorTopLeft, (lv_xOffsetAfterLabel+lv_buttonWidth), lv_yOffset, StringExternal("Param/Value/A81FB44B"), StringExternal("Param/Value/F10A96D8"), "");
     gv_buildSelectionRemoveButton = DialogControlLastCreated();
-    libNtve_gf_CreateDialogItemButton(gv_benchmarkDialog, gv_buildSelectionConfigureButtonWidth, gv_buildSelectionConfigureButtonHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent+gv_buildSelectionPulldownWidth-gv_buildSelectionConfigureButtonWidth), lv_yOffset, StringExternal("Param/Value/B45136BC"), StringExternal("Param/Value/33E71492"), "");
-    gv_buildSelectionConfigureButton = DialogControlLastCreated();
     gf_CreateBuildSelectionPulldown();
 }
 
@@ -3314,7 +3424,6 @@ void gf_CreateBuildSelectionPulldown () {
     DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv_buildSelectionPulldownWidth, gv_menuRowHeight);
     DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent), lv_yOffset);
     gv_buildSelectionPulldown = DialogControlLastCreated();
-    DialogControlAddItem(DialogControlLastCreated(), PlayerGroupAll(), StringExternal("Param/Value/CDBEDEEC"));
 }
 
 void gf_CreateAddBuildDialog () {
@@ -3396,6 +3505,9 @@ void gf_CreateConfigureBuildDialog () {
     libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_buildDialogButtonWidth, gv_buildDialogButtonHeight, c_anchorBottom, lv_buttonXOffset, lv_buttonYOffset, StringExternal("Param/Value/5BB21B34"), StringExternal("Param/Value/EC9BA9F0"), "");
     gv_configureBuildDialogOkButton = DialogControlLastCreated();
     DialogSetVisible(DialogLastCreated(), PlayerGroupAll(), false);
+}
+
+void gf_PopulateRemoveBuildDialog () {
 }
 
 void gf_InitializeBuildOrderPreviewSection () {
@@ -4041,11 +4153,11 @@ void gf_UpdatePostBuildMatchupText () {
     // Implementation
     libNtve_gf_SetDialogItemTextWriteout(gv_postBuildReportMatchupLabels[0], true, PlayerGroupAll());
     libNtve_gf_SetDialogItemTextWriteoutDuration(gv_postBuildReportMatchupLabels[0], 0.3, PlayerGroupAll());
-    TextExpressionSetToken("Param/Expression/35C1E315", "A", gf_GetCurrentlySelectedMatchupasText());
+    TextExpressionSetToken("Param/Expression/35C1E315", "A", gf_GetCurrentlyMatchupasText());
     libNtve_gf_SetDialogItemText(gv_postBuildReportMatchupLabels[0], TextExpressionAssemble("Param/Expression/35C1E315"), PlayerGroupAll());
     libNtve_gf_SetDialogItemTextWriteout(gv_postBuildReportMatchupLabels[1], true, PlayerGroupAll());
     libNtve_gf_SetDialogItemTextWriteoutDuration(gv_postBuildReportMatchupLabels[1], 0.3, PlayerGroupAll());
-    TextExpressionSetToken("Param/Expression/58FC614E", "A", gf_GetCurrentlySelectedMatchupasText());
+    TextExpressionSetToken("Param/Expression/58FC614E", "A", gf_GetCurrentlyMatchupasText());
     libNtve_gf_SetDialogItemText(gv_postBuildReportMatchupLabels[1], TextExpressionAssemble("Param/Expression/58FC614E"), PlayerGroupAll());
 }
 
@@ -4163,7 +4275,7 @@ void gf_UpdatePostBuildStatRowValueasInt (text lp_label, int lp_value, string lp
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][0], TextExpressionAssemble("Param/Expression/B465A6FA"), PlayerGroupAll());
     TextExpressionSetToken("Param/Expression/F0E2DCFF", "A", IntToText(lp_value));
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][1], TextExpressionAssemble("Param/Expression/F0E2DCFF"), PlayerGroupAll());
-    lv_benchmarkValue = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_benchmarkEntryKey);
+    lv_benchmarkValue = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), lp_benchmarkEntryKey);
     TextExpressionSetToken("Param/Expression/F6BAF499", "A", IntToText(lv_benchmarkValue));
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][2], TextExpressionAssemble("Param/Expression/F6BAF499"), PlayerGroupAll());
     lv_differenceText = gf_GetIntDifferenceasText(lp_value, lv_benchmarkValue, lp_higherIsBetter, lp_differenceAsPercentage);
@@ -4183,7 +4295,7 @@ void gf_UpdatePostBuildStatRowValueasReal (text lp_label, fixed lp_value, string
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][0], TextExpressionAssemble("Param/Expression/C43A814E"), PlayerGroupAll());
     TextExpressionSetToken("Param/Expression/58FC52E5", "A", FixedToText(lp_value, 0));
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][1], TextExpressionAssemble("Param/Expression/58FC52E5"), PlayerGroupAll());
-    lv_benchmarkValue = BankValueGetAsFixed(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_benchmarkEntryKey);
+    lv_benchmarkValue = BankValueGetAsFixed(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), lp_benchmarkEntryKey);
     TextExpressionSetToken("Param/Expression/11DCA616", "A", FixedToText(lv_benchmarkValue, 0));
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][2], TextExpressionAssemble("Param/Expression/11DCA616"), PlayerGroupAll());
     lv_diffText = gf_GetRealDifferenceasText(lp_value, lv_benchmarkValue, lp_higherIsBetter);
@@ -4203,7 +4315,7 @@ void gf_UpdatePostBuildStatRowValueasTime (text lp_label, int lp_value, string l
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][0], TextExpressionAssemble("Param/Expression/9E619A01"), PlayerGroupAll());
     TextExpressionSetToken("Param/Expression/47991026", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lp_value));
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][1], TextExpressionAssemble("Param/Expression/47991026"), PlayerGroupAll());
-    lv_benchmarkValue = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), lp_benchmarkEntryKey);
+    lv_benchmarkValue = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), lp_benchmarkEntryKey);
     TextExpressionSetToken("Param/Expression/430A1346", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_benchmarkValue));
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][2], TextExpressionAssemble("Param/Expression/430A1346"), PlayerGroupAll());
     lv_diffText = gf_GetTimeDifferenceasText(lp_value, lv_benchmarkValue, lp_higherIsBetter, lp_displayasPercentage);
@@ -6072,7 +6184,33 @@ string gf_GetIconForBuildingType (string lp_unitType) {
     }
 }
 
-string gf_GetCurrentlySelectedMatchupasBankSectionKey () {
+string gf_GenerateBuildKeyReferenceforBuildNumber (int lp_buildNumber) {
+    // Variable Declarations
+    string lv_result;
+
+    // Variable Initialization
+    lv_result = "";
+
+    // Implementation
+    lv_result = (gf_GetCurrentlySelectedMatchupAsBankSectionKey() + "_build_" + IntToString(lp_buildNumber));
+    return lv_result;
+}
+
+string gf_GetCurrentlySelectedBuildAsBankSectionKey () {
+    // Variable Declarations
+    int lv_selectedBuildNum;
+    string lv_buildSectionKey;
+
+    // Variable Initialization
+    lv_buildSectionKey = "";
+
+    // Implementation
+    lv_selectedBuildNum = DialogControlGetSelectedItem(gv_buildSelectionPulldown, 1);
+    lv_buildSectionKey = gv_currentMatchupBuildEntries[gv_currentlySelectedBuildEntryIndex].lv_bankSectionKey;
+    return lv_buildSectionKey;
+}
+
+string gf_GetCurrentlySelectedMatchupAsBankSectionKey () {
     // Implementation
     return (gv_currentMatchupSectionKeys[gv_currentlySelectedMatchupIndex]);
 }
@@ -7513,9 +7651,14 @@ unitgroup gf_GetUnitGroupofAllPlayer1WithoutThisUnit () {
     return lv_result;
 }
 
-text gf_GetCurrentlySelectedMatchupasText () {
+text gf_GetCurrentlyMatchupasText () {
     // Implementation
     return libNtve_gf_DialogItemText(gv_matchupSelectionButtons[gv_currentlySelectedMatchupIndex], 1);
+}
+
+text gf_GetCurrentlySelectedBuildasText () {
+    // Implementation
+    return gv_currentMatchupBuildEntries[DialogControlGetSelectedItem(gv_buildSelectionPulldown, 1)].lv_buildName;
 }
 
 int gf_GetEditBoxValueasInt (int lp_editBox) {
@@ -7543,7 +7686,7 @@ bool gf_DoesSavedBuildOrderExistForCurrentMatchup () {
     // Variable Initialization
 
     // Implementation
-    lv_numSteps = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedMatchupasBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey);
+    lv_numSteps = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey);
     if ((lv_numSteps > 0)) {
         lv_result = true;
     }
@@ -7562,7 +7705,7 @@ string gf_GetCurrentlySelectedMatchupOpponentRace () {
     lv_selectedMatchup = "";
 
     // Implementation
-    lv_selectedMatchup = gf_GetCurrentlySelectedMatchupasBankSectionKey();
+    lv_selectedMatchup = gf_GetCurrentlySelectedMatchupAsBankSectionKey();
     if ((StringContains(lv_selectedMatchup, "vP", c_stringAnywhere, c_stringCase) == true)) {
         lv_result = "Prot";
     }
@@ -9798,7 +9941,7 @@ bool gt_StartBuild_Func (bool testConds, bool runActions) {
 
     gf_HideBenchmarkDialog();
     UIDisplayMessage(PlayerGroupAll(), c_messageAreaDirective, StringExternal("Param/Value/27023A8A"));
-    gf_SaveBenchmarkMenuConfiguration(gf_GetCurrentlySelectedMatchupasBankSectionKey());
+    gf_SaveBenchmarkMenuConfigurationForBuild(gf_GetCurrentlySelectedBuildAsBankSectionKey());
     gf_SaveAlertMenuConfiguration();
     if ((gv_isFirstBuild == false)) {
         gf_ResetGameState();
@@ -10429,9 +10572,10 @@ bool gt_SelectMatchup_Func (bool testConds, bool runActions) {
     }
 
     libNtve_gf_SetDialogItemToggled(EventDialogControl(), true, PlayerGroupAll());
-    gf_SaveBenchmarkMenuConfiguration(gf_GetCurrentlySelectedMatchupasBankSectionKey());
+    gf_SaveBenchmarkMenuConfigurationForBuild(gf_GetCurrentlySelectedBuildAsBankSectionKey());
     gf_UpdateCurrentlySelectedMatchup();
-    gf_LoadBenchmarkMenuConfiguration(gf_GetCurrentlySelectedMatchupasBankSectionKey());
+    gf_LoadBuildEntriesforCurrentlySelectedMatchup(gf_GetCurrentlySelectedMatchupAsBankSectionKey());
+    gf_LoadBenchmarkMenuConfiguration(gf_GetCurrentlySelectedBuildAsBankSectionKey());
     gv_currentBuildWasForked = false;
     return true;
 }
@@ -10487,6 +10631,7 @@ bool gt_AddBuildDialogOkButtonClicked_Func (bool testConds, bool runActions) {
 
     DialogSetVisible(gv_addBuildDialog, PlayerGroupAll(), false);
     gf_DisableEnableBenchmarkDialog(true);
+    gf_AddBuildEntry();
     return true;
 }
 
@@ -10696,6 +10841,14 @@ bool gt_BuildSelectionChanged_Func (bool testConds, bool runActions) {
         }
     }
 
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gf_SaveBenchmarkMenuConfigurationForBuild(gf_GetCurrentlySelectedBuildAsBankSectionKey());
+    gv_currentlySelectedBuildEntryIndex = DialogControlGetSelectedItem(gv_buildSelectionPulldown, 1);
+    gf_LoadBenchmarkMenuConfiguration(gf_GetCurrentlySelectedBuildAsBankSectionKey());
     return true;
 }
 
@@ -10836,7 +10989,7 @@ bool gt_ClearSavedBenchmarkBuildforMatchuponButtonPress_Func (bool testConds, bo
         return true;
     }
 
-    gf_ClearBenchmarkBuildOrder(gf_GetCurrentlySelectedMatchupasBankSectionKey());
+    gf_ClearBenchmarkBuildOrder(gf_GetCurrentlySelectedBuildAsBankSectionKey());
     gf_ClearBenchmarkBuildStatsForCurrentMatchup();
     libNtve_gf_SetDialogItemChecked(gv_practiceAgainstSavedBuildOrderCheckbox, false, PlayerGroupAll());
     DialogControlSetEnabled(gv_practiceAgainstSavedBuildOrderCheckbox, PlayerGroupAll(), false);
@@ -11130,7 +11283,7 @@ bool gt_SaveBenchmarkBuildStats_Func (bool testConds, bool runActions) {
 
     gf_SaveCurrentBuildStatsAsBenchmarkBuildStats();
     gf_UpdatePostBuildReportDialogValues(false);
-    gf_SaveCurrentBuildAsBenchmarkBuildOrderForCurrentMatchup();
+    gf_SaveCurrentBuildOrderAsBenchmarkBuildOrderForCurrentBuild();
     return true;
 }
 
@@ -11158,7 +11311,7 @@ bool gt_ClearBenchmarkBuildStats_Func (bool testConds, bool runActions) {
 
     gf_ClearBenchmarkBuildStatsForCurrentMatchup();
     gf_UpdatePostBuildReportDialogValues(false);
-    gf_ClearBenchmarkBuildOrder(gf_GetCurrentlySelectedMatchupasBankSectionKey());
+    gf_ClearBenchmarkBuildOrder(gf_GetCurrentlySelectedBuildAsBankSectionKey());
     return true;
 }
 
@@ -11240,8 +11393,8 @@ bool gt_UpdateSupplyBenchmarksonButtonClick_Func (bool testConds, bool runAction
     else {
         gv_benchmarkFinalSupplyatGameTimeValue = gv_supplyBenchmarks[3].lv_actualSupplyatBenchmarkTime;
     }
-    gf_SaveMatchupBenchmarksConfiguration(gf_GetCurrentlySelectedMatchupasBankSectionKey());
-    gf_SaveBuildCompletionConfiguration(gf_GetCurrentlySelectedMatchupasBankSectionKey());
+    gf_SaveMatchupBenchmarksConfiguration(gf_GetCurrentlySelectedBuildAsBankSectionKey());
+    gf_SaveBuildCompletionConfiguration(gf_GetCurrentlySelectedBuildAsBankSectionKey());
     gf_UpdatePostBuildReportBenchmarkSection();
     return true;
 }
@@ -11450,7 +11603,8 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_CreateScreenButtons();
     TimerWindowCreate(gv_currentBuildBuildTimer, StringExternal("Param/Value/EAED3202"), true, true);
     TimerWindowSetAnchor(TimerWindowLastCreated(), c_anchorTopRight, 0, 0);
-    gf_LoadBenchmarkMenuConfiguration(gf_GetCurrentlySelectedMatchupasBankSectionKey());
+    gf_LoadBuildEntriesforCurrentlySelectedMatchup(gf_GetCurrentlySelectedMatchupAsBankSectionKey());
+    gf_LoadBenchmarkMenuConfiguration(gf_GetCurrentlySelectedBuildAsBankSectionKey());
     gf_LoadAlertMenuConfiguration();
     gf_ShowBenchmarkDialog();
     gf_CreateHiddenBenchmarkSupplyObjectives();
