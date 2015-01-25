@@ -510,7 +510,7 @@ int gv_numMapResources;
 bool gv_isFirstBuild;
 bool gv_currentBuildIsGasTaken;
 bool gv_currentBuildWasForked;
-timer gv_currentBuildBuildTimer;
+timer gv_currentBuildTimer;
 int gv_onehourinseconds;
 fixed gv_e;
 unitgroup gv_workers;
@@ -895,7 +895,7 @@ void InitGlobals () {
     gv_postBuildReportBuildOverviewLabelHeight = 45;
     gv_postBuildReportBenchmarkHeadingWidth = 260;
     gv_postBuildReportBenchmarksSupplyHeadingWidth = 200;
-    gv_postBuildReportBenchmarkAnalysisRowLabelWidth = 250;
+    gv_postBuildReportBenchmarkAnalysisRowLabelWidth = 350;
     gv_postBuildReportBenchmarkAnalysisRowHeight = 35;
     gv_postBuildReportBenchmarkUpdateButton = c_invalidDialogControlId;
     gv_postBuildReportStatLabelHeight = 35;
@@ -935,7 +935,7 @@ void InitGlobals () {
     gv_protossColorLight = Color(72.55, 93.33, 74.90);
     gv_paused = true;
     gv_isFirstBuild = true;
-    gv_currentBuildBuildTimer = TimerCreate();
+    gv_currentBuildTimer = TimerCreate();
     gv_onehourinseconds = 216000;
     gv_e = 2.7183;
     gv_workers = UnitGroupEmpty();
@@ -1106,8 +1106,8 @@ void gf_CreatePostBuildReportMuteCheckbox ();
 void gf_UpdatePostBuildMatchupText ();
 void gf_UpdatePostBuildReportDialogValues (bool lp_updateBuildOrderListBox);
 void gf_UpdatePostBuildReportOverviewSection ();
-void gf_UpdatePostBuildReportBenchmarkSection ();
-void gf_UpdatePostBuildReportBenchmarkAnalysisRow (int lp_rowNumber);
+void gf_UpdatePostBuildReportSupplyBenchmarkSection ();
+void gf_UpdatePostBuildReportSupplyBenchmarkAnalysisRow (int lp_rowNumber);
 void gf_UpdatePostBuildReportStatsSection ();
 void gf_UpdatePostBuildStatRowValueasInt (text lp_label, int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter, bool lp_differenceAsPercentage);
 void gf_UpdatePostBuildStatRowValueasReal (text lp_label, fixed lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter);
@@ -1372,6 +1372,7 @@ trigger gt_OpenMainMenu;
 trigger gt_SelectAlertMenu;
 trigger gt_SelectMatchup;
 trigger gt_AddBuildButtonClicked;
+trigger gt_AddBuildDialogEditBoxChanged;
 trigger gt_AddBuildDialogOkButtonClicked;
 trigger gt_AddBuildDialogCancelButtonClicked;
 trigger gt_RemoveBuildButtonClicked;
@@ -1663,8 +1664,8 @@ void gf_SaveCurrentBuildOrderAsBenchmarkBuildOrderForCurrentBuild () {
     BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gv_numBenchmarkBuildOrderStepsEntryKey, lv_numCurrentBuildSteps);
     TextExpressionSetToken("Param/Expression/1DC37812", "A", IntToText(gv_currentBuildOrderStepCursor));
     gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/1DC37812"));
-    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gv_benchmarkBuildOrderTimeKey, FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer)));
-    TextExpressionSetToken("Param/Expression/49DC8CAF", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))));
+    BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gv_benchmarkBuildOrderTimeKey, FixedToInt(TimerGetElapsed(gv_currentBuildTimer)));
+    TextExpressionSetToken("Param/Expression/49DC8CAF", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildTimer))));
     gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/49DC8CAF"));
     BankValueSetFromInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), gv_benchmarkBuildOrderSupplyBenchmarksMetKey, gv_numBenchmarksMetThisBuild);
     TextExpressionSetToken("Param/Expression/49EB79CE", "A", IntToText(gv_numBenchmarksMetThisBuild));
@@ -2229,7 +2230,7 @@ void gf_CompleteFinalBenchmarkObjective () {
     if ((ObjectiveGetState(gv_benchmarkFinalBenchmarkObjective) == c_objectiveStateActive)) {
         ObjectiveSetState(gv_benchmarkFinalBenchmarkObjective, c_objectiveStateCompleted);
         TextExpressionSetToken("Param/Expression/739A89F7", "A", ObjectiveGetName(gv_benchmarkFinalBenchmarkObjective));
-        TextExpressionSetToken("Param/Expression/739A89F7", "B", TextTimeFormat(StringToText("<min2/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))));
+        TextExpressionSetToken("Param/Expression/739A89F7", "B", TextTimeFormat(StringToText("<min2/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildTimer))));
         ObjectiveSetName(gv_benchmarkFinalBenchmarkObjective, TextExpressionAssemble("Param/Expression/739A89F7"));
         gv_numBenchmarksMetThisBuild += 1;
     }
@@ -2242,7 +2243,7 @@ void gf_FailFinalBenchmarkObjective () {
     if ((ObjectiveGetState(gv_benchmarkFinalBenchmarkObjective) == c_objectiveStateActive)) {
         ObjectiveSetState(gv_benchmarkFinalBenchmarkObjective, c_objectiveStateFailed);
         TextExpressionSetToken("Param/Expression/186AFB36", "A", ObjectiveGetName(gv_benchmarkFinalBenchmarkObjective));
-        TextExpressionSetToken("Param/Expression/186AFB36", "B", TextTimeFormat(StringToText("<min2/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))));
+        TextExpressionSetToken("Param/Expression/186AFB36", "B", TextTimeFormat(StringToText("<min2/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildTimer))));
         ObjectiveSetName(gv_benchmarkFinalBenchmarkObjective, TextExpressionAssemble("Param/Expression/186AFB36"));
     }
     else {
@@ -2337,7 +2338,7 @@ void gf_AddUnitBuildOrderStep (int lp_currentStep, unit lp_triggeringProgressUni
     gv_currentBuildOrderSteps[lp_currentStep].lv_unitType = lp_triggeringProgressUnitType;
     gv_currentBuildOrderSteps[lp_currentStep].lv_amount = 1;
     gv_currentBuildOrderSteps[lp_currentStep].lv_supply = gf_GetSupplyforCurrentBuildOrderStep(lp_currentStep);
-    gv_currentBuildOrderSteps[lp_currentStep].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer));
+    gv_currentBuildOrderSteps[lp_currentStep].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_currentBuildTimer));
     UnitGroupAdd(gv_currentBuildOrderSteps[lp_currentStep].lv_completingUnits, lp_triggeringProgressUnit);
     TextExpressionSetToken("Param/Expression/08B35931", "A", gf_GetCurrentBuildOrderStepText(lp_currentStep));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/08B35931"));
@@ -2349,7 +2350,7 @@ void gf_AddUpgradeBuildOrderStep (int lp_currentStep, string lp_buildStepUpgrade
     gv_currentBuildOrderSteps[lp_currentStep].lv_upgrade = lp_buildStepUpgrade;
     gv_currentBuildOrderSteps[lp_currentStep].lv_amount = 1;
     gv_currentBuildOrderSteps[lp_currentStep].lv_supply = PlayerScoreValueGetAsInt(1, "FoodUsed");
-    gv_currentBuildOrderSteps[lp_currentStep].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer));
+    gv_currentBuildOrderSteps[lp_currentStep].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_currentBuildTimer));
     gv_currentBuildOrderSteps[lp_currentStep].lv_completingUpgrade = lp_buildStepUpgrade;
     TextExpressionSetToken("Param/Expression/2B969709", "A", gf_GetCurrentBuildOrderStepText(lp_currentStep));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/2B969709"));
@@ -2367,7 +2368,7 @@ void gf_AddAbilityBuildOrderStep (int lp_currentStep, abilcmd lp_triggerringAbil
     gv_currentBuildOrderSteps[lp_currentStep].lv_ability = lv_triggeringAbilityType;
     gv_currentBuildOrderSteps[lp_currentStep].lv_amount = 1;
     gv_currentBuildOrderSteps[lp_currentStep].lv_supply = PlayerScoreValueGetAsInt(1, "FoodUsed");
-    gv_currentBuildOrderSteps[lp_currentStep].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer));
+    gv_currentBuildOrderSteps[lp_currentStep].lv_elapsedSeconds = FixedToInt(TimerGetElapsed(gv_currentBuildTimer));
     gv_currentBuildOrderSteps[lp_currentStep].lv_completingAbility = lp_triggerringAbilityCommand;
     TextExpressionSetToken("Param/Expression/736976D0", "A", gf_GetCurrentBuildOrderStepText(lp_currentStep));
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/736976D0"));
@@ -3281,7 +3282,7 @@ void gf_OpenBenchmarkDialogMainMenu () {
         UnitRemove(UnitGroupLoopCurrent());
     }
     UnitGroupLoopEnd();
-    TimerRestart(gv_currentBuildBuildTimer);
+    TimerRestart(gv_currentBuildTimer);
     gf_ResetBenchmarkTimers();
     gf_PauseGame();
 }
@@ -3353,7 +3354,11 @@ void gf_DisableEnableBenchmarkDialog (bool lp_enableDisable) {
         DialogSetTransparency(gv_benchmarkDialog, 60.0);
     }
     DialogControlSetEnabled(gv_startButton[0], PlayerGroupAll(), lp_enableDisable);
-    gf_ValidateBuildCanBeAddedOrRemoved();
+    if ((lp_enableDisable == true)) {
+        gf_ValidateBuildCanBeAddedOrRemoved();
+    }
+    else {
+    }
 }
 
 void gf_InitializeMatchupSelectionRow () {
@@ -3492,6 +3497,7 @@ void gf_CreateAddBuildDialog () {
     gv_addBuildDialogCancelButton = DialogControlLastCreated();
     libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_buildDialogButtonWidth, gv_buildDialogButtonHeight, c_anchorBottom, lv_buttonXOffset, lv_buttonYOffset, StringExternal("Param/Value/269CBA1E"), StringExternal("Param/Value/33373AA7"), "");
     gv_addBuildDialogOkButton = DialogControlLastCreated();
+    DialogControlSetEnabled(gv_addBuildDialogOkButton, PlayerGroupAll(), false);
     DialogSetVisible(DialogLastCreated(), PlayerGroupAll(), false);
 }
 
@@ -4224,7 +4230,7 @@ void gf_UpdatePostBuildMatchupText () {
 void gf_UpdatePostBuildReportDialogValues (bool lp_updateBuildOrderListBox) {
     // Implementation
     gf_UpdatePostBuildReportOverviewSection();
-    gf_UpdatePostBuildReportBenchmarkSection();
+    gf_UpdatePostBuildReportSupplyBenchmarkSection();
     gf_UpdatePostBuildReportStatsSection();
     if ((lp_updateBuildOrderListBox == true)) {
         gf_ResetBuildOrderListBox(gv_postBuildReportBuildOrderListBox);
@@ -4244,7 +4250,7 @@ void gf_UpdatePostBuildReportOverviewSection () {
 
     // Implementation
     if (((gv_practiceAgainstBenchmarkBuildOrder == true))) {
-        TextExpressionSetToken("Param/Expression/48512523", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))));
+        TextExpressionSetToken("Param/Expression/48512523", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildTimer))));
         TextExpressionSetToken("Param/Expression/48512523", "B", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkBuildOrderTimeSeconds));
         lv_buildTimeText = TextExpressionAssemble("Param/Expression/48512523");
         TextExpressionSetToken("Param/Expression/423A89C7", "A", IntToText(gv_numBenchmarksMetThisBuild));
@@ -4255,7 +4261,7 @@ void gf_UpdatePostBuildReportOverviewSection () {
         lv_benchmarkStepsText = TextExpressionAssemble("Param/Expression/DA3A6761");
     }
     else {
-        lv_buildTimeText = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer)));
+        lv_buildTimeText = TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), FixedToInt(TimerGetElapsed(gv_currentBuildTimer)));
         TextExpressionSetToken("Param/Expression/14C275AD", "A", IntToText(gv_numBenchmarksMetThisBuild));
         lv_supplyBenchmarksMetText = TextExpressionAssemble("Param/Expression/14C275AD");
         lv_benchmarkStepsText = IntToText(gv_currentBuildOrderStepCursor);
@@ -4268,7 +4274,7 @@ void gf_UpdatePostBuildReportOverviewSection () {
     libNtve_gf_SetDialogItemText(gv_postBuildReportBuildOverviewBuildStepNumLabel, TextExpressionAssemble("Param/Expression/60AFE4E0"), PlayerGroupAll());
 }
 
-void gf_UpdatePostBuildReportBenchmarkSection () {
+void gf_UpdatePostBuildReportSupplyBenchmarkSection () {
     int auto4B009C04_ae;
     int auto4B009C04_ai;
 
@@ -4284,16 +4290,35 @@ void gf_UpdatePostBuildReportBenchmarkSection () {
     auto4B009C04_ai = 1;
     lv_rowNum = 0;
     for ( ; ( (auto4B009C04_ai >= 0 && lv_rowNum <= auto4B009C04_ae) || (auto4B009C04_ai <= 0 && lv_rowNum >= auto4B009C04_ae) ) ; lv_rowNum += auto4B009C04_ai ) {
-        gf_UpdatePostBuildReportBenchmarkAnalysisRow(lv_rowNum);
+        gf_UpdatePostBuildReportSupplyBenchmarkAnalysisRow(lv_rowNum);
     }
 }
 
-void gf_UpdatePostBuildReportBenchmarkAnalysisRow (int lp_rowNumber) {
+void gf_UpdatePostBuildReportSupplyBenchmarkAnalysisRow (int lp_rowNumber) {
+    // Variable Declarations
+    int lv_currentBuildTime;
+    int lv_previousBuildTime;
+
+    // Variable Initialization
+
     // Implementation
-    TextExpressionSetToken("Param/Expression/F2C7E9FD", "A", IntToText(gv_supplyBenchmarks[lp_rowNumber].lv_actualSupplyatBenchmarkTime));
-    TextExpressionSetToken("Param/Expression/F2C7E9FD", "B", IntToText(gv_supplyBenchmarks[lp_rowNumber].lv_benchmarkSupply));
-    TextExpressionSetToken("Param/Expression/F2C7E9FD", "C", gf_GetSupplyDifferenceasFormattedText(gv_supplyBenchmarks[lp_rowNumber].lv_actualSupplyatBenchmarkTime, gv_supplyBenchmarks[lp_rowNumber].lv_benchmarkSupply));
-    libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportBenchmarksIndex][lp_rowNumber][1], TextExpressionAssemble("Param/Expression/F2C7E9FD"), PlayerGroupAll());
+    if (((gf_IsEndBuildatMaxSupplySelected() == true) && (lp_rowNumber == 3))) {
+        lv_currentBuildTime = FixedToInt(TimerGetElapsed(gv_currentBuildTimer));
+        lv_previousBuildTime = gf_GetTotalSecondsforMinSeconds(gv_supplyBenchmarks[lp_rowNumber].lv_benchmarkTimeMin, gv_supplyBenchmarks[3].lv_benchmarkTimeSeconds);
+        libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportBenchmarksIndex][lp_rowNumber][0], TextExpressionAssemble("Param/Expression/243FD242"), PlayerGroupAll());
+        TextExpressionSetToken("Param/Expression/47E819FC", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_currentBuildTime));
+        TextExpressionSetToken("Param/Expression/47E819FC", "B", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_previousBuildTime));
+        TextExpressionSetToken("Param/Expression/47E819FC", "C", gf_GetTimeDifferenceasText(lv_currentBuildTime, lv_previousBuildTime, false, false));
+        libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportBenchmarksIndex][lp_rowNumber][1], TextExpressionAssemble("Param/Expression/47E819FC"), PlayerGroupAll());
+    }
+    else {
+        TextExpressionSetToken("Param/Expression/4E7B2613", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gf_GetTotalSecondsforMinSeconds(gv_supplyBenchmarks[lp_rowNumber].lv_benchmarkTimeMin, gv_supplyBenchmarks[lp_rowNumber].lv_benchmarkTimeSeconds)));
+        libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportBenchmarksIndex][lp_rowNumber][0], TextExpressionAssemble("Param/Expression/4E7B2613"), PlayerGroupAll());
+        TextExpressionSetToken("Param/Expression/F2C7E9FD", "A", IntToText(gv_supplyBenchmarks[lp_rowNumber].lv_actualSupplyatBenchmarkTime));
+        TextExpressionSetToken("Param/Expression/F2C7E9FD", "B", IntToText(gv_supplyBenchmarks[lp_rowNumber].lv_benchmarkSupply));
+        TextExpressionSetToken("Param/Expression/F2C7E9FD", "C", gf_GetSupplyDifferenceasFormattedText(gv_supplyBenchmarks[lp_rowNumber].lv_actualSupplyatBenchmarkTime, gv_supplyBenchmarks[lp_rowNumber].lv_benchmarkSupply));
+        libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportBenchmarksIndex][lp_rowNumber][1], TextExpressionAssemble("Param/Expression/F2C7E9FD"), PlayerGroupAll());
+    }
 }
 
 void gf_UpdatePostBuildReportStatsSection () {
@@ -4913,7 +4938,7 @@ void gf_ResetGameState () {
     gf_ResetBenchmarkBuildOrderVariables();
     gf_ResetAlertTimers();
     gf_ResetBenchmarkTimers();
-    TimerRestart(gv_currentBuildBuildTimer);
+    TimerRestart(gv_currentBuildTimer);
     gf_ResetCamera();
     gf_InitializeBuildConfiguration();
     Wait(0.25, c_timeGame);
@@ -5315,7 +5340,7 @@ void gf_PauseGame () {
 
 void gf_PauseAllTimers () {
     // Implementation
-    TimerPause(gv_currentBuildBuildTimer, true);
+    TimerPause(gv_currentBuildTimer, true);
     gf_PauseBenchmarkTimers();
     gf_PauseActiveAlertTimers();
     gf_PauseActiveMultiUnitFailureTimers();
@@ -5433,7 +5458,7 @@ void gf_UnpauseAllTimers () {
     gf_UnpauseActiveMultiUnitFailureTimers();
     gf_ClearStoredActiveAlertTimers();
     gf_ClearStoredActiveMultiUnitFailureTimers();
-    TimerPause(gv_currentBuildBuildTimer, false);
+    TimerPause(gv_currentBuildTimer, false);
 }
 
 void gf_UnpauseBenchmarkTimers () {
@@ -6133,7 +6158,7 @@ bool gf_DoesZergHaveLarvaToSpendAndNoUnitsMorphing () {
     // Variable Initialization
 
     // Implementation
-    if (((TechTreeUnitCount(1, "Egg", c_techCountQueuedOrBetter) == 0) && (TechTreeUnitCount(1, "Larva", c_techCountQueuedOrBetter) > 0) && ((PlayerScoreValueGetAsInt(1, "FoodUsed") >= 12) || (TimerGetElapsed(gv_currentBuildBuildTimer) > 90.0)))) {
+    if (((TechTreeUnitCount(1, "Egg", c_techCountQueuedOrBetter) == 0) && (TechTreeUnitCount(1, "Larva", c_techCountQueuedOrBetter) > 0) && ((PlayerScoreValueGetAsInt(1, "FoodUsed") >= 12) || (TimerGetElapsed(gv_currentBuildTimer) > 90.0)))) {
         lv_result = true;
     }
     else {
@@ -6593,7 +6618,7 @@ bool gf_IsCurrentUnitTypeSameAsPreviousAndWithinMultiUnitThreshold (string lp_un
     // Variable Initialization
 
     // Implementation
-    if ((((TimerGetElapsed(gv_currentBuildBuildTimer)-gv_currentBuildOrderSteps[lp_previousStep].lv_elapsedSeconds) <= gv_multipleUnitFailureThresholdSeconds) && (gf_IsUnitTypeSameAsPreviousUnitType(lp_unitType, lp_previousStep) == true))) {
+    if ((((TimerGetElapsed(gv_currentBuildTimer)-gv_currentBuildOrderSteps[lp_previousStep].lv_elapsedSeconds) <= gv_multipleUnitFailureThresholdSeconds) && (gf_IsUnitTypeSameAsPreviousUnitType(lp_unitType, lp_previousStep) == true))) {
         lv_result = true;
     }
     else {
@@ -6987,7 +7012,7 @@ color gf_GetColorForBenchmarkBuildOrderStepCompletion (int lp_stepNumber) {
     lv_color = Color(100,100,100);
 
     // Implementation
-    lv_currentElaspedSeconds = FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer));
+    lv_currentElaspedSeconds = FixedToInt(TimerGetElapsed(gv_currentBuildTimer));
     lv_currentSupplyCount = PlayerScoreValueGetAsInt(1, "FoodUsed");
     if (((lv_currentSupplyCount <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_supply+0)) && (lv_currentElaspedSeconds <= (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds+0)))) {
         lv_color = Color(66.67, 79.22, 100.00);
@@ -7053,9 +7078,9 @@ text gf_GetBenchmarkandCurrentStepSecondsDiffasText (int lp_stepNumber) {
     // Variable Initialization
 
     // Implementation
-    lv_diff = (FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer))-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
+    lv_diff = (FixedToInt(TimerGetElapsed(gv_currentBuildTimer))-gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds);
     if ((lv_diff < 0)) {
-        lv_diff = (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds-FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer)));
+        lv_diff = (gv_benchmarkBuildOrderSteps[lp_stepNumber].lv_elapsedSeconds-FixedToInt(TimerGetElapsed(gv_currentBuildTimer)));
         TextExpressionSetToken("Param/Expression/D17BAC5D", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_diff));
         lv_result = TextExpressionAssemble("Param/Expression/D17BAC5D");
     }
@@ -7628,7 +7653,7 @@ int gf_GetTimeSupplyBlocked () {
 
 int gf_GetIdleProductionTime () {
     // Implementation
-    if ((TimerGetElapsed(gv_currentBuildBuildTimer) >= 1)) {
+    if ((TimerGetElapsed(gv_currentBuildTimer) >= 1)) {
         return gv_timeProductionIdleThisBuild;
     }
     else {
@@ -8807,7 +8832,7 @@ bool gt_APMBelowThreshold_Func (bool testConds, bool runActions) {
 
     // Conditions
     if (testConds) {
-        if (!(((gv_paused == false) && (gv_aPMBelowThresholdEnabled == true) && (TimerGetRemaining(gv_aPMBelowThresholdCooldownTimer) == 0.0) && (TimerGetElapsed(gv_currentBuildBuildTimer) > gv_aPMThresholdDuration)))) {
+        if (!(((gv_paused == false) && (gv_aPMBelowThresholdEnabled == true) && (TimerGetRemaining(gv_aPMBelowThresholdCooldownTimer) == 0.0) && (TimerGetElapsed(gv_currentBuildTimer) > gv_aPMThresholdDuration)))) {
             return false;
         }
     }
@@ -9025,7 +9050,7 @@ void gt_EndBuildatMaxSupply_Init () {
 bool gt_EndBuildatSpecifiedGameTime_Func (bool testConds, bool runActions) {
     // Conditions
     if (testConds) {
-        if (!(((gf_IsEndBuildatGameTimeSelected() == true) && (TimerGetElapsed(gv_currentBuildBuildTimer) >= gv_benchmarkEndBuildatGameTimeTotalSeconds) && (gv_paused == false)))) {
+        if (!(((gf_IsEndBuildatGameTimeSelected() == true) && (TimerGetElapsed(gv_currentBuildTimer) >= gv_benchmarkEndBuildatGameTimeTotalSeconds) && (gv_paused == false)))) {
             return false;
         }
     }
@@ -9588,7 +9613,7 @@ bool gt_EverySecondCheckforBuildHints_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    lv_timebeforenextstep = (gv_benchmarkBuildOrderSteps[gv_buildHintCursor].lv_elapsedSeconds-TimerGetElapsed(gv_currentBuildBuildTimer));
+    lv_timebeforenextstep = (gv_benchmarkBuildOrderSteps[gv_buildHintCursor].lv_elapsedSeconds-TimerGetElapsed(gv_currentBuildTimer));
     if (((lv_timebeforenextstep <= gv_buildHintTimeThreshold) && (lv_timebeforenextstep >= 0.0))) {
         TimerStart(gv_displayBuildHintCooldownTimer, 6.0, false, c_timeGame);
         TextExpressionSetToken("Param/Expression/8534C2D6", "A", gf_GetBenchmarkBuildOrderStepText(gv_buildHintCursor));
@@ -10010,7 +10035,7 @@ bool gt_StartBuild_Func (bool testConds, bool runActions) {
     else {
     }
     gf_UnpauseGame();
-    TimerStart(gv_currentBuildBuildTimer, gv_onehourinseconds, false, c_timeGame);
+    TimerStart(gv_currentBuildTimer, gv_onehourinseconds, false, c_timeGame);
     gf_StartBenchmarkTimers();
     CameraPan(1, PlayerStartLocation(1), 0.5, -1, 5.0, true);
     UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
@@ -10664,6 +10689,37 @@ bool gt_AddBuildButtonClicked_Func (bool testConds, bool runActions) {
 void gt_AddBuildButtonClicked_Init () {
     gt_AddBuildButtonClicked = TriggerCreate("gt_AddBuildButtonClicked_Func");
     TriggerAddEventDialogControl(gt_AddBuildButtonClicked, 1, c_invalidDialogControlId, c_triggerControlEventTypeClick);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Add Build Dialog Edit Box Changed
+//--------------------------------------------------------------------------------------------------
+bool gt_AddBuildDialogEditBoxChanged_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((EventDialogControl() == gv_addBuildDialogNameEditBox))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    if ((libNtve_gf_DialogItemEditValue(gv_addBuildDialogNameEditBox, 1) != "")) {
+        DialogControlSetEnabled(gv_addBuildDialogOkButton, PlayerGroupAll(), true);
+    }
+    else {
+        DialogControlSetEnabled(gv_addBuildDialogOkButton, PlayerGroupAll(), false);
+    }
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_AddBuildDialogEditBoxChanged_Init () {
+    gt_AddBuildDialogEditBoxChanged = TriggerCreate("gt_AddBuildDialogEditBoxChanged_Func");
+    TriggerAddEventDialogControl(gt_AddBuildDialogEditBoxChanged, 1, c_invalidDialogControlId, c_triggerControlEventTypeTextChanged);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -11486,7 +11542,7 @@ bool gt_UpdateSupplyBenchmarksonButtonClick_Func (bool testConds, bool runAction
         return true;
     }
 
-    lv_buildtime = FixedToInt(TimerGetElapsed(gv_currentBuildBuildTimer));
+    lv_buildtime = FixedToInt(TimerGetElapsed(gv_currentBuildTimer));
     auto053D7F19_ae = 3;
     auto053D7F19_ai = 1;
     lv_i = 0;
@@ -11502,7 +11558,7 @@ bool gt_UpdateSupplyBenchmarksonButtonClick_Func (bool testConds, bool runAction
     }
     gf_SaveMatchupBenchmarksConfiguration(gf_GetCurrentlySelectedBuildAsBankSectionKey());
     gf_SaveBuildCompletionConfiguration(gf_GetCurrentlySelectedBuildAsBankSectionKey());
-    gf_UpdatePostBuildReportBenchmarkSection();
+    gf_UpdatePostBuildReportSupplyBenchmarkSection();
     return true;
 }
 
@@ -11708,7 +11764,7 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     }
     gf_InitializePostBuildReportDialog();
     gf_CreateScreenButtons();
-    TimerWindowCreate(gv_currentBuildBuildTimer, StringExternal("Param/Value/EAED3202"), true, true);
+    TimerWindowCreate(gv_currentBuildTimer, StringExternal("Param/Value/EAED3202"), true, true);
     TimerWindowSetAnchor(TimerWindowLastCreated(), c_anchorTopRight, 0, 0);
     gf_LoadBuildEntriesforCurrentlySelectedMatchup(gf_GetCurrentlySelectedMatchupAsBankSectionKey());
     gf_LoadBenchmarkMenuConfiguration(gf_GetCurrentlySelectedBuildAsBankSectionKey());
@@ -11923,6 +11979,7 @@ void InitTriggers () {
     gt_SelectAlertMenu_Init();
     gt_SelectMatchup_Init();
     gt_AddBuildButtonClicked_Init();
+    gt_AddBuildDialogEditBoxChanged_Init();
     gt_AddBuildDialogOkButtonClicked_Init();
     gt_AddBuildDialogCancelButtonClicked_Init();
     gt_RemoveBuildButtonClicked_Init();
