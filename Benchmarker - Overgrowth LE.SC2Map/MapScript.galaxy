@@ -430,6 +430,9 @@ int gv_debugButtonHeight;
 int gv_debugMaxMinButton;
 int gv_debugMaxMinButtonWidth;
 int gv_debugMaxMinButtonHeight;
+int gv_debugCloseButton;
+int gv_debugClsoeButtonHeight;
+int gv_debugCloseButtonWidth;
 bool gv_debugWindowMaximized;
 int gv_helpDialogTitleSpacer;
 int gv_helpDialogItemHeight;
@@ -852,6 +855,9 @@ void InitGlobals () {
     gv_debugMaxMinButton = c_invalidDialogControlId;
     gv_debugMaxMinButtonWidth = 35;
     gv_debugMaxMinButtonHeight = 32;
+    gv_debugCloseButton = c_invalidDialogControlId;
+    gv_debugClsoeButtonHeight = 32;
+    gv_debugCloseButtonWidth = 35;
     gv_helpDialogTitleSpacer = 35;
     gv_helpDialogItemHeight = 35;
     gv_helpCommandLabelWidth = 175;
@@ -1392,6 +1398,7 @@ trigger gt_UpdateTimeBoxTextWithLeadingZeros;
 trigger gt_ToggleDebugDialogMaxMinButton;
 trigger gt_ToggleDebugDialogPauseButton;
 trigger gt_DebugDialogClearButtonPressed;
+trigger gt_DebugDialogCloseButtonPressed;
 trigger gt_CloseHelpandResumeBuildfromOkButton;
 trigger gt_CloseHelpandResumeBuildfromHotkey;
 trigger gt_OpenHelpDialog;
@@ -3881,7 +3888,7 @@ void gf_CreateDebugDialog () {
 
     // Variable Initialization
     lv_debugButtonXPadding = 35;
-    lv_debugLabelXPadding = 25;
+    lv_debugLabelXPadding = 40;
     lv_debugLabelYPadding = -13;
 
     // Implementation
@@ -3902,6 +3909,8 @@ void gf_CreateDebugDialog () {
     gv_debugPauseButton = DialogControlLastCreated();
     libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_debugButtonWidth, gv_debugButtonHeight, c_anchorBottomLeft, (lv_debugButtonXPadding+gv_debugButtonWidth), 0, StringExternal("Param/Value/3BD24962"), StringExternal("Param/Value/1BF0D20E"), "");
     gv_debugClearButton = DialogControlLastCreated();
+    libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_debugCloseButtonWidth, gv_debugClsoeButtonHeight, c_anchorTopLeft, 0, 0, StringExternal("Param/Value/1D7454EF"), StringExternal("Param/Value/7B7A43E1"), "");
+    gv_debugCloseButton = DialogControlLastCreated();
     gf_HideDebugDialog();
 }
 
@@ -11301,6 +11310,38 @@ void gt_DebugDialogClearButtonPressed_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Trigger: Debug Dialog Close Button Pressed
+//--------------------------------------------------------------------------------------------------
+bool gt_DebugDialogCloseButtonPressed_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((EventDialogControl() == gv_debugCloseButton))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_debugStatsEnabled = false;
+    gv_debugMenusEnabled = false;
+    gv_debugMapMechanicsEnabled = false;
+    gv_debugBankEnabled = false;
+    gv_debugAlertsEnabled = false;
+    gv_debugBuildOrderEnabled = false;
+    gf_HideDebugDialog();
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_DebugDialogCloseButtonPressed_Init () {
+    gt_DebugDialogCloseButtonPressed = TriggerCreate("gt_DebugDialogCloseButtonPressed_Func");
+    TriggerAddEventDialogControl(gt_DebugDialogCloseButtonPressed, 1, c_invalidDialogControlId, c_triggerControlEventTypeClick);
+}
+
+//--------------------------------------------------------------------------------------------------
 // Trigger: Close Help and Resume Build from Ok Button
 //--------------------------------------------------------------------------------------------------
 bool gt_CloseHelpandResumeBuildfromOkButton_Func (bool testConds, bool runActions) {
@@ -11999,6 +12040,7 @@ void InitTriggers () {
     gt_ToggleDebugDialogMaxMinButton_Init();
     gt_ToggleDebugDialogPauseButton_Init();
     gt_DebugDialogClearButtonPressed_Init();
+    gt_DebugDialogCloseButtonPressed_Init();
     gt_CloseHelpandResumeBuildfromOkButton_Init();
     gt_CloseHelpandResumeBuildfromHotkey_Init();
     gt_OpenHelpDialog_Init();
