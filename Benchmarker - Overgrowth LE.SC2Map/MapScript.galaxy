@@ -1205,6 +1205,7 @@ string gf_GetCurrentlySelectedBuildAsBankSectionKey ();
 string gf_GetCurrentlySelectedMatchupAsBankSectionKey ();
 string gf_GetBenchmarkBuildOrderStepBankKey (int lp_stepNumber, string lp_stepEntryKeySuffix);
 bool gf_IsUserBankVersionCurrentWithRelease ();
+bool gf_DoesBuildKeyExist (string lp_buildKey);
 bool gf_IsUnitTypeAStructure (string lp_unitType);
 bool gf_IsUnitTypeATrackedArmyUnit (string lp_unitType);
 bool gf_IsUnitTypeDestructible (string lp_unitType);
@@ -6336,6 +6337,35 @@ bool gf_IsUserBankVersionCurrentWithRelease () {
     return lv_result;
 }
 
+bool gf_DoesBuildKeyExist (string lp_buildKey) {
+    int auto50CEE74C_ae;
+    int auto50CEE74C_ai;
+
+    // Variable Declarations
+    bool lv_result;
+    int lv_currentBuildNum;
+
+    // Variable Initialization
+
+    // Implementation
+    auto50CEE74C_ae = gv_currentMatchupNumBuilds;
+    auto50CEE74C_ai = 1;
+    lv_currentBuildNum = 1;
+    for ( ; ( (auto50CEE74C_ai >= 0 && lv_currentBuildNum <= auto50CEE74C_ae) || (auto50CEE74C_ai <= 0 && lv_currentBuildNum >= auto50CEE74C_ae) ) ; lv_currentBuildNum += auto50CEE74C_ai ) {
+        TextExpressionSetToken("Param/Expression/8569C255", "A", StringToText(gv_currentMatchupBuildEntries[lv_currentBuildNum].lv_buildName));
+        gf_LogTextMessage(gv_debugMenusEnabled, TextExpressionAssemble("Param/Expression/8569C255"));
+        if ((StringEqual(lp_buildKey, gv_currentMatchupBuildEntries[lv_currentBuildNum].lv_buildName, c_stringNoCase) == true)) {
+            lv_result = true;
+        }
+        else {
+        }
+    }
+    TextExpressionSetToken("Param/Expression/7AF87DE5", "A", StringToText(lp_buildKey));
+    TextExpressionSetToken("Param/Expression/7AF87DE5", "B", libNtve_gf_ConvertBooleanToText(lv_result));
+    gf_LogTextMessage(gv_debugMenusEnabled, TextExpressionAssemble("Param/Expression/7AF87DE5"));
+    return lv_result;
+}
+
 bool gf_IsUnitTypeAStructure (string lp_unitType) {
     // Variable Declarations
     bool lv_result;
@@ -10717,7 +10747,12 @@ bool gt_AddBuildDialogEditBoxChanged_Func (bool testConds, bool runActions) {
     }
 
     if ((libNtve_gf_DialogItemEditValue(gv_addBuildDialogNameEditBox, 1) != "")) {
-        DialogControlSetEnabled(gv_addBuildDialogOkButton, PlayerGroupAll(), true);
+        if ((gf_DoesBuildKeyExist(libNtve_gf_DialogItemEditValue(gv_addBuildDialogNameEditBox, 1)) == true)) {
+            DialogControlSetEnabled(gv_addBuildDialogOkButton, PlayerGroupAll(), false);
+        }
+        else {
+            DialogControlSetEnabled(gv_addBuildDialogOkButton, PlayerGroupAll(), true);
+        }
     }
     else {
         DialogControlSetEnabled(gv_addBuildDialogOkButton, PlayerGroupAll(), false);
