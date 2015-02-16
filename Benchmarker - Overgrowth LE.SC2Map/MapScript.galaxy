@@ -258,6 +258,7 @@ int gv_orangeBenchmarkSupplyThreshold;
 int gv_orangeBenchmarkSecondsThreshold;
 int gv_currentBuildTotalAPMSamplesThisBuild;
 int gv_currentBuildCumulativeAPM;
+int gv_currentBuildAverageAPM;
 fixed gv_currentBuildCumulativeTotalMineralCollectionRate;
 fixed gv_currentBuildCumulativeTotalGasCollectionRate;
 int gv_currentBuildNumResourceCollectionRateSamples;
@@ -1141,9 +1142,9 @@ void gf_UpdatePostBuildReportOverviewSection ();
 void gf_UpdatePostBuildReportSupplyBenchmarkSection ();
 void gf_UpdatePostBuildReportSupplyBenchmarkAnalysisRow (int lp_rowNumber);
 void gf_UpdatePostBuildReportStatsSection ();
-void gf_UpdatePostBuildStatRowValueasInt (text lp_label, int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter, bool lp_differenceAsPercentage);
-void gf_UpdatePostBuildStatRowValueasReal (text lp_label, fixed lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter);
-void gf_UpdatePostBuildStatRowValueasTime (text lp_label, int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter, bool lp_displayasPercentage);
+void gf_UpdatePostBuildStatRowValueasInt (text lp_label, int lp_currentValue, int lp_benchmarkValue, int lp_rowNumber, bool lp_higherIsBetter, bool lp_differenceAsPercentage);
+void gf_UpdatePostBuildStatRowValueasReal (text lp_label, fixed lp_currentValue, fixed lp_benchmarkValue, int lp_rowNumber, bool lp_higherIsBetter);
+void gf_UpdatePostBuildStatRowValueasTime (text lp_label, int lp_currentValue, int lp_benchmarkValue, int lp_rowNumber, bool lp_higherIsBetter, bool lp_displayasPercentage);
 void gf_CreateStatsDialog ();
 void gf_CreateStatsDialogHeaderRowLabels ();
 void gf_CreateStatsDialogRow (int lp_rowOffset);
@@ -1378,16 +1379,16 @@ trigger gt_EnableDisableBuildHints;
 trigger gt_EnableDisablePerformanceFeedback;
 trigger gt_DebugSpendingQuotient;
 trigger gt_UpdateGasTaken;
-trigger gt_UpdateProductionIdleTime;
-trigger gt_UpdateTimeSupplyBlocked;
 trigger gt_UpdateMineralsCollectedThisBuild;
 trigger gt_UpdateGasCollectedThisBuild;
-trigger gt_UpdateAPM;
 trigger gt_UpdateTotalWorkers;
 trigger gt_UpdateNumUpgradesResearched;
+trigger gt_EverySecondUpdateCurrentBuildStats;
+trigger gt_UpdateAPM;
+trigger gt_UpdateTimeSupplyBlocked;
+trigger gt_UpdateProductionIdleTime;
 trigger gt_UpdateResourceCollectionRate;
 trigger gt_UpdateAverageUnspentResources;
-trigger gt_EverySecondUpdateCurrentBuildStats;
 trigger gt_StartBuild;
 trigger gt_ResetBuild;
 trigger gt_ToggleDebugAlerts;
@@ -4521,29 +4522,30 @@ void gf_UpdatePostBuildReportStatsSection () {
     // Variable Initialization
 
     // Implementation
-    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/D3C083D3"), gv_currentBuildWorkersCreated, gv_bestTotalWorkersCreatedEntryKey, lv_statRowNum, true, false);
+    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/D3C083D3"), gv_currentBuildWorkersCreated, gv_benchmarkBuildWorkersCreated, lv_statRowNum, true, false);
     lv_statRowNum += 1;
-    gf_UpdatePostBuildStatRowValueasTime(StringExternal("Param/Value/F52DAACD"), gf_GetTimeSupplyBlocked(), gv_bestTimeSupplyBlockedEntryKey, lv_statRowNum, false, false);
+    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/6D5463E2"), gv_currentBuildNumSupplyBlocks, gv_benchmarkBuildNumSupplyBlocks, lv_statRowNum, false, false);
     lv_statRowNum += 1;
-    gf_UpdatePostBuildStatRowValueasTime(StringExternal("Param/Value/E59E74B8"), gf_GetIdleProductionTime(), gv_bestIdleProductionTimeEntryKey, lv_statRowNum, false, false);
+    gf_UpdatePostBuildStatRowValueasTime(StringExternal("Param/Value/F52DAACD"), gv_currentBuildTimeSupplyBlocked, gv_benchmarkBuildTimeSupplyBlocked, lv_statRowNum, false, false);
     lv_statRowNum += 1;
-    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/F9CF4469"), gf_GetTotalMineralsCollected(), gv_bestTotalMineralsCollectedEntryKey, lv_statRowNum, true, true);
+    gf_UpdatePostBuildStatRowValueasTime(StringExternal("Param/Value/E59E74B8"), gv_currentBuildTimeProductionIdle, gv_benchmarkBuildTimeProductionIdle, lv_statRowNum, false, false);
     lv_statRowNum += 1;
-    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/B88570A5"), gf_GetTotalGasCollected(), gv_bestTotalGasCollectedEntryKey, lv_statRowNum, true, true);
+    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/F9CF4469"), gv_currentBuildTotalMineralsCollected, gv_benchmarkBuildTotalMineralsCollected, lv_statRowNum, true, true);
     lv_statRowNum += 1;
-    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/89E5DE2C"), gf_GetTotalArmySupplyFromGame(), gv_bestTotalArmySupplyEntryKey, lv_statRowNum, true, false);
+    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/B88570A5"), gv_currentBuildTotalGasCollected, gv_benchmarkBuildTotalGasCollected, lv_statRowNum, true, true);
     lv_statRowNum += 1;
-    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/EBB3E7BB"), gf_GetTotalArmyValueMineralsFromGame(), gv_bestTotalArmyValueMineralsEntryKey, lv_statRowNum, true, true);
+    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/89E5DE2C"), gv_currentBuildTotalArmySupply, gv_benchmarkBuildTotalArmySupply, lv_statRowNum, true, false);
     lv_statRowNum += 1;
-    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/87426EC9"), gf_GetTotalArmyValueGasFromGame(), gv_bestTotalArmyValueGasEntryKey, lv_statRowNum, true, true);
+    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/EBB3E7BB"), gv_currentBuildTotalArmyValueMinerals, gv_benchmarkBuildTotalArmyValueMinerals, lv_statRowNum, true, true);
     lv_statRowNum += 1;
-    gf_UpdatePostBuildStatRowValueasReal(StringExternal("Param/Value/14A329F0"), gf_GetAverageBuildAPM(), gv_bestAverageAPMEntryKey, lv_statRowNum, true);
+    gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/87426EC9"), gv_currentBuildTotalArmyValueGas, gv_benchmarkBuildTotalArmyValueGas, lv_statRowNum, true, true);
+    lv_statRowNum += 1;
+    gf_UpdatePostBuildStatRowValueasReal(StringExternal("Param/Value/14A329F0"), gv_currentBuildAverageAPM, gv_benchmarkBuildAverageAPM, lv_statRowNum, true);
     lv_statRowNum += 1;
 }
 
-void gf_UpdatePostBuildStatRowValueasInt (text lp_label, int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter, bool lp_differenceAsPercentage) {
+void gf_UpdatePostBuildStatRowValueasInt (text lp_label, int lp_currentValue, int lp_benchmarkValue, int lp_rowNumber, bool lp_higherIsBetter, bool lp_differenceAsPercentage) {
     // Variable Declarations
-    int lv_benchmarkValue;
     text lv_differenceText;
 
     // Variable Initialization
@@ -4551,19 +4553,17 @@ void gf_UpdatePostBuildStatRowValueasInt (text lp_label, int lp_value, string lp
     // Implementation
     TextExpressionSetToken("Param/Expression/B465A6FA", "A", lp_label);
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][0], TextExpressionAssemble("Param/Expression/B465A6FA"), PlayerGroupAll());
-    TextExpressionSetToken("Param/Expression/F0E2DCFF", "A", IntToText(lp_value));
+    TextExpressionSetToken("Param/Expression/F0E2DCFF", "A", IntToText(lp_currentValue));
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][1], TextExpressionAssemble("Param/Expression/F0E2DCFF"), PlayerGroupAll());
-    lv_benchmarkValue = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), lp_benchmarkEntryKey);
-    TextExpressionSetToken("Param/Expression/F6BAF499", "A", IntToText(lv_benchmarkValue));
+    TextExpressionSetToken("Param/Expression/F6BAF499", "A", IntToText(lp_benchmarkValue));
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][2], TextExpressionAssemble("Param/Expression/F6BAF499"), PlayerGroupAll());
-    lv_differenceText = gf_GetIntDifferenceasText(lp_value, lv_benchmarkValue, lp_higherIsBetter, lp_differenceAsPercentage);
+    lv_differenceText = gf_GetIntDifferenceasText(lp_currentValue, lp_benchmarkValue, lp_higherIsBetter, lp_differenceAsPercentage);
     TextExpressionSetToken("Param/Expression/CBC6EA6A", "A", lv_differenceText);
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][3], TextExpressionAssemble("Param/Expression/CBC6EA6A"), PlayerGroupAll());
 }
 
-void gf_UpdatePostBuildStatRowValueasReal (text lp_label, fixed lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter) {
+void gf_UpdatePostBuildStatRowValueasReal (text lp_label, fixed lp_currentValue, fixed lp_benchmarkValue, int lp_rowNumber, bool lp_higherIsBetter) {
     // Variable Declarations
-    fixed lv_benchmarkValue;
     text lv_diffText;
 
     // Variable Initialization
@@ -4571,32 +4571,29 @@ void gf_UpdatePostBuildStatRowValueasReal (text lp_label, fixed lp_value, string
     // Implementation
     TextExpressionSetToken("Param/Expression/C43A814E", "A", lp_label);
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][0], TextExpressionAssemble("Param/Expression/C43A814E"), PlayerGroupAll());
-    TextExpressionSetToken("Param/Expression/58FC52E5", "A", FixedToText(lp_value, 0));
+    TextExpressionSetToken("Param/Expression/58FC52E5", "A", FixedToText(lp_currentValue, 0));
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][1], TextExpressionAssemble("Param/Expression/58FC52E5"), PlayerGroupAll());
-    lv_benchmarkValue = BankValueGetAsFixed(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), lp_benchmarkEntryKey);
-    TextExpressionSetToken("Param/Expression/11DCA616", "A", FixedToText(lv_benchmarkValue, 0));
+    TextExpressionSetToken("Param/Expression/11DCA616", "A", FixedToText(lp_benchmarkValue, 0));
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][2], TextExpressionAssemble("Param/Expression/11DCA616"), PlayerGroupAll());
-    lv_diffText = gf_GetRealDifferenceasText(lp_value, lv_benchmarkValue, lp_higherIsBetter);
+    lv_diffText = gf_GetRealDifferenceasText(lp_currentValue, lp_benchmarkValue, lp_higherIsBetter);
     TextExpressionSetToken("Param/Expression/7E060849", "A", lv_diffText);
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][3], TextExpressionAssemble("Param/Expression/7E060849"), PlayerGroupAll());
 }
 
-void gf_UpdatePostBuildStatRowValueasTime (text lp_label, int lp_value, string lp_benchmarkEntryKey, int lp_rowNumber, bool lp_higherIsBetter, bool lp_displayasPercentage) {
+void gf_UpdatePostBuildStatRowValueasTime (text lp_label, int lp_currentValue, int lp_benchmarkValue, int lp_rowNumber, bool lp_higherIsBetter, bool lp_displayasPercentage) {
     // Variable Declarations
     text lv_diffText;
-    int lv_benchmarkValue;
 
     // Variable Initialization
 
     // Implementation
     TextExpressionSetToken("Param/Expression/9E619A01", "A", lp_label);
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][0], TextExpressionAssemble("Param/Expression/9E619A01"), PlayerGroupAll());
-    TextExpressionSetToken("Param/Expression/47991026", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lp_value));
+    TextExpressionSetToken("Param/Expression/47991026", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lp_currentValue));
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][1], TextExpressionAssemble("Param/Expression/47991026"), PlayerGroupAll());
-    lv_benchmarkValue = BankValueGetAsInt(gv_benchmarkerBank, gf_GetCurrentlySelectedBuildAsBankSectionKey(), lp_benchmarkEntryKey);
-    TextExpressionSetToken("Param/Expression/430A1346", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lv_benchmarkValue));
+    TextExpressionSetToken("Param/Expression/430A1346", "A", TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), lp_benchmarkValue));
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][2], TextExpressionAssemble("Param/Expression/430A1346"), PlayerGroupAll());
-    lv_diffText = gf_GetTimeDifferenceasText(lp_value, lv_benchmarkValue, lp_higherIsBetter, lp_displayasPercentage);
+    lv_diffText = gf_GetTimeDifferenceasText(lp_currentValue, lp_benchmarkValue, lp_higherIsBetter, lp_displayasPercentage);
     TextExpressionSetToken("Param/Expression/F7F5AD3C", "A", lv_diffText);
     libNtve_gf_SetDialogItemText(gv_postBuildReportDialogItems[gv_postBuildReportStatsIndex][lp_rowNumber][3], TextExpressionAssemble("Param/Expression/F7F5AD3C"), PlayerGroupAll());
 }
@@ -10056,58 +10053,6 @@ void gt_UpdateGasTaken_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Update Production Idle Time
-//--------------------------------------------------------------------------------------------------
-bool gt_UpdateProductionIdleTime_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!(((gf_IsAnyProductionUnitTypeQueueIdle() == true) && (gv_paused == false)))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gv_currentBuildTimeProductionIdle += 1;
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_UpdateProductionIdleTime_Init () {
-    gt_UpdateProductionIdleTime = TriggerCreate("gt_UpdateProductionIdleTime_Func");
-    TriggerAddEventTimePeriodic(gt_UpdateProductionIdleTime, 1.0, c_timeGame);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Update Time Supply Blocked
-//--------------------------------------------------------------------------------------------------
-bool gt_UpdateTimeSupplyBlocked_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") == PlayerScoreValueGetAsInt(1, "FoodMade")) && (gv_paused == false)))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gv_currentBuildTimeSupplyBlocked += 1;
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_UpdateTimeSupplyBlocked_Init () {
-    gt_UpdateTimeSupplyBlocked = TriggerCreate("gt_UpdateTimeSupplyBlocked_Func");
-    TriggerAddEventTimePeriodic(gt_UpdateTimeSupplyBlocked, 1.0, c_timeGame);
-}
-
-//--------------------------------------------------------------------------------------------------
 // Trigger: Update Minerals Collected This Build
 //--------------------------------------------------------------------------------------------------
 bool gt_UpdateMineralsCollectedThisBuild_Func (bool testConds, bool runActions) {
@@ -10160,33 +10105,6 @@ void gt_UpdateGasCollectedThisBuild_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Update APM
-//--------------------------------------------------------------------------------------------------
-bool gt_UpdateAPM_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!((gv_paused == false))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gv_currentBuildCumulativeAPM += PlayerScoreValueGetAsInt(1, "APM");
-    gv_currentBuildTotalAPMSamplesThisBuild += 1;
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_UpdateAPM_Init () {
-    gt_UpdateAPM = TriggerCreate("gt_UpdateAPM_Func");
-    TriggerAddEventTimePeriodic(gt_UpdateAPM, 0.5, c_timeGame);
-}
-
-//--------------------------------------------------------------------------------------------------
 // Trigger: Update Total Workers
 //--------------------------------------------------------------------------------------------------
 bool gt_UpdateTotalWorkers_Func (bool testConds, bool runActions) {
@@ -10229,6 +10147,105 @@ bool gt_UpdateNumUpgradesResearched_Func (bool testConds, bool runActions) {
 void gt_UpdateNumUpgradesResearched_Init () {
     gt_UpdateNumUpgradesResearched = TriggerCreate("gt_UpdateNumUpgradesResearched_Func");
     TriggerAddEventUnitResearchProgress(gt_UpdateNumUpgradesResearched, null, c_unitProgressStageStart);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Every Second - Update Current Build Stats
+//--------------------------------------------------------------------------------------------------
+bool gt_EverySecondUpdateCurrentBuildStats_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_paused == false))) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_EverySecondUpdateCurrentBuildStats_Init () {
+    gt_EverySecondUpdateCurrentBuildStats = TriggerCreate("gt_EverySecondUpdateCurrentBuildStats_Func");
+    TriggerAddEventTimePeriodic(gt_EverySecondUpdateCurrentBuildStats, 1.0, c_timeGame);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update APM
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateAPM_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_paused == false))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_currentBuildCumulativeAPM += PlayerScoreValueGetAsInt(1, "APM");
+    gv_currentBuildTotalAPMSamplesThisBuild += 1;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateAPM_Init () {
+    gt_UpdateAPM = TriggerCreate("gt_UpdateAPM_Func");
+    TriggerAddEventTimePeriodic(gt_UpdateAPM, 0.5, c_timeGame);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Time Supply Blocked
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateTimeSupplyBlocked_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") == PlayerScoreValueGetAsInt(1, "FoodMade")) && (gv_paused == false)))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_currentBuildTimeSupplyBlocked += 1;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateTimeSupplyBlocked_Init () {
+    gt_UpdateTimeSupplyBlocked = TriggerCreate("gt_UpdateTimeSupplyBlocked_Func");
+    TriggerAddEventTimePeriodic(gt_UpdateTimeSupplyBlocked, 1.0, c_timeGame);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Production Idle Time
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateProductionIdleTime_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((gf_IsAnyProductionUnitTypeQueueIdle() == true) && (gv_paused == false)))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_currentBuildTimeProductionIdle += 1;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateProductionIdleTime_Init () {
+    gt_UpdateProductionIdleTime = TriggerCreate("gt_UpdateProductionIdleTime_Func");
+    TriggerAddEventTimePeriodic(gt_UpdateProductionIdleTime, 1.0, c_timeGame);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -10285,26 +10302,6 @@ bool gt_UpdateAverageUnspentResources_Func (bool testConds, bool runActions) {
 void gt_UpdateAverageUnspentResources_Init () {
     gt_UpdateAverageUnspentResources = TriggerCreate("gt_UpdateAverageUnspentResources_Func");
     TriggerAddEventTimePeriodic(gt_UpdateAverageUnspentResources, 1.0, c_timeGame);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Every Second - Update Current Build Stats
-//--------------------------------------------------------------------------------------------------
-bool gt_EverySecondUpdateCurrentBuildStats_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!((gv_paused == false))) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_EverySecondUpdateCurrentBuildStats_Init () {
-    gt_EverySecondUpdateCurrentBuildStats = TriggerCreate("gt_EverySecondUpdateCurrentBuildStats_Func");
-    TriggerAddEventTimePeriodic(gt_EverySecondUpdateCurrentBuildStats, 1.0, c_timeGame);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -12296,16 +12293,16 @@ void InitTriggers () {
     gt_EnableDisablePerformanceFeedback_Init();
     gt_DebugSpendingQuotient_Init();
     gt_UpdateGasTaken_Init();
-    gt_UpdateProductionIdleTime_Init();
-    gt_UpdateTimeSupplyBlocked_Init();
     gt_UpdateMineralsCollectedThisBuild_Init();
     gt_UpdateGasCollectedThisBuild_Init();
-    gt_UpdateAPM_Init();
     gt_UpdateTotalWorkers_Init();
     gt_UpdateNumUpgradesResearched_Init();
+    gt_EverySecondUpdateCurrentBuildStats_Init();
+    gt_UpdateAPM_Init();
+    gt_UpdateTimeSupplyBlocked_Init();
+    gt_UpdateProductionIdleTime_Init();
     gt_UpdateResourceCollectionRate_Init();
     gt_UpdateAverageUnspentResources_Init();
-    gt_EverySecondUpdateCurrentBuildStats_Init();
     gt_StartBuild_Init();
     gt_ResetBuild_Init();
     gt_ToggleDebugAlerts_Init();
