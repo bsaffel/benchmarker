@@ -663,6 +663,7 @@ void InitGlobals () {
     gv_pvTMatchupSectionKey = "PvT";
     gv_pvZMatchupSectionKey = "PvZ";
     gv_pvPMatchupSectionKey = "PvP";
+    gv_currentlySelectedBuildNumber = 1;
     for (init_i = 0; init_i <= 11; init_i += 1) {
         gv_currentMatchupBuildEntries[init_i].lv_buildName = "";
         gv_currentMatchupBuildEntries[init_i].lv_buildSectionKey = "";
@@ -10129,7 +10130,7 @@ void gt_UpdateGasTaken_Init () {
 bool gt_IncrementNumSupplyBlocks_Func (bool testConds, bool runActions) {
     // Conditions
     if (testConds) {
-        if (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") < 200) && ((PlayerScoreValueGetAsInt(1, "FoodUsed") - PlayerScoreValueGetAsInt(1, "FoodMade")) > FixedToInt(gf_GetSupplyCostForUnit(libNtve_gf_TriggeringProgressUnitType())))))) {
+        if (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") < 200) && ((PlayerScoreValueGetAsInt(1, "FoodUsed") - PlayerScoreValueGetAsInt(1, "FoodMade")) > FixedToInt(gf_GetSupplyCostForUnit(libNtve_gf_TriggeringProgressUnitType()))) && (gf_IsSupplyDepotorPylonUnderConstruction() == false) && (gf_IsOverlordCurrentlyInProgress() == false)))) {
             return false;
         }
     }
@@ -10155,9 +10156,15 @@ void gt_IncrementNumSupplyBlocks_Init () {
 // Trigger: Update Time Supply Blocked
 //--------------------------------------------------------------------------------------------------
 bool gt_UpdateTimeSupplyBlocked_Func (bool testConds, bool runActions) {
+    // Variable Declarations
+    int lv_minimumSupplyBlockThreshold;
+
+    // Variable Initialization
+    lv_minimumSupplyBlockThreshold = 18;
+
     // Conditions
     if (testConds) {
-        if (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") == PlayerScoreValueGetAsInt(1, "FoodMade")) && (gv_paused == false)))) {
+        if (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") == PlayerScoreValueGetAsInt(1, "FoodMade")) && (gv_paused == false) && (PlayerScoreValueGetAsInt(1, "FoodMade") >= lv_minimumSupplyBlockThreshold)))) {
             return false;
         }
     }
@@ -10294,36 +10301,78 @@ void gt_UpdateAverageUnspentResources_Init () {
 // Trigger: Update Total Army Supply
 //--------------------------------------------------------------------------------------------------
 bool gt_UpdateTotalArmySupply_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_paused == false))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_currentBuildTotalArmySupply = PlayerScoreValueGetAsInt(1, "FoodUsedArmy");
     return true;
 }
 
 //--------------------------------------------------------------------------------------------------
 void gt_UpdateTotalArmySupply_Init () {
     gt_UpdateTotalArmySupply = TriggerCreate("gt_UpdateTotalArmySupply_Func");
+    TriggerAddEventTimePeriodic(gt_UpdateTotalArmySupply, 1.0, c_timeGame);
 }
 
 //--------------------------------------------------------------------------------------------------
 // Trigger: Update Total Army Value Minerals
 //--------------------------------------------------------------------------------------------------
 bool gt_UpdateTotalArmyValueMinerals_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_paused == false))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_currentBuildTotalArmyValueMinerals = PlayerScoreValueGetAsInt(1, "MineralsUsedTotalArmy");
     return true;
 }
 
 //--------------------------------------------------------------------------------------------------
 void gt_UpdateTotalArmyValueMinerals_Init () {
     gt_UpdateTotalArmyValueMinerals = TriggerCreate("gt_UpdateTotalArmyValueMinerals_Func");
+    TriggerAddEventTimePeriodic(gt_UpdateTotalArmyValueMinerals, 1.0, c_timeGame);
 }
 
 //--------------------------------------------------------------------------------------------------
 // Trigger: Update Total Army Value Gas
 //--------------------------------------------------------------------------------------------------
 bool gt_UpdateTotalArmyValueGas_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_paused == false))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_currentBuildTotalArmyValueMinerals = PlayerScoreValueGetAsInt(1, "VespeneUsedTotalArmy");
     return true;
 }
 
 //--------------------------------------------------------------------------------------------------
 void gt_UpdateTotalArmyValueGas_Init () {
     gt_UpdateTotalArmyValueGas = TriggerCreate("gt_UpdateTotalArmyValueGas_Func");
+    TriggerAddEventTimePeriodic(gt_UpdateTotalArmyValueGas, 1.0, c_timeGame);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -12171,9 +12220,9 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_CreateScreenButtons();
     TimerWindowCreate(gv_currentBuildTimer, StringExternal("Param/Value/EAED3202"), true, true);
     TimerWindowSetAnchor(TimerWindowLastCreated(), c_anchorTopRight, 0, 0);
+    gf_LoadAlertMenuConfiguration();
     gf_LoadBuildEntriesforMatchup();
     gf_LoadBenchmarkMenuConfiguration(gf_GetCurrentlySelectedBuildAsBankSectionKey());
-    gf_LoadAlertMenuConfiguration();
     gf_MigrateBuildstoBetaPatch4();
     gf_ShowBenchmarkDialog();
     gf_CreateHiddenBenchmarkSupplyObjectives();
