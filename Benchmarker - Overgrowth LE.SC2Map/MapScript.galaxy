@@ -262,11 +262,13 @@ int gv_currentBuildAverageAPM;
 fixed gv_currentBuildCumulativeTotalMineralCollectionRate;
 fixed gv_currentBuildCumulativeTotalGasCollectionRate;
 int gv_currentBuildNumResourceCollectionRateSamples;
+fixed gv_currentBuildAverageResourceCollectionRate;
 int gv_currentBuildTotalMineralsCollected;
 int gv_currentBuildTotalGasCollected;
 int gv_currentBuildCumulativeTotalUnspentMinerals;
 int gv_currentBuildCumulativeTotalUnspentGas;
 int gv_currentBuildNumUnspentResourceSamples;
+fixed gv_currentBuildAverageUnspentResources;
 int gv_currentBuildWorkersCreated;
 int gv_currentBuildTotalArmySupply;
 int gv_currentBuildTotalArmyValueMinerals;
@@ -1325,6 +1327,7 @@ bool gf_IsEndBuildatGameTimeSelected ();
 int gf_GetMapResourceIndexForUnit (unit lp_unit);
 fixed gf_ln (fixed lp_x);
 fixed gf_log10 (fixed lp_x);
+fixed gf_CalculateMovingAverage (int lp_newSampleValue, int lp_currentAverage, int lp_numSamples);
 int gf_GetWinButtonYPadding ();
 unitgroup gf_GetAllGasStructureUnits ();
 unitgroup gf_GetAllPlayerUnitsforType (int lp_player, string lp_unitType);
@@ -1377,18 +1380,24 @@ trigger gt_ForkBuildOrder;
 trigger gt_EverySecondCheckforBuildHints;
 trigger gt_EnableDisableBuildHints;
 trigger gt_EnableDisablePerformanceFeedback;
-trigger gt_DebugSpendingQuotient;
-trigger gt_UpdateGasTaken;
+trigger gt_UpdateTotalWorkers;
 trigger gt_UpdateMineralsCollectedThisBuild;
 trigger gt_UpdateGasCollectedThisBuild;
-trigger gt_UpdateTotalWorkers;
 trigger gt_UpdateNumUpgradesResearched;
-trigger gt_EverySecondUpdateCurrentBuildStats;
-trigger gt_UpdateAPM;
+trigger gt_UpdateGasTaken;
+trigger gt_IncrementNumSupplyBlocks;
+trigger gt_ResetSupplyBlockStatus;
 trigger gt_UpdateTimeSupplyBlocked;
 trigger gt_UpdateProductionIdleTime;
-trigger gt_UpdateResourceCollectionRate;
+trigger gt_UpdateAverageResourceCollectionRates;
+trigger gt_UpdateAverageAPM;
 trigger gt_UpdateAverageUnspentResources;
+trigger gt_UpdateAverageUnspentMinerals;
+trigger gt_UpdateAverageUnspentGas;
+trigger gt_UpdateTotalArmySupply;
+trigger gt_UpdateTotalArmyValueMinerals;
+trigger gt_UpdateTotalArmyValueGas;
+trigger gt_DebugSpendingQuotient;
 trigger gt_StartBuild;
 trigger gt_ResetBuild;
 trigger gt_ToggleDebugAlerts;
@@ -4074,7 +4083,7 @@ void gf_CreateDebugDialog () {
     // Variable Initialization
     lv_debugButtonXPadding = 35;
     lv_debugLabelXPadding = 40;
-    lv_debugLabelYPadding = -13;
+    lv_debugLabelYPadding = -15;
 
     // Implementation
     DialogCreate(gv_debugDialogMinWidth, gv_debugDialogMinHeight, c_anchorBottomLeft, gv_debugDialogXPadding, gf_GetWinButtonYPadding(), true);
@@ -4676,11 +4685,13 @@ void gf_RefreshStatsDialog () {
     // Implementation
     gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/79A57BD9"), IntToText(gv_currentBuildWorkersCreated));
     lv_rowNum += 1;
-    gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/67D50843"), TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gf_GetIdleProductionTime()));
+    gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/67D50843"), TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_currentBuildTimeProductionIdle));
     lv_rowNum += 1;
-    gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/C1F8724A"), TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gf_GetTimeSupplyBlocked()));
+    gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/1A978A80"), IntToText(gv_currentBuildNumSupplyBlocks));
     lv_rowNum += 1;
-    gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/1D3859A8"), IntToText(gf_GetAverageBuildAPM()));
+    gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/C1F8724A"), TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_currentBuildTimeSupplyBlocked));
+    lv_rowNum += 1;
+    gf_RefreshStatsDialogRow(lv_rowNum, StringExternal("Param/Value/1D3859A8"), IntToText(gv_currentBuildAverageAPM));
     lv_rowNum += 1;
     gf_ResetBuildOrderListBox(gv_statsDialogBuildOrderListBox);
     gf_UpdateBuildOrderListBoxwithCurrentBuild(gv_statsDialogBuildOrderListBox);
@@ -5391,16 +5402,24 @@ void gf_ResetGameVariables () {
     gv_currentBuildWorkersCreated = 6;
     gv_currentBuildTimeProductionIdle = 0;
     gv_currentBuildTimeSupplyBlocked = 0;
+    gv_currentBuildNumSupplyBlocks = 0;
     gv_currentBuildCumulativeTotalUnspentMinerals = 0;
     gv_currentBuildCumulativeTotalUnspentGas = 0;
     gv_currentBuildNumUnspentResourceSamples = 0;
+    gv_currentBuildAverageUnspentResources = 0;
     gv_currentBuildCumulativeTotalMineralCollectionRate = 0;
     gv_currentBuildCumulativeTotalGasCollectionRate = 0;
     gv_currentBuildNumResourceCollectionRateSamples = 0;
+    gv_currentBuildAverageResourceCollectionRate = 0;
     gv_currentBuildCumulativeAPM = 0;
     gv_currentBuildTotalAPMSamplesThisBuild = 0;
+    gv_currentBuildAverageAPM = 0;
     gv_currentBuildTotalMineralsCollected = 0;
     gv_currentBuildTotalGasCollected = 0;
+    gv_currentBuildTotalArmySupply = 0;
+    gv_currentBuildTotalArmyValueMinerals = 0;
+    gv_currentBuildTotalArmyValueGas = 0;
+    gv_currentBuildTotalNumberofUpgradesResearched = 0;
 }
 
 void gf_ResetBenchmarkSupplyObjectives () {
@@ -8162,6 +8181,16 @@ fixed gf_log10 (fixed lp_x) {
     return lv_result;
 }
 
+fixed gf_CalculateMovingAverage (int lp_newSampleValue, int lp_currentAverage, int lp_numSamples) {
+    // Variable Declarations
+    fixed lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    return lv_result;
+}
+
 int gf_GetWinButtonYPadding () {
     string autoDB867731_val;
 
@@ -9996,17 +10025,12 @@ void gt_EnableDisablePerformanceFeedback_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Debug Spending Quotient
+// Trigger: Update Total Workers
 //--------------------------------------------------------------------------------------------------
-bool gt_DebugSpendingQuotient_Func (bool testConds, bool runActions) {
-    // Variable Declarations
-    fixed lv_result;
-
-    // Variable Initialization
-
+bool gt_UpdateTotalWorkers_Func (bool testConds, bool runActions) {
     // Conditions
     if (testConds) {
-        if (!((gv_debugStatsEnabled == true))) {
+        if (!(((UnitGetOwner(EventUnitCreatedUnit()) == 1) && ((UnitGetType(EventUnitCreatedUnit()) == "Drone") || (UnitGetType(EventUnitCreatedUnit()) == "Probe") || (UnitGetType(EventUnitCreatedUnit()) == "SCV"))))) {
             return false;
         }
     }
@@ -10016,40 +10040,14 @@ bool gt_DebugSpendingQuotient_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    lv_result = gf_CalculateSpendingQuotient();
+    gv_currentBuildWorkersCreated += 1;
     return true;
 }
 
 //--------------------------------------------------------------------------------------------------
-void gt_DebugSpendingQuotient_Init () {
-    gt_DebugSpendingQuotient = TriggerCreate("gt_DebugSpendingQuotient_Func");
-    TriggerAddEventTimePeriodic(gt_DebugSpendingQuotient, 15.0, c_timeGame);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Update Gas Taken
-//--------------------------------------------------------------------------------------------------
-bool gt_UpdateGasTaken_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!(((UnitGetType(EventUnit()) == "Assimilator") || (UnitGetType(EventUnit()) == "Extractor") || (UnitGetType(EventUnit()) == "Refinery")))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gv_currentBuildIsGasTaken = true;
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_UpdateGasTaken_Init () {
-    gt_UpdateGasTaken = TriggerCreate("gt_UpdateGasTaken_Func");
-    TriggerAddEventUnitConstructProgress(gt_UpdateGasTaken, null, c_unitProgressStageComplete);
+void gt_UpdateTotalWorkers_Init () {
+    gt_UpdateTotalWorkers = TriggerCreate("gt_UpdateTotalWorkers_Func");
+    TriggerAddEventUnitCreated(gt_UpdateTotalWorkers, null, null, null);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -10105,32 +10103,6 @@ void gt_UpdateGasCollectedThisBuild_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Update Total Workers
-//--------------------------------------------------------------------------------------------------
-bool gt_UpdateTotalWorkers_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!(((UnitGetOwner(EventUnitCreatedUnit()) == 1) && ((UnitGetType(EventUnitCreatedUnit()) == "Drone") || (UnitGetType(EventUnitCreatedUnit()) == "Probe") || (UnitGetType(EventUnitCreatedUnit()) == "SCV"))))) {
-            return false;
-        }
-    }
-
-    // Actions
-    if (!runActions) {
-        return true;
-    }
-
-    gv_currentBuildWorkersCreated += 1;
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_UpdateTotalWorkers_Init () {
-    gt_UpdateTotalWorkers = TriggerCreate("gt_UpdateTotalWorkers_Func");
-    TriggerAddEventUnitCreated(gt_UpdateTotalWorkers, null, null, null);
-}
-
-//--------------------------------------------------------------------------------------------------
 // Trigger: Update Num Upgrades Researched
 //--------------------------------------------------------------------------------------------------
 bool gt_UpdateNumUpgradesResearched_Func (bool testConds, bool runActions) {
@@ -10150,32 +10122,12 @@ void gt_UpdateNumUpgradesResearched_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Every Second - Update Current Build Stats
+// Trigger: Update Gas Taken
 //--------------------------------------------------------------------------------------------------
-bool gt_EverySecondUpdateCurrentBuildStats_Func (bool testConds, bool runActions) {
+bool gt_UpdateGasTaken_Func (bool testConds, bool runActions) {
     // Conditions
     if (testConds) {
-        if (!((gv_paused == false))) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_EverySecondUpdateCurrentBuildStats_Init () {
-    gt_EverySecondUpdateCurrentBuildStats = TriggerCreate("gt_EverySecondUpdateCurrentBuildStats_Func");
-    TriggerAddEventTimePeriodic(gt_EverySecondUpdateCurrentBuildStats, 1.0, c_timeGame);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Update APM
-//--------------------------------------------------------------------------------------------------
-bool gt_UpdateAPM_Func (bool testConds, bool runActions) {
-    // Conditions
-    if (testConds) {
-        if (!((gv_paused == false))) {
+        if (!(((UnitGetType(EventUnit()) == "Assimilator") || (UnitGetType(EventUnit()) == "Extractor") || (UnitGetType(EventUnit()) == "Refinery")))) {
             return false;
         }
     }
@@ -10185,15 +10137,54 @@ bool gt_UpdateAPM_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    gv_currentBuildCumulativeAPM += PlayerScoreValueGetAsInt(1, "APM");
-    gv_currentBuildTotalAPMSamplesThisBuild += 1;
+    gv_currentBuildIsGasTaken = true;
     return true;
 }
 
 //--------------------------------------------------------------------------------------------------
-void gt_UpdateAPM_Init () {
-    gt_UpdateAPM = TriggerCreate("gt_UpdateAPM_Func");
-    TriggerAddEventTimePeriodic(gt_UpdateAPM, 0.5, c_timeGame);
+void gt_UpdateGasTaken_Init () {
+    gt_UpdateGasTaken = TriggerCreate("gt_UpdateGasTaken_Func");
+    TriggerAddEventUnitConstructProgress(gt_UpdateGasTaken, null, c_unitProgressStageComplete);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Increment Num Supply Blocks
+//--------------------------------------------------------------------------------------------------
+bool gt_IncrementNumSupplyBlocks_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((PlayerScoreValueGetAsInt(1, "FoodUsed") < 200) && ((PlayerScoreValueGetAsInt(1, "FoodUsed") - PlayerScoreValueGetAsInt(1, "FoodMade")) > FixedToInt(gf_GetSupplyCostForUnit(libNtve_gf_TriggeringProgressUnitType())))))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    TextExpressionSetToken("Param/Expression/570135ED", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
+    gf_LogTextMessage(gv_debugStatsEnabled, TextExpressionAssemble("Param/Expression/570135ED"));
+    gv_currentBuildNumSupplyBlocks += 1;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_IncrementNumSupplyBlocks_Init () {
+    gt_IncrementNumSupplyBlocks = TriggerCreate("gt_IncrementNumSupplyBlocks_Func");
+    TriggerAddEventUnitTrainProgress(gt_IncrementNumSupplyBlocks, null, c_unitProgressStageStart);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Reset Supply Block Status
+//--------------------------------------------------------------------------------------------------
+bool gt_ResetSupplyBlockStatus_Func (bool testConds, bool runActions) {
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_ResetSupplyBlockStatus_Init () {
+    gt_ResetSupplyBlockStatus = TriggerCreate("gt_ResetSupplyBlockStatus_Func");
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -10249,9 +10240,14 @@ void gt_UpdateProductionIdleTime_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Update Resource Collection Rate
+// Trigger: Update Average Resource Collection Rates
 //--------------------------------------------------------------------------------------------------
-bool gt_UpdateResourceCollectionRate_Func (bool testConds, bool runActions) {
+bool gt_UpdateAverageResourceCollectionRates_Func (bool testConds, bool runActions) {
+    // Variable Declarations
+    int lv_currentResourceCollecitonRate;
+
+    // Variable Initialization
+
     // Conditions
     if (testConds) {
         if (!((gv_paused == false))) {
@@ -10267,13 +10263,41 @@ bool gt_UpdateResourceCollectionRate_Func (bool testConds, bool runActions) {
     gv_currentBuildCumulativeTotalMineralCollectionRate += PlayerScoreValueGetAsFixed(1, "MineralsCollectionRate");
     gv_currentBuildCumulativeTotalGasCollectionRate += PlayerScoreValueGetAsFixed(1, "VespeneCollectionRate");
     gv_currentBuildNumResourceCollectionRateSamples += 1;
+    gv_currentBuildAverageResourceCollectionRate = gf_CalculateMovingAverage(0, 0, 0);
     return true;
 }
 
 //--------------------------------------------------------------------------------------------------
-void gt_UpdateResourceCollectionRate_Init () {
-    gt_UpdateResourceCollectionRate = TriggerCreate("gt_UpdateResourceCollectionRate_Func");
-    TriggerAddEventTimePeriodic(gt_UpdateResourceCollectionRate, 1.0, c_timeGame);
+void gt_UpdateAverageResourceCollectionRates_Init () {
+    gt_UpdateAverageResourceCollectionRates = TriggerCreate("gt_UpdateAverageResourceCollectionRates_Func");
+    TriggerAddEventTimePeriodic(gt_UpdateAverageResourceCollectionRates, 1.0, c_timeGame);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Average APM
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateAverageAPM_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!((gv_paused == false))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    gv_currentBuildCumulativeAPM += PlayerScoreValueGetAsInt(1, "APM");
+    gv_currentBuildTotalAPMSamplesThisBuild += 1;
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateAverageAPM_Init () {
+    gt_UpdateAverageAPM = TriggerCreate("gt_UpdateAverageAPM_Func");
+    TriggerAddEventTimePeriodic(gt_UpdateAverageAPM, 1.0, c_timeGame);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -10302,6 +10326,97 @@ bool gt_UpdateAverageUnspentResources_Func (bool testConds, bool runActions) {
 void gt_UpdateAverageUnspentResources_Init () {
     gt_UpdateAverageUnspentResources = TriggerCreate("gt_UpdateAverageUnspentResources_Func");
     TriggerAddEventTimePeriodic(gt_UpdateAverageUnspentResources, 1.0, c_timeGame);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Average Unspent Minerals
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateAverageUnspentMinerals_Func (bool testConds, bool runActions) {
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateAverageUnspentMinerals_Init () {
+    gt_UpdateAverageUnspentMinerals = TriggerCreate("gt_UpdateAverageUnspentMinerals_Func");
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Average Unspent Gas
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateAverageUnspentGas_Func (bool testConds, bool runActions) {
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateAverageUnspentGas_Init () {
+    gt_UpdateAverageUnspentGas = TriggerCreate("gt_UpdateAverageUnspentGas_Func");
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Total Army Supply
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateTotalArmySupply_Func (bool testConds, bool runActions) {
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateTotalArmySupply_Init () {
+    gt_UpdateTotalArmySupply = TriggerCreate("gt_UpdateTotalArmySupply_Func");
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Total Army Value Minerals
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateTotalArmyValueMinerals_Func (bool testConds, bool runActions) {
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateTotalArmyValueMinerals_Init () {
+    gt_UpdateTotalArmyValueMinerals = TriggerCreate("gt_UpdateTotalArmyValueMinerals_Func");
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Update Total Army Value Gas
+//--------------------------------------------------------------------------------------------------
+bool gt_UpdateTotalArmyValueGas_Func (bool testConds, bool runActions) {
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_UpdateTotalArmyValueGas_Init () {
+    gt_UpdateTotalArmyValueGas = TriggerCreate("gt_UpdateTotalArmyValueGas_Func");
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Debug Spending Quotient
+//--------------------------------------------------------------------------------------------------
+bool gt_DebugSpendingQuotient_Func (bool testConds, bool runActions) {
+    // Variable Declarations
+    fixed lv_result;
+
+    // Variable Initialization
+
+    // Conditions
+    if (testConds) {
+        if (!((gv_debugStatsEnabled == true))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    lv_result = gf_CalculateSpendingQuotient();
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_DebugSpendingQuotient_Init () {
+    gt_DebugSpendingQuotient = TriggerCreate("gt_DebugSpendingQuotient_Func");
+    TriggerAddEventTimePeriodic(gt_DebugSpendingQuotient, 15.0, c_timeGame);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -10428,12 +10543,11 @@ bool gt_ToggleDebugStats_Func (bool testConds, bool runActions) {
     }
 
     if ((gv_debugStatsEnabled == false)) {
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/B26255F6"));
+        libNtve_gf_SetDialogItemText(gv_debugDialogLabel, StringExternal("Param/Value/DAF66B6C"), PlayerGroupAll());
         gv_debugStatsEnabled = true;
         gf_ShowDebugDialog();
     }
     else {
-        UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringExternal("Param/Value/68D2F15B"));
         gv_debugStatsEnabled = false;
         gf_HideDebugDialog();
     }
@@ -12291,18 +12405,24 @@ void InitTriggers () {
     gt_EverySecondCheckforBuildHints_Init();
     gt_EnableDisableBuildHints_Init();
     gt_EnableDisablePerformanceFeedback_Init();
-    gt_DebugSpendingQuotient_Init();
-    gt_UpdateGasTaken_Init();
+    gt_UpdateTotalWorkers_Init();
     gt_UpdateMineralsCollectedThisBuild_Init();
     gt_UpdateGasCollectedThisBuild_Init();
-    gt_UpdateTotalWorkers_Init();
     gt_UpdateNumUpgradesResearched_Init();
-    gt_EverySecondUpdateCurrentBuildStats_Init();
-    gt_UpdateAPM_Init();
+    gt_UpdateGasTaken_Init();
+    gt_IncrementNumSupplyBlocks_Init();
+    gt_ResetSupplyBlockStatus_Init();
     gt_UpdateTimeSupplyBlocked_Init();
     gt_UpdateProductionIdleTime_Init();
-    gt_UpdateResourceCollectionRate_Init();
+    gt_UpdateAverageResourceCollectionRates_Init();
+    gt_UpdateAverageAPM_Init();
     gt_UpdateAverageUnspentResources_Init();
+    gt_UpdateAverageUnspentMinerals_Init();
+    gt_UpdateAverageUnspentGas_Init();
+    gt_UpdateTotalArmySupply_Init();
+    gt_UpdateTotalArmyValueMinerals_Init();
+    gt_UpdateTotalArmyValueGas_Init();
+    gt_DebugSpendingQuotient_Init();
     gt_StartBuild_Init();
     gt_ResetBuild_Init();
     gt_ToggleDebugAlerts_Init();
