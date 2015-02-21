@@ -262,13 +262,13 @@ int gv_currentBuildAverageAPM;
 fixed gv_currentBuildCumulativeTotalMineralCollectionRate;
 fixed gv_currentBuildCumulativeTotalGasCollectionRate;
 int gv_currentBuildNumResourceCollectionRateSamples;
-fixed gv_currentBuildAverageResourceCollectionRate;
+int gv_currentBuildAverageResourceCollectionRate;
 int gv_currentBuildTotalMineralsCollected;
 int gv_currentBuildTotalGasCollected;
 int gv_currentBuildCumulativeTotalUnspentMinerals;
 int gv_currentBuildCumulativeTotalUnspentGas;
 int gv_currentBuildNumUnspentResourceSamples;
-fixed gv_currentBuildAverageUnspentResources;
+int gv_currentBuildAverageUnspentResources;
 int gv_currentBuildWorkersCreated;
 int gv_currentBuildTotalArmySupply;
 int gv_currentBuildTotalArmyValueMinerals;
@@ -1304,18 +1304,15 @@ bool gf_BenchmarkBuildHasPreviousObjectiveForStep (int lp_benchmarkStep);
 bool gf_BenchmarkBuildHasObjectiveForStep (int lp_benchmarkStep);
 fixed gf_GetAverageResourceCollectionRate ();
 fixed gf_GetAverageUnspentResources ();
-int gf_GetAverageUnspentMinerals ();
-int gf_GetAverageUnspentGas ();
+int gf_GetAverageBuildAPM ();
 int gf_GetTimeSupplyBlocked ();
 int gf_GetIdleProductionTime ();
-int gf_GetAverageBuildAPM ();
 int gf_GetTotalArmySupplyFromGame ();
 int gf_GetTotalArmyValueMineralsFromGame ();
 int gf_GetTotalArmyValueGasFromGame ();
 int gf_GetNumUpgradesResearched ();
 int gf_GetTotalMineralsCollected ();
 int gf_GetTotalGasCollected ();
-fixed gf_CalculateSpendingQuotient ();
 unitgroup gf_GetUnitGroupofAllPlayer1WithoutThisUnit ();
 text gf_GetCurrentlyMatchupasText ();
 int gf_GetEditBoxValueasInt (int lp_editBox);
@@ -1325,9 +1322,14 @@ color gf_GetColorForRealStatValue (fixed lp_percentage, bool lp_higherIsBetter);
 bool gf_IsEndBuildatMaxSupplySelected ();
 bool gf_IsEndBuildatGameTimeSelected ();
 int gf_GetMapResourceIndexForUnit (unit lp_unit);
+int gf_GetBlizzardCurrentAPM ();
+int gf_GetBlizzardAverageAPM ();
+int gf_GetBlizzardCurrentResourceCollectionRate ();
+int gf_GetBlizzardAverageResourceCollectionRate ();
 fixed gf_ln (fixed lp_x);
 fixed gf_log10 (fixed lp_x);
-fixed gf_CalculateMovingAverage (int lp_newSampleValue, int lp_currentAverage, int lp_numSamples);
+int gf_CalculateMovingAverageInteger (int lp_newSampleValue, int lp_currentAverage, int lp_numSamples);
+fixed gf_CalculateSpendingQuotient ();
 int gf_GetWinButtonYPadding ();
 unitgroup gf_GetAllGasStructureUnits ();
 unitgroup gf_GetAllPlayerUnitsforType (int lp_player, string lp_unitType);
@@ -1386,18 +1388,15 @@ trigger gt_UpdateGasCollectedThisBuild;
 trigger gt_UpdateNumUpgradesResearched;
 trigger gt_UpdateGasTaken;
 trigger gt_IncrementNumSupplyBlocks;
-trigger gt_ResetSupplyBlockStatus;
 trigger gt_UpdateTimeSupplyBlocked;
 trigger gt_UpdateProductionIdleTime;
 trigger gt_UpdateAverageResourceCollectionRates;
 trigger gt_UpdateAverageAPM;
 trigger gt_UpdateAverageUnspentResources;
-trigger gt_UpdateAverageUnspentMinerals;
-trigger gt_UpdateAverageUnspentGas;
 trigger gt_UpdateTotalArmySupply;
 trigger gt_UpdateTotalArmyValueMinerals;
 trigger gt_UpdateTotalArmyValueGas;
-trigger gt_DebugSpendingQuotient;
+trigger gt_DebugMovingAverages;
 trigger gt_StartBuild;
 trigger gt_ResetBuild;
 trigger gt_ToggleDebugAlerts;
@@ -1742,8 +1741,6 @@ void gf_SaveCurrentBuildStatsAsBenchmarkBuildStats () {
     gf_SaveIntForCurrentBuild(gf_GetTotalGasCollected(), gv_bestTotalGasCollectedEntryKey);
     gf_SaveIntForCurrentBuild(gf_GetTimeSupplyBlocked(), gv_bestTimeSupplyBlockedEntryKey);
     gf_SaveIntForCurrentBuild(gf_GetIdleProductionTime(), gv_bestIdleProductionTimeEntryKey);
-    gf_SaveIntForCurrentBuild(gf_GetAverageUnspentMinerals(), gv_bestAverageUnspentMineralsEntryKey);
-    gf_SaveIntForCurrentBuild(gf_GetAverageUnspentGas(), gv_bestAverageUnspentGasEntryKey);
     gf_SaveRealForCurrentBuild(gf_GetAverageBuildAPM(), gv_bestAverageAPMEntryKey);
     BankSave(gv_benchmarkerBank);
 }
@@ -2460,8 +2457,6 @@ void gf_SetBenchmarkStats () {
     gv_benchmarkBuildTimeSupplyBlocked = gv_currentBuildTimeSupplyBlocked;
     gv_benchmarkBuildNumSupplyBlocks = gv_currentBuildNumSupplyBlocks;
     gv_benchmarkBuildTimeProductionIdle = gv_currentBuildTimeProductionIdle;
-    gv_benchmarkBuildAverageUnspentMinerals = gf_GetAverageUnspentMinerals();
-    gv_benchmarkBuildAverageUnspentGas = gf_GetAverageUnspentGas();
     gv_benchmarkBuildAverageAPM = gf_GetAverageBuildAPM();
 }
 
@@ -7909,43 +7904,17 @@ fixed gf_GetAverageResourceCollectionRate () {
     // Variable Initialization
 
     // Implementation
-    if ((gv_currentBuildNumResourceCollectionRateSamples >= 1)) {
-        lv_result = ((gv_currentBuildCumulativeTotalMineralCollectionRate+gv_currentBuildCumulativeTotalGasCollectionRate)/gv_currentBuildNumResourceCollectionRateSamples);
-    }
-    else {
-        lv_result = 0.0;
-    }
-    return lv_result;
+    return FixedToInt(gv_currentBuildAverageResourceCollectionRate);
 }
 
 fixed gf_GetAverageUnspentResources () {
     // Implementation
-    if ((gv_currentBuildNumUnspentResourceSamples >= 1)) {
-        return ((gv_currentBuildCumulativeTotalUnspentMinerals + gv_currentBuildCumulativeTotalUnspentGas) / gv_currentBuildNumUnspentResourceSamples);
-    }
-    else {
-        return 0;
-    }
+    return gv_currentBuildAverageUnspentResources;
 }
 
-int gf_GetAverageUnspentMinerals () {
+int gf_GetAverageBuildAPM () {
     // Implementation
-    if ((gv_currentBuildNumUnspentResourceSamples >= 1)) {
-        return FixedToInt((gv_currentBuildCumulativeTotalUnspentMinerals/gv_currentBuildNumUnspentResourceSamples));
-    }
-    else {
-        return 0;
-    }
-}
-
-int gf_GetAverageUnspentGas () {
-    // Implementation
-    if ((gv_currentBuildNumUnspentResourceSamples >= 1)) {
-        return FixedToInt((gv_currentBuildCumulativeTotalUnspentGas/gv_currentBuildNumUnspentResourceSamples));
-    }
-    else {
-        return 0;
-    }
+    return gv_currentBuildAverageAPM;
 }
 
 int gf_GetTimeSupplyBlocked () {
@@ -7957,16 +7926,6 @@ int gf_GetIdleProductionTime () {
     // Implementation
     if ((TimerGetElapsed(gv_currentBuildTimer) >= 1)) {
         return gv_currentBuildTimeProductionIdle;
-    }
-    else {
-        return 0;
-    }
-}
-
-int gf_GetAverageBuildAPM () {
-    // Implementation
-    if ((gv_currentBuildTotalAPMSamplesThisBuild >= 1)) {
-        return FixedToInt((gv_currentBuildCumulativeAPM/gv_currentBuildTotalAPMSamplesThisBuild));
     }
     else {
         return 0;
@@ -8001,28 +7960,6 @@ int gf_GetTotalMineralsCollected () {
 int gf_GetTotalGasCollected () {
     // Implementation
     return gv_currentBuildTotalGasCollected;
-}
-
-fixed gf_CalculateSpendingQuotient () {
-    // Variable Declarations
-    fixed lv_result;
-    fixed lv_blizzardResult;
-
-    // Variable Initialization
-
-    // Implementation
-    lv_result = (35*((0.00137*gf_GetAverageResourceCollectionRate())-gf_ln(gf_GetAverageUnspentResources()))+240);
-    lv_result = ((35.0 * (((0.0137 * gf_GetAverageResourceCollectionRate()) / 10.0) - gf_ln(gf_GetAverageUnspentResources()))) + 240.0);
-    TextExpressionSetToken("Param/Expression/72561A85", "A", FixedToText(gf_GetAverageResourceCollectionRate(), 0));
-    TextExpressionSetToken("Param/Expression/72561A85", "B", FixedToText(gf_GetAverageUnspentResources(), 0));
-    TextExpressionSetToken("Param/Expression/72561A85", "C", FixedToText(lv_result, 0));
-    gf_LogTextMessage(gv_debugStatsEnabled, TextExpressionAssemble("Param/Expression/72561A85"));
-    lv_blizzardResult = ((35.0 * (((0.0137 * PlayerScoreValueGetAsFixed(1, "ResourceCollectionRateSampled")) / 10.0) - gf_ln(PlayerScoreValueGetAsFixed(1, "ResourceFloatAverage")))) + 240.0);
-    TextExpressionSetToken("Param/Expression/CD90F5E5", "A", FixedToText(PlayerScoreValueGetAsFixed(1, "ResourceCollectionRateSampled"), c_fixedPrecisionAny));
-    TextExpressionSetToken("Param/Expression/CD90F5E5", "B", FixedToText(PlayerScoreValueGetAsFixed(1, "ResourceFloatAverage"), c_fixedPrecisionAny));
-    TextExpressionSetToken("Param/Expression/CD90F5E5", "C", FixedToText(lv_blizzardResult, c_fixedPrecisionAny));
-    gf_LogTextMessage(gv_debugStatsEnabled, TextExpressionAssemble("Param/Expression/CD90F5E5"));
-    return lv_result;
 }
 
 unitgroup gf_GetUnitGroupofAllPlayer1WithoutThisUnit () {
@@ -8159,6 +8096,26 @@ int gf_GetMapResourceIndexForUnit (unit lp_unit) {
     return -1;
 }
 
+int gf_GetBlizzardCurrentAPM () {
+    // Implementation
+    return PlayerScoreValueGetAsInt(1, "APM");
+}
+
+int gf_GetBlizzardAverageAPM () {
+    // Implementation
+    return PlayerScoreValueGetAsInt(1, "APMAverage");
+}
+
+int gf_GetBlizzardCurrentResourceCollectionRate () {
+    // Implementation
+    return PlayerScoreValueGetAsInt(1, "ResourceCollectionRateSampled");
+}
+
+int gf_GetBlizzardAverageResourceCollectionRate () {
+    // Implementation
+    return PlayerScoreValueGetAsInt(1, "ResourceCollectionRate");
+}
+
 fixed gf_ln (fixed lp_x) {
     // Variable Declarations
     fixed lv_result;
@@ -8181,13 +8138,32 @@ fixed gf_log10 (fixed lp_x) {
     return lv_result;
 }
 
-fixed gf_CalculateMovingAverage (int lp_newSampleValue, int lp_currentAverage, int lp_numSamples) {
+int gf_CalculateMovingAverageInteger (int lp_newSampleValue, int lp_currentAverage, int lp_numSamples) {
     // Variable Declarations
-    fixed lv_result;
+    int lv_result;
 
     // Variable Initialization
 
     // Implementation
+    lv_result = ((lp_newSampleValue+(lp_numSamples*lp_currentAverage))/(lp_numSamples+1));
+    return lv_result;
+}
+
+fixed gf_CalculateSpendingQuotient () {
+    // Variable Declarations
+    fixed lv_result;
+    fixed lv_blizzardResult;
+
+    // Variable Initialization
+
+    // Implementation
+    lv_result = (35*((0.00137*gf_GetAverageResourceCollectionRate())-gf_ln(gf_GetAverageUnspentResources()))+240);
+    lv_result = ((35.0 * (((0.0137 * gv_currentBuildAverageResourceCollectionRate) / 10.0) - gf_ln(gv_currentBuildAverageUnspentResources))) + 240.0);
+    TextExpressionSetToken("Param/Expression/72561A85", "C", FixedToText(lv_result, 0));
+    gf_LogTextMessage(gv_debugStatsEnabled, TextExpressionAssemble("Param/Expression/72561A85"));
+    lv_blizzardResult = ((35.0 * (((0.0137 * PlayerScoreValueGetAsFixed(1, "ResourceCollectionRateSampled")) / 10.0) - gf_ln(PlayerScoreValueGetAsFixed(1, "ResourceFloatAverage")))) + 240.0);
+    TextExpressionSetToken("Param/Expression/CD90F5E5", "C", FixedToText(lv_blizzardResult, 0));
+    gf_LogTextMessage(gv_debugStatsEnabled, TextExpressionAssemble("Param/Expression/CD90F5E5"));
     return lv_result;
 }
 
@@ -10176,18 +10152,6 @@ void gt_IncrementNumSupplyBlocks_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Reset Supply Block Status
-//--------------------------------------------------------------------------------------------------
-bool gt_ResetSupplyBlockStatus_Func (bool testConds, bool runActions) {
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_ResetSupplyBlockStatus_Init () {
-    gt_ResetSupplyBlockStatus = TriggerCreate("gt_ResetSupplyBlockStatus_Func");
-}
-
-//--------------------------------------------------------------------------------------------------
 // Trigger: Update Time Supply Blocked
 //--------------------------------------------------------------------------------------------------
 bool gt_UpdateTimeSupplyBlocked_Func (bool testConds, bool runActions) {
@@ -10243,11 +10207,6 @@ void gt_UpdateProductionIdleTime_Init () {
 // Trigger: Update Average Resource Collection Rates
 //--------------------------------------------------------------------------------------------------
 bool gt_UpdateAverageResourceCollectionRates_Func (bool testConds, bool runActions) {
-    // Variable Declarations
-    int lv_currentResourceCollecitonRate;
-
-    // Variable Initialization
-
     // Conditions
     if (testConds) {
         if (!((gv_paused == false))) {
@@ -10260,10 +10219,8 @@ bool gt_UpdateAverageResourceCollectionRates_Func (bool testConds, bool runActio
         return true;
     }
 
-    gv_currentBuildCumulativeTotalMineralCollectionRate += PlayerScoreValueGetAsFixed(1, "MineralsCollectionRate");
-    gv_currentBuildCumulativeTotalGasCollectionRate += PlayerScoreValueGetAsFixed(1, "VespeneCollectionRate");
+    gv_currentBuildAverageResourceCollectionRate = gf_CalculateMovingAverageInteger(gf_GetBlizzardCurrentResourceCollectionRate(), gv_currentBuildAverageResourceCollectionRate, gv_currentBuildNumResourceCollectionRateSamples);
     gv_currentBuildNumResourceCollectionRateSamples += 1;
-    gv_currentBuildAverageResourceCollectionRate = gf_CalculateMovingAverage(0, 0, 0);
     return true;
 }
 
@@ -10289,7 +10246,7 @@ bool gt_UpdateAverageAPM_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    gv_currentBuildCumulativeAPM += PlayerScoreValueGetAsInt(1, "APM");
+    gv_currentBuildAverageAPM = gf_CalculateMovingAverageInteger(gf_GetBlizzardCurrentAPM(), gv_currentBuildAverageAPM, gv_currentBuildTotalAPMSamplesThisBuild);
     gv_currentBuildTotalAPMSamplesThisBuild += 1;
     return true;
 }
@@ -10304,6 +10261,11 @@ void gt_UpdateAverageAPM_Init () {
 // Trigger: Update Average Unspent Resources
 //--------------------------------------------------------------------------------------------------
 bool gt_UpdateAverageUnspentResources_Func (bool testConds, bool runActions) {
+    // Variable Declarations
+    int lv_currentResourcesStockpiled;
+
+    // Variable Initialization
+
     // Conditions
     if (testConds) {
         if (!((gv_paused == false))) {
@@ -10316,8 +10278,8 @@ bool gt_UpdateAverageUnspentResources_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    gv_currentBuildCumulativeTotalUnspentMinerals += PlayerScoreValueGetAsInt(1, "MineralsCurrent");
-    gv_currentBuildCumulativeTotalUnspentGas += PlayerScoreValueGetAsInt(1, "VespeneCurrent");
+    lv_currentResourcesStockpiled = (PlayerScoreValueGetAsInt(1, "MineralsCurrent") + PlayerScoreValueGetAsInt(1, "VespeneCurrent"));
+    gv_currentBuildAverageUnspentResources = gf_CalculateMovingAverageInteger(PlayerScoreValueGetAsInt(1, "MineralsFloatAverage"), gv_currentBuildAverageUnspentResources, gv_currentBuildNumUnspentResourceSamples);
     gv_currentBuildNumUnspentResourceSamples += 1;
     return true;
 }
@@ -10326,30 +10288,6 @@ bool gt_UpdateAverageUnspentResources_Func (bool testConds, bool runActions) {
 void gt_UpdateAverageUnspentResources_Init () {
     gt_UpdateAverageUnspentResources = TriggerCreate("gt_UpdateAverageUnspentResources_Func");
     TriggerAddEventTimePeriodic(gt_UpdateAverageUnspentResources, 1.0, c_timeGame);
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Update Average Unspent Minerals
-//--------------------------------------------------------------------------------------------------
-bool gt_UpdateAverageUnspentMinerals_Func (bool testConds, bool runActions) {
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_UpdateAverageUnspentMinerals_Init () {
-    gt_UpdateAverageUnspentMinerals = TriggerCreate("gt_UpdateAverageUnspentMinerals_Func");
-}
-
-//--------------------------------------------------------------------------------------------------
-// Trigger: Update Average Unspent Gas
-//--------------------------------------------------------------------------------------------------
-bool gt_UpdateAverageUnspentGas_Func (bool testConds, bool runActions) {
-    return true;
-}
-
-//--------------------------------------------------------------------------------------------------
-void gt_UpdateAverageUnspentGas_Init () {
-    gt_UpdateAverageUnspentGas = TriggerCreate("gt_UpdateAverageUnspentGas_Func");
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -10389,9 +10327,9 @@ void gt_UpdateTotalArmyValueGas_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Debug Spending Quotient
+// Trigger: Debug Moving Averages
 //--------------------------------------------------------------------------------------------------
-bool gt_DebugSpendingQuotient_Func (bool testConds, bool runActions) {
+bool gt_DebugMovingAverages_Func (bool testConds, bool runActions) {
     // Variable Declarations
     fixed lv_result;
 
@@ -10399,7 +10337,7 @@ bool gt_DebugSpendingQuotient_Func (bool testConds, bool runActions) {
 
     // Conditions
     if (testConds) {
-        if (!((gv_debugStatsEnabled == true))) {
+        if (!(((gv_debugStatsEnabled == true) && (gv_paused == false)))) {
             return false;
         }
     }
@@ -10409,14 +10347,23 @@ bool gt_DebugSpendingQuotient_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    lv_result = gf_CalculateSpendingQuotient();
+    gf_LogTextMessage(gv_debugStatsEnabled, StringExternal("Param/Value/A7DDBE8D"));
+    TextExpressionSetToken("Param/Expression/74F16A9D", "A", IntToText(gv_currentBuildAverageAPM));
+    TextExpressionSetToken("Param/Expression/74F16A9D", "B", IntToText(gf_GetBlizzardAverageAPM()));
+    gf_LogTextMessage(gv_debugStatsEnabled, TextExpressionAssemble("Param/Expression/74F16A9D"));
+    TextExpressionSetToken("Param/Expression/A699DEF9", "A", IntToText(gv_currentBuildAverageResourceCollectionRate));
+    TextExpressionSetToken("Param/Expression/A699DEF9", "B", IntToText(gf_GetBlizzardAverageResourceCollectionRate()));
+    gf_LogTextMessage(gv_debugStatsEnabled, TextExpressionAssemble("Param/Expression/A699DEF9"));
+    TextExpressionSetToken("Param/Expression/71A451E5", "A", IntToText(gv_currentBuildAverageUnspentResources));
+    TextExpressionSetToken("Param/Expression/71A451E5", "B", IntToText(PlayerScoreValueGetAsInt(1, "ResourceFloatAverage")));
+    gf_LogTextMessage(gv_debugStatsEnabled, TextExpressionAssemble("Param/Expression/71A451E5"));
     return true;
 }
 
 //--------------------------------------------------------------------------------------------------
-void gt_DebugSpendingQuotient_Init () {
-    gt_DebugSpendingQuotient = TriggerCreate("gt_DebugSpendingQuotient_Func");
-    TriggerAddEventTimePeriodic(gt_DebugSpendingQuotient, 15.0, c_timeGame);
+void gt_DebugMovingAverages_Init () {
+    gt_DebugMovingAverages = TriggerCreate("gt_DebugMovingAverages_Func");
+    TriggerAddEventTimePeriodic(gt_DebugMovingAverages, 10.0, c_timeGame);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -12411,18 +12358,15 @@ void InitTriggers () {
     gt_UpdateNumUpgradesResearched_Init();
     gt_UpdateGasTaken_Init();
     gt_IncrementNumSupplyBlocks_Init();
-    gt_ResetSupplyBlockStatus_Init();
     gt_UpdateTimeSupplyBlocked_Init();
     gt_UpdateProductionIdleTime_Init();
     gt_UpdateAverageResourceCollectionRates_Init();
     gt_UpdateAverageAPM_Init();
     gt_UpdateAverageUnspentResources_Init();
-    gt_UpdateAverageUnspentMinerals_Init();
-    gt_UpdateAverageUnspentGas_Init();
     gt_UpdateTotalArmySupply_Init();
     gt_UpdateTotalArmyValueMinerals_Init();
     gt_UpdateTotalArmyValueGas_Init();
-    gt_DebugSpendingQuotient_Init();
+    gt_DebugMovingAverages_Init();
     gt_StartBuild_Init();
     gt_ResetBuild_Init();
     gt_ToggleDebugAlerts_Init();
