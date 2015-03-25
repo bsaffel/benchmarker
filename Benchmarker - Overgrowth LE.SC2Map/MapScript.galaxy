@@ -52,6 +52,12 @@ struct gs_SupplyBenchmark {
     int lv_actualSupplyatBenchmarkTime;
 };
 
+struct gs_TimeLimit {
+    int lv_displayMinutes;
+    int lv_displaySeconds;
+    int lv_totalSeconds;
+};
+
 struct gs_BuildOrderStep {
     string lv_stepType;
     string lv_unitType;
@@ -207,6 +213,10 @@ timer gv_benchmark2Timer;
 timer gv_benchmark3Timer;
 int[4] gv_benchmarkSupplyDefaults;
 timer gv_finalBenchmarkTimer;
+gs_TimeLimit gv_benchmarkMaxSupplyTimeLimit;
+gs_TimeLimit gv_defaultMaxSupplyTimeLimit;
+gs_TimeLimit gv_benchmarkBuildTimeLimit;
+gs_TimeLimit gv_defaultBuildTimeLimit;
 int gv_benchmarkMaxSupplyMinutes;
 int gv_benchmarkMaxSupplySeconds;
 int gv_benchmarkMaxSupplyTotalSeconds;
@@ -1645,8 +1655,9 @@ void gf_SaveCurrentBuildOrderAsBenchmarkBuildOrder (string lp_buildSectionKey) {
     // Variable Initialization
 
     // Implementation
-    gf_LogTextMessage(gv_debugBankEnabled, StringExternal("Param/Value/EE33C8C1"));
-    lv_numCurrentBuildSteps = gv_benchmarkBuildOrderStepCursor;
+    TextExpressionSetToken("Param/Expression/EE33C8C1", "A", StringToText(lp_buildSectionKey));
+    gf_LogTextMessage(gv_debugBankEnabled, TextExpressionAssemble("Param/Expression/EE33C8C1"));
+    lv_numCurrentBuildSteps = gv_currentBuildOrderStepCursor;
     auto895F190E_ae = (lv_numCurrentBuildSteps-1);
     auto895F190E_ai = 1;
     lv_currentStepNum = 0;
