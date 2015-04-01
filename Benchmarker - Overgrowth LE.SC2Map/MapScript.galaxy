@@ -211,19 +211,14 @@ int gv_benchmarkFinalBenchmarkObjective;
 timer gv_benchmark1Timer;
 timer gv_benchmark2Timer;
 timer gv_benchmark3Timer;
-int[4] gv_benchmarkSupplyDefaults;
 timer gv_finalBenchmarkTimer;
+int[4] gv_benchmarkSupplyDefaults;
 gs_TimeLimit gv_benchmarkMaxSupplyTimeLimit;
 gs_TimeLimit gv_defaultMaxSupplyTimeLimit;
 gs_TimeLimit gv_benchmarkBuildTimeLimit;
+int gv_benchmarkFinalSupplyAtBuildTimeLimit;
 gs_TimeLimit gv_defaultBuildTimeLimit;
-int gv_benchmarkMaxSupplyMinutes;
-int gv_benchmarkMaxSupplySeconds;
-int gv_benchmarkMaxSupplyTotalSeconds;
-int gv_benchmarkEndBuildatGameTimeMinutes;
-int gv_benchmarkEndBuildatGameTimeSeconds;
-int gv_benchmarkEndBuildatGameTimeTotalSeconds;
-int gv_benchmarkFinalSupplyatGameTimeValue;
+int gv_defaultFinalSupplyAtBuildTimeLimit;
 int gv_numBenchmarksMetThisBuild;
 bool gv_buildOrderStepLock;
 bool gv_practiceAgainstBenchmarkBuildOrder;
@@ -1380,7 +1375,7 @@ trigger gt_Benchmark2TimerExpires;
 trigger gt_Benchmark3TimerExpires;
 trigger gt_MaxTimeTimerElapsed;
 trigger gt_EndBuildatMaxSupply;
-trigger gt_EndBuildatSpecifiedGameTime;
+trigger gt_EndBuildatBuildTimeLimit;
 trigger gt_EndBuildFromHotkey;
 trigger gt_OnUnitStartUpdateCurrentBuildOrder;
 trigger gt_OnUpgradeStartUpdateCurrentBuildOrder;
@@ -2110,10 +2105,10 @@ void gf_StartBenchmarkTimers () {
     TimerStart(gv_benchmark2Timer, gf_GetTotalSecondsforMinSeconds(gv_supplyBenchmarks[1].lv_benchmarkTimeMin, gv_supplyBenchmarks[1].lv_benchmarkTimeSeconds), false, c_timeGame);
     TimerStart(gv_benchmark3Timer, gf_GetTotalSecondsforMinSeconds(gv_supplyBenchmarks[2].lv_benchmarkTimeMin, gv_supplyBenchmarks[2].lv_benchmarkTimeSeconds), false, c_timeGame);
     if ((gf_IsEndBuildatMaxSupplySelected() == true)) {
-        TimerStart(gv_finalBenchmarkTimer, gv_benchmarkMaxSupplyTotalSeconds, false, c_timeGame);
+        TimerStart(gv_finalBenchmarkTimer, gv_benchmarkMaxSupplyTimeLimit.lv_totalSeconds, false, c_timeGame);
     }
     else {
-        TimerStart(gv_finalBenchmarkTimer, gv_benchmarkEndBuildatGameTimeTotalSeconds, false, c_timeGame);
+        TimerStart(gv_finalBenchmarkTimer, gv_benchmarkBuildTimeLimit.lv_totalSeconds, false, c_timeGame);
     }
 }
 
@@ -3140,12 +3135,12 @@ void gf_SetSupplyBenchmarksConfigurationValuesFromDialog () {
 
 void gf_SetBuildCompletionConfigurationValuesFromDialog () {
     // Implementation
-    gv_benchmarkMaxSupplyMinutes = gf_GetEditBoxValueasInt(gv_maxTimeMinutesEditBox);
-    gv_benchmarkMaxSupplySeconds = gf_GetEditBoxValueasInt(gv_maxTimeSecondsEditBox);
-    gv_benchmarkMaxSupplyTotalSeconds = ((gf_GetEditBoxValueasInt(gv_maxTimeMinutesEditBox)*60)+gf_GetEditBoxValueasInt(gv_maxTimeSecondsEditBox));
-    gv_benchmarkEndBuildatGameTimeTotalSeconds = ((gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox)*60)+gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox));
-    gv_benchmarkEndBuildatGameTimeMinutes = gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox);
-    gv_benchmarkEndBuildatGameTimeSeconds = gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox);
+    gv_benchmarkMaxSupplyTimeLimit.lv_displayMinutes = gf_GetEditBoxValueasInt(gv_maxTimeMinutesEditBox);
+    gv_benchmarkMaxSupplyTimeLimit.lv_displaySeconds = gf_GetEditBoxValueasInt(gv_maxTimeSecondsEditBox);
+    gv_benchmarkMaxSupplyTimeLimit.lv_totalSeconds = ((gf_GetEditBoxValueasInt(gv_maxTimeMinutesEditBox)*60)+gf_GetEditBoxValueasInt(gv_maxTimeSecondsEditBox));
+    gv_benchmarkBuildTimeLimit.lv_displayMinutes = gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox);
+    gv_benchmarkBuildTimeLimit.lv_displaySeconds = gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox);
+    gv_benchmarkBuildTimeLimit.lv_totalSeconds = ((gf_GetEditBoxValueasInt(gv_endBuildMinutesEditBox)*60)+gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox));
     if ((gf_IsEndBuildatMaxSupplySelected() == true)) {
         gv_supplyBenchmarks[3].lv_benchmarkTimeMin = gf_GetEditBoxValueasInt(gv_maxTimeMinutesEditBox);
         gv_supplyBenchmarks[3].lv_benchmarkTimeSeconds = gf_GetEditBoxValueasInt(gv_maxTimeSecondsEditBox);
@@ -3156,7 +3151,7 @@ void gf_SetBuildCompletionConfigurationValuesFromDialog () {
         gv_supplyBenchmarks[3].lv_benchmarkTimeSeconds = gf_GetEditBoxValueasInt(gv_endBuildSecondsEditBox);
         gv_supplyBenchmarks[3].lv_benchmarkSupply = gf_GetEditBoxValueasInt(gv_finalSupplyAtGameTimeEditBox);
     }
-    gv_benchmarkFinalSupplyatGameTimeValue = gf_GetEditBoxValueasInt(gv_finalSupplyAtGameTimeEditBox);
+    gv_benchmarkFinalSupplyAtBuildTimeLimit = gf_GetEditBoxValueasInt(gv_finalSupplyAtGameTimeEditBox);
 }
 
 void gf_SaveSupplyBenchmarksConfiguration (string lp_sectionKey) {
@@ -3180,11 +3175,11 @@ void gf_SaveSupplyBenchmarksConfiguration (string lp_sectionKey) {
 void gf_SaveBuildCompletionConfiguration (string lp_sectionKey) {
     // Implementation
     BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSelectionKey, DialogControlGetSelectedItem(gv_endBuildPulldown, 1));
-    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkMaxSupplyatTimeMinutesKey, gv_benchmarkMaxSupplyMinutes);
-    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkMaxSupplyatTimeSecondsKey, gv_benchmarkMaxSupplySeconds);
-    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildMinutesKey, gv_benchmarkEndBuildatGameTimeMinutes);
-    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSecondsKey, gv_benchmarkEndBuildatGameTimeSeconds);
-    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkFinalSupplyatGameTimeKey, gv_benchmarkFinalSupplyatGameTimeValue);
+    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkMaxSupplyatTimeMinutesKey, gv_benchmarkMaxSupplyTimeLimit.lv_displayMinutes);
+    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkMaxSupplyatTimeSecondsKey, gv_benchmarkMaxSupplyTimeLimit.lv_displaySeconds);
+    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildMinutesKey, gv_benchmarkBuildTimeLimit.lv_displayMinutes);
+    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSecondsKey, gv_benchmarkBuildTimeLimit.lv_displaySeconds);
+    BankValueSetFromInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkFinalSupplyatGameTimeKey, gv_benchmarkFinalSupplyAtBuildTimeLimit);
 }
 
 void gf_SaveBenchmarkBuildOptionsConfiguration (string lp_sectionKey) {
@@ -3225,17 +3220,17 @@ void gf_LoadSupplyBenchmarkMenuConfiguration (string lp_sectionKey) {
 
 void gf_LoadBuildCompletionMenuConfiguraiton (string lp_sectionKey) {
     // Implementation
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeMinutesEditBox, gv_benchmarkMaxSupplyatTimeMinutesKey, lp_sectionKey, gv_benchmarkMaxSupplyMinutes, 1);
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeSecondsEditBox, gv_benchmarkMaxSupplyatTimeSecondsKey, lp_sectionKey, gv_benchmarkMaxSupplySeconds, 1);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeMinutesEditBox, gv_benchmarkMaxSupplyatTimeMinutesKey, lp_sectionKey, gv_defaultMaxSupplyTimeLimit.lv_displayMinutes, 1);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_maxTimeSecondsEditBox, gv_benchmarkMaxSupplyatTimeSecondsKey, lp_sectionKey, gv_defaultMaxSupplyTimeLimit.lv_displaySeconds, 1);
     if ((BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSelectionKey) > 0)) {
         DialogControlSelectItem(gv_endBuildPulldown, PlayerGroupAll(), BankValueGetAsInt(gv_benchmarkerBank, lp_sectionKey, gv_benchmarkEndBuildSelectionKey));
     }
     else {
         DialogControlSelectItem(gv_endBuildPulldown, PlayerGroupAll(), gv_endBuildPulldownSelection);
     }
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildMinutesEditBox, gv_benchmarkEndBuildMinutesKey, lp_sectionKey, gv_benchmarkEndBuildatGameTimeMinutes, 1);
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildSecondsEditBox, gv_benchmarkEndBuildSecondsKey, lp_sectionKey, gv_benchmarkEndBuildatGameTimeSeconds, 1);
-    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_finalSupplyAtGameTimeEditBox, gv_benchmarkFinalSupplyatGameTimeKey, lp_sectionKey, gv_benchmarkFinalSupplyatGameTimeValue, 0);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildMinutesEditBox, gv_benchmarkEndBuildMinutesKey, lp_sectionKey, gv_defaultBuildTimeLimit.lv_displayMinutes, 1);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_endBuildSecondsEditBox, gv_benchmarkEndBuildSecondsKey, lp_sectionKey, gv_defaultBuildTimeLimit.lv_displaySeconds, 1);
+    gf_LoadIntFromBankIfKeyisSetElseDefault(gv_finalSupplyAtGameTimeEditBox, gv_benchmarkFinalSupplyatGameTimeKey, lp_sectionKey, gv_defaultFinalSupplyAtBuildTimeLimit, 0);
 }
 
 void gf_LoadBenchmarkBuildOptionsConfiguration (string lp_sectionKey) {
@@ -3883,7 +3878,7 @@ void gf_CreateEndBuildTimeBox (int lp_sectionYOffset) {
     gv_endBuildMinutesEditBox = DialogControlLastCreated();
     DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv__2DigitEditBoxWidth, gv_benchmarkEditBoxHeight);
     DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent+gv_endBuildLabelWidth+gv_endBuildPulldownWidth), lv_yOffset);
-    libNtve_gf_SetDialogItemEditorValue(DialogControlLastCreated(), IntToString(gv_benchmarkEndBuildatGameTimeMinutes), PlayerGroupAll());
+    libNtve_gf_SetDialogItemEditorValue(DialogControlLastCreated(), IntToString(gv_benchmarkBuildTimeLimit.lv_displayMinutes), PlayerGroupAll());
     libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/3F527ED2"), PlayerGroupAll());
     DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), false);
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_timeBoxColonLabelWidth, gv_menuRowHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent+gv_endBuildLabelWidth+gv_endBuildPulldownWidth+gv__2DigitEditBoxWidth-gv_timeBoxColonOffset), lv_yOffset, StringExternal("Param/Value/36CC771D"), ColorWithAlpha(0,0,0,0), false, 2.0);
@@ -3893,7 +3888,7 @@ void gf_CreateEndBuildTimeBox (int lp_sectionYOffset) {
     gv_endBuildSecondsEditBox = DialogControlLastCreated();
     DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv__2DigitEditBoxWidth, gv_benchmarkEditBoxHeight);
     DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent+gv_endBuildLabelWidth+gv_endBuildPulldownWidth+gv__2DigitEditBoxWidth+gv_timeBoxColonSpacer), lv_yOffset);
-    libNtve_gf_SetDialogItemEditorValue(DialogControlLastCreated(), IntToString(gv_benchmarkEndBuildatGameTimeSeconds), PlayerGroupAll());
+    libNtve_gf_SetDialogItemEditorValue(DialogControlLastCreated(), IntToString(gv_benchmarkBuildTimeLimit.lv_displaySeconds), PlayerGroupAll());
     libNtve_gf_SetDialogItemTooltip(DialogControlLastCreated(), StringExternal("Param/Value/78D21490"), PlayerGroupAll());
     DialogControlSetVisible(DialogControlLastCreated(), PlayerGroupAll(), false);
 }
@@ -3918,7 +3913,7 @@ void gf_CreateMaxSupplyatTimeRow (int lp_sectionYOffset) {
     gv_maxTimeMinutesEditBox = DialogControlLastCreated();
     DialogControlSetSize(gv_maxTimeMinutesEditBox, PlayerGroupAll(), gv__2DigitEditBoxWidth, gv_benchmarkEditBoxHeight);
     DialogControlSetPosition(gv_maxTimeMinutesEditBox, PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent+gv_maxTimeLabelWidth), lv_yOffset);
-    libNtve_gf_SetDialogItemEditorValue(gv_maxTimeMinutesEditBox, IntToString(gv_benchmarkMaxSupplyMinutes), PlayerGroupAll());
+    libNtve_gf_SetDialogItemEditorValue(gv_maxTimeMinutesEditBox, IntToString(gv_benchmarkMaxSupplyTimeLimit.lv_displayMinutes), PlayerGroupAll());
     libNtve_gf_SetDialogItemTooltip(gv_maxTimeMinutesEditBox, StringExternal("Param/Value/E8E99EE8"), PlayerGroupAll());
     libNtve_gf_CreateDialogItemLabel(gv_benchmarkDialog, gv_timeBoxColonLabelWidth, gv_benchmarkSupplyValueLabelHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent+gv_maxTimeLabelWidth+gv__2DigitEditBoxWidth-gv_timeBoxColonOffset), lv_yOffset, StringExternal("Param/Value/B80AD986"), ColorWithAlpha(0,0,0,0), false, 2.0);
     gv_maxTimeMinutesTimeBoxColonLabel = DialogControlLastCreated();
@@ -3926,7 +3921,7 @@ void gf_CreateMaxSupplyatTimeRow (int lp_sectionYOffset) {
     gv_maxTimeSecondsEditBox = DialogControlLastCreated();
     DialogControlSetSize(gv_maxTimeSecondsEditBox, PlayerGroupAll(), gv__2DigitEditBoxWidth, gv_benchmarkEditBoxHeight);
     DialogControlSetPosition(gv_maxTimeSecondsEditBox, PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent+gv_maxTimeLabelWidth+gv__2DigitEditBoxWidth+gv_timeBoxColonSpacer), lv_yOffset);
-    libNtve_gf_SetDialogItemEditorValue(gv_maxTimeSecondsEditBox, IntToString(gv_benchmarkMaxSupplySeconds), PlayerGroupAll());
+    libNtve_gf_SetDialogItemEditorValue(gv_maxTimeSecondsEditBox, IntToString(gv_benchmarkMaxSupplyTimeLimit.lv_displaySeconds), PlayerGroupAll());
     libNtve_gf_SetDialogItemTooltip(gv_maxTimeSecondsEditBox, StringExternal("Param/Value/FBA43D52"), PlayerGroupAll());
 }
 
@@ -3943,7 +3938,7 @@ void gf_CreateFinalSupplyatGameTimeRow (int lp_sectionYOffset) {
     DialogControlCreate(DialogLastCreated(), c_triggerControlTypeEditBox);
     DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv__3DigitEditBoxWidth, gv_benchmarkEditBoxHeight);
     DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent+gv_finalSupplyAtGameTimeLabelWidth), lv_yOffset);
-    libNtve_gf_SetDialogItemEditorValue(DialogControlLastCreated(), IntToString(gv_benchmarkMaxSupplyMinutes), PlayerGroupAll());
+    libNtve_gf_SetDialogItemEditorValue(DialogControlLastCreated(), IntToString(gv_benchmarkMaxSupplyTimeLimit.lv_displayMinutes), PlayerGroupAll());
     gv_finalSupplyAtGameTimeEditBox = DialogControlLastCreated();
     TextExpressionSetToken("Param/Expression/515E5E9E", "A", IntToText(0));
     TextExpressionSetToken("Param/Expression/515E5E9E", "B", IntToText(0));
@@ -4981,11 +4976,11 @@ void gf_InitializeGameDefaults () {
     gv_supplyBenchmarks[1].lv_benchmarkTimeSeconds = 0;
     gv_supplyBenchmarks[2].lv_benchmarkTimeMin = 10;
     gv_supplyBenchmarks[2].lv_benchmarkTimeSeconds = 0;
-    gv_benchmarkMaxSupplyMinutes = 15;
-    gv_benchmarkMaxSupplySeconds = 0;
-    gv_benchmarkEndBuildatGameTimeMinutes = 12;
-    gv_benchmarkEndBuildatGameTimeSeconds = 30;
-    gv_benchmarkFinalSupplyatGameTimeValue = 130;
+    gv_defaultMaxSupplyTimeLimit.lv_displayMinutes = 15;
+    gv_defaultMaxSupplyTimeLimit.lv_displaySeconds = 0;
+    gv_defaultBuildTimeLimit.lv_displayMinutes = 12;
+    gv_defaultBuildTimeLimit.lv_displaySeconds = 30;
+    gv_defaultFinalSupplyAtBuildTimeLimit = 130;
     gv_enableGasTracking = true;
     gv_gasTrackingThresholdSteps = 4;
     gv_enableSupplyUnitTracking = true;
@@ -5148,12 +5143,12 @@ void gf_InitializeBenchmarkSupplyObjectives () {
     }
     ObjectiveSetState(gv_benchmarkFinalBenchmarkObjective, c_objectiveStateActive);
     if ((gf_IsEndBuildatMaxSupplySelected() == true)) {
-        TextExpressionSetToken("Param/Expression/0E7777EB", "B", TextWithColor(TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkMaxSupplyTotalSeconds), gv_benchmarkSupplyObjectiveTextColor));
+        TextExpressionSetToken("Param/Expression/0E7777EB", "B", TextWithColor(TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkMaxSupplyTimeLimit.lv_totalSeconds), gv_benchmarkSupplyObjectiveTextColor));
         ObjectiveSetName(gv_benchmarkFinalBenchmarkObjective, TextExpressionAssemble("Param/Expression/0E7777EB"));
     }
     else {
-        TextExpressionSetToken("Param/Expression/FF78F416", "A", TextWithColor(IntToText(gv_benchmarkFinalSupplyatGameTimeValue), gv_benchmarkSupplyObjectiveTextColor));
-        TextExpressionSetToken("Param/Expression/FF78F416", "B", TextWithColor(TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkEndBuildatGameTimeTotalSeconds), gv_benchmarkSupplyObjectiveTextColor));
+        TextExpressionSetToken("Param/Expression/FF78F416", "A", TextWithColor(IntToText(gv_benchmarkFinalSupplyAtBuildTimeLimit), gv_benchmarkSupplyObjectiveTextColor));
+        TextExpressionSetToken("Param/Expression/FF78F416", "B", TextWithColor(TextTimeFormat(StringToText("<mintotal/>:<sec2/>"), gv_benchmarkBuildTimeLimit.lv_totalSeconds), gv_benchmarkSupplyObjectiveTextColor));
         ObjectiveSetName(gv_benchmarkFinalBenchmarkObjective, TextExpressionAssemble("Param/Expression/FF78F416"));
     }
 }
@@ -9345,12 +9340,12 @@ void gt_EndBuildatMaxSupply_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: End Build at Specified Game Time
+// Trigger: End Build at Build Time Limit
 //--------------------------------------------------------------------------------------------------
-bool gt_EndBuildatSpecifiedGameTime_Func (bool testConds, bool runActions) {
+bool gt_EndBuildatBuildTimeLimit_Func (bool testConds, bool runActions) {
     // Conditions
     if (testConds) {
-        if (!(((gf_IsEndBuildatGameTimeSelected() == true) && (TimerGetElapsed(gv_currentBuildTimer) >= gv_benchmarkEndBuildatGameTimeTotalSeconds) && (gv_paused == false)))) {
+        if (!(((gf_IsEndBuildatGameTimeSelected() == true) && (TimerGetElapsed(gv_currentBuildTimer) >= gv_benchmarkBuildTimeLimit.lv_totalSeconds) && (gv_paused == false)))) {
             return false;
         }
     }
@@ -9361,9 +9356,9 @@ bool gt_EndBuildatSpecifiedGameTime_Func (bool testConds, bool runActions) {
     }
 
     TextExpressionSetToken("Param/Expression/7BCEB932", "A", IntToText(PlayerGetPropertyInt(1, c_playerPropSuppliesUsed)));
-    TextExpressionSetToken("Param/Expression/7BCEB932", "B", IntToText(gv_benchmarkFinalSupplyatGameTimeValue));
+    TextExpressionSetToken("Param/Expression/7BCEB932", "B", IntToText(gv_benchmarkFinalSupplyAtBuildTimeLimit));
     gf_LogTextMessage(gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/7BCEB932"));
-    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) >= gv_benchmarkFinalSupplyatGameTimeValue)) {
+    if ((PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) >= gv_benchmarkFinalSupplyAtBuildTimeLimit)) {
         gf_CompleteFinalBenchmarkObjective();
     }
     else {
@@ -9375,9 +9370,9 @@ bool gt_EndBuildatSpecifiedGameTime_Func (bool testConds, bool runActions) {
 }
 
 //--------------------------------------------------------------------------------------------------
-void gt_EndBuildatSpecifiedGameTime_Init () {
-    gt_EndBuildatSpecifiedGameTime = TriggerCreate("gt_EndBuildatSpecifiedGameTime_Func");
-    TriggerAddEventTimePeriodic(gt_EndBuildatSpecifiedGameTime, 1.0, c_timeGame);
+void gt_EndBuildatBuildTimeLimit_Init () {
+    gt_EndBuildatBuildTimeLimit = TriggerCreate("gt_EndBuildatBuildTimeLimit_Func");
+    TriggerAddEventTimePeriodic(gt_EndBuildatBuildTimeLimit, 1.0, c_timeGame);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -11990,7 +11985,7 @@ bool gt_UpdateSupplyBenchmarksonButtonClick_Func (bool testConds, bool runAction
     int auto053D7F19_ai;
 
     // Variable Declarations
-    int lv_buildtime;
+    int lv_buildTime;
     int lv_i;
 
     // Variable Initialization
@@ -12007,7 +12002,7 @@ bool gt_UpdateSupplyBenchmarksonButtonClick_Func (bool testConds, bool runAction
         return true;
     }
 
-    lv_buildtime = FixedToInt(TimerGetElapsed(gv_currentBuildTimer));
+    lv_buildTime = FixedToInt(TimerGetElapsed(gv_currentBuildTimer));
     auto053D7F19_ae = 3;
     auto053D7F19_ai = 1;
     lv_i = 0;
@@ -12015,11 +12010,12 @@ bool gt_UpdateSupplyBenchmarksonButtonClick_Func (bool testConds, bool runAction
         gv_supplyBenchmarks[lv_i].lv_benchmarkSupply = gv_supplyBenchmarks[lv_i].lv_actualSupplyatBenchmarkTime;
     }
     if ((gf_IsEndBuildatMaxSupplySelected() == true)) {
-        gv_benchmarkMaxSupplySeconds = ModI(lv_buildtime, 60);
-        gv_benchmarkMaxSupplyMinutes = ((lv_buildtime-gv_benchmarkMaxSupplySeconds)/60);
+        gv_benchmarkMaxSupplyTimeLimit.lv_totalSeconds = lv_buildTime;
+        gv_benchmarkMaxSupplyTimeLimit.lv_displaySeconds = ModI(lv_buildTime, 60);
+        gv_benchmarkMaxSupplyTimeLimit.lv_displayMinutes = ((lv_buildTime-gv_benchmarkMaxSupplyTimeLimit.lv_displaySeconds)/60);
     }
     else {
-        gv_benchmarkFinalSupplyatGameTimeValue = gv_supplyBenchmarks[3].lv_actualSupplyatBenchmarkTime;
+        gv_benchmarkFinalSupplyAtBuildTimeLimit = gv_supplyBenchmarks[3].lv_actualSupplyatBenchmarkTime;
     }
     gf_SaveSupplyBenchmarksConfiguration(gf_GetCurrentlySelectedBuildAsBankSectionKey());
     gf_SaveBuildCompletionConfiguration(gf_GetCurrentlySelectedBuildAsBankSectionKey());
@@ -12399,7 +12395,7 @@ void InitTriggers () {
     gt_Benchmark3TimerExpires_Init();
     gt_MaxTimeTimerElapsed_Init();
     gt_EndBuildatMaxSupply_Init();
-    gt_EndBuildatSpecifiedGameTime_Init();
+    gt_EndBuildatBuildTimeLimit_Init();
     gt_EndBuildFromHotkey_Init();
     gt_OnUnitStartUpdateCurrentBuildOrder_Init();
     gt_OnUpgradeStartUpdateCurrentBuildOrder_Init();
