@@ -11986,7 +11986,9 @@ bool gt_UpdateSupplyBenchmarksonButtonClick_Func (bool testConds, bool runAction
     int auto053D7F19_ai;
 
     // Variable Declarations
-    int lv_buildTime;
+    int lv_buildTimeTotalSeconds;
+    int lv_buildTimeMinutes;
+    int lv_buildTimeSeconds;
     int lv_i;
 
     // Variable Initialization
@@ -12003,7 +12005,9 @@ bool gt_UpdateSupplyBenchmarksonButtonClick_Func (bool testConds, bool runAction
         return true;
     }
 
-    lv_buildTime = FixedToInt(TimerGetElapsed(gv_currentBuildTimer));
+    lv_buildTimeTotalSeconds = FixedToInt(TimerGetElapsed(gv_currentBuildTimer));
+    lv_buildTimeSeconds = ModI(lv_buildTimeTotalSeconds, 60);
+    lv_buildTimeMinutes = ((lv_buildTimeTotalSeconds-lv_buildTimeSeconds)/60);
     auto053D7F19_ae = 3;
     auto053D7F19_ai = 1;
     lv_i = 0;
@@ -12011,9 +12015,11 @@ bool gt_UpdateSupplyBenchmarksonButtonClick_Func (bool testConds, bool runAction
         gv_supplyBenchmarks[lv_i].lv_benchmarkSupply = gv_supplyBenchmarks[lv_i].lv_actualSupplyatBenchmarkTime;
     }
     if ((gf_IsEndBuildatMaxSupplySelected() == true)) {
-        gv_benchmarkMaxSupplyTimeLimit.lv_totalSeconds = lv_buildTime;
-        gv_benchmarkMaxSupplyTimeLimit.lv_displaySeconds = ModI(lv_buildTime, 60);
-        gv_benchmarkMaxSupplyTimeLimit.lv_displayMinutes = ((lv_buildTime-gv_benchmarkMaxSupplyTimeLimit.lv_displaySeconds)/60);
+        gv_benchmarkMaxSupplyTimeLimit.lv_totalSeconds = lv_buildTimeTotalSeconds;
+        gv_benchmarkMaxSupplyTimeLimit.lv_displayMinutes = lv_buildTimeMinutes;
+        gv_benchmarkMaxSupplyTimeLimit.lv_displaySeconds = lv_buildTimeSeconds;
+        gv_supplyBenchmarks[3].lv_benchmarkTimeMin = lv_buildTimeMinutes;
+        gv_supplyBenchmarks[3].lv_benchmarkTimeSeconds = lv_buildTimeSeconds;
     }
     else {
         gv_benchmarkFinalSupplyAtBuildTimeLimit = gv_supplyBenchmarks[3].lv_actualSupplyatBenchmarkTime;
