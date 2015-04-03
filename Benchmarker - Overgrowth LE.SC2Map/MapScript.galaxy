@@ -492,13 +492,17 @@ int gv_postBuildReportMatchupLabelWidth;
 int gv_postBuildReportMatchupLabelHeight;
 int gv_postBuildReportMatchupLabelXOffset;
 int gv_postBuildReportMatchupLabelYOffset;
+int gv_postBuildReportBuildNameLabel;
+int gv_postBuildReportBuildNameLabelWidth;
+int gv_postBuildReportBuildNameLabelHeight;
+int gv_postBuildReportBuildNameLabelYOffset;
+int gv_postBuildReportBuildOverviewLabelHeight;
 int gv_postBuildReportBuildOverviewSectionHeight;
 int gv_postBuildReportBuildOverviewTimeLabel;
 int gv_postBuildReportBuildOverviewBenchmarkCompletionLabel;
 int gv_postBuildReportBuildOverviewBuildStepNumLabel;
 int gv_postBuildReportBuildOverviewLabelNameWidth;
 int gv_postBuildReportBuildOverviewLabelValueWidth;
-int gv_postBuildReportBuildOverviewLabelHeight;
 int gv_postBuildReportBenchmarkHeadingWidth;
 int gv_postBuildReportBenchmarksSupplyHeadingWidth;
 int gv_postBuildReportBenchmarkAnalysisRowLabelWidth;
@@ -902,7 +906,7 @@ void InitGlobals () {
     gv_postBuildReportDialog = c_invalidDialogId;
     gv_postBuildReportDialogTitle = StringExternal("Param/Value/B121E629");
     gv_backToMenuButton = c_invalidDialogControlId;
-    gv_postBuildReportDialogTitleSpacer = 40;
+    gv_postBuildReportDialogTitleSpacer = 80;
     for (init_i = 0; init_i <= 3; init_i += 1) {
         for (init_j = 0; init_j <= 10; init_j += 1) {
             for (init_k = 0; init_k <= 4; init_k += 1) {
@@ -922,13 +926,17 @@ void InitGlobals () {
     gv_postBuildReportMatchupLabelHeight = 60;
     gv_postBuildReportMatchupLabelXOffset = 70;
     gv_postBuildReportMatchupLabelYOffset = 35;
-    gv_postBuildReportBuildOverviewSectionHeight = (4*60);
+    gv_postBuildReportBuildNameLabel = c_invalidDialogControlId;
+    gv_postBuildReportBuildNameLabelWidth = 600;
+    gv_postBuildReportBuildNameLabelHeight = 50;
+    gv_postBuildReportBuildNameLabelYOffset = 85;
+    gv_postBuildReportBuildOverviewLabelHeight = 45;
+    gv_postBuildReportBuildOverviewSectionHeight = ((4*gv_postBuildReportBuildOverviewLabelHeight)+15);
     gv_postBuildReportBuildOverviewTimeLabel = c_invalidDialogControlId;
     gv_postBuildReportBuildOverviewBenchmarkCompletionLabel = c_invalidDialogControlId;
     gv_postBuildReportBuildOverviewBuildStepNumLabel = c_invalidDialogControlId;
     gv_postBuildReportBuildOverviewLabelNameWidth = 275;
     gv_postBuildReportBuildOverviewLabelValueWidth = 235;
-    gv_postBuildReportBuildOverviewLabelHeight = 45;
     gv_postBuildReportBenchmarkHeadingWidth = 260;
     gv_postBuildReportBenchmarksSupplyHeadingWidth = 200;
     gv_postBuildReportBenchmarkAnalysisRowLabelWidth = 350;
@@ -940,7 +948,7 @@ void InitGlobals () {
     gv_postBuildReportStatBestWidth = 150;
     gv_postBuildReportStatPercentDifferenceWidth = 150;
     gv_postBuildReportBuildOrderListBox = c_invalidDialogControlId;
-    gv_postBuildReportBuildOrderListBoxHeight = 360;
+    gv_postBuildReportBuildOrderListBoxHeight = 345;
     gv_postBuildReportBuildOrderListBoxWidth = 325;
     gv_postBuildReportSaveBuildButton = c_invalidDialogControlId;
     gv_postBuildReportClearBuildButton = c_invalidDialogControlId;
@@ -1145,6 +1153,7 @@ void gf_CreatePostBuildReportBuildOrderListBox ();
 void gf_CreatePostBuildReportBuildOrderSaveClearButtons ();
 void gf_CreatePostBuildReportMuteCheckbox ();
 void gf_UpdatePostBuildMatchupText ();
+void gf_UpdatePostBuildBuildNameText ();
 void gf_UpdatePostBuildReportDialogValues (bool lp_updateBuildOrderListBox);
 void gf_UpdatePostBuildReportOverviewSection ();
 void gf_UpdatePostBuildReportSupplyBenchmarkSection ();
@@ -4244,6 +4253,8 @@ void gf_CreatePostBuildReportDialog () {
     gv_postBuildReportMatchupLabels[0] = DialogControlLastCreated();
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_postBuildReportMatchupLabelWidth, gv_postBuildReportMatchupLabelHeight, c_anchorTopRight, (gv_postBuildReportMatchupLabelXOffset), gv_postBuildReportMatchupLabelYOffset, StringExternal("Param/Value/392C1E2D"), ColorWithAlpha(0,0,0,0), false, 2.0);
     gv_postBuildReportMatchupLabels[1] = DialogControlLastCreated();
+    libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_postBuildReportBuildNameLabelWidth, gv_postBuildReportBuildNameLabelHeight, c_anchorTop, (0), gv_postBuildReportBuildNameLabelYOffset, StringExternal("Param/Value/27390862"), ColorWithAlpha(0,0,0,0), false, 2.0);
+    gv_postBuildReportBuildNameLabel = DialogControlLastCreated();
 }
 
 void gf_CreatePostBuildReportBuildOverviewLabels () {
@@ -4341,7 +4352,7 @@ void gf_CreatePostBuildReportStatSectionHeaderLabels () {
     int lv_labelHeightOffset;
 
     // Variable Initialization
-    lv_labelHeightOffset = (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_postBuildReportBuildOverviewSectionHeight);
+    lv_labelHeightOffset = (gv_menuPadding+gv_postBuildReportDialogTitleSpacer+gv_postBuildReportBuildOverviewSectionHeight);
 
     // Implementation
     TextExpressionSetToken("Param/Expression/14A9E66D", "A", StringExternal("Param/Value/F716237B"));
@@ -4357,7 +4368,7 @@ void gf_CreatePostBuildReportStatAnalysisRow (int lp_rowOffset) {
     int lv_yOffset;
 
     // Variable Initialization
-    lv_yOffset = (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_postBuildReportBuildOverviewSectionHeight+gv_sectionLabelHeight+lp_rowOffset*gv_postBuildReportStatLabelHeight);
+    lv_yOffset = (gv_menuPadding+gv_postBuildReportDialogTitleSpacer+gv_postBuildReportBuildOverviewSectionHeight+gv_sectionLabelHeight+lp_rowOffset*gv_postBuildReportStatLabelHeight);
 
     // Implementation
     libNtve_gf_CreateDialogItemLabel(DialogLastCreated(), gv_postBuildReportStatLabelWidth, gv_postBuildReportStatLabelHeight, c_anchorTopLeft, (gv_menuPadding+gv_menuOptionIndent), lv_yOffset, StringExternal("Param/Value/90E834B6"), ColorWithAlpha(0,0,0,0), false, 2.0);
@@ -4375,7 +4386,7 @@ void gf_CreatePostBuildReportBuildOrderListBox () {
     gf_CreatePostBuildReportBuildOrderSaveClearButtons();
     DialogControlCreate(DialogLastCreated(), c_triggerControlTypeListBox);
     DialogControlSetSize(DialogControlLastCreated(), PlayerGroupAll(), gv_postBuildReportBuildOrderListBoxWidth, gv_postBuildReportBuildOrderListBoxHeight);
-    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopRight, gv_menuPadding, (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_postBuildReportBuildOverviewSectionHeight+gv_sectionLabelHeight));
+    DialogControlSetPosition(DialogControlLastCreated(), PlayerGroupAll(), c_anchorTopRight, gv_menuPadding, (gv_menuPadding+gv_postBuildReportDialogTitleSpacer+gv_postBuildReportBuildOverviewSectionHeight+gv_sectionLabelHeight));
     gv_postBuildReportBuildOrderListBox = DialogControlLastCreated();
 }
 
@@ -4386,7 +4397,7 @@ void gf_CreatePostBuildReportBuildOrderSaveClearButtons () {
 
     // Variable Initialization
     lv_buttonXPadding = gv_menuPadding;
-    lv_buttonYPadding = (gv_menuPadding+gv_benchmarkDialogTitleSpacer+gv_postBuildReportBuildOverviewSectionHeight-15);
+    lv_buttonYPadding = (gv_menuPadding+gv_postBuildReportDialogTitleSpacer+gv_postBuildReportBuildOverviewSectionHeight-15);
 
     // Implementation
     libNtve_gf_CreateDialogItemButton(DialogLastCreated(), gv_postBuildReportButtonWidth, gv_postBuildReportButtonHeight, c_anchorTopRight, (lv_buttonXPadding+gv_postBuildReportButtonWidth
@@ -4430,6 +4441,13 @@ void gf_UpdatePostBuildMatchupText () {
     libNtve_gf_SetDialogItemTextWriteoutDuration(gv_postBuildReportMatchupLabels[1], 0.3, PlayerGroupAll());
     TextExpressionSetToken("Param/Expression/58FC614E", "A", gf_GetCurrentlyMatchupasText());
     libNtve_gf_SetDialogItemText(gv_postBuildReportMatchupLabels[1], TextExpressionAssemble("Param/Expression/58FC614E"), PlayerGroupAll());
+}
+
+void gf_UpdatePostBuildBuildNameText () {
+    // Implementation
+    TextExpressionSetToken("Param/Expression/89C25BF0", "A", StringToText(gv_currentMatchupBuildEntries[gv_currentlySelectedBuildNumber].lv_buildName));
+    libNtve_gf_SetDialogItemText(gv_postBuildReportBuildNameLabel, TextExpressionAssemble("Param/Expression/89C25BF0"), PlayerGroupAll());
+    libNtve_gf_SetDialogItemStyle(gv_postBuildReportBuildNameLabel, "BenchmarkerBuildNameText", PlayerGroupAll());
 }
 
 void gf_UpdatePostBuildReportDialogValues (bool lp_updateBuildOrderListBox) {
@@ -11869,6 +11887,7 @@ bool gt_OpenPostBuildReportDialog_Func (bool testConds, bool runActions) {
     gf_PauseGame();
     gf_UpdatePostBuildReportDialogValues(true);
     gf_UpdatePostBuildMatchupText();
+    gf_UpdatePostBuildBuildNameText();
     DialogSetVisible(gv_postBuildReportDialog, PlayerGroupAll(), true);
     libNtve_gf_SwooshCamera(1, ((CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance)) + 0.0), (CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance)+ 20
 ), PlayerStartLocation(1), 15.0);
