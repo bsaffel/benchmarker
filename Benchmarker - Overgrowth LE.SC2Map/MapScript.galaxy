@@ -2249,7 +2249,7 @@ void gf_CreateBenchmarkBuildOrderObjectives () {
     // Variable Initialization
     lv_buildButtonWidth = 115;
     lv_buildButtonHeight = 35;
-    lv_buildButtonYOffset = 198;
+    lv_buildButtonYOffset = 200;
     lv_forkButtonXOffset = 155;
     lv_ignoreButtonXOffset = (lv_forkButtonXOffset+lv_buildButtonWidth-12);
 
@@ -9496,11 +9496,19 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
             TextExpressionSetToken("Param/Expression/512CB732", "C", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/512CB732"));
             gf_AddUnitBuildOrderStep(lv_currentStep, EventUnitProgressUnit(), libNtve_gf_TriggeringProgressUnitType());
-            if (((gv_numBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == true))) {
-                gf_EvaluateUnitTypeForBenchmarkBuildOrderStep(libNtve_gf_TriggeringProgressUnitType(), lv_currentStep, lv_benchmarkStep);
+            if ((gv_ignoreNextStep == false)) {
+                if (((gv_numBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == true))) {
+                    gf_EvaluateUnitTypeForBenchmarkBuildOrderStep(libNtve_gf_TriggeringProgressUnitType(), lv_currentStep, lv_benchmarkStep);
+                }
+                else {
+                    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/DE5D625B"));
+                }
             }
             else {
-                gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/DE5D625B"));
+                TextExpressionSetToken("Param/Expression/D3EFC920", "A", gf_GetCurrentBuildOrderStepText(lv_currentStep));
+                gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/D3EFC920"));
+                gv_ignoreNextStep = false;
+                libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_ignoreScreenButtonId), false, PlayerGroupAll());
             }
             gv_currentBuildOrderStepCursor += 1;
         }
@@ -9553,11 +9561,19 @@ bool gt_OnUpgradeStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActi
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/148223DF"));
     if (((lv_currentStep) < gv_maxNumCurrentBuildOrderStepsTracked)) {
         gf_AddUpgradeBuildOrderStep(lv_currentStep, libNtve_gf_TriggeringProgressUpgrade());
-        if (((gv_numBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == true))) {
-            gf_EvaluateUpgradeForBenchmarkBuildOrderStep(libNtve_gf_TriggeringProgressUpgrade(), lv_currentStep, lv_benchmarkStep);
+        if ((gv_ignoreNextStep == false)) {
+            if (((gv_numBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == true))) {
+                gf_EvaluateUpgradeForBenchmarkBuildOrderStep(libNtve_gf_TriggeringProgressUpgrade(), lv_currentStep, lv_benchmarkStep);
+            }
+            else {
+                gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/7FC007BA"));
+            }
         }
         else {
-            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/7FC007BA"));
+            TextExpressionSetToken("Param/Expression/BE93789B", "A", gf_GetCurrentBuildOrderStepText(lv_currentStep));
+            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/BE93789B"));
+            gv_ignoreNextStep = false;
+            libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_ignoreScreenButtonId), false, PlayerGroupAll());
         }
         gv_currentBuildOrderStepCursor += 1;
     }
@@ -9610,11 +9626,19 @@ bool gt_OnAbilityStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActi
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/91218BC2"));
     if (((lv_currentStep) < gv_maxNumCurrentBuildOrderStepsTracked)) {
         gf_AddAbilityBuildOrderStep(lv_currentStep, EventUnitAbility());
-        if (((gv_numBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == true))) {
-            gf_EvaluateAbilityForBenchmarkBuildOrderStep(lv_triggeringAbilityType, lv_currentStep, lv_benchmarkStep);
+        if ((gv_ignoreNextStep == false)) {
+            if (((gv_numBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == true))) {
+                gf_EvaluateAbilityForBenchmarkBuildOrderStep(lv_triggeringAbilityType, lv_currentStep, lv_benchmarkStep);
+            }
+            else {
+                gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/B8C0A347"));
+            }
         }
         else {
-            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/B8C0A347"));
+            TextExpressionSetToken("Param/Expression/EF7B3186", "A", gf_GetCurrentBuildOrderStepText(lv_currentStep));
+            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/EF7B3186"));
+            gv_ignoreNextStep = false;
+            libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_ignoreScreenButtonId), false, PlayerGroupAll());
         }
         gv_currentBuildOrderStepCursor += 1;
     }
