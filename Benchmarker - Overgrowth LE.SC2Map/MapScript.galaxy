@@ -569,7 +569,9 @@ int gv_screenButtonWidth;
 int gv_screenButtonHeight;
 int gv_screenButtonXPadding;
 int gv_screenButtonYPadding;
-int gv_forkScreenButtonID;
+int gv_forkScreenButtonId;
+int gv_ignoreScreenButtonId;
+bool gv_ignoreNextStep;
 
 void InitGlobals () {
     int init_i;
@@ -997,7 +999,8 @@ void InitGlobals () {
     gv_screenButtonHeight = 50;
     gv_screenButtonXPadding = 10;
     gv_screenButtonYPadding = 125;
-    gv_forkScreenButtonID = 6;
+    gv_forkScreenButtonId = 6;
+    gv_ignoreScreenButtonId = 7;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -1394,6 +1397,7 @@ trigger gt_OnUpgradeCancelUpdateCurrentBuildOrder;
 trigger gt_OnAbilityCancelUpdateCurrentBuildOrder;
 trigger gt_OnMultipleUnitFailureTimerExpires;
 trigger gt_ForkBuildOrder;
+trigger gt_IgnoreButtonClicked;
 trigger gt_EverySecondCheckforBuildHints;
 trigger gt_EnableDisableBuildHints;
 trigger gt_EnableDisablePerformanceFeedback;
@@ -2236,8 +2240,18 @@ void gf_CreateBenchmarkBuildOrderObjectives () {
     // Variable Declarations
     int lv_firstStep;
     int lv_i;
+    int lv_buildButtonWidth;
+    int lv_buildButtonHeight;
+    int lv_buildButtonYOffset;
+    int lv_forkButtonXOffset;
+    int lv_ignoreButtonXOffset;
 
     // Variable Initialization
+    lv_buildButtonWidth = 115;
+    lv_buildButtonHeight = 35;
+    lv_buildButtonYOffset = 198;
+    lv_forkButtonXOffset = 155;
+    lv_ignoreButtonXOffset = (lv_forkButtonXOffset+lv_buildButtonWidth-12);
 
     // Implementation
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/A1F4609D"));
@@ -2252,8 +2266,10 @@ void gf_CreateBenchmarkBuildOrderObjectives () {
         else {
         }
     }
-    libNtve_gf_DisplayScreenButton(gv_forkScreenButtonID, StringExternal("Param/Value/4265F0EA"), 105, 35, c_anchorTopLeft, 160, 198, gt_ForkBuildOrder);
-    libNtve_gf_SetDialogItemTooltip(libNtve_gf_ScreenButton(gv_forkScreenButtonID), StringExternal("Param/Value/D99E1BC8"), PlayerGroupAll());
+    libNtve_gf_DisplayScreenButton(gv_forkScreenButtonId, StringExternal("Param/Value/4265F0EA"), lv_buildButtonWidth, lv_buildButtonHeight, c_anchorTopLeft, lv_forkButtonXOffset, lv_buildButtonYOffset, gt_ForkBuildOrder);
+    libNtve_gf_SetDialogItemTooltip(libNtve_gf_ScreenButton(gv_forkScreenButtonId), StringExternal("Param/Value/D99E1BC8"), PlayerGroupAll());
+    libNtve_gf_DisplayScreenButton(gv_ignoreScreenButtonId, StringExternal("Param/Value/2939B047"), lv_buildButtonWidth, lv_buildButtonHeight, c_anchorTopLeft, lv_ignoreButtonXOffset, lv_buildButtonYOffset, gt_IgnoreButtonClicked);
+    libNtve_gf_SetDialogItemTooltip(libNtve_gf_ScreenButton(gv_ignoreScreenButtonId), StringExternal("Param/Value/3C8FA19D"), PlayerGroupAll());
     gf_HighlightBenchmarkBuildOrderObjective(lv_firstStep);
 }
 
@@ -2389,7 +2405,8 @@ void gf_DestroyBenchmarkBuildOrderObjectives () {
     for ( ; ( (auto8EFD539D_ai >= 0 && lv_i <= auto8EFD539D_ae) || (auto8EFD539D_ai <= 0 && lv_i >= auto8EFD539D_ae) ) ; lv_i += auto8EFD539D_ai ) {
         ObjectiveDestroy(gv_benchmarkBuildOrderStepObjectives[lv_i]);
     }
-    libNtve_gf_HideScreenButton(false, gv_forkScreenButtonID);
+    libNtve_gf_HideScreenButton(false, gv_forkScreenButtonId);
+    libNtve_gf_HideScreenButton(false, gv_ignoreScreenButtonId);
 }
 
 void gf_UpdateBenchmarkBuildOrderStepCursor (int lp_benchmarkStep) {
@@ -9887,7 +9904,7 @@ bool gt_ForkBuildOrder_Func (bool testConds, bool runActions) {
         ObjectiveDestroy(gv_benchmarkBuildOrderStepObjectives[lv_i]);
         Wait(0.1, c_timeGame);
     }
-    libNtve_gf_HideScreenButton(false, gv_forkScreenButtonID);
+    libNtve_gf_HideScreenButton(false, gv_forkScreenButtonId);
     UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
     gv_currentBuildWasForked = true;
     return true;
@@ -9899,6 +9916,41 @@ void gt_ForkBuildOrder_Init () {
     TriggerAddEventChatMessage(gt_ForkBuildOrder, c_playerAny, "-f", true);
     TriggerAddEventChatMessage(gt_ForkBuildOrder, c_playerAny, "-fork", true);
     TriggerAddEventKeyPressed(gt_ForkBuildOrder, 1, c_keyK, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
+}
+
+//--------------------------------------------------------------------------------------------------
+// Trigger: Ignore Button Clicked
+//--------------------------------------------------------------------------------------------------
+bool gt_IgnoreButtonClicked_Func (bool testConds, bool runActions) {
+    // Conditions
+    if (testConds) {
+        if (!(((gv_practiceAgainstBenchmarkBuildOrder == true) && (gv_paused == false)))) {
+            return false;
+        }
+    }
+
+    // Actions
+    if (!runActions) {
+        return true;
+    }
+
+    if ((gv_ignoreNextStep == false)) {
+        libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_ignoreScreenButtonId), true, PlayerGroupAll());
+        gv_ignoreNextStep = true;
+    }
+    else {
+        libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_ignoreScreenButtonId), false, PlayerGroupAll());
+        gv_ignoreNextStep = false;
+    }
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+void gt_IgnoreButtonClicked_Init () {
+    gt_IgnoreButtonClicked = TriggerCreate("gt_IgnoreButtonClicked_Func");
+    TriggerAddEventChatMessage(gt_IgnoreButtonClicked, c_playerAny, "-i", true);
+    TriggerAddEventChatMessage(gt_IgnoreButtonClicked, c_playerAny, "-ignore", true);
+    TriggerAddEventKeyPressed(gt_IgnoreButtonClicked, 1, c_keyI, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -12428,6 +12480,7 @@ void InitTriggers () {
     gt_OnAbilityCancelUpdateCurrentBuildOrder_Init();
     gt_OnMultipleUnitFailureTimerExpires_Init();
     gt_ForkBuildOrder_Init();
+    gt_IgnoreButtonClicked_Init();
     gt_EverySecondCheckforBuildHints_Init();
     gt_EnableDisableBuildHints_Init();
     gt_EnableDisablePerformanceFeedback_Init();
