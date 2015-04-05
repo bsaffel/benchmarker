@@ -19,7 +19,7 @@ void InitLibs () {
 //--------------------------------------------------------------------------------------------------
 // Constants
 //--------------------------------------------------------------------------------------------------
-const int gv_benchmarkerCurrentReleaseBankVersion = 1;
+const int gv_benchmarkerCurrentReleaseBankVersion = 2;
 const int gv_buildOrderStepLimit = 40;
 const string gv_unitStepType = "unit";
 const string gv_upgradeStepType = "upgrade";
@@ -995,7 +995,7 @@ void InitGlobals () {
     gv_statsDialogBuildOrderListBox = c_invalidDialogControlId;
     gv_welcomeMessageDialog = c_invalidDialogId;
     gv_welcomeMessageDialogWidth = 1000;
-    gv_welcomeMessageDialogHeight = 625;
+    gv_welcomeMessageDialogHeight = 550;
     gv_welcomeMessageDialogOkButton = c_invalidDialogControlId;
     gv_welcomeMessageDialogOkButtonWidth = 200;
     gv_welcomeMessageDialogOkButtonHeight = 60;
@@ -4909,7 +4909,7 @@ void gf_CreateWelcomeMessageDialog () {
     libNtve_gf_CreateDialogItemButton(gv_welcomeMessageDialog, gv_welcomeMessageDialogOkButtonWidth, gv_welcomeMessageDialogOkButtonHeight, c_anchorBottom, 0, 50, StringExternal("Param/Value/D0B83A10"), StringExternal("Param/Value/F22C6BA1"), "");
     gv_welcomeMessageDialogOkButton = DialogControlLastCreated();
     DialogSetTitle(gv_welcomeMessageDialog, StringExternal("Param/Value/FE7D1DB6"));
-    gf_PopulateWelcomeMessageDialogBetaPatch3();
+    gf_PopulateWelcomeMessageDialogBetaPatch4();
     DialogSetVisible(gv_welcomeMessageDialog, PlayerGroupAll(), true);
 }
 
@@ -12536,7 +12536,6 @@ bool gt_CloseWelcomeMessageDialog_Func (bool testConds, bool runActions) {
     }
 
     gf_UpdateBankVersion();
-    gf_ClearAllBenchmarkBuildOrders();
     DialogSetVisible(gv_welcomeMessageDialog, PlayerGroupAll(), false);
     return true;
 }
