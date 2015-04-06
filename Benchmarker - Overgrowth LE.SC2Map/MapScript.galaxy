@@ -1288,6 +1288,7 @@ bool gf_IsUnitTypeDestructible (string lp_unitType);
 bool gf_IsUpgradeAnAttackDefenseUpgrade (string lp_upgrade);
 bool gf_IsUnitTypeATownHall (string lp_unitType);
 int gf_GetNumCurrentStepsForUnitType (string lp_unitType);
+int gf_GetNumCurrentStepsForAbility (string lp_ability);
 int gf_GetNumCurrentTrackedArmyUnitSteps ();
 bool gf_DoesUnitUseSupply (string lp_unitType);
 fixed gf_GetSupplyCostForUnit (string lp_unitType);
@@ -4724,7 +4725,6 @@ void gf_EnableDisablePostBuildReportDialog (bool lp_enableDisable) {
     // Variable Initialization
 
     // Implementation
-    DialogControlSetEnabled(gv_postBuildReportDialogMainMenuButton, PlayerGroupAll(), lp_enableDisable);
     DialogControlSetEnabled(gv_postBuildReportMatchupLabels[0], PlayerGroupAll(), lp_enableDisable);
     DialogControlSetEnabled(gv_postBuildReportMatchupLabels[1], PlayerGroupAll(), lp_enableDisable);
     DialogControlSetEnabled(gv_postBuildReportBuildNameLabel, PlayerGroupAll(), lp_enableDisable);
@@ -4782,6 +4782,8 @@ void gf_EnableDisablePostBuildReportDialog (bool lp_enableDisable) {
     DialogControlSetEnabled(gv_postBuildReportSaveUpdateBuildButton, PlayerGroupAll(), lp_enableDisable);
     DialogControlSetEnabled(gv_postBuildReportMuteButtonLabel, PlayerGroupAll(), lp_enableDisable);
     DialogControlSetEnabled(gv_postBuildReportMuteButton, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_postBuildReportDialogMainMenuButton, PlayerGroupAll(), lp_enableDisable);
+    DialogControlSetEnabled(gv_postBuildReportDialogRestartBuildButton, PlayerGroupAll(), lp_enableDisable);
     if ((lp_enableDisable == true)) {
         DialogSetTransparency(gv_postBuildReportDialog, 0.0);
     }
@@ -6909,6 +6911,30 @@ int gf_GetNumCurrentStepsForUnitType (string lp_unitType) {
     return lv_result;
 }
 
+int gf_GetNumCurrentStepsForAbility (string lp_ability) {
+    int autoAFF8E832_ae;
+    int autoAFF8E832_ai;
+
+    // Variable Declarations
+    int lv_step;
+    int lv_result;
+
+    // Variable Initialization
+
+    // Implementation
+    autoAFF8E832_ae = gv_currentBuildOrderStepCursor;
+    autoAFF8E832_ai = 1;
+    lv_step = 0;
+    for ( ; ( (autoAFF8E832_ai >= 0 && lv_step <= autoAFF8E832_ae) || (autoAFF8E832_ai <= 0 && lv_step >= autoAFF8E832_ae) ) ; lv_step += autoAFF8E832_ai ) {
+        if (((gv_currentBuildOrderSteps[lv_step].lv_stepType == gv_abilityStepType) && (lp_ability == gv_currentBuildOrderSteps[lv_step].lv_ability))) {
+            lv_result += 1;
+        }
+        else {
+        }
+    }
+    return lv_result;
+}
+
 int gf_GetNumCurrentTrackedArmyUnitSteps () {
     int autoECDF2B4A_ae;
     int autoECDF2B4A_ai;
@@ -7031,11 +7057,21 @@ bool gf_IsUnitTypeATrackedArmyUnitWithinThreshold (string lp_unitType) {
 bool gf_IsUnitTypeADetectorWithinThreshold (string lp_unitType) {
     // Variable Declarations
     bool lv_result;
+    int lv_currentNumSteps;
 
     // Variable Initialization
 
     // Implementation
-    if (((gv_enableDetectorTracking == true) && ((lp_unitType == "Observer") || (lp_unitType == "Overseer") || (lp_unitType == "Raven")) && ((gf_GetNumCurrentStepsForUnitType(lp_unitType) < gv_detectorTrackingThresholdSteps) || (gf_IsCurrentUnitTypeSameAsPreviousAndWithinMultiUnitThreshold(lp_unitType, (gv_currentBuildOrderStepCursor - 1)) == true) || ((gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsPreviousBenchmarkStepObjectiveForUnitTypeStillActive(lp_unitType) == true))))) {
+    if ((lp_unitType == "Overseer")) {
+        lv_currentNumSteps = gf_GetNumCurrentStepsForAbility("MorphToOverseer");
+    }
+    else {
+        lv_currentNumSteps = gf_GetNumCurrentStepsForUnitType(lp_unitType);
+    }
+    TextExpressionSetToken("Param/Expression/719330E3", "A", UnitTypeGetName(lp_unitType));
+    TextExpressionSetToken("Param/Expression/719330E3", "B", IntToText(lv_currentNumSteps));
+    gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/719330E3"));
+    if (((gv_enableDetectorTracking == true) && ((lp_unitType == "Observer") || (lp_unitType == "Overseer") || (lp_unitType == "Raven")) && ((lv_currentNumSteps < gv_detectorTrackingThresholdSteps) || (gf_IsCurrentUnitTypeSameAsPreviousAndWithinMultiUnitThreshold(lp_unitType, (gv_currentBuildOrderStepCursor - 1)) == true) || ((gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsPreviousBenchmarkStepObjectiveForUnitTypeStillActive(lp_unitType) == true))))) {
         lv_result = true;
     }
     else {
@@ -7088,10 +7124,15 @@ bool gf_IsAbilityValidForBuildOrder (string lp_ability) {
     // Variable Initialization
 
     // Implementation
-    if (((lp_ability == "NexusTrainMothership") || (lp_ability == "UpgradeToPlanetaryFortress") || (lp_ability == "UpgradeToOrbital") || (lp_ability == "UpgradeToLair") || (lp_ability == "UpgradeToHive") || (lp_ability == "MorphToOverseer"))) {
+    if (((lp_ability == "NexusTrainMothership") || (lp_ability == "NexusTrainMothershipCore") || (lp_ability == "UpgradeToPlanetaryFortress") || (lp_ability == "UpgradeToOrbital") || (lp_ability == "UpgradeToLair") || (lp_ability == "UpgradeToHive"))) {
         lv_result = true;
     }
     else {
+        if (((lp_ability == "MorphToOverseer") && (gf_IsUnitTypeADetectorWithinThreshold("Overseer") == true))) {
+            lv_result = true;
+        }
+        else {
+        }
     }
     return lv_result;
 }
