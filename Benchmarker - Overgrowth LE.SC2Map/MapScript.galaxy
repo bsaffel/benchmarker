@@ -582,8 +582,8 @@ int gv_screenButtonHeight;
 int gv_screenButtonXPadding;
 int gv_screenButtonYPadding;
 int gv_forkScreenButtonId;
-int gv_ignoreScreenButtonId;
-bool gv_ignoreNextStep;
+int gv_insertScreenButtonId;
+bool gv_insertNextStep;
 
 void InitGlobals () {
     int init_i;
@@ -1023,7 +1023,7 @@ void InitGlobals () {
     gv_screenButtonXPadding = 10;
     gv_screenButtonYPadding = 125;
     gv_forkScreenButtonId = 6;
-    gv_ignoreScreenButtonId = 7;
+    gv_insertScreenButtonId = 7;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -2297,8 +2297,8 @@ void gf_CreateBenchmarkBuildOrderObjectives () {
     }
     libNtve_gf_DisplayScreenButton(gv_forkScreenButtonId, StringExternal("Param/Value/4265F0EA"), lv_buildButtonWidth, lv_buildButtonHeight, c_anchorTopLeft, lv_forkButtonXOffset, lv_buildButtonYOffset, gt_ForkBuildOrder);
     libNtve_gf_SetDialogItemTooltip(libNtve_gf_ScreenButton(gv_forkScreenButtonId), StringExternal("Param/Value/D99E1BC8"), PlayerGroupAll());
-    libNtve_gf_DisplayScreenButton(gv_ignoreScreenButtonId, StringExternal("Param/Value/2939B047"), lv_buildButtonWidth, lv_buildButtonHeight, c_anchorTopLeft, lv_ignoreButtonXOffset, lv_buildButtonYOffset, gt_IgnoreButtonClicked);
-    libNtve_gf_SetDialogItemTooltip(libNtve_gf_ScreenButton(gv_ignoreScreenButtonId), StringExternal("Param/Value/3C8FA19D"), PlayerGroupAll());
+    libNtve_gf_DisplayScreenButton(gv_insertScreenButtonId, StringExternal("Param/Value/2939B047"), lv_buildButtonWidth, lv_buildButtonHeight, c_anchorTopLeft, lv_ignoreButtonXOffset, lv_buildButtonYOffset, gt_IgnoreButtonClicked);
+    libNtve_gf_SetDialogItemTooltip(libNtve_gf_ScreenButton(gv_insertScreenButtonId), StringExternal("Param/Value/3C8FA19D"), PlayerGroupAll());
     gf_HighlightBenchmarkBuildOrderObjective(lv_firstStep);
 }
 
@@ -2435,7 +2435,7 @@ void gf_DestroyBenchmarkBuildOrderObjectives () {
         ObjectiveDestroy(gv_benchmarkBuildOrderStepObjectives[lv_i]);
     }
     libNtve_gf_HideScreenButton(false, gv_forkScreenButtonId);
-    libNtve_gf_HideScreenButton(false, gv_ignoreScreenButtonId);
+    libNtve_gf_HideScreenButton(false, gv_insertScreenButtonId);
 }
 
 void gf_UpdateBenchmarkBuildOrderStepCursor (int lp_benchmarkStep) {
@@ -9683,7 +9683,7 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
             TextExpressionSetToken("Param/Expression/512CB732", "C", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/512CB732"));
             gf_AddUnitBuildOrderStep(lv_currentStep, EventUnitProgressUnit(), libNtve_gf_TriggeringProgressUnitType());
-            if ((gv_ignoreNextStep == false)) {
+            if ((gv_insertNextStep == false)) {
                 if (((gv_numBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == true))) {
                     gf_EvaluateUnitTypeForBenchmarkBuildOrderStep(libNtve_gf_TriggeringProgressUnitType(), lv_currentStep, lv_benchmarkStep);
                 }
@@ -9694,8 +9694,8 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
             else {
                 TextExpressionSetToken("Param/Expression/D3EFC920", "A", gf_GetCurrentBuildOrderStepText(lv_currentStep));
                 gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/D3EFC920"));
-                gv_ignoreNextStep = false;
-                libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_ignoreScreenButtonId), false, PlayerGroupAll());
+                gv_insertNextStep = false;
+                libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_insertScreenButtonId), false, PlayerGroupAll());
             }
             gv_currentBuildOrderStepCursor += 1;
         }
@@ -9748,7 +9748,7 @@ bool gt_OnUpgradeStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActi
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/148223DF"));
     if (((lv_currentStep) < gv_maxNumCurrentBuildOrderStepsTracked)) {
         gf_AddUpgradeBuildOrderStep(lv_currentStep, libNtve_gf_TriggeringProgressUpgrade());
-        if ((gv_ignoreNextStep == false)) {
+        if ((gv_insertNextStep == false)) {
             if (((gv_numBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == true))) {
                 gf_EvaluateUpgradeForBenchmarkBuildOrderStep(libNtve_gf_TriggeringProgressUpgrade(), lv_currentStep, lv_benchmarkStep);
             }
@@ -9759,8 +9759,8 @@ bool gt_OnUpgradeStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActi
         else {
             TextExpressionSetToken("Param/Expression/BE93789B", "A", gf_GetCurrentBuildOrderStepText(lv_currentStep));
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/BE93789B"));
-            gv_ignoreNextStep = false;
-            libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_ignoreScreenButtonId), false, PlayerGroupAll());
+            gv_insertNextStep = false;
+            libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_insertScreenButtonId), false, PlayerGroupAll());
         }
         gv_currentBuildOrderStepCursor += 1;
     }
@@ -9813,7 +9813,7 @@ bool gt_OnAbilityStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActi
     gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/91218BC2"));
     if (((lv_currentStep) < gv_maxNumCurrentBuildOrderStepsTracked)) {
         gf_AddAbilityBuildOrderStep(lv_currentStep, EventUnitAbility());
-        if ((gv_ignoreNextStep == false)) {
+        if ((gv_insertNextStep == false)) {
             if (((gv_numBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == true))) {
                 gf_EvaluateAbilityForBenchmarkBuildOrderStep(lv_triggeringAbilityType, lv_currentStep, lv_benchmarkStep);
             }
@@ -9824,8 +9824,8 @@ bool gt_OnAbilityStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActi
         else {
             TextExpressionSetToken("Param/Expression/EF7B3186", "A", gf_GetCurrentBuildOrderStepText(lv_currentStep));
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/EF7B3186"));
-            gv_ignoreNextStep = false;
-            libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_ignoreScreenButtonId), false, PlayerGroupAll());
+            gv_insertNextStep = false;
+            libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_insertScreenButtonId), false, PlayerGroupAll());
         }
         gv_currentBuildOrderStepCursor += 1;
     }
@@ -10145,13 +10145,13 @@ bool gt_IgnoreButtonClicked_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    if ((gv_ignoreNextStep == false)) {
-        libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_ignoreScreenButtonId), true, PlayerGroupAll());
-        gv_ignoreNextStep = true;
+    if ((gv_insertNextStep == false)) {
+        libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_insertScreenButtonId), true, PlayerGroupAll());
+        gv_insertNextStep = true;
     }
     else {
-        libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_ignoreScreenButtonId), false, PlayerGroupAll());
-        gv_ignoreNextStep = false;
+        libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_insertScreenButtonId), false, PlayerGroupAll());
+        gv_insertNextStep = false;
     }
     return true;
 }
@@ -10538,6 +10538,7 @@ bool gt_UpdateAverageAPM_Func (bool testConds, bool runActions) {
     }
 
     gv_currentBuildAverageAPM = gf_CalculateMovingAverageInteger(gf_GetBlizzardCurrentAPM(), gv_currentBuildAverageAPM, gv_currentBuildTotalAPMSamplesThisBuild);
+    gf_LogTextMessage(false, null);
     gv_currentBuildTotalAPMSamplesThisBuild += 1;
     return true;
 }
@@ -10649,7 +10650,7 @@ bool gt_UpdateTotalArmyValueGas_Func (bool testConds, bool runActions) {
         return true;
     }
 
-    gv_currentBuildTotalArmyValueMinerals = PlayerScoreValueGetAsInt(1, "VespeneUsedTotalArmy");
+    gv_currentBuildTotalArmyValueGas = PlayerScoreValueGetAsInt(1, "VespeneUsedTotalArmy");
     return true;
 }
 
