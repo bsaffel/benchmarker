@@ -1423,7 +1423,7 @@ trigger gt_OnUpgradeCancelUpdateCurrentBuildOrder;
 trigger gt_OnAbilityCancelUpdateCurrentBuildOrder;
 trigger gt_OnMultipleUnitFailureTimerExpires;
 trigger gt_ForkBuildOrder;
-trigger gt_IgnoreButtonClicked;
+trigger gt_InsertButtonClicked;
 trigger gt_EverySecondCheckforBuildHints;
 trigger gt_EnableDisableBuildHints;
 trigger gt_EnableDisablePerformanceFeedback;
@@ -2297,7 +2297,7 @@ void gf_CreateBenchmarkBuildOrderObjectives () {
     }
     libNtve_gf_DisplayScreenButton(gv_forkScreenButtonId, StringExternal("Param/Value/4265F0EA"), lv_buildButtonWidth, lv_buildButtonHeight, c_anchorTopLeft, lv_forkButtonXOffset, lv_buildButtonYOffset, gt_ForkBuildOrder);
     libNtve_gf_SetDialogItemTooltip(libNtve_gf_ScreenButton(gv_forkScreenButtonId), StringExternal("Param/Value/D99E1BC8"), PlayerGroupAll());
-    libNtve_gf_DisplayScreenButton(gv_insertScreenButtonId, StringExternal("Param/Value/2939B047"), lv_buildButtonWidth, lv_buildButtonHeight, c_anchorTopLeft, lv_ignoreButtonXOffset, lv_buildButtonYOffset, gt_IgnoreButtonClicked);
+    libNtve_gf_DisplayScreenButton(gv_insertScreenButtonId, StringExternal("Param/Value/2939B047"), lv_buildButtonWidth, lv_buildButtonHeight, c_anchorTopLeft, lv_ignoreButtonXOffset, lv_buildButtonYOffset, gt_InsertButtonClicked);
     libNtve_gf_SetDialogItemTooltip(libNtve_gf_ScreenButton(gv_insertScreenButtonId), StringExternal("Param/Value/3C8FA19D"), PlayerGroupAll());
     gf_HighlightBenchmarkBuildOrderObjective(lv_firstStep);
 }
@@ -4233,6 +4233,8 @@ void gf_CreateHelpDialog () {
     lv_rowNum += 1;
     gf_CreateHelpInfoRow(StringExternal("Param/Value/1AD5555E"), StringExternal("Param/Value/F9EACEB5"), StringExternal("Param/Value/93AFCE51"), lv_rowNum);
     lv_rowNum += 1;
+    gf_CreateHelpInfoRow(StringExternal("Param/Value/E9984D21"), StringExternal("Param/Value/4E9F9057"), StringExternal("Param/Value/FD864AFB"), lv_rowNum);
+    lv_rowNum += 1;
     gf_CreateHelpInfoRow(StringExternal("Param/Value/732FD0CC"), StringExternal("Param/Value/E709BC6E"), StringExternal("Param/Value/7A5AB46F"), lv_rowNum);
     lv_rowNum += 1;
     gf_CreateHelpInfoRow(StringExternal("Param/Value/CAABB127"), StringExternal("Param/Value/DF04A6CB"), StringExternal("Param/Value/E45AD521"), lv_rowNum);
@@ -4627,6 +4629,7 @@ void gf_UpdatePostBuildReportStatsSection () {
     // Variable Initialization
 
     // Implementation
+    gf_LoadBenchmarkBuildStats(gf_GetCurrentlySelectedBuildAsBankSectionKey());
     gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/D3C083D3"), gv_currentBuildWorkersCreated, gv_benchmarkBuildWorkersCreated, lv_statRowNum, true, false);
     lv_statRowNum += 1;
     gf_UpdatePostBuildStatRowValueasInt(StringExternal("Param/Value/6D5463E2"), gv_currentBuildNumSupplyBlocks, gv_benchmarkBuildNumSupplyBlocks, lv_statRowNum, false, false);
@@ -10130,9 +10133,9 @@ void gt_ForkBuildOrder_Init () {
 }
 
 //--------------------------------------------------------------------------------------------------
-// Trigger: Ignore Button Clicked
+// Trigger: Insert Button Clicked
 //--------------------------------------------------------------------------------------------------
-bool gt_IgnoreButtonClicked_Func (bool testConds, bool runActions) {
+bool gt_InsertButtonClicked_Func (bool testConds, bool runActions) {
     // Conditions
     if (testConds) {
         if (!(((gv_practiceAgainstBenchmarkBuildOrder == true) && (gv_paused == false)))) {
@@ -10157,11 +10160,11 @@ bool gt_IgnoreButtonClicked_Func (bool testConds, bool runActions) {
 }
 
 //--------------------------------------------------------------------------------------------------
-void gt_IgnoreButtonClicked_Init () {
-    gt_IgnoreButtonClicked = TriggerCreate("gt_IgnoreButtonClicked_Func");
-    TriggerAddEventChatMessage(gt_IgnoreButtonClicked, c_playerAny, "-i", true);
-    TriggerAddEventChatMessage(gt_IgnoreButtonClicked, c_playerAny, "-ignore", true);
-    TriggerAddEventKeyPressed(gt_IgnoreButtonClicked, 1, c_keyI, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
+void gt_InsertButtonClicked_Init () {
+    gt_InsertButtonClicked = TriggerCreate("gt_InsertButtonClicked_Func");
+    TriggerAddEventChatMessage(gt_InsertButtonClicked, c_playerAny, "-i", true);
+    TriggerAddEventChatMessage(gt_InsertButtonClicked, c_playerAny, "-insert", true);
+    TriggerAddEventKeyPressed(gt_InsertButtonClicked, 1, c_keyI, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -12808,7 +12811,7 @@ void InitTriggers () {
     gt_OnAbilityCancelUpdateCurrentBuildOrder_Init();
     gt_OnMultipleUnitFailureTimerExpires_Init();
     gt_ForkBuildOrder_Init();
-    gt_IgnoreButtonClicked_Init();
+    gt_InsertButtonClicked_Init();
     gt_EverySecondCheckforBuildHints_Init();
     gt_EnableDisableBuildHints_Init();
     gt_EnableDisablePerformanceFeedback_Init();
