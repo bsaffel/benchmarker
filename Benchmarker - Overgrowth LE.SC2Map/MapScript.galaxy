@@ -5663,6 +5663,7 @@ void gf_ResetCurrentBuildOrderVariables () {
         gv_currentBuildOrderSteps[lv_i].lv_completingUnits = UnitGroupEmpty();
         gv_currentBuildOrderSteps[lv_i].lv_completingUpgrade = null;
         gv_currentBuildOrderSteps[lv_i].lv_completingAbility = null;
+        gv_currentBuildOrderSteps[lv_i].lv_finishedBenchmarkStepReference = -1;
     }
     gv_currentBuildOrderStepCursor = 0;
     gv_buildOrderCycleOffset = 0;
@@ -9673,6 +9674,10 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
             gf_EvaluateUnitTypeForBenchmarkBuildOrderStep(libNtve_gf_TriggeringProgressUnitType(), lv_previousUnitStep, lv_benchmarkStep);
         }
         else {
+            TextExpressionSetToken("Param/Expression/E3EB41A9", "A", libNtve_gf_ConvertBooleanToText(gf_IsThereAnUnsatisfiedBenchmarkBuildObjective()));
+            TextExpressionSetToken("Param/Expression/E3EB41A9", "B", IntToText(lv_benchmarkStep));
+            TextExpressionSetToken("Param/Expression/E3EB41A9", "C", libNtve_gf_ConvertBooleanToText((ObjectiveGetState(gv_benchmarkBuildOrderStepObjectives[gf_GetObjectiveIndexforBenchmarkStep(lv_benchmarkStep)]) == c_objectiveStateActive)));
+            TextExpressionSetToken("Param/Expression/E3EB41A9", "D", IntToText(gv_currentBuildOrderSteps[lv_previousUnitStep].lv_finishedBenchmarkStepReference));
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/E3EB41A9"));
         }
     }
@@ -9687,7 +9692,7 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/512CB732"));
             gf_AddUnitBuildOrderStep(lv_currentStep, EventUnitProgressUnit(), libNtve_gf_TriggeringProgressUnitType());
             if ((gv_insertNextStep == false)) {
-                if (((gv_numBenchmarkBuildOrderSteps > 0) && (gv_practiceAgainstBenchmarkBuildOrder == true) && (gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == true))) {
+                if (((gv_numBenchmarkBuildOrderSteps > 0) && (gf_IsThereAnUnsatisfiedBenchmarkBuildObjective() == true) && (gv_practiceAgainstBenchmarkBuildOrder == true))) {
                     gf_EvaluateUnitTypeForBenchmarkBuildOrderStep(libNtve_gf_TriggeringProgressUnitType(), lv_currentStep, lv_benchmarkStep);
                 }
                 else {
