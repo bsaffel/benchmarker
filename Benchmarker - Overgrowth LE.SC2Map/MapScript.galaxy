@@ -9621,7 +9621,7 @@ bool gt_EndBuildFromHotkey_Func (bool testConds, bool runActions) {
 //--------------------------------------------------------------------------------------------------
 void gt_EndBuildFromHotkey_Init () {
     gt_EndBuildFromHotkey = TriggerCreate("gt_EndBuildFromHotkey_Func");
-    TriggerAddEventKeyPressed(gt_EndBuildFromHotkey, c_playerAny, c_keyNumPad0, true, c_keyModifierStateIgnore, c_keyModifierStateIgnore, c_keyModifierStateIgnore);
+    TriggerAddEventKeyPressed(gt_EndBuildFromHotkey, c_playerAny, c_keyNumPad0, true, c_keyModifierStateIgnore, c_keyModifierStateRequire, c_keyModifierStateIgnore);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -9680,6 +9680,14 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
             TextExpressionSetToken("Param/Expression/E3EB41A9", "D", IntToText(gv_currentBuildOrderSteps[lv_previousUnitStep].lv_finishedBenchmarkStepReference));
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/E3EB41A9"));
         }
+        if ((gv_insertNextStep == true)) {
+            TextExpressionSetToken("Param/Expression/5D80A4D5", "A", gf_GetCurrentBuildOrderStepText(lv_currentStep));
+            gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/5D80A4D5"));
+            gv_insertNextStep = false;
+            libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_insertScreenButtonId), false, PlayerGroupAll());
+        }
+        else {
+        }
     }
     else {
         TextExpressionSetToken("Param/Expression/EF816D38", "A", UnitTypeGetName(libNtve_gf_TriggeringProgressUnitType()));
@@ -9702,14 +9710,18 @@ bool gt_OnUnitStartUpdateCurrentBuildOrder_Func (bool testConds, bool runActions
             else {
                 TextExpressionSetToken("Param/Expression/D3EFC920", "A", gf_GetCurrentBuildOrderStepText(lv_currentStep));
                 gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/D3EFC920"));
-                gv_insertNextStep = false;
-                libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_insertScreenButtonId), false, PlayerGroupAll());
             }
             gv_currentBuildOrderStepCursor += 1;
         }
         else {
             gf_LogTextMessage(gv_debugBuildOrderEnabled, TextExpressionAssemble("Param/Expression/FE737C09"));
         }
+    }
+    if ((gv_practiceAgainstBenchmarkBuildOrder == true)) {
+        gv_insertNextStep = false;
+        libNtve_gf_SetDialogItemToggled(libNtve_gf_ScreenButton(gv_insertScreenButtonId), false, PlayerGroupAll());
+    }
+    else {
     }
     gv_buildOrderStepLock = false;
     return true;
@@ -10547,7 +10559,10 @@ bool gt_UpdateAverageAPM_Func (bool testConds, bool runActions) {
     }
 
     gv_currentBuildAverageAPM = gf_CalculateMovingAverageInteger(gf_GetBlizzardCurrentAPM(), gv_currentBuildAverageAPM, gv_currentBuildTotalAPMSamplesThisBuild);
-    gf_LogTextMessage(false, null);
+    TextExpressionSetToken("Param/Expression/8E00DB1D", "A", IntToText(gf_GetBlizzardCurrentAPM()));
+    TextExpressionSetToken("Param/Expression/8E00DB1D", "C", IntToText(gf_GetBlizzardAverageAPM()));
+    TextExpressionSetToken("Param/Expression/8E00DB1D", "B", IntToText(gv_currentBuildAverageAPM));
+    gf_LogTextMessage(gv_debugStatsEnabled, TextExpressionAssemble("Param/Expression/8E00DB1D"));
     gv_currentBuildTotalAPMSamplesThisBuild += 1;
     return true;
 }
@@ -12288,6 +12303,7 @@ bool gt_NewBuildDialogOkButtonClicked_Func (bool testConds, bool runActions) {
     }
 
     gf_AddBuildEntry();
+    gf_SaveCurrentBuildStatsAsBenchmarkBuildStats();
     gf_SaveCurrentBuildOrderAsBenchmarkBuildOrder(gv_currentMatchupBuildEntries[gv_currentMatchupNumBuilds].lv_buildSectionKey);
     gv_currentlySelectedBuildNumber = gv_currentMatchupNumBuilds;
     gf_UpdatePostBuildBuildNameText();
