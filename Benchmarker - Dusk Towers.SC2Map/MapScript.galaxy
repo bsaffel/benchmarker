@@ -494,6 +494,7 @@ int gv_postBuildReportMuteButtonLabel;
 int gv_postBuildReportMuteButtonLabelWidth;
 int gv_postBuildReportMuteButtonLabelHeight;
 bool gv_muteVictoryFanfare;
+sound gv_victoryFanfareSound;
 int[3] gv_postBuildReportMatchupLabels;
 int gv_postBuildReportMatchupLabelWidth;
 int gv_postBuildReportMatchupLabelHeight;
@@ -9621,7 +9622,7 @@ bool gt_EndBuildFromHotkey_Func (bool testConds, bool runActions) {
 //--------------------------------------------------------------------------------------------------
 void gt_EndBuildFromHotkey_Init () {
     gt_EndBuildFromHotkey = TriggerCreate("gt_EndBuildFromHotkey_Func");
-    TriggerAddEventKeyPressed(gt_EndBuildFromHotkey, c_playerAny, c_keyNumPad0, true, c_keyModifierStateIgnore, c_keyModifierStateRequire, c_keyModifierStateIgnore);
+    TriggerAddEventKeyPressed(gt_EndBuildFromHotkey, c_playerAny, c_keyEnd, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -12168,6 +12169,8 @@ bool gt_OpenPostBuildReportDialog_Func (bool testConds, bool runActions) {
     }
 
     if ((gv_muteVictoryFanfare == false)) {
+        SoundPlayForPlayer(SoundLink("VictoryFanfare", 0), c_maxPlayers, PlayerGroupAll(), 100.0, 0.0);
+        gv_victoryFanfareSound = SoundLastPlayed();
     }
     else {
     }
@@ -12407,6 +12410,7 @@ bool gt_ReturntoMainMenufromReport_Func (bool testConds, bool runActions) {
         return true;
     }
 
+    SoundStop(gv_victoryFanfareSound, true);
     gv_currentBuildWasForked = false;
     gv_postBuildReportBenchmarkUpdateButtonPreviouslyDisabled = false;
     gf_OpenBenchmarkDialogMainMenu();
@@ -12440,6 +12444,7 @@ bool gt_RestartBuildClicked_Func (bool testConds, bool runActions) {
         return true;
     }
 
+    SoundStop(gv_victoryFanfareSound, true);
     gv_currentBuildWasForked = false;
     gv_postBuildReportBenchmarkUpdateButtonPreviouslyDisabled = false;
     DialogSetVisible(gv_postBuildReportDialog, PlayerGroupAll(), false);
@@ -12473,6 +12478,7 @@ bool gt_MuteVictoryFanfare_Func (bool testConds, bool runActions) {
 
     if ((libNtve_gf_DialogItemIsChecked(gv_postBuildReportMuteButton, 1) == true)) {
         gv_muteVictoryFanfare = true;
+        SoundStop(gv_victoryFanfareSound, false);
     }
     else {
         gv_muteVictoryFanfare = false;
