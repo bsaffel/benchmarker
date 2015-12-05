@@ -1517,7 +1517,7 @@ void gf_AddUpgradeGapAlert (string lp_delayedUpgrade) {
     TextExpressionSetToken("Param/Expression/A3731B98", "A", gf_GetFormattedUpgradeNameasText(lp_delayedUpgrade));
     gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/A3731B98"));
     gv_upgradeGapAlerts[gv_alertUpgradeGapNumUpgrades].lv_delayedUpgrade = lp_delayedUpgrade;
-    TimerStart(gv_upgradeGapAlerts[gv_alertUpgradeGapNumUpgrades].lv_alertTimer, gv_alertUpgradeGapThreshold, false, c_timeGame);
+    TimerStart(gv_upgradeGapAlerts[gv_alertUpgradeGapNumUpgrades].lv_alertTimer, gv_alertUpgradeGapThreshold, false, c_timeReal);
     if ((gv_debugAlertsEnabled == true)) {
         TextExpressionSetToken("Param/Expression/46760CB3", "A", gf_GetFormattedUpgradeNameasText(lp_delayedUpgrade));
         gf_AddDebugTimerWindow(gv_upgradeGapAlerts[gv_alertUpgradeGapNumUpgrades].lv_alertTimer, TextExpressionAssemble("Param/Expression/46760CB3"));
@@ -1607,7 +1607,7 @@ void gf_AddProductionIdleAlert (string lp_unitType) {
     // Implementation
     TextExpressionSetToken("Param/Expression/04F20F4B", "A", UnitTypeGetName(lp_unitType));
     gf_LogTextMessage(gv_debugAlertsEnabled, TextExpressionAssemble("Param/Expression/04F20F4B"));
-    TimerStart(gv_productionIdleAlerts[gv_productionIdleNumProductionUnitTypes].lv_alertTimer, gv_productionIdleAlertSecondsThreshold, false, c_timeGame);
+    TimerStart(gv_productionIdleAlerts[gv_productionIdleNumProductionUnitTypes].lv_alertTimer, gv_productionIdleAlertSecondsThreshold, false, c_timeReal);
     gv_productionIdleAlerts[gv_productionIdleNumProductionUnitTypes].lv_unitType = lp_unitType;
     if ((gv_debugAlertsEnabled == true)) {
         TextExpressionSetToken("Param/Expression/2DCFD2AA", "A", UnitTypeGetName(lp_unitType));
@@ -2144,14 +2144,14 @@ void gf_StartBenchmarkTimers () {
     // Variable Initialization
 
     // Implementation
-    TimerStart(gv_benchmark1Timer, gf_GetTotalSecondsforMinSeconds(gv_supplyBenchmarks[0].lv_benchmarkTimeMin, gv_supplyBenchmarks[0].lv_benchmarkTimeSeconds), false, c_timeGame);
-    TimerStart(gv_benchmark2Timer, gf_GetTotalSecondsforMinSeconds(gv_supplyBenchmarks[1].lv_benchmarkTimeMin, gv_supplyBenchmarks[1].lv_benchmarkTimeSeconds), false, c_timeGame);
-    TimerStart(gv_benchmark3Timer, gf_GetTotalSecondsforMinSeconds(gv_supplyBenchmarks[2].lv_benchmarkTimeMin, gv_supplyBenchmarks[2].lv_benchmarkTimeSeconds), false, c_timeGame);
+    TimerStart(gv_benchmark1Timer, gf_GetTotalSecondsforMinSeconds(gv_supplyBenchmarks[0].lv_benchmarkTimeMin, gv_supplyBenchmarks[0].lv_benchmarkTimeSeconds), false, c_timeReal);
+    TimerStart(gv_benchmark2Timer, gf_GetTotalSecondsforMinSeconds(gv_supplyBenchmarks[1].lv_benchmarkTimeMin, gv_supplyBenchmarks[1].lv_benchmarkTimeSeconds), false, c_timeReal);
+    TimerStart(gv_benchmark3Timer, gf_GetTotalSecondsforMinSeconds(gv_supplyBenchmarks[2].lv_benchmarkTimeMin, gv_supplyBenchmarks[2].lv_benchmarkTimeSeconds), false, c_timeReal);
     if ((gf_IsEndBuildatMaxSupplySelected() == true)) {
-        TimerStart(gv_finalBenchmarkTimer, gv_benchmarkMaxSupplyTimeLimit.lv_totalSeconds, false, c_timeGame);
+        TimerStart(gv_finalBenchmarkTimer, gv_benchmarkMaxSupplyTimeLimit.lv_totalSeconds, false, c_timeReal);
     }
     else {
-        TimerStart(gv_finalBenchmarkTimer, gv_benchmarkBuildTimeLimit.lv_totalSeconds, false, c_timeGame);
+        TimerStart(gv_finalBenchmarkTimer, gv_benchmarkBuildTimeLimit.lv_totalSeconds, false, c_timeReal);
     }
 }
 
@@ -5157,17 +5157,17 @@ void gf_InitializeGameDefaults () {
     gv_alertProtossDefaultMacroEnergyThreshold = 55;
     gv_aPMThreshold = 100;
     gv_aPMThresholdDuration = 10;
-    gv_supplyBenchmarks[0].lv_benchmarkTimeMin = 6;
+    gv_supplyBenchmarks[0].lv_benchmarkTimeMin = 3;
     gv_supplyBenchmarks[0].lv_benchmarkTimeSeconds = 0;
-    gv_supplyBenchmarks[1].lv_benchmarkTimeMin = 8;
+    gv_supplyBenchmarks[1].lv_benchmarkTimeMin = 5;
     gv_supplyBenchmarks[1].lv_benchmarkTimeSeconds = 0;
-    gv_supplyBenchmarks[2].lv_benchmarkTimeMin = 10;
+    gv_supplyBenchmarks[2].lv_benchmarkTimeMin = 7;
     gv_supplyBenchmarks[2].lv_benchmarkTimeSeconds = 0;
     gv_defaultMaxSupplyTimeLimit.lv_displayMinutes = 15;
     gv_defaultMaxSupplyTimeLimit.lv_displaySeconds = 0;
-    gv_defaultBuildTimeLimit.lv_displayMinutes = 12;
+    gv_defaultBuildTimeLimit.lv_displayMinutes = 8;
     gv_defaultBuildTimeLimit.lv_displaySeconds = 30;
-    gv_defaultFinalSupplyAtBuildTimeLimit = 130;
+    gv_defaultFinalSupplyAtBuildTimeLimit = 155;
     gv_enableGasTracking = true;
     gv_gasTrackingThresholdSteps = 4;
     gv_enableSupplyUnitTracking = true;
@@ -5439,7 +5439,7 @@ void gf_ResetMapResources () {
         lv_currentResource = gv_mapResources[lv_i].lv_unit;
         lv_currentResourceType = gv_mapResources[lv_i].lv_type;
         lv_currentPosition = gv_mapResources[lv_i].lv_position;
-        if (((((lv_currentResourceType == "VespeneGeyser") || (lv_currentResourceType == "RichVespeneGeyser") || (lv_currentResourceType == "ProtossVespeneGeyser") || (lv_currentResourceType == "SpacePlatformGeyser")) && (libNtve_gf_UnitGetPropertyResources(lv_currentResource, c_unitPropCurrent) < 2500)) || (((lv_currentResourceType == "MineralField") || (lv_currentResourceType == "RichMineralField")) && (libNtve_gf_UnitGetPropertyResources(lv_currentResource, c_unitPropCurrent) < 1500)) || ((gf_IsUnitTypeDestructible(lv_currentResourceType) == true) && (UnitGetPropertyFixed(lv_currentResource, c_unitPropLifePercent, c_unitPropCurrent) < 100.0)))) {
+        if (((((lv_currentResourceType == "VespeneGeyser") || (lv_currentResourceType == "RichVespeneGeyser") || (lv_currentResourceType == "ProtossVespeneGeyser") || (lv_currentResourceType == "SpacePlatformGeyser") || (lv_currentResourceType == "PurifierVespeneGeyser") || (lv_currentResourceType == "ShakurasVespeneGeyser")) && (libNtve_gf_UnitGetPropertyResources(lv_currentResource, c_unitPropCurrent) < 2000)) || (((lv_currentResourceType == "MineralField") || (lv_currentResourceType == "RichMineralField") || (lv_currentResourceType == "PurifierMineralField") || (lv_currentResourceType == "PurifierRichMineralField") || (lv_currentResourceType == "LabMineralField")) && (libNtve_gf_UnitGetPropertyResources(lv_currentResource, c_unitPropCurrent) < 1500)) || (((lv_currentResourceType == "MineralField750") || (lv_currentResourceType == "RichMineralField750") || (lv_currentResourceType == "PurifierMineralField750") || (lv_currentResourceType == "PurifierRichMineralField750") || (lv_currentResourceType == "LabMineralField750")) && (libNtve_gf_UnitGetPropertyResources(lv_currentResource, c_unitPropCurrent) < 900)) || ((gf_IsUnitTypeDestructible(lv_currentResourceType) == true) && (UnitGetPropertyFixed(lv_currentResource, c_unitPropLifePercent, c_unitPropCurrent) < 100.0)))) {
             UnitRemove(lv_currentResource);
             libNtve_gf_CreateUnitsWithDefaultFacing(1, lv_currentResourceType, c_unitCreateIgnorePlacement, 0, lv_currentPosition);
             gv_mapResources[lv_i].lv_unit = UnitLastCreated();
@@ -9596,7 +9596,7 @@ bool gt_EndBuildatBuildTimeLimit_Func (bool testConds, bool runActions) {
 //--------------------------------------------------------------------------------------------------
 void gt_EndBuildatBuildTimeLimit_Init () {
     gt_EndBuildatBuildTimeLimit = TriggerCreate("gt_EndBuildatBuildTimeLimit_Func");
-    TriggerAddEventTimePeriodic(gt_EndBuildatBuildTimeLimit, 1.0, c_timeGame);
+    TriggerAddEventTimePeriodic(gt_EndBuildatBuildTimeLimit, 1.0, c_timeReal);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -10487,7 +10487,7 @@ bool gt_UpdateTimeSupplyBlocked_Func (bool testConds, bool runActions) {
 //--------------------------------------------------------------------------------------------------
 void gt_UpdateTimeSupplyBlocked_Init () {
     gt_UpdateTimeSupplyBlocked = TriggerCreate("gt_UpdateTimeSupplyBlocked_Func");
-    TriggerAddEventTimePeriodic(gt_UpdateTimeSupplyBlocked, 1.0, c_timeGame);
+    TriggerAddEventTimePeriodic(gt_UpdateTimeSupplyBlocked, 1.0, c_timeReal);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -10513,7 +10513,7 @@ bool gt_UpdateProductionIdleTime_Func (bool testConds, bool runActions) {
 //--------------------------------------------------------------------------------------------------
 void gt_UpdateProductionIdleTime_Init () {
     gt_UpdateProductionIdleTime = TriggerCreate("gt_UpdateProductionIdleTime_Func");
-    TriggerAddEventTimePeriodic(gt_UpdateProductionIdleTime, 1.0, c_timeGame);
+    TriggerAddEventTimePeriodic(gt_UpdateProductionIdleTime, 1.0, c_timeReal);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -10759,7 +10759,7 @@ bool gt_StartBuild_Func (bool testConds, bool runActions) {
     else {
     }
     gf_UnpauseGame();
-    TimerStart(gv_currentBuildTimer, gv_onehourinseconds, false, c_timeGame);
+    TimerStart(gv_currentBuildTimer, gv_onehourinseconds, false, c_timeReal);
     gf_StartBenchmarkTimers();
     CameraPan(1, PlayerStartLocation(1), 0.5, -1, 5.0, true);
     UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
@@ -12648,12 +12648,6 @@ bool gt_MapInitialization_Func (bool testConds, bool runActions) {
     gf_CreateAddBuildDialog();
     gf_CreateRemoveBuildDialog();
     gf_CreateConfigureBuildDialog();
-    if ((gf_IsUserBankVersionCurrentWithRelease() == false)) {
-        gf_CreateWelcomeMessageDialog();
-        TriggerWaitForTrigger(gt_CloseWelcomeMessageDialog, true);
-    }
-    else {
-    }
     gf_CreateScreenButtons();
     TimerWindowCreate(gv_currentBuildTimer, StringExternal("Param/Value/EAED3202"), true, true);
     TimerWindowSetAnchor(TimerWindowLastCreated(), c_anchorTopRight, 0, 0);
