@@ -1209,6 +1209,7 @@ void gf_DisplayDebugTimerWindowsForExistingAlertTimers ();
 void gf_DisplayDebugTimerWindowsForExistingMultipleUnitFailureTimers ();
 void gf_AddDebugTimerWindow (timer lp_timer, text lp_windowName);
 void gf_ClearDebugTimerWindows ();
+void gf_InitializeDebugTimerWindows ();
 void gf_InitializeBankDefaults ();
 void gf_InitializeDialogDefaults ();
 void gf_InitializeGameDefaults ();
@@ -5080,6 +5081,35 @@ void gf_ClearDebugTimerWindows () {
         TimerWindowDestroy(gv_debugTimerWindows[lv_i]);
     }
     gv_numDebugTimerWindows = 0;
+}
+
+void gf_InitializeDebugTimerWindows () {
+    // Implementation
+    if ((gv_alertMineralsEnabled == true)) {
+        gf_AddDebugTimerWindow(gv_alertMineralsCooldownTimer, StringExternal("Param/Value/FF6B0064"));
+    }
+    else {
+    }
+    if ((gv_alertGasEnabled == true)) {
+        gf_AddDebugTimerWindow(gv_alertGasCooldownTimer, StringExternal("Param/Value/B55B3F79"));
+    }
+    else {
+    }
+    if ((gv_aPMBelowThresholdEnabled == true)) {
+        gf_AddDebugTimerWindow(gv_aPMBelowThresholdCooldownTimer, StringExternal("Param/Value/63B28299"));
+    }
+    else {
+    }
+    if ((gv_alertSupplyBlockEnabled == true)) {
+        gf_AddDebugTimerWindow(gv_alertSupplyBlockCooldownTimer, StringExternal("Param/Value/E0E71A2E"));
+    }
+    else {
+    }
+    if ((gv_alertMacroEnergyEnabled == true)) {
+        gf_AddDebugTimerWindow(gv_alertMacroEnergyCooldownTimer, StringExternal("Param/Value/4D3AEEFC"));
+    }
+    else {
+    }
 }
 
 void gf_InitializeBankDefaults () {
@@ -9169,7 +9199,7 @@ void gt_ProductionIdleAlertTimerExpiresFireAlert_Init () {
 bool gt_MineralsAboveThreshold_Func (bool testConds, bool runActions) {
     // Conditions
     if (testConds) {
-        if (!(((gv_paused == false) && (gv_alertMineralsEnabled == true) && (TimerGetRemaining(gv_alertMineralsCooldownTimer) == 0.0) && (PlayerScoreValueGetAsInt(1, "MineralsCurrent") > gv_alertMineralsThreshold) && (PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) <= 200)))) {
+        if (!(((gv_paused == false) && (gv_alertMineralsEnabled == true) && (TimerGetRemaining(gv_alertMineralsCooldownTimer) <= 0.1) && (PlayerScoreValueGetAsInt(1, "MineralsCurrent") > gv_alertMineralsThreshold) && (PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) <= 200)))) {
             return false;
         }
     }
@@ -9201,7 +9231,7 @@ void gt_MineralsAboveThreshold_Init () {
 bool gt_GasAboveThreshold_Func (bool testConds, bool runActions) {
     // Conditions
     if (testConds) {
-        if (!(((gv_paused == false) && (gv_alertGasEnabled == true) && (TimerGetRemaining(gv_alertGasCooldownTimer) == 0.0) && (PlayerScoreValueGetAsInt(1, "VespeneCurrent") > gv_alertGasThreshold) && (PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) <= 200)))) {
+        if (!(((gv_paused == false) && (gv_alertGasEnabled == true) && (TimerGetRemaining(gv_alertGasCooldownTimer) <= 0.1) && (PlayerScoreValueGetAsInt(1, "VespeneCurrent") > gv_alertGasThreshold) && (PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) <= 200)))) {
             return false;
         }
     }
@@ -9235,7 +9265,7 @@ bool gt_SupplyBlockImminent_Func (bool testConds, bool runActions) {
 
     // Conditions
     if (testConds) {
-        if (!(((gv_paused == false) && (gv_alertSupplyBlockEnabled == true) && (TimerGetRemaining(gv_alertSupplyBlockCooldownTimer) == 0.0) && (PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) > gv_alertSupplyBlockStart) && (((PlayerGetPropertyInt(1, c_playerPropSuppliesMade)-PlayerGetPropertyInt(1, c_playerPropSuppliesUsed)) >= 0) && ((PlayerGetPropertyInt(1, c_playerPropSuppliesMade)-PlayerGetPropertyInt(1, c_playerPropSuppliesUsed)) <= gv_alertSupplyBlockWithinCapThreshold)) && (PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) <= (200-gv_alertSupplyBlockWithinCapThreshold)) && (gf_IsSupplyDepotorPylonUnderConstruction() == false) && (gf_IsOverlordCurrentlyInProgress() == false)))) {
+        if (!(((gv_paused == false) && (gv_alertSupplyBlockEnabled == true) && (TimerGetRemaining(gv_alertSupplyBlockCooldownTimer) <= 0.1) && (PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) > gv_alertSupplyBlockStart) && (((PlayerGetPropertyInt(1, c_playerPropSuppliesMade)-PlayerGetPropertyInt(1, c_playerPropSuppliesUsed)) >= 0) && ((PlayerGetPropertyInt(1, c_playerPropSuppliesMade)-PlayerGetPropertyInt(1, c_playerPropSuppliesUsed)) <= gv_alertSupplyBlockWithinCapThreshold)) && (PlayerGetPropertyInt(1, c_playerPropSuppliesUsed) <= (200-gv_alertSupplyBlockWithinCapThreshold)) && (gf_IsSupplyDepotorPylonUnderConstruction() == false) && (gf_IsOverlordCurrentlyInProgress() == false)))) {
             return false;
         }
     }
@@ -9287,7 +9317,7 @@ bool gt_RaceMacroEnergyAboveThreshold_Func (bool testConds, bool runActions) {
 
     // Conditions
     if (testConds) {
-        if (!(((gv_paused == false) && (gv_alertMacroEnergyEnabled == true) && (gf_IsRaceMacroEnergyAboveThreshold() == true) && (TimerGetRemaining(gv_alertMacroEnergyCooldownTimer) == 0.0)))) {
+        if (!(((gv_paused == false) && (gv_alertMacroEnergyEnabled == true) && (gf_IsRaceMacroEnergyAboveThreshold() == true) && (TimerGetRemaining(gv_alertMacroEnergyCooldownTimer) <= 0.1)))) {
             return false;
         }
     }
@@ -9351,7 +9381,7 @@ bool gt_APMBelowThreshold_Func (bool testConds, bool runActions) {
 
     // Conditions
     if (testConds) {
-        if (!(((gv_paused == false) && (gv_aPMBelowThresholdEnabled == true) && (TimerGetRemaining(gv_aPMBelowThresholdCooldownTimer) == 0.0) && (TimerGetElapsed(gv_currentBuildTimer) > gv_aPMThresholdDuration)))) {
+        if (!(((gv_paused == false) && (gv_aPMBelowThresholdEnabled == true) && (TimerGetRemaining(gv_aPMBelowThresholdCooldownTimer) <= 0.1) && (TimerGetElapsed(gv_currentBuildTimer) > gv_aPMThresholdDuration)))) {
             return false;
         }
     }
@@ -10826,6 +10856,7 @@ bool gt_ToggleDebugAlerts_Func (bool testConds, bool runActions) {
         gf_DisplayDebugTimerWindowsForExistingAlertTimers();
         gv_debugAlertsEnabled = true;
         gf_ShowDebugDialog();
+        gf_InitializeDebugTimerWindows();
     }
     else {
         gf_ClearDebugTimerWindows();
