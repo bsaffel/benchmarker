@@ -4,7 +4,7 @@
 
 ### macro trainer | build optimizer | practice tool
 
-Benchmarker is a Starcraft 2 training mod that can be used with any current ladder map. This tool aims to help players of all levels refine and improve their macro mechanics while at the same time practicing the builds they will need to slay all the nerds and steal their ladder points.
+Benchmarker is a starcraft 2 macro and build trainer. This tool aims to help players improve macro mechanics by tracking supply at certain benchmarks during the game.  It also includes alerts for common mistakes, and tracks stats for each build.
 
 ### Features
 
