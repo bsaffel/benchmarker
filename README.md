@@ -47,8 +47,6 @@ A [WIN] button... because who doesn’t want a win button?
 
 Supports chat commands and hotkeys for accessing menus in game
 
-*Note - The beta is being released only on Overgrowth LE at the moment for testing purposes.  However, the full release version will support all current ladder pool maps.*
-
 ### How To Play
 
 **For first time players:**
