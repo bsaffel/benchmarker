@@ -1,3 +1,5 @@
+![Benchmarker](https://github.com/bsaffel/benchmarker/blob/master/Mod.SC2Mod/Base.SC2Data/benchmarker-logo-800x600.jpg)
+
 # Benchmarker
 
 ### macro trainer | build optimizer | practice tool
