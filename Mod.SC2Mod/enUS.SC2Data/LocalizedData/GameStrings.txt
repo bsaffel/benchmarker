@@ -1,5 +1,15 @@
-﻿DocInfo/DescShort=Any
-DocInfo/Name=Just Another StarCraft II Mod
+﻿DocInfo/DescLong=Benchmarker is a starcraft 2 macro and build trainer. This tool aims to help players improve macro mechanics by tracking supply at certain benchmarks throughout the game.  It also includes alerts for common mistakes, and tracks stats for each build.<n/><n/>For more information check out the github page
+DocInfo/DescShort=1
+DocInfo/HowToPlayAdvanced00=Use hotkeys or chat commands like -help
+DocInfo/HowToPlayAdvanced01=Reset builds on the fly
+DocInfo/HowToPlayAdvanced02=Practice against previously saved benchmark build orders
+DocInfo/HowToPlayAdvanced03=View stats about your play at any time
+DocInfo/HowToPlayBasic00=Select a matchup
+DocInfo/HowToPlayBasic01=Select your supply benchmarks
+DocInfo/HowToPlayBasic02=Select how the build ends
+DocInfo/HowToPlayWinning00=Achieve the supply benchmark within the required time
+DocInfo/Name=Benchmarker Mod
+DocInfo/Website=https://github.com/bsaffel/benchmarker
 Param/Expression/lib_2EEF85E3_0033483F=<s val="BenchmarkerDialogTitle">~A~</s>
 Param/Expression/lib_2EEF85E3_00E4C1BF=Unsatisfied Objective -> True = ~A~ | Objective for Step ~B~ -> Active = ~C~ | Previous Unit Step Finished Reference -> -1 = ~D~
 Param/Expression/lib_2EEF85E3_00FA6DD3=<s val="BenchmarkerAlert">~A~ Energy Too High!</s>
@@ -15,6 +25,7 @@ Param/Expression/lib_2EEF85E3_0586C8E1=Objective: ~B~ for Step: ~A~ is not activ
 Param/Expression/lib_2EEF85E3_06BF9AA8=<s val="BenchmarkerHelpMenuLabel">~A~</s>
 Param/Expression/lib_2EEF85E3_06E5A3BF=**** Ability: ~A~ |  Current #: ~B~ | Benchmark #: ~C~ ****
 Param/Expression/lib_2EEF85E3_0CE7080F=<s val="BuildStatValue">~A~</s>
+Param/Expression/lib_2EEF85E3_0CF25A67=There are ~A~ leftover broodlings
 Param/Expression/lib_2EEF85E3_0D7B47D6=~A~
 Param/Expression/lib_2EEF85E3_0EA03DEE=Starting a multi unit failure timer for this step that will expire in ~A~
 Param/Expression/lib_2EEF85E3_112A66F3=~A~ v Z
@@ -296,7 +307,7 @@ Param/Value/lib_2EEF85E3_20274559=<s val="BenchmarkerStatLabel">Benchmark</s>
 Param/Value/lib_2EEF85E3_2192B163=Clear the currently saved benchmark build order and all related statistics for the current matchup.
 Param/Value/lib_2EEF85E3_233C805B=Production Idle Time
 Param/Value/lib_2EEF85E3_24D6C18C=0:00
-Param/Value/lib_2EEF85E3_255637E6=-help
+Param/Value/lib_2EEF85E3_255637E6=-[e]nd
 Param/Value/lib_2EEF85E3_25912932=-[h]ints
 Param/Value/lib_2EEF85E3_26510D58=<s val="BenchmarkerDebugDialogButtonText">CLEAR</s>
 Param/Value/lib_2EEF85E3_26833BA3=The alert will stop firing after reaching this attack upgrade level. This limit applies to any attack upgrade.
@@ -329,6 +340,7 @@ Param/Value/lib_2EEF85E3_4612E867=Open the advanced build configuration menu.
 Param/Value/lib_2EEF85E3_47EBA714=STATS
 Param/Value/lib_2EEF85E3_4A58D61D=Saving Benchmark Build Order
 Param/Value/lib_2EEF85E3_4AB5B477=Closes the debug window.
+Param/Value/lib_2EEF85E3_4AE9B54E=-help
 Param/Value/lib_2EEF85E3_4BA379F2=Insert the next step into the current build, and skip the benchmark build check. (Click again to disable)
 Param/Value/lib_2EEF85E3_4C12260D=Minutes
 Param/Value/lib_2EEF85E3_4C5473EB=Build configuration loaded without error.
@@ -336,7 +348,7 @@ Param/Value/lib_2EEF85E3_4C707FBD=<s val="BenchmarkerTimeBoxColon">:</s>
 Param/Value/lib_2EEF85E3_4D15C9C0=ctrl + shift + I
 Param/Value/lib_2EEF85E3_4E1764DD=<s val="BenchmarkerMenuLabel">Welcome to Benchmarker Beta Patch 3.</s><n/><n/><s val="BenchmarkerSectionLabel">Release Notes:</s><n/><s val="BenchmarkerWelcomeMessageText">- **Major overhaul to the benchmark build tracking functionality**<n/>- Added "Cancel As Undo" which lets you cancel a step to remove it from your current build (this replaces the correction mechanic)<n/>- Added a "Build Order Tolerance Window" that lets you complete steps out of order within a small window of time/steps<n/>- Adding concurrency controls to prevent race conditions between simultaneous build order steps which fixes a large number of bugs.<n/>- Revamped the multiple unit failure timer logic so that steps should not fail due to incorrect timer expiration<n/>- Added tracking of first army unit step created<n/>- Added tracking of first detector created<n/>- Added the ability to disable performance feedback by hotkey (similar to hints)<n/>- Added a new expandable debug window for more thorough debugging instead of using chat messages.<n/>- Updated the Benchmark Menu to contain a new build preview window.<n/>- Added a Bank Versioning feature to prevent version compatibility issues.<n/>- Other minor bug fixes and assorted polish.</s><n/><n/>This patch requires all builds to be cleared to prevent buggy behavior.  If you would like to save your build, back up your bechmarker bank file before clicking [OK].
 Param/Value/lib_2EEF85E3_4ED88630=Average Resource Collection Rate
-Param/Value/lib_2EEF85E3_4F1F6900=Pauses the current build and opens the HELP dialog.
+Param/Value/lib_2EEF85E3_4F1F6900=Ends the current build and opens the report screen
 Param/Value/lib_2EEF85E3_4FA506E7=<s val="BenchmarkerPostBuildReportButtonText">CLEAR</s>
 Param/Value/lib_2EEF85E3_50CC66B6=Gas Collected
 Param/Value/lib_2EEF85E3_51756B64=<s val="BenchmarkerDialogTitle">Build Stats</s>
@@ -395,7 +407,7 @@ Param/Value/lib_2EEF85E3_94C3586F=ctrl + shift + H
 Param/Value/lib_2EEF85E3_956A7375=<s val="BenchmarkerAlert">Supply Block Imminent!</s>
 Param/Value/lib_2EEF85E3_97D28FC1=Start
 Param/Value/lib_2EEF85E3_982EF18E=<s val="BenchmarkerMenuLabel">for</s>
-Param/Value/lib_2EEF85E3_9889407F=ctrl + shift + X
+Param/Value/lib_2EEF85E3_9889407F=ctrl + shift + end
 Param/Value/lib_2EEF85E3_9B1054A5=Error, how do you not have a race?
 Param/Value/lib_2EEF85E3_9B491DC8=--
 Param/Value/lib_2EEF85E3_9B7D3C8D=Alert when production is idle longer than
@@ -411,6 +423,7 @@ Param/Value/lib_2EEF85E3_A83BEF64=<s val="BenchmarkerSectionLabel">Build Preview
 Param/Value/lib_2EEF85E3_AA045DC1=2nd 
 Param/Value/lib_2EEF85E3_AA37A2EB=Clears all text in the debug window.
 Param/Value/lib_2EEF85E3_AA4FCAF5=Debug window already added, skipping...
+Param/Value/lib_2EEF85E3_AB391E48=Pauses the current build and opens the HELP dialog.
 Param/Value/lib_2EEF85E3_AD5B8676=ctrl + shift + R
 Param/Value/lib_2EEF85E3_B067B1E8=<s val="BenchmarkerStatLabel">Current</s>
 Param/Value/lib_2EEF85E3_B7E842B5=<s val="BenchmarkerMenuLabel">seconds</s>
@@ -443,6 +456,7 @@ Param/Value/lib_2EEF85E3_CD8EF641=<s val="BenchmarkerPostBuildReportButtonText">
 Param/Value/lib_2EEF85E3_CEECB8AA=Debugging: <s val="BenchmarkerSectionLabel">Build</s>
 Param/Value/lib_2EEF85E3_CFC68E0E=<s val="BenchmarkMenuSelectButton">Benchmarks</s>
 Param/Value/lib_2EEF85E3_D1860499=Ok
+Param/Value/lib_2EEF85E3_D2F027AF=ctrl + shift + X
 Param/Value/lib_2EEF85E3_D450A4DF=Alert when APM is below
 Param/Value/lib_2EEF85E3_D504F6E8=Pause build and open help.
 Param/Value/lib_2EEF85E3_D9EF8084=Selecting this option will display your benchmark build for this matchup as objectives.  (This option becomes enabled once you have saved a benchmark build order)

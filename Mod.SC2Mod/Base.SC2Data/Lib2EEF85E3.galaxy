@@ -2374,10 +2374,6 @@ void lib2EEF85E3_gf_UpdateFinalSupplyatGameTime () {
 
 void lib2EEF85E3_gf_OpenBenchmarkDialogMainMenu () {
     // Automatic Variable Declarations
-    unitgroup auto7E92ED96_g;
-    int auto7E92ED96_u;
-    unit auto7E92ED96_var;
-
     // Implementation
     lib2EEF85E3_gv_isBenchmarkAlertDialogOpen = true;
     CinematicFade(false, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, false);
@@ -2400,13 +2396,8 @@ void lib2EEF85E3_gf_OpenBenchmarkDialogMainMenu () {
     }
     DialogSetVisible(lib2EEF85E3_gv_benchmarkDialog, PlayerGroupAll(), true);
     Wait(0.2, c_timeReal);
-    auto7E92ED96_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, (1 << c_targetFilterAlly) | (1 << c_targetFilterNeutral) | (1 << c_targetFilterEnemy), 0), 0);
-    auto7E92ED96_u = UnitGroupCount(auto7E92ED96_g, c_unitCountAll);
-    for (;; auto7E92ED96_u -= 1) {
-        auto7E92ED96_var = UnitGroupUnitFromEnd(auto7E92ED96_g, auto7E92ED96_u);
-        if (auto7E92ED96_var == null) { break; }
-        UnitRemove(auto7E92ED96_var);
-    }
+    lib2EEF85E3_gf_ResetUnitsForPlayer(1);
+    lib2EEF85E3_gf_ResetUnitsForPlayer(2);
     TimerRestart(lib2EEF85E3_gv_currentBuildTimer);
     lib2EEF85E3_gf_ResetBenchmarkTimers();
     lib2EEF85E3_gf_PauseGame();
@@ -3270,6 +3261,8 @@ void lib2EEF85E3_gf_CreateHelpDialog () {
     lib2EEF85E3_gf_CreateHelpInfoRow(StringExternal("Param/Value/lib_2EEF85E3_344C7B53"), StringExternal("Param/Value/lib_2EEF85E3_043FC9DD"), StringExternal("Param/Value/lib_2EEF85E3_0DAAB899"), lv_rowNum);
     lv_rowNum += 1;
     lib2EEF85E3_gf_CreateHelpInfoRow(StringExternal("Param/Value/lib_2EEF85E3_255637E6"), StringExternal("Param/Value/lib_2EEF85E3_9889407F"), StringExternal("Param/Value/lib_2EEF85E3_4F1F6900"), lv_rowNum);
+    lv_rowNum += 1;
+    lib2EEF85E3_gf_CreateHelpInfoRow(StringExternal("Param/Value/lib_2EEF85E3_4AE9B54E"), StringExternal("Param/Value/lib_2EEF85E3_D2F027AF"), StringExternal("Param/Value/lib_2EEF85E3_AB391E48"), lv_rowNum);
     lv_rowNum += 1;
     lib2EEF85E3_gf_CreateHelpInfoRow(StringExternal("Param/Value/lib_2EEF85E3_5CEF532B"), StringExternal("Param/Value/lib_2EEF85E3_043A618D"), StringExternal("Param/Value/lib_2EEF85E3_C48DEAA0"), lv_rowNum);
     lv_rowNum += 1;
@@ -4270,9 +4263,10 @@ void lib2EEF85E3_gf_InitializeGameState () {
     // Implementation
     lib2EEF85E3_gf_InitializeBuildConfiguration();
     lib2EEF85E3_gf_LogTextMessage(lib2EEF85E3_gv_debugMapMechanicsEnabled, StringExternal("Param/Value/lib_2EEF85E3_4C5473EB"));
+    lib2EEF85E3_gf_ResetUnitsForPlayer(1);
     lib2EEF85E3_gf_ResetUnitsForPlayer(2);
     lib2EEF85E3_gf_ResetCreep();
-    lib2EEF85E3_gf_InitializeUnitsAndStartingResources(true);
+    lib2EEF85E3_gf_InitializeUnitsAndStartingResources(false);
     lib2EEF85E3_gf_ResetCamera();
 }
 
@@ -4329,6 +4323,7 @@ void lib2EEF85E3_gf_InitializeUnitsAndStartingResources (bool lp_skipPlayer1) {
     // Implementation
     if ((lp_skipPlayer1 == false)) {
         MeleeInitUnitsForPlayer(1, PlayerRace(1), PlayerStartLocation(1));
+        UnitRemove(lib2EEF85E3_gv_placeholderBases[1]);
         if ((PlayerRace(1) == "Zerg")) {
             CreepModify(PlayerStartLocation(1), lib2EEF85E3_gv_zergHatcheryCreepRadius, true, false);
         }
@@ -4340,6 +4335,7 @@ void lib2EEF85E3_gf_InitializeUnitsAndStartingResources (bool lp_skipPlayer1) {
     }
 
     MeleeInitUnitsForPlayer(2, lib2EEF85E3_gf_GetCurrentlySelectedMatchupOpponentRace(), PlayerStartLocation(2));
+    UnitRemove(lib2EEF85E3_gv_placeholderBases[2]);
     MeleeInitResources();
     lib2EEF85E3_gf_WaitForRaceAssetsToLoadIfNecessary();
 }
@@ -4432,6 +4428,14 @@ void lib2EEF85E3_gf_CreateMatchupBankSections () {
     BankSectionCreate(lib2EEF85E3_gv_benchmarkerBank, lib2EEF85E3_gv_pvPMatchupSectionKey);
 }
 
+void lib2EEF85E3_gf_CreateHiddenBaseforPlayer (int lp_player) {
+    // Automatic Variable Declarations
+    // Implementation
+    libNtve_gf_CreateUnitsWithDefaultFacing(1, "OrbitalCommandFlying", 0, lp_player, PlayerStartLocation(lp_player));
+    lib2EEF85E3_gv_placeholderBases[lp_player] = UnitLastCreated();
+    libNtve_gf_ShowHideUnit(lib2EEF85E3_gv_placeholderBases[lp_player], false);
+}
+
 void lib2EEF85E3_gf_ResetGameState () {
     // Variable Declarations
     unitgroup lv_player1Units;
@@ -4441,6 +4445,7 @@ void lib2EEF85E3_gf_ResetGameState () {
     lv_player1Units = UnitGroupEmpty();
 
     // Implementation
+    lib2EEF85E3_gf_PauseGame();
     if (((lib2EEF85E3_gv_currentBuildWasForked == true))) {
         lib2EEF85E3_gv_practiceAgainstBenchmarkBuildOrder = true;
     }
@@ -4463,11 +4468,15 @@ void lib2EEF85E3_gf_ResetGameState () {
     Wait(0.2, c_timeReal);
     lib2EEF85E3_gf_ResetMapVision();
     lib2EEF85E3_gf_InitializeUnitsAndStartingResources(false);
+    Wait(0.5, c_timeReal);
+    UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
+    lib2EEF85E3_gf_UnpauseGame();
 }
 
 void lib2EEF85E3_gf_ResetUnitsForPlayer (int lp_player) {
     // Variable Declarations
     unitgroup lv_playerUnits;
+    unitgroup lv_leftoverBroodlings;
 
     // Automatic Variable Declarations
     unitgroup auto415426A5_g;
@@ -4479,12 +4488,17 @@ void lib2EEF85E3_gf_ResetUnitsForPlayer (int lp_player) {
     unitgroup auto182FBBFB_g;
     int auto182FBBFB_u;
     unit auto182FBBFB_var;
+    unitgroup auto9012A570_g;
+    int auto9012A570_u;
+    unit auto9012A570_var;
 
     // Variable Initialization
     lv_playerUnits = UnitGroupEmpty();
+    lv_leftoverBroodlings = UnitGroupEmpty();
 
     // Implementation
     lv_playerUnits = lib2EEF85E3_gf_GetAllPlayerUnits(lp_player);
+    lib2EEF85E3_gf_CreateHiddenBaseforPlayer(lp_player);
     if ((UnitGroupCount(lv_playerUnits, c_unitCountAlive) >= 0)) {
         auto415426A5_g = UnitGroupFilterPlayer(lib2EEF85E3_gv_workers, lp_player, 0);
         auto415426A5_u = UnitGroupCount(auto415426A5_g, c_unitCountAll);
@@ -4508,6 +4522,23 @@ void lib2EEF85E3_gf_ResetUnitsForPlayer (int lp_player) {
             if (auto182FBBFB_var == null) { break; }
             UnitRemove(auto182FBBFB_var);
         }
+    }
+
+    if ((PlayerRace(1) == "Zerg")) {
+        Wait(0.75, c_timeGame);
+        lv_leftoverBroodlings = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, 0, (1 << (c_targetFilterHidden - 32))), 0);
+        TextExpressionSetToken("Param/Expression/lib_2EEF85E3_0CF25A67", "A", IntToText(UnitGroupCount(lv_leftoverBroodlings, c_unitCountAll)));
+        lib2EEF85E3_gf_LogTextMessage(lib2EEF85E3_gv_debugMapMechanicsEnabled, TextExpressionAssemble("Param/Expression/lib_2EEF85E3_0CF25A67"));
+        if ((UnitGroupCount(lv_leftoverBroodlings, c_unitCountAll) >= 0)) {
+            auto9012A570_g = lv_leftoverBroodlings;
+            auto9012A570_u = UnitGroupCount(auto9012A570_g, c_unitCountAll);
+            for (;; auto9012A570_u -= 1) {
+                auto9012A570_var = UnitGroupUnitFromEnd(auto9012A570_g, auto9012A570_u);
+                if (auto9012A570_var == null) { break; }
+                UnitRemove(auto9012A570_var);
+            }
+        }
+
     }
 
 }
@@ -4693,7 +4724,7 @@ void lib2EEF85E3_gf_ResetCamera () {
 void lib2EEF85E3_gf_ResetGameVariables () {
     // Automatic Variable Declarations
     // Implementation
-    lib2EEF85E3_gv_currentBuildWorkersCreated = 6;
+    lib2EEF85E3_gv_currentBuildWorkersCreated = 0;
     lib2EEF85E3_gv_currentBuildTimeProductionIdle = 0;
     lib2EEF85E3_gv_currentBuildTimeSupplyBlocked = 0;
     lib2EEF85E3_gv_currentBuildNumSupplyBlocks = 0;
@@ -8722,7 +8753,7 @@ bool lib2EEF85E3_gt_EndBuildatMaxSupply_Func (bool testConds, bool runActions) {
 //--------------------------------------------------------------------------------------------------
 void lib2EEF85E3_gt_EndBuildatMaxSupply_Init () {
     lib2EEF85E3_gt_EndBuildatMaxSupply = TriggerCreate("lib2EEF85E3_gt_EndBuildatMaxSupply_Func");
-    TriggerAddEventTimePeriodic(lib2EEF85E3_gt_EndBuildatMaxSupply, 0.2, c_timeReal);
+    TriggerAddEventTimePeriodic(lib2EEF85E3_gt_EndBuildatMaxSupply, 1.0, c_timeGame);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -8786,6 +8817,8 @@ bool lib2EEF85E3_gt_EndBuildFromHotkey_Func (bool testConds, bool runActions) {
 //--------------------------------------------------------------------------------------------------
 void lib2EEF85E3_gt_EndBuildFromHotkey_Init () {
     lib2EEF85E3_gt_EndBuildFromHotkey = TriggerCreate("lib2EEF85E3_gt_EndBuildFromHotkey_Func");
+    TriggerAddEventChatMessage(lib2EEF85E3_gt_EndBuildFromHotkey, c_playerAny, "-end", true);
+    TriggerAddEventChatMessage(lib2EEF85E3_gt_EndBuildFromHotkey, c_playerAny, "-e", true);
     TriggerAddEventKeyPressed(lib2EEF85E3_gt_EndBuildFromHotkey, c_playerAny, c_keyEnd, true, c_keyModifierStateRequire, c_keyModifierStateRequire, c_keyModifierStateIgnore);
 }
 
@@ -9982,14 +10015,8 @@ bool lib2EEF85E3_gt_ResetBuild_Func (bool testConds, bool runActions) {
     UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
     UIDisplayMessage(PlayerGroupAll(), c_messageAreaDirective, StringExternal("Param/Value/lib_2EEF85E3_C128AF68"));
     CinematicFade(false, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
-    libNtve_gf_CinematicMode(true, PlayerGroupAll(), c_transitionDurationDefault);
-    lib2EEF85E3_gf_PauseGame();
     lib2EEF85E3_gf_ResetGameState();
-    UIClearMessages(PlayerGroupAll(), c_messageAreaDirective);
-    Wait(0.5, c_timeReal);
-    lib2EEF85E3_gf_UnpauseGame();
     CameraPan(1, PlayerStartLocation(1), 0.5, -1, 5.0, true);
-    libNtve_gf_CinematicMode(false, PlayerGroupAll(), c_transitionDurationDefault);
     CinematicFade(true, 0.5, c_fadeStyleSquareRoot, Color(0.00, 0.00, 0.00), 0.0, true);
     return true;
 }
@@ -11417,7 +11444,8 @@ bool lib2EEF85E3_gt_OpenPostBuildReportDialog_Func (bool testConds, bool runActi
     libNtve_gf_SwooshCamera(1, ((CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance)) + 0.0), (CameraInfoGetValue(CameraInfoDefault(), c_cameraValueDistance)+ 20
 ), PlayerStartLocation(1), 15.0);
     CameraPan(1, PlayerStartLocation(1), 20.0, -1, 10.0, true);
-    autoD4A168DB_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, 0, 0), 0);
+    lib2EEF85E3_gf_CreateHiddenBaseforPlayer(1);
+    autoD4A168DB_g = UnitGroup(null, 1, RegionEntireMap(), UnitFilter(0, 0, 0, (1 << (c_targetFilterHidden - 32))), 0);
     autoD4A168DB_u = UnitGroupCount(autoD4A168DB_g, c_unitCountAll);
     for (;; autoD4A168DB_u -= 1) {
         lv_currentUnit = UnitGroupUnitFromEnd(autoD4A168DB_g, autoD4A168DB_u);
